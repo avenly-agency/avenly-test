@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowUpRight } from 'lucide-react';
 
@@ -37,15 +37,32 @@ const projects = [
 
 export const Portfolio = () => {
   const targetRef = useRef<HTMLDivElement>(null);
+  const mobileContainerRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+
   const { scrollYProgress } = useScroll({ target: targetRef });
   
-  // Przesunięcie poziome (-75% dla 6 elementów)
+  // Przesunięcie poziome dla desktopu
   const x = useTransform(scrollYProgress, [0, 1], ["0%", "-75%"]);
+
+  // Obliczamy liczbę wszystkich elementów slidera (Tytuł + Projekty + CTA)
+  const totalSlides = 1 + projects.length + 1; 
+
+  // Handler scrolla dla mobilek (aktualizacja kropek)
+  const handleMobileScroll = () => {
+    if (mobileContainerRef.current) {
+      const scrollLeft = mobileContainerRef.current.scrollLeft;
+      // Szerokość karty (320px) + gap (12px = gap-3)
+      const itemWidth = 320 + 12; 
+      const newIndex = Math.round(scrollLeft / itemWidth);
+      setActiveIndex(newIndex);
+    }
+  };
 
   return (
     <div className="relative w-full bg-[#050505]">
         
-        <section ref={targetRef} className="relative h-[300vh]">
+        <section ref={targetRef} className="relative h-[100vh] lg:h-[300vh]">
         
             <style jsx global>{`
                 .scrollbar-hide::-webkit-scrollbar { display: none; }
@@ -54,40 +71,35 @@ export const Portfolio = () => {
 
             <div className="sticky top-0 flex h-screen items-center overflow-hidden w-full bg-[#050505] z-10">
                 
-                {/* --- TRACK --- */}
+                {/* --- TRACK (DESKTOP) --- */}
                 <motion.div 
                     style={{ x }} 
-                    className="flex gap-12 lg:gap-16 items-center w-max h-full pl-[calc(50vw-225px)]"
+                    className="hidden lg:flex gap-12 lg:gap-16 items-center w-max h-full pl-[calc(50vw-225px)]"
                 >
-                    
-                    {/* --- 1. KARTA TYTUŁOWA (PERFORMANCE CARD) --- */}
-                    <div className="shrink-0 w-[350px] lg:w-[450px] h-[450px] lg:h-[550px] flex flex-col justify-center p-8 lg:p-12">
+                    {/* (Kod Desktopowy bez zmian) */}
+                    {/* 1. KARTA TYTUŁOWA */}
+                    <div className="shrink-0 w-[450px] h-[550px] flex flex-col justify-center p-12">
                          <div className="flex items-center gap-4 mb-8">
                             <span className="w-12 h-[2px] bg-blue-500"></span>
                             <span className="text-blue-500 font-mono text-sm tracking-widest uppercase">Portfolio 2024</span>
                          </div>
-                         
-                         <h2 className="text-5xl md:text-7xl font-bold text-white tracking-tighter leading-[0.9] mb-8">
-                            Wybrane <br />
-                            {/* GRADIENT Z HERO SECTION */}
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">
-                                Realizacje
-                            </span>
+                         <h2 className="text-7xl font-bold text-white tracking-tighter leading-[0.9] mb-8">
+                           Wybrane <br />
+                           <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">
+                               Realizacje
+                           </span>
                          </h2>
-                         
                          <p className="text-slate-400 text-lg max-w-xs leading-relaxed">
-                            Projekty, które definiują jakość. Od stron WWW po zaawansowane systemy AI.
+                           Projekty, które definiują jakość. Od stron WWW po zaawansowane systemy AI.
                          </p>
                     </div>
 
-
-                    {/* --- 2. KARTY PROJEKTÓW --- */}
+                    {/* 2. KARTY PROJEKTÓW */}
                     {projects.map((project) => (
                         <Card key={project.id} project={project} />
                     ))}
                     
-                    
-                    {/* --- 3. CTA CARD --- */}
+                    {/* 3. CTA CARD */}
                     <div className="relative h-[450px] w-[350px] flex items-center justify-center shrink-0 rounded-3xl border border-white/5 bg-white/[0.02] hover:border-blue-500/50 hover:bg-blue-900/10 transition-all cursor-pointer group backdrop-blur-sm">
                         <div className="text-center p-6">
                             <h3 className="text-3xl font-bold text-white mb-2 group-hover:scale-105 transition-transform">Twój Projekt?</h3>
@@ -96,25 +108,28 @@ export const Portfolio = () => {
                         </div>
                     </div>
 
-                    {/* Margines końcowy */}
                     <div className="shrink-0 w-[50vw]"></div>
                 </motion.div>
 
 
                 {/* --- MOBILE (SWIPE) --- */}
-                <div className="lg:hidden absolute bottom-0 left-0 w-full h-full flex items-center overflow-x-auto gap-4 px-6 snap-x snap-mandatory scrollbar-hide bg-[#050505]">
+                <div 
+                    ref={mobileContainerRef}
+                    onScroll={handleMobileScroll}
+                    className="lg:hidden absolute bottom-0 left-0 w-full h-full flex items-center overflow-x-auto gap-3 px-6 snap-x snap-mandatory scrollbar-hide bg-[#050505]"
+                >
                     
-                    {/* Spacer Startowy */}
-                    <div className="shrink-0 w-[calc(50vw-175px-24px)]" />
+                    {/* Spacer Startowy - Wycentrowanie pierwszej karty (screen width / 2) - (card width / 2) - padding */}
+                    {/* Card: 320px. 390/2 - 160 = 35px. Minus gap. */}
+                    <div className="shrink-0 w-[calc(50vw-160px-12px)]" />
 
-                    {/* Karta Tytułowa Mobile */}
-                    <div className="snap-center shrink-0 w-[350px] h-[450px] flex flex-col justify-center p-4">
+                    {/* Karta Tytułowa Mobile - Zmniejszona do 320px dla lepszego "peeku" */}
+                    <div className="snap-center shrink-0 w-[320px] h-[450px] flex flex-col justify-center p-4">
                          <h2 className="text-5xl font-bold text-white tracking-tighter leading-none mb-4">
-                            Wybrane <br />
-                            {/* GRADIENT MOBILE */}
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">
-                                Realizacje
-                            </span>
+                           Wybrane <br />
+                           <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">
+                               Realizacje
+                           </span>
                          </h2>
                          <div className="w-12 h-[2px] bg-blue-500 mb-4"></div>
                          <p className="text-slate-400 text-sm">Przesuń, aby zobaczyć.</p>
@@ -136,7 +151,21 @@ export const Portfolio = () => {
                     </div>
                     
                     {/* Spacer Końcowy */}
-                    <div className="shrink-0 w-[calc(50vw-175px-24px)]" />
+                    <div className="shrink-0 w-[calc(50vw-160px-12px)]" />
+                </div>
+
+                {/* --- NAWIGACJA (KROPKI - TYLKO MOBILE) --- */}
+                <div className="lg:hidden absolute bottom-8 left-0 w-full flex justify-center items-center gap-2 z-20 pointer-events-none">
+                    {Array.from({ length: totalSlides }).map((_, index) => (
+                        <div 
+                            key={index}
+                            className={`h-1.5 rounded-full transition-all duration-300 ${
+                                activeIndex === index 
+                                    ? 'w-6 bg-blue-500' 
+                                    : 'w-1.5 bg-slate-700'
+                            }`}
+                        />
+                    ))}
                 </div>
 
             </div>
@@ -145,9 +174,10 @@ export const Portfolio = () => {
   );
 };
 
+// Component Card - Zaktualizowany rozmiar dla mobile (320px)
 const Card = ({ project }: { project: any }) => {
   return (
-    <div className="group relative h-[450px] w-[350px] lg:h-[550px] lg:w-[450px] overflow-hidden rounded-3xl bg-[#080808] border border-white/5 shrink-0 cursor-pointer transition-all duration-500 hover:border-blue-500/40 hover:shadow-[0_0_40px_-10px_rgba(37,99,235,0.2)]">
+    <div className="group relative h-[450px] w-[320px] lg:h-[550px] lg:w-[450px] overflow-hidden rounded-3xl bg-[#080808] border border-white/5 shrink-0 cursor-pointer transition-all duration-500 hover:border-blue-500/40 hover:shadow-[0_0_40px_-10px_rgba(37,99,235,0.2)]">
       <div className="absolute inset-0 bg-gradient-to-br from-slate-900 to-[#050505] transition-transform duration-700 group-hover:scale-105"></div>
       <div className="absolute inset-0 bg-gradient-to-t from-blue-900/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
       <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
