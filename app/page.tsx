@@ -30,7 +30,9 @@ const Process = dynamic(() => import('@/components/sections/Process').then(mod =
 const Impact = dynamic(() => import('@/components/sections/Impact').then(mod => mod.Impact), {
   loading: () => <SectionLoader height="h-screen" />
 });
-
+const Services = dynamic(() => import('@/components/sections/Services').then(mod => mod.Services), {
+  loading: () => <div className="h-[800px] bg-[#050505]" /> // Placeholder
+});
 // app/page.tsx
 
 // ... importy
@@ -54,6 +56,9 @@ export default function Home() {
       
       <div className="render-optimize">
         <Impact />
+      </div>
+      <div className="render-optimize">
+        <Services />
       </div>
     </main>
   );
