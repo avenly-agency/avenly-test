@@ -2,19 +2,21 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
-import { ArrowRight, Github, Twitter, Linkedin } from 'lucide-react';
+import { Menu, X, ArrowRight, Github, Twitter, Linkedin } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
-// DEFINICJA LINKÓW
-const navLinks = [
+// --- DANE ---
+const NAV_LINKS = [
   { title: "Oferta", href: "#oferta" },
   { title: "Proces", href: "#proces" },
   { title: "Realizacje", href: "#realizacje" },
   { title: "Kontakt", href: "#kontakt" },
 ];
 
-// --- WARIANTY ANIMACJI (NAPRAWIONE TYPOWANIE) ---
+// --- KONFIGURACJA ANIMACJI (NAPRAWIONA) ---
+// Definiujemy te zmienne TUTAJ, żeby nie było błędu "not defined"
+
 const menuVars: Variants = {
   initial: {
     scaleY: 0,
@@ -23,7 +25,7 @@ const menuVars: Variants = {
     scaleY: 1,
     transition: {
       duration: 0.5,
-      ease: [0.12, 0, 0.39, 0] as const, // FIX: as const naprawia błąd TypeScript
+      ease: [0.12, 0, 0.39, 0] as const, // 'as const' naprawia błąd TypeScript
     },
   },
   exit: {
@@ -31,7 +33,7 @@ const menuVars: Variants = {
     transition: {
       delay: 0.5,
       duration: 0.5,
-      ease: [0.22, 1, 0.36, 1] as const, // FIX: as const
+      ease: [0.22, 1, 0.36, 1] as const, // 'as const' naprawia błąd TypeScript
     },
   },
 };
@@ -57,13 +59,13 @@ const mobileLinkVars: Variants = {
     y: "30vh",
     transition: {
       duration: 0.5,
-      ease: [0.37, 0, 0.63, 1] as const, // FIX: as const
+      ease: [0.37, 0, 0.63, 1] as const, // 'as const' naprawia błąd TypeScript
     },
   },
   open: {
     y: 0,
     transition: {
-      ease: [0, 0.55, 0.45, 1] as const, // FIX: as const
+      ease: [0, 0.55, 0.45, 1] as const, // 'as const' naprawia błąd TypeScript
       duration: 0.7,
     },
   },
@@ -77,7 +79,7 @@ export const Navbar = () => {
   const lastScrollY = useRef(0);
   const scrollDownAccumulator = useRef(0);
 
-  // Scroll Handler
+  // --- LOGIKA SCROLLOWANIA (DESKTOP) ---
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
@@ -102,7 +104,7 @@ export const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Body Lock
+  // --- BLOKADA SCROLLA (MOBILE) ---
   useEffect(() => {
     if (isMobileMenuOpen) {
       document.body.style.overflow = 'hidden';
@@ -115,7 +117,7 @@ export const Navbar = () => {
   const navbarClasses = cn(
     "fixed top-0 left-0 w-full z-50 transition-all duration-300 ease-in-out border-b",
     isScrolled 
-      ? 'bg-slate-950/70 backdrop-blur-xl border-slate-800/50 py-4 shadow-lg'
+      ? 'bg-slate-950/80 backdrop-blur-xl border-slate-800/50 py-4 shadow-lg'
       : 'bg-transparent border-transparent py-6',
     isVisible && !isMobileMenuOpen 
       ? 'translate-y-0' 
@@ -136,9 +138,9 @@ export const Navbar = () => {
             AVENLY<span className="text-blue-500">.</span>
           </Link>
 
-          {/* DESKTOP MENU */}
+          {/* DESKTOP MENU (PREMIUM) */}
           <div className="hidden md:flex items-center gap-10">
-            {navLinks.map((item) => (
+            {NAV_LINKS.map((item) => (
               <Link 
                 key={item.title} 
                 href={item.href} 
@@ -155,11 +157,11 @@ export const Navbar = () => {
             </button>
           </div>
 
-          {/* MOBILE TOGGLE BUTTON */}
+          {/* MOBILE HAMBURGER BUTTON */}
           <button 
             className="md:hidden text-white z-50 relative cursor-pointer hover:text-blue-400 transition-colors p-2 active:scale-90"
-            aria-label={isMobileMenuOpen ? "Zamknij menu" : "Otwórz menu nawigacji"}
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label={isMobileMenuOpen ? "Zamknij menu" : "Otwórz menu"}
           >
              <div className="relative w-6 h-6 flex flex-col justify-center items-center gap-[5px]">
                 <motion.span 
@@ -184,10 +186,10 @@ export const Navbar = () => {
         {isMobileMenuOpen && (
           <motion.div
             key="mobile-menu"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
+            variants={menuVars}
+            initial="initial"
+            animate="animate"
+            exit="exit"
             className="fixed inset-0 w-full h-[100dvh] bg-[#050505] z-40 origin-top flex flex-col justify-between"
           >
             {/* TŁO AMBIENT */}
@@ -195,23 +197,37 @@ export const Navbar = () => {
 
             <div className="flex flex-col h-full container mx-auto px-6 pb-10 pt-32 relative z-10">
               
-              {/* LINKI */}
-              <div className="flex flex-col gap-6 flex-1 justify-center">
-                {navLinks.map((link, index) => (
-                  <Link 
-                      key={index}
-                      href={link.href}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="text-5xl font-bold text-white tracking-tight hover:text-blue-500 transition-colors block py-2"
-                  >
-                      {link.title}
-                      <span className="text-blue-500 text-6xl leading-[0]">.</span>
-                  </Link>
+              {/* LINKI - KASKADOWE WEJŚCIE */}
+              <motion.div 
+                variants={containerVars}
+                initial="initial"
+                animate="open"
+                exit="initial"
+                className="flex flex-col gap-4 flex-1 justify-center"
+              >
+                {NAV_LINKS.map((link, index) => (
+                  <div key={index} className="overflow-hidden">
+                    <motion.div variants={mobileLinkVars}>
+                        <Link 
+                            href={link.href}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="text-5xl font-bold text-white tracking-tight hover:text-blue-500 transition-colors block py-2"
+                        >
+                            {link.title}
+                            <span className="text-blue-500 text-6xl leading-[0]">.</span>
+                        </Link>
+                    </motion.div>
+                  </div>
                 ))}
-              </div>
+              </motion.div>
 
               {/* FOOTER W MENU */}
-              <div className="border-t border-white/10 pt-8 mt-8">
+              <motion.div 
+                 initial={{ opacity: 0, y: 20 }}
+                 animate={{ opacity: 1, y: 0, transition: { delay: 0.5 } }}
+                 exit={{ opacity: 0, transition: { duration: 0.2 } }}
+                 className="border-t border-white/10 pt-8 mt-8"
+              >
                   <div className="flex flex-col gap-6">
                       <div className="flex justify-between items-center">
                           <span className="text-slate-400 text-sm uppercase tracking-widest">Social Media</span>
@@ -227,7 +243,7 @@ export const Navbar = () => {
                           <ArrowRight className="group-hover:translate-x-1 transition-transform" />
                       </button>
                   </div>
-              </div>
+              </motion.div>
 
             </div>
           </motion.div>
