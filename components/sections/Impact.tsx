@@ -1,20 +1,34 @@
 'use client';
 
 import { useRef } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion, Variants } from 'framer-motion'; // Dodano import Variants
 import { TrendingUp, Bot, Zap, ArrowRight, ShieldCheck } from 'lucide-react';
 
 export const Impact = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const shouldReduceMotion = useReducedMotion();
+  const reducedMotion = useReducedMotion();
+  // Bezpiecznik dla TS (null check)
+  const shouldReduceMotion = reducedMotion ?? false;
 
-  // Konfiguracja animacji z uwzględnieniem dostępności
-  const animProps = (delay: number) => ({
-    initial: { opacity: 0, y: shouldReduceMotion ? 0 : 20 },
-    whileInView: { opacity: 1, y: 0 },
-    viewport: { once: true, margin: "-50px" },
-    transition: { duration: 0.6, delay: shouldReduceMotion ? 0 : delay, ease: "easeOut" }
-  });
+  // DEFINICJA WARIANTÓW (Otypowana jako Variants)
+  const fadeInUpVariants: Variants = {
+    hidden: { 
+      opacity: 0, 
+      y: shouldReduceMotion ? 0 : 20 
+    },
+    visible: (customDelay: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: { 
+        duration: 0.6, 
+        delay: shouldReduceMotion ? 0 : customDelay, 
+        ease: "easeOut" 
+      }
+    })
+  };
+
+  // Wspólna konfiguracja viewportu
+  const viewportConfig = { once: true, margin: "-50px" } as const;
 
   return (
     <section 
@@ -33,7 +47,13 @@ export const Impact = () => {
         
         {/* --- HEADER --- */}
         <div className="max-w-3xl mx-auto text-center mb-20">
-            <motion.div {...animProps(0)}>
+            <motion.div 
+                custom={0}
+                variants={fadeInUpVariants}
+                initial="hidden"
+                whileInView="visible"
+                viewport={viewportConfig}
+            >
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-900/20 border border-blue-500/20 mb-6" role="text">
                     <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" aria-hidden="true"></span>
                     <span className="text-blue-400 text-xs font-bold tracking-widest uppercase">Dlaczego Avenly?</span>
@@ -56,11 +76,14 @@ export const Impact = () => {
             
             {/* KAFEL 1: SKALOWALNY WZROST */}
             <motion.div 
-                {...animProps(0.1)}
-                // ZMIANA: duration-700 (0.7s) - bardzo płynne przejście
+                custom={0.1}
+                variants={fadeInUpVariants}
+                initial="hidden"
+                whileInView="visible"
+                viewport={viewportConfig}
                 className="md:col-span-2 relative group overflow-hidden rounded-3xl bg-[#080808] border border-white/5 p-8 md:p-12 min-h-[400px] flex flex-col justify-between hover:border-blue-500/30 transition-colors duration-700 ease-out"
             >
-                {/* Dekoracyjny Gradient - też zwolniony do 700ms */}
+                {/* Dekoracyjny Gradient */}
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-out" aria-hidden="true"></div>
 
                 <div className="relative z-10">
@@ -92,8 +115,11 @@ export const Impact = () => {
 
             {/* KAFEL 2: AI FIRST */}
             <motion.div 
-                {...animProps(0.2)}
-                // ZMIANA: duration-700
+                custom={0.2}
+                variants={fadeInUpVariants}
+                initial="hidden"
+                whileInView="visible"
+                viewport={viewportConfig}
                 className="relative group overflow-hidden rounded-3xl bg-[#080808] border border-white/5 p-8 min-h-[300px] flex flex-col hover:border-indigo-500/30 transition-colors duration-700 ease-out"
             >
                 <div className="absolute inset-0 bg-gradient-to-bl from-indigo-900/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-out" aria-hidden="true"></div>
@@ -112,8 +138,11 @@ export const Impact = () => {
 
             {/* KAFEL 3: PERFORMANCE */}
             <motion.div 
-                {...animProps(0.3)}
-                // ZMIANA: duration-700
+                custom={0.3}
+                variants={fadeInUpVariants}
+                initial="hidden"
+                whileInView="visible"
+                viewport={viewportConfig}
                 className="relative group overflow-hidden rounded-3xl bg-[#080808] border border-white/5 p-8 min-h-[250px] flex flex-col hover:border-yellow-500/30 transition-colors duration-700 ease-out"
             >
                 <div className="absolute inset-0 bg-gradient-to-t from-yellow-900/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-out" aria-hidden="true"></div>
@@ -134,8 +163,11 @@ export const Impact = () => {
 
             {/* KAFEL 4: SECURITY */}
             <motion.div 
-                {...animProps(0.4)}
-                // ZMIANA: duration-700
+                custom={0.4}
+                variants={fadeInUpVariants}
+                initial="hidden"
+                whileInView="visible"
+                viewport={viewportConfig}
                 className="md:col-span-2 relative group overflow-hidden rounded-3xl bg-[#080808] border border-white/5 p-8 flex flex-col md:flex-row items-center gap-8 hover:border-green-500/30 transition-colors duration-700 ease-out"
             >
                  <div className="absolute inset-0 bg-gradient-to-r from-green-900/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-out" aria-hidden="true"></div>
@@ -153,7 +185,6 @@ export const Impact = () => {
                  </div>
                  
                  <div className="shrink-0 relative z-20">
-                    {/* ZMIANA: duration-500 dla przycisku (nieco szybciej niż karty, ale płynnie) */}
                     <button className="px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm font-bold hover:bg-white hover:text-black focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none transition-all duration-500 ease-out flex items-center gap-2 group/btn !cursor-pointer">
                         Sprawdź Ofertę
                         <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform duration-500" aria-hidden="true" />

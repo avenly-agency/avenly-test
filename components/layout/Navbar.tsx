@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, ArrowRight, Github, Twitter, Linkedin } from 'lucide-react'; // Dodałem ikony social (przykładowo)
+import { motion, AnimatePresence, Variants } from 'framer-motion';
+import { Menu, X, ArrowRight, Github, Twitter, Linkedin } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
@@ -14,8 +14,8 @@ const navLinks = [
   { title: "Kontakt", href: "#kontakt" },
 ];
 
-// WARIANTY ANIMACJI (FRAMER MOTION)
-const menuVars = {
+// WARIANTY ANIMACJI (TYPOWANE)
+const menuVars: Variants = {
   initial: {
     scaleY: 0,
   },
@@ -36,7 +36,7 @@ const menuVars = {
   },
 };
 
-const containerVars = {
+const containerVars: Variants = {
   initial: {
     transition: {
       staggerChildren: 0.09,
@@ -52,7 +52,7 @@ const containerVars = {
   },
 };
 
-const mobileLinkVars = {
+const mobileLinkVars: Variants = {
   initial: {
     y: "30vh",
     transition: {
@@ -74,6 +74,7 @@ export const Navbar = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  // useRef dla wartości, które nie wymagają re-renderowania przy zmianie
   const lastScrollY = useRef(0);
   const scrollDownAccumulator = useRef(0);
 
@@ -114,18 +115,21 @@ export const Navbar = () => {
     if (isMobileMenuOpen) {
       document.body.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = 'unset';
+      // FIX: Zmieniono 'unset' na '' (empty string), co jest bezpieczniejsze w TS/React
+      document.body.style.overflow = '';
     }
+    // Cleanup function na wypadek odmontowania komponentu
+    return () => { document.body.style.overflow = ''; };
   }, [isMobileMenuOpen]);
 
   const navbarClasses = cn(
     "fixed top-0 left-0 w-full z-50 transition-all duration-300 ease-in-out border-b",
     isScrolled 
-      ? 'bg-slate-950/70 backdrop-blur-xl border-slate-800/50 py-4 shadow-lg' // Zmniejszyłem lekko padding przy scrollu dla estetyki
+      ? 'bg-slate-950/70 backdrop-blur-xl border-slate-800/50 py-4 shadow-lg'
       : 'bg-transparent border-transparent py-6',
-    isVisible && !isMobileMenuOpen // Ukrywamy "smart navbar" gdy mobile menu jest otwarte (żeby nie konfliktował)
+    isVisible && !isMobileMenuOpen 
       ? 'translate-y-0' 
-      : !isMobileMenuOpen ? '-translate-y-full' : 'translate-y-0' // Jeśli menu otwarte, navbar musi być widoczny
+      : !isMobileMenuOpen ? '-translate-y-full' : 'translate-y-0'
   );
 
   return (
@@ -167,7 +171,6 @@ export const Navbar = () => {
             aria-label={isMobileMenuOpen ? "Zamknij menu" : "Otwórz menu nawigacji"}
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
-             {/* Animacja ikonki Hamburger <-> X */}
              <div className="relative w-6 h-6 flex flex-col justify-center items-center gap-[5px]">
                 <motion.span 
                     animate={isMobileMenuOpen ? { rotate: 45, y: 7 } : { rotate: 0, y: 0 }} 
@@ -190,13 +193,14 @@ export const Navbar = () => {
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
+            key="mobile-menu" // FIX: Dodano klucz, wymagany dla AnimatePresence
             variants={menuVars}
             initial="initial"
             animate="animate"
             exit="exit"
             className="fixed inset-0 w-full h-screen bg-[#050505] z-40 origin-top flex flex-col justify-between"
           >
-            {/* TŁO AMBIENT W MENU (DLA EFEKTU WOW) */}
+            {/* TŁO AMBIENT */}
             <div className="absolute top-[-20%] right-[-20%] w-[80vw] h-[80vw] bg-blue-900/20 blur-[100px] rounded-full pointer-events-none" />
 
             <div className="flex flex-col h-full container mx-auto px-6 pb-10 pt-32">
@@ -236,7 +240,6 @@ export const Navbar = () => {
                       <div className="flex justify-between items-center">
                           <span className="text-slate-400 text-sm uppercase tracking-widest">Social Media</span>
                           <div className="flex gap-4">
-                             {/* Atrapy linków social */}
                              <div className="p-2 bg-white/5 rounded-full hover:bg-blue-600 transition-colors cursor-pointer"><Github size={20} className="text-white"/></div>
                              <div className="p-2 bg-white/5 rounded-full hover:bg-blue-600 transition-colors cursor-pointer"><Twitter size={20} className="text-white"/></div>
                              <div className="p-2 bg-white/5 rounded-full hover:bg-blue-600 transition-colors cursor-pointer"><Linkedin size={20} className="text-white"/></div>
