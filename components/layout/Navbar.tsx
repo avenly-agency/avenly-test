@@ -15,7 +15,7 @@ const navLinks = [
 ];
 
 // WARIANTY ANIMACJI
-// Kluczowe: 'as const' przy tablicach ease naprawia błąd TypeScript
+// FIX: Dodano 'as const' do wszystkich tablic ease - to naprawia błąd builda
 const menuVars: Variants = {
   initial: {
     scaleY: 0,
@@ -24,7 +24,7 @@ const menuVars: Variants = {
     scaleY: 1,
     transition: {
       duration: 0.5,
-      ease: [0.12, 0, 0.39, 0] as const, // FIX: as const
+      ease: [0.12, 0, 0.39, 0] as const, // <--- TUTAJ FIX
     },
   },
   exit: {
@@ -32,7 +32,7 @@ const menuVars: Variants = {
     transition: {
       delay: 0.5,
       duration: 0.5,
-      ease: [0.22, 1, 0.36, 1] as const, // FIX: as const
+      ease: [0.22, 1, 0.36, 1] as const, // <--- TUTAJ FIX
     },
   },
 };
@@ -58,13 +58,13 @@ const mobileLinkVars: Variants = {
     y: "30vh",
     transition: {
       duration: 0.5,
-      ease: [0.37, 0, 0.63, 1] as const, // FIX: as const
+      ease: [0.37, 0, 0.63, 1] as const, // <--- TUTAJ FIX
     },
   },
   open: {
     y: 0,
     transition: {
-      ease: [0, 0.55, 0.45, 1] as const, // FIX: as const
+      ease: [0, 0.55, 0.45, 1] as const, // <--- TUTAJ FIX
       duration: 0.7,
     },
   },
