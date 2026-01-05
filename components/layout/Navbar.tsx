@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, Variants } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, ArrowRight, Github, Twitter, Linkedin } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -15,8 +15,7 @@ const navLinks = [
 ];
 
 // WARIANTY ANIMACJI
-// FIX: Dodano 'as const' do wszystkich tablic ease - to naprawia błąd builda
-const menuVars: Variants = {
+const menuVars = {
   initial: {
     scaleY: 0,
   },
@@ -24,7 +23,7 @@ const menuVars: Variants = {
     scaleY: 1,
     transition: {
       duration: 0.5,
-      ease: [0.12, 0, 0.39, 0] as const, // <--- TUTAJ FIX
+      ease: [0.12, 0, 0.39, 0],
     },
   },
   exit: {
@@ -32,12 +31,12 @@ const menuVars: Variants = {
     transition: {
       delay: 0.5,
       duration: 0.5,
-      ease: [0.22, 1, 0.36, 1] as const, // <--- TUTAJ FIX
+      ease: [0.22, 1, 0.36, 1],
     },
   },
 };
 
-const containerVars: Variants = {
+const containerVars = {
   initial: {
     transition: {
       staggerChildren: 0.09,
@@ -53,18 +52,18 @@ const containerVars: Variants = {
   },
 };
 
-const mobileLinkVars: Variants = {
+const mobileLinkVars = {
   initial: {
     y: "30vh",
     transition: {
       duration: 0.5,
-      ease: [0.37, 0, 0.63, 1] as const, // <--- TUTAJ FIX
+      ease: [0.37, 0, 0.63, 1],
     },
   },
   open: {
     y: 0,
     transition: {
-      ease: [0, 0.55, 0.45, 1] as const, // <--- TUTAJ FIX
+      ease: [0, 0.55, 0.45, 1],
       duration: 0.7,
     },
   },
@@ -192,7 +191,7 @@ export const Navbar = () => {
         {isMobileMenuOpen && (
           <motion.div
             key="mobile-menu"
-            variants={menuVars}
+            variants={menuVars as any} // FIX: Dodano as any
             initial="initial"
             animate="animate"
             exit="exit"
@@ -213,7 +212,7 @@ export const Navbar = () => {
               >
                 {navLinks.map((link, index) => (
                   <div key={index} className="overflow-hidden">
-                    <motion.div variants={mobileLinkVars}>
+                    <motion.div variants={mobileLinkVars as any}> {/* FIX: Dodano as any */}
                         <Link 
                             href={link.href}
                             onClick={() => setIsMobileMenuOpen(false)}
