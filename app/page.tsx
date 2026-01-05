@@ -20,6 +20,9 @@ const TechStack = dynamic(() => import('@/components/sections/TechStack').then(m
 const Portfolio = dynamic(() => import('@/components/sections/Portfolio').then(mod => mod.Portfolio), {
   loading: () => <SectionLoader height="h-[350vh]" /> // Ważne: Taka sama wysokość jak w komponencie!
 });
+const CallToAction = dynamic(() => import('@/components/sections/CallToAction').then(mod => mod.CallToAction), {
+  loading: () => <SectionLoader height="h-[350vh]" /> // Ważne: Taka sama wysokość jak w komponencie!
+});
 
 // 3. Process - ciężka sekcja (Sticky Scroll)
 const Process = dynamic(() => import('@/components/sections/Process').then(mod => mod.Process), {
@@ -59,6 +62,9 @@ export default function Home() {
       </div>
       <div className="render-optimize">
         <Services />
+      </div>
+      <div className="render-optimize">
+       <CallToAction />
       </div>
     </main>
   );

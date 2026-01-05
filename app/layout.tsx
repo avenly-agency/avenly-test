@@ -2,15 +2,14 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
-import { SmoothScrolling } from "@/components/providers/SmoothScrolling"; // IMPORT
-
+import { Footer } from "@/components/layout/Footer"; // <--- NOWY IMPORT
+import { SmoothScrolling } from "@/components/providers/SmoothScrolling";
 
 const inter = Inter({ 
   subsets: ['latin'],
-  display: 'swap', // To jest kluczowe dla Lighthouse!
+  display: 'swap',
   variable: '--font-inter',
 });
-
 
 export const metadata: Metadata = {
   title: "Avenly Agency",
@@ -31,7 +30,13 @@ export default function RootLayout({
         {/* WRAPPER LENIS - CAŁA STRONA PŁYWA */}
         <SmoothScrolling>
             <Navbar />
-            {children}
+            
+            {/* Main wrapper dla semantyki i struktury */}
+            <main className="relative flex flex-col min-h-screen">
+                {children}
+            </main>
+            
+            <Footer /> {/* <--- STOPKA DODANA TUTAJ */}
         </SmoothScrolling>
       </body>
     </html>
