@@ -60,6 +60,14 @@ export const Services = () => {
 
   const activeContent = servicesData.find(s => s.id === activeTab);
 
+  // Konfiguracja animacji wejścia
+  const fadeInUp = {
+    initial: { opacity: 0, y: 30 },
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true, margin: "-50px" },
+    transition: { duration: 0.6, ease: "easeOut" }
+  };
+
   return (
     <section className="relative w-full py-20 md:py-24 bg-[#050505] overflow-hidden" id="uslugi">
       
@@ -69,17 +77,24 @@ export const Services = () => {
       <div className="container mx-auto px-6 relative z-10">
         
         {/* NAGŁÓWEK (H2) */}
-        <div className="mb-12 md:mb-20 max-w-2xl">
+        <motion.div 
+            {...fadeInUp}
+            className="mb-12 md:mb-20 max-w-2xl"
+        >
             <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tight mb-6">
                 Nasze <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">Usługi</span>
             </h2>
             <p className="text-slate-400 text-lg leading-relaxed">
                 Kompleksowe podejście. Od pierwszej linii kodu, przez design, aż po automatyzację procesów. Nie szukaj trzech agencji, wystarczy jedna dobra.
             </p>
-        </div>
+        </motion.div>
 
-        {/* --- DESKTOP (STANDARDOWY ROZMIAR) --- */}
-        <div className="hidden lg:flex flex-row gap-20 min-h-[500px]">
+        {/* --- DESKTOP --- */}
+        <motion.div 
+            {...fadeInUp}
+            transition={{ ...fadeInUp.transition, delay: 0.2 }} 
+            className="hidden lg:flex flex-row gap-20 min-h-[500px]"
+        >
             
             {/* LEWA STRONA: NAWIGACJA */}
             <div className="w-1/3 flex flex-col gap-2">
@@ -87,7 +102,8 @@ export const Services = () => {
                     <button
                         key={service.id}
                         onClick={() => setActiveTab(service.id)}
-                        className={`group relative flex items-center justify-between p-6 text-left rounded-2xl transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                        // FIX: Added !cursor-pointer here just in case
+                        className={`group relative flex items-center justify-between p-6 text-left rounded-2xl transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-blue-500 !cursor-pointer ${
                             activeTab === service.id 
                                 ? 'bg-white/5 text-white' 
                                 : 'text-slate-500 hover:text-white hover:bg-white/[0.02]'
@@ -123,7 +139,6 @@ export const Services = () => {
                             transition={{ duration: 0.3 }}
                         >
                             <div className="mb-8">
-                                {/* H3 - Poprawna hierarchia na Desktopie (H2 -> H3) */}
                                 <h3 className="text-2xl font-bold text-white mb-2 flex items-center gap-3">
                                     <activeContent.icon className="text-blue-500" size={24} />
                                     {activeContent.label}
@@ -146,7 +161,6 @@ export const Services = () => {
                                             <card.icon size={20} />
                                         </div>
                                         <div>
-                                            {/* H4 - Poprawna hierarchia na Desktopie (H3 -> H4) */}
                                             <h4 className="text-lg font-bold text-white mb-1 group-hover:text-blue-200 transition-colors">
                                                 {card.title}
                                             </h4>
@@ -169,10 +183,14 @@ export const Services = () => {
                     )}
                 </AnimatePresence>
             </div>
-        </div>
+        </motion.div>
 
         {/* --- WERSJA MOBILE (ACCORDION XXL) --- */}
-        <div className="flex flex-col gap-5 lg:hidden">
+        <motion.div 
+            {...fadeInUp}
+            transition={{ ...fadeInUp.transition, delay: 0.2 }}
+            className="flex flex-col gap-5 lg:hidden"
+        >
             {servicesData.map((service) => {
                 const isOpen = activeTab === service.id;
 
@@ -185,8 +203,8 @@ export const Services = () => {
                     >
                         <button
                             onClick={() => toggleMobile(service.id)}
-                            className="w-full flex items-center justify-between p-6 text-left active:bg-white/5 transition-colors"
-                            // Dodajemy aria-expanded dla dostępności
+                            // FIX: Wymuszony pointer (!cursor-pointer), dodany relative i z-10 dla pewności
+                            className="w-full flex items-center justify-between p-6 text-left hover:bg-white/[0.02] active:bg-white/5 transition-colors !cursor-pointer relative z-10"
                             aria-expanded={isOpen}
                         >
                             <div className="flex items-center gap-5">
@@ -222,7 +240,6 @@ export const Services = () => {
                                                         <card.icon size={24} />
                                                     </div>
                                                     <div>
-                                                        {/* NAPRAWA: Zmieniono H4 na H3 dla zachowania ciągłości (H2 -> H3) */}
                                                         <h3 className="text-white font-bold text-lg mb-1">{card.title}</h3>
                                                         <p className="text-slate-500 text-sm leading-relaxed">{card.desc}</p>
                                                     </div>
@@ -241,7 +258,7 @@ export const Services = () => {
                     </div>
                 );
             })}
-        </div>
+        </motion.div>
 
       </div>
     </section>
