@@ -14,7 +14,8 @@ const navLinks = [
   { title: "Kontakt", href: "#kontakt" },
 ];
 
-// WARIANTY ANIMACJI (NAPRAWIONE TYPOWANIE 'as const')
+// WARIANTY ANIMACJI
+// Kluczowe: 'as const' przy tablicach ease naprawia błąd TypeScript
 const menuVars: Variants = {
   initial: {
     scaleY: 0,
@@ -23,8 +24,7 @@ const menuVars: Variants = {
     scaleY: 1,
     transition: {
       duration: 0.5,
-      // FIX: Dodano 'as const', żeby TS wiedział, że to Tuple [n, n, n, n]
-      ease: [0.12, 0, 0.39, 0] as const, 
+      ease: [0.12, 0, 0.39, 0] as const, // FIX: as const
     },
   },
   exit: {
@@ -32,8 +32,7 @@ const menuVars: Variants = {
     transition: {
       delay: 0.5,
       duration: 0.5,
-      // FIX: Dodano 'as const'
-      ease: [0.22, 1, 0.36, 1] as const,
+      ease: [0.22, 1, 0.36, 1] as const, // FIX: as const
     },
   },
 };
@@ -59,15 +58,13 @@ const mobileLinkVars: Variants = {
     y: "30vh",
     transition: {
       duration: 0.5,
-      // FIX: Dodano 'as const'
-      ease: [0.37, 0, 0.63, 1] as const,
+      ease: [0.37, 0, 0.63, 1] as const, // FIX: as const
     },
   },
   open: {
     y: 0,
     transition: {
-      // FIX: Dodano 'as const'
-      ease: [0, 0.55, 0.45, 1] as const,
+      ease: [0, 0.55, 0.45, 1] as const, // FIX: as const
       duration: 0.7,
     },
   },
