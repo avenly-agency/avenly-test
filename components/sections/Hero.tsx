@@ -1,10 +1,8 @@
 'use client';
 
-// ZMIANA 1: Dodajemy 'Variants' do importu
 import { motion, Variants } from 'framer-motion';
 import { ArrowRight, Calendar, MessageSquare, Mail, CheckCircle2, ShieldCheck, Clock } from 'lucide-react';
 
-// ZMIANA 2: Dodajemy typ ': Variants' do stałej
 const blobVariants: Variants = {
   animateLeft: {
     scale: [1, 1.5, 1],
@@ -35,25 +33,35 @@ export const Hero = () => {
   return (
     <section className="relative w-full min-h-[100dvh] flex items-center justify-center overflow-hidden bg-slate-950 text-white selection:bg-blue-500/30 pt-20 lg:pt-0">
       
-      {/* --- TŁO (Zoptymalizowane pod GPU) --- */}
+      {/* --- HYBRYDOWE TŁO --- */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden="true">
-        {/* Lewa kula */}
-        <motion.div 
-          variants={blobVariants}
-          animate="animateLeft"
-          className="absolute top-[-20%] left-[5%] w-[70vw] h-[70vw] md:w-[50vw] md:h-[50vw] bg-blue-600/20 blur-[120px] rounded-full mix-blend-screen will-change-transform transform-gpu" 
-        />
+        
+        {/* WERSJA MOBILE (Statyczna, lekka, bez Framer Motion) */}
+        {/* Używamy mniejszego blura i statycznych pozycji. Przeglądarka renderuje to raz. */}
+        <div className="md:hidden absolute inset-0">
+            <div className="absolute top-0 left-0 w-[80vw] h-[80vw] bg-blue-600/10 blur-[60px] rounded-full mix-blend-screen opacity-30"></div>
+            <div className="absolute bottom-0 right-0 w-[80vw] h-[80vw] bg-indigo-500/10 blur-[60px] rounded-full mix-blend-screen opacity-30"></div>
+        </div>
 
-        {/* Prawa kula */}
-        <motion.div 
-          variants={blobVariants}
-          animate="animateRight"
-          className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] md:w-[55vw] md:h-[55vw] bg-indigo-500/10 blur-[120px] rounded-full mix-blend-screen will-change-transform transform-gpu"
-        />
+        {/* WERSJA DESKTOP (Animowana, ukryta na mobile 'hidden md:block') */}
+        <div className="hidden md:block absolute inset-0">
+            <motion.div 
+            variants={blobVariants}
+            animate="animateLeft"
+            className="absolute top-[-20%] left-[5%] w-[50vw] h-[50vw] bg-blue-600/20 blur-[120px] rounded-full mix-blend-screen will-change-transform transform-gpu" 
+            />
+
+            <motion.div 
+            variants={blobVariants}
+            animate="animateRight"
+            className="absolute bottom-[-20%] right-[-10%] w-[55vw] h-[55vw] bg-indigo-500/10 blur-[120px] rounded-full mix-blend-screen will-change-transform transform-gpu"
+            />
+        </div>
       </div>
 
-      {/* ... RESZTA KODU BEZ ZMIAN ... */}
+      {/* WRAPPER TREŚCI */}
       <div className="w-full max-w-[1800px] px-6 md:px-12 relative z-10 flex flex-col lg:flex-row items-center gap-16 lg:gap-32">
+        
         {/* LEWA STRONA */}
         <div className="flex-1 text-center lg:text-left space-y-10 relative z-20">
           
@@ -118,6 +126,8 @@ export const Hero = () => {
         </div>
 
         {/* PRAWA STRONA */}
+        {/* Na mobile ukrywamy ciężki modal z blurami, lub zostawiamy go statycznego jeśli jest kluczowy */}
+        {/* Zoptymalizowano: hidden na mobile (opcjonalnie), lub zachowanie z mniejszym blurem */}
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -125,7 +135,7 @@ export const Hero = () => {
           className="hidden lg:block flex-1 w-full max-w-[650px] relative perspective-1000"
           aria-hidden="true"
         >
-          {/* Tło za modalem */}
+          {/* Tło za modalem - TYLKO DESKTOP */}
           <motion.div 
              animate={{ scale: [1, 1.05, 1], opacity: [0.5, 0.7, 0.5] }}
              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
