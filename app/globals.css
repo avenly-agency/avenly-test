@@ -123,3 +123,30 @@
     @apply bg-background text-foreground;
   }
 }
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%); /* Przesuwamy o połowę, bo zduplikowaliśmy content */
+  }
+}
+
+.animate-scroll {
+  animation: scroll 40s linear infinite; /* 40s to prędkość - im więcej tym wolniej */
+  will-change: transform;
+}
+
+/* Pauza po najechaniu myszką (opcjonalne - usuń jeśli nie chcesz) */
+.animate-scroll:hover {
+  animation-play-state: paused;
+}
+html.lenis, html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.mh-screen{
+  height: 85vh;
+}

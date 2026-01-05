@@ -8,40 +8,44 @@ export const Hero = () => {
     <section className="relative w-full min-h-[100dvh] flex items-center justify-center overflow-hidden bg-slate-950 text-white selection:bg-blue-500/30 pt-20 lg:pt-0">
       
       {/* TŁO Z ANIMOWANYM GRADIENTEM */}
-      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-        {/* Lewa kula - animacja pulsowania i przesuwania */}
-        <motion.div 
-          animate={{
-            scale: [1, 1.5, 1],
-            opacity: [0.3, 0.5, 0.3],
-            x: [0, 50, 0],
-            y: [0, -30, 0],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-          className="absolute top-[-10%] left-1/4 -translate-x-1/2 w-[60vw] h-[50vh] bg-blue-600/20 blur-[120px] rounded-full mix-blend-screen"
-        ></motion.div>
+    {/* --- TŁO (NAPRAWIONE: STYL HERO NA CZARNYM TLE) --- */}
+                <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                    
+                    {/* Lewa kula - Parametry z Hero (blue-600/20) + dostrojona animacja */}
+                    <motion.div 
+                        animate={{
+                            scale: [1, 1.5, 1],       // Skala jak w Hero
+                            opacity: [0.2, 0.4, 0.2], // Opacity dostosowane do czerni (żeby nie krzyczało)
+                            x: [0, 50, 0],
+                            y: [0, -30, 0],
+                        }}
+                        transition={{
+                            duration: 12,             // Nieco wolniej dla relaksu
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                        }}
+                        // ZMIANA: Dokładnie te same kolory co w Hero: bg-blue-600/20
+                        className="absolute top-[-20%] left-[5%] w-[70vw] h-[70vw] md:w-[50vw] md:h-[50vw] bg-blue-600/20 blur-[120px] rounded-full mix-blend-screen" 
+                    ></motion.div>
 
-        {/* Prawa kula - animacja pulsowania i przesuwania (przesunięcie w fazie) */}
-        <motion.div 
-          animate={{
-            scale: [1, 1.3, 1],
-            opacity: [0.2, 0.6, 0.2],
-            x: [0, -40, 0],
-            y: [0, 40, 0],
-          }}
-          transition={{
-            duration: 10,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 1 // opóźnienie dla asynchronii
-          }}
-          className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vh] bg-indigo-500/10 blur-[100px] rounded-full mix-blend-screen"
-        ></motion.div>
-      </div>
+                    {/* Prawa kula - Parametry z Hero (indigo-500/10) + dostrojona animacja */}
+                    <motion.div 
+                        animate={{
+                            scale: [1, 1.3, 1],       // Skala jak w Hero
+                            opacity: [0.2, 0.5, 0.2], // Opacity dostosowane do czerni
+                            x: [0, -40, 0],
+                            y: [0, 40, 0],
+                        }}
+                        transition={{
+                            duration: 15,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                            delay: 2
+                        }}
+                        // ZMIANA: Dokładnie te same kolory co w Hero: bg-indigo-500/10
+                        className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] md:w-[55vw] md:h-[55vw] bg-indigo-500/10 blur-[120px] rounded-full mix-blend-screen"
+                    ></motion.div>
+                </div>
 
       {/* WRAPPER: ZMIANA NA max-w-[1800px] - szerszy kontener */}
       <div className="w-full max-w-[1800px] px-6 md:px-12 relative z-10 flex flex-col lg:flex-row items-center gap-16 lg:gap-32">

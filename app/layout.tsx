@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "@/components/layout/Navbar"; // Import Navbara
+import { Navbar } from "@/components/layout/Navbar";
+import { SmoothScrolling } from "@/components/providers/SmoothScrolling"; // IMPORT
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,13 +18,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pl" className="dark" suppressHydrationWarning>
-      {/* Dodaj suppressHydrationWarning również do body, jeśli błąd dotyczy body */}
       <body 
-        className={`${inter.className} bg-black text-white antialiased`}
+        className={`${inter.className} bg-[#050505] text-white antialiased`}
         suppressHydrationWarning={true} 
       >
-        <Navbar />
-        {children}
+        {/* WRAPPER LENIS - CAŁA STRONA PŁYWA */}
+        <SmoothScrolling>
+            <Navbar />
+            {children}
+        </SmoothScrolling>
       </body>
     </html>
-  );}
+  );
+}
