@@ -68,7 +68,7 @@ export const Services = () => {
       
       <div className="container mx-auto px-6 relative z-10">
         
-        {/* NAGŁÓWEK */}
+        {/* NAGŁÓWEK (H2) */}
         <div className="mb-12 md:mb-20 max-w-2xl">
             <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tight mb-6">
                 Nasze <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">Usługi</span>
@@ -123,6 +123,7 @@ export const Services = () => {
                             transition={{ duration: 0.3 }}
                         >
                             <div className="mb-8">
+                                {/* H3 - Poprawna hierarchia na Desktopie (H2 -> H3) */}
                                 <h3 className="text-2xl font-bold text-white mb-2 flex items-center gap-3">
                                     <activeContent.icon className="text-blue-500" size={24} />
                                     {activeContent.label}
@@ -145,6 +146,7 @@ export const Services = () => {
                                             <card.icon size={20} />
                                         </div>
                                         <div>
+                                            {/* H4 - Poprawna hierarchia na Desktopie (H3 -> H4) */}
                                             <h4 className="text-lg font-bold text-white mb-1 group-hover:text-blue-200 transition-colors">
                                                 {card.title}
                                             </h4>
@@ -154,7 +156,7 @@ export const Services = () => {
                                         </div>
                                     </motion.div>
                                 ))}
-                                {/* CTA CARD DESKTOP */}
+                                
                                 <div className="p-6 rounded-2xl border border-dashed border-white/10 flex flex-col items-center justify-center text-center gap-3 hover:bg-white/[0.02] transition-colors cursor-pointer group">
                                     <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                                         <ArrowRight size={20} />
@@ -169,7 +171,7 @@ export const Services = () => {
             </div>
         </div>
 
-        {/* --- WERSJA MOBILE (ACCORDION XXL) - ZWIĘKSZONA --- */}
+        {/* --- WERSJA MOBILE (ACCORDION XXL) --- */}
         <div className="flex flex-col gap-5 lg:hidden">
             {servicesData.map((service) => {
                 const isOpen = activeTab === service.id;
@@ -181,10 +183,11 @@ export const Services = () => {
                             isOpen ? 'bg-white/[0.03] border-blue-500/30' : 'bg-[#080808] border-white/10'
                         }`}
                     >
-                        {/* HEADER MOBILE: PADDING 6, IKONA 28, TEKST 2XL */}
                         <button
                             onClick={() => toggleMobile(service.id)}
                             className="w-full flex items-center justify-between p-6 text-left active:bg-white/5 transition-colors"
+                            // Dodajemy aria-expanded dla dostępności
+                            aria-expanded={isOpen}
                         >
                             <div className="flex items-center gap-5">
                                 <div className={`p-3 rounded-xl transition-colors ${isOpen ? 'bg-blue-500/20 text-blue-400' : 'bg-white/5 text-slate-400'}`}>
@@ -199,7 +202,6 @@ export const Services = () => {
                             />
                         </button>
 
-                        {/* TREŚĆ MOBILE */}
                         <AnimatePresence>
                             {isOpen && (
                                 <motion.div
@@ -220,13 +222,13 @@ export const Services = () => {
                                                         <card.icon size={24} />
                                                     </div>
                                                     <div>
-                                                        <h4 className="text-white font-bold text-lg mb-1">{card.title}</h4>
+                                                        {/* NAPRAWA: Zmieniono H4 na H3 dla zachowania ciągłości (H2 -> H3) */}
+                                                        <h3 className="text-white font-bold text-lg mb-1">{card.title}</h3>
                                                         <p className="text-slate-500 text-sm leading-relaxed">{card.desc}</p>
                                                     </div>
                                                 </div>
                                             ))}
                                             
-                                            {/* CTA CARD MOBILE */}
                                             <div className="p-5 rounded-2xl border border-dashed border-white/10 flex items-center justify-center gap-3 text-slate-400">
                                                 <span>Masz inny pomysł?</span>
                                                 <ArrowRight size={18} />
