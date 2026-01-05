@@ -1,11 +1,10 @@
 'use client';
 
-import { useRef, useState, useLayoutEffect } from 'react';
+import { useRef, useState, useEffect, useLayoutEffect } from 'react';
 import { motion, useScroll, useTransform, useSpring, MotionValue, useReducedMotion } from 'framer-motion';
 import { ArrowUpRight, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 
-// --- DANE PROJEKTÓW ---
 const projects = [
   {
     id: 1,
@@ -49,37 +48,50 @@ export const Portfolio = () => {
   const targetRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null); 
   const mobileContainerRef = useRef<HTMLDivElement>(null);
+  
   const [activeIndex, setActiveIndex] = useState(0);
   const [scrollRange, setScrollRange] = useState(0); 
+  const [isDesktop, setIsDesktop] = useState(false);
   
   const shouldReduceMotion = useReducedMotion();
 
   const { scrollYProgress } = useScroll({ target: targetRef });
 
-  // --- NOWOŚĆ: Fizyka (Spring) dla płynności scrolla ---
-  // To eliminuje "klatkowanie" przy scrollowaniu myszką
   const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 90,   // Sprężystość (im mniejsza, tym bardziej "pływa")
-    damping: 20,     // Tłumienie (zapobiega drganiom na końcu)
-    restDelta: 0.001 // Precyzja zatrzymania
+    stiffness: 90,
+    damping: 20,
+    restDelta: 0.001
   });
-  
-  // --- DYNAMICZNE OBLICZANIE SZEROKOŚCI SCROLLA ---
+
+  // --- KROK 1: Sprawdź czy to Desktop (po załadowaniu) ---
+  useEffect(() => {
+    const checkDesktop = () => setIsDesktop(window.innerWidth >= 768);
+    checkDesktop();
+    window.addEventListener('resize', checkDesktop);
+    return () => window.removeEventListener('resize', checkDesktop);
+  }, []);
+
+  // --- KROK 2: Zmierz szerokość DOPIERO gdy isDesktop == true ---
   useLayoutEffect(() => {
+    // Jeśli to nie desktop, lub ref jeszcze nie istnieje, nie mierzymy
+    if (!isDesktop || !scrollContainerRef.current) return;
+
     const updateScrollRange = () => {
         if (scrollContainerRef.current) {
             const scrollWidth = scrollContainerRef.current.scrollWidth;
             const clientWidth = window.innerWidth;
+            // Ustawiamy zakres scrolla
             setScrollRange(scrollWidth - clientWidth);
         }
     };
 
+    // Mierzymy od razu po pojawieniu się elementu
     updateScrollRange();
+
     window.addEventListener('resize', updateScrollRange);
     return () => window.removeEventListener('resize', updateScrollRange);
-  }, []);
+  }, [isDesktop]); // <--- KLUCZOWE: Odpalamy efekt ponownie, gdy zmienia się isDesktop
 
-  // ZMIANA: Używamy 'smoothProgress' zamiast surowego 'scrollYProgress'
   const x = useTransform(smoothProgress, [0, 1], [0, -scrollRange]);
 
   const totalSlides = 1 + projects.length + 1; 
@@ -98,7 +110,7 @@ export const Portfolio = () => {
         
         <section 
             ref={targetRef} 
-            className="relative h-[100vh] md:h-[350vh]" // Wysokość sekcji determinuje prędkość animacji
+            className="relative h-[100vh] md:h-[350vh]" 
             aria-label="Portfolio Realizacji"
         >
         
@@ -109,159 +121,142 @@ export const Portfolio = () => {
 
             <div className="sticky top-0 flex h-screen items-center overflow-hidden w-full bg-[#050505] z-10">
                 
-                {/* --- TŁO --- */}
-                <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden="true">
-                    
+                {/* TŁO AMBIENT (Tylko Desktop) */}
+                {isDesktop && (
+                    <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden="true">
+                        <motion.div 
+                            animate={shouldReduceMotion ? {} : {
+                                scale: [1, 1.5, 1],
+                                opacity: [0.2, 0.4, 0.2],
+                                x: [0, 50, 0],
+                                y: [0, -30, 0],
+                            }}
+                            transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+                            className="absolute top-[-20%] left-[5%] w-[50vw] h-[50vw] bg-blue-600/20 blur-[120px] rounded-full mix-blend-screen will-change-transform" 
+                        ></motion.div>
+                        <motion.div 
+                            animate={shouldReduceMotion ? {} : {
+                                scale: [1, 1.3, 1],
+                                opacity: [0.2, 0.5, 0.2],
+                                x: [0, -40, 0],
+                                y: [0, 40, 0],
+                            }}
+                            transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+                            className="absolute bottom-[-20%] right-[-10%] w-[55vw] h-[55vw] bg-indigo-500/10 blur-[120px] rounded-full mix-blend-screen will-change-transform"
+                        ></motion.div>
+                    </div>
+                )}
+
+                {/* TRACK DESKTOP */}
+                {isDesktop ? (
                     <motion.div 
-                        animate={shouldReduceMotion ? {} : {
-                            scale: [1, 1.5, 1],
-                            opacity: [0.2, 0.4, 0.2],
-                            x: [0, 50, 0],
-                            y: [0, -30, 0],
-                        }}
-                        transition={{
-                            duration: 12,
-                            repeat: Infinity,
-                            ease: "easeInOut"
-                        }}
-                        className="absolute top-[-20%] left-[5%] w-[70vw] h-[70vw] md:w-[50vw] md:h-[50vw] bg-blue-600/20 blur-[120px] rounded-full mix-blend-screen will-change-transform" 
-                    ></motion.div>
-
-                    <motion.div 
-                        animate={shouldReduceMotion ? {} : {
-                            scale: [1, 1.3, 1],
-                            opacity: [0.2, 0.5, 0.2],
-                            x: [0, -40, 0],
-                            y: [0, 40, 0],
-                        }}
-                        transition={{
-                            duration: 15,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                            delay: 2
-                        }}
-                        className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] md:w-[55vw] md:h-[55vw] bg-indigo-500/10 blur-[120px] rounded-full mix-blend-screen will-change-transform"
-                    ></motion.div>
-                </div>
-
-
-                {/* --- TRACK (DESKTOP/TABLET) --- */}
-                <motion.div 
-                    ref={scrollContainerRef}
-                    style={{ x }} 
-                    // Dodano will-change-transform dla lepszej wydajności renderowania
-                    className="hidden md:flex gap-12 md:gap-16 items-center w-max h-full pl-[calc(50vw-225px)] pr-[calc(50vw-175px)] relative z-10 will-change-transform"
-                >
-                    {/* 1. KARTA TYTUŁOWA */}
-                    {/* ZMIANA: Przekazujemy smoothProgress zamiast scrollYProgress */}
-                    <FocusCard index={0} total={totalSlides} progress={smoothProgress} reduceMotion={shouldReduceMotion}>
-                        <div className="shrink-0 w-[450px] h-[550px] flex flex-col justify-center p-12">
-                            <div className="flex items-center gap-4 mb-8">
-                                <span className="w-12 h-[2px] bg-blue-500" aria-hidden="true"></span>
-                                <span className="text-blue-500 font-mono text-sm tracking-widest uppercase">Portfolio 2024</span>
+                        ref={scrollContainerRef}
+                        style={{ x }} 
+                        className="hidden md:flex gap-12 md:gap-16 items-center w-max h-full pl-[calc(50vw-225px)] pr-[calc(50vw-175px)] relative z-10 will-change-transform"
+                    >
+                        {/* Karta Tytułowa */}
+                        <FocusCard index={0} total={totalSlides} progress={smoothProgress} reduceMotion={shouldReduceMotion}>
+                            <div className="shrink-0 w-[450px] h-[550px] flex flex-col justify-center p-12">
+                                <div className="flex items-center gap-4 mb-8">
+                                    <span className="w-12 h-[2px] bg-blue-500" aria-hidden="true"></span>
+                                    <span className="text-blue-500 font-mono text-sm tracking-widest uppercase">Portfolio 2024</span>
+                                </div>
+                                <h2 className="text-7xl font-bold text-white tracking-tighter leading-[0.9] mb-8">
+                                Wybrane <br />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">
+                                    Realizacje
+                                </span>
+                                </h2>
+                                <p className="text-slate-400 text-lg max-w-xs leading-relaxed">
+                                Projekty, które definiują jakość. Od stron WWW po zaawansowane systemy AI.
+                                </p>
                             </div>
-                            <h2 className="text-7xl font-bold text-white tracking-tighter leading-[0.9] mb-8">
+                        </FocusCard>
+
+                        {/* Projekty */}
+                        {projects.map((project, i) => (
+                            <FocusCard key={project.id} index={i + 1} total={totalSlides} progress={smoothProgress} reduceMotion={shouldReduceMotion}>
+                                <RevealCard delay={i * 0.2} reduceMotion={shouldReduceMotion}>
+                                    <Card project={project} />
+                                </RevealCard>
+                            </FocusCard>
+                        ))}
+                        
+                        {/* CTA */}
+                        <FocusCard index={totalSlides - 1} total={totalSlides} progress={smoothProgress} reduceMotion={shouldReduceMotion}>
+                            <RevealCard delay={projects.length * 0.2} reduceMotion={shouldReduceMotion}>
+                                <div className="relative h-[450px] w-[350px] flex items-center justify-center shrink-0 rounded-3xl border border-white/5 bg-white/[0.02] cursor-default transition-all group backdrop-blur-sm overflow-hidden">
+                                    <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 to-indigo-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true"></div>
+                                    <div className="text-center p-8 relative z-10 flex flex-col items-center">
+                                        <h3 className="text-3xl font-bold text-white mb-2 group-hover:scale-105 transition-transform duration-500">Twój Projekt?</h3>
+                                        <div className="h-[1px] w-12 bg-blue-500/50 mx-auto my-6 group-hover:w-24 transition-all" aria-hidden="true"></div>
+                                        <p className="text-slate-400 text-sm mb-8">Dołącz do liderów rynku i wyskaluj swój biznes.</p>
+                                        <button className="px-8 py-4 bg-white text-black font-bold rounded-xl hover:bg-blue-50 hover:scale-105 transition-all shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] flex items-center gap-2 group/btn cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none">
+                                                Rozpocznij
+                                                <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" aria-hidden="true" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </RevealCard>
+                        </FocusCard>
+                    </motion.div>
+                ) : (
+                    // MOBILE VIEW
+                    <div className="md:hidden absolute inset-0 w-full h-full flex flex-col justify-center relative z-10">
+                         <div className="container mx-auto px-6 mb-4">
+                            <h2 className="text-5xl font-bold text-white tracking-tighter leading-none mb-2">
                             Wybrane <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">
                                 Realizacje
                             </span>
                             </h2>
-                            <p className="text-slate-400 text-lg max-w-xs leading-relaxed">
-                            Projekty, które definiują jakość. Od stron WWW po zaawansowane systemy AI.
-                            </p>
-                        </div>
-                    </FocusCard>
+                            <p className="text-slate-400 text-xs">Przesuń, aby zobaczyć.</p>
+                         </div>
 
-                    {/* 2. KARTY PROJEKTÓW */}
-                    {projects.map((project, i) => (
-                        <FocusCard key={project.id} index={i + 1} total={totalSlides} progress={smoothProgress} reduceMotion={shouldReduceMotion}>
-                            <RevealCard delay={i * 0.2} reduceMotion={shouldReduceMotion}>
-                                <Card project={project} />
-                            </RevealCard>
-                        </FocusCard>
-                    ))}
-                    
-                    {/* 3. CTA CARD */}
-                    <FocusCard index={totalSlides - 1} total={totalSlides} progress={smoothProgress} reduceMotion={shouldReduceMotion}>
-                        <RevealCard delay={projects.length * 0.2} reduceMotion={shouldReduceMotion}>
-                            <div className="relative h-[450px] w-[350px] flex items-center justify-center shrink-0 rounded-3xl border border-white/5 bg-white/[0.02] cursor-default transition-all group backdrop-blur-sm overflow-hidden">
-                                <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 to-indigo-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true"></div>
-                                
-                                <div className="text-center p-8 relative z-10 flex flex-col items-center">
-                                    <h3 className="text-3xl font-bold text-white mb-2 group-hover:scale-105 transition-transform duration-500">Twój Projekt?</h3>
-                                    <div className="h-[1px] w-12 bg-blue-500/50 mx-auto my-6 group-hover:w-24 transition-all" aria-hidden="true"></div>
-                                    <p className="text-slate-400 text-sm mb-8">Dołącz do liderów rynku i wyskaluj swój biznes.</p>
-                                    
-                                    <button className="px-8 py-4 bg-white text-black font-bold rounded-xl hover:bg-blue-50 hover:scale-105 transition-all shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] flex items-center gap-2 group/btn cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none">
-                                            Rozpocznij
-                                            <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" aria-hidden="true" />
+                        <div 
+                            ref={mobileContainerRef}
+                            onScroll={handleMobileScroll}
+                            className="flex items-center overflow-x-auto gap-4 px-6 snap-x snap-mandatory scrollbar-hide pb-8"
+                        >
+                            {projects.map((project) => (
+                                <div key={project.id} className="snap-center shrink-0">
+                                    <Card project={project} />
+                                </div>
+                            ))}
+                            
+                            <div className="snap-center shrink-0 h-[400px] w-[300px] flex items-center justify-center rounded-3xl border border-white/10 bg-white/[0.02]">
+                                <div className="text-center p-6 flex flex-col items-center">
+                                    <h3 className="text-xl font-bold text-white mb-4">Twój Projekt?</h3>
+                                    <button className="px-6 py-3 bg-white text-black text-sm font-bold rounded-lg hover:bg-blue-50 transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none">
+                                        Działajmy
                                     </button>
                                 </div>
                             </div>
-                        </RevealCard>
-                    </FocusCard>
-                </motion.div>
-
-
-                {/* --- MOBILE (SWIPE) - BEZ ZMIAN --- */}
-                <div 
-                    ref={mobileContainerRef}
-                    onScroll={handleMobileScroll}
-                    className="md:hidden absolute bottom-0 left-0 w-full h-full flex items-center overflow-x-auto gap-3 px-6 snap-x snap-mandatory scrollbar-hide relative z-10"
-                >
-                    <div className="shrink-0 w-[calc(50vw-160px-12px)]" />
-
-                    <div className="snap-center shrink-0 w-[320px] h-[450px] flex flex-col justify-center p-4">
-                         <h2 className="text-5xl font-bold text-white tracking-tighter leading-none mb-4">
-                           Wybrane <br />
-                           <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">
-                               Realizacje
-                           </span>
-                         </h2>
-                         <div className="w-12 h-[2px] bg-blue-500 mb-4" aria-hidden="true"></div>
-                         <p className="text-slate-400 text-sm">Przesuń, aby zobaczyć.</p>
-                    </div>
-                    
-                    {projects.map((project) => (
-                        <div key={project.id} className="snap-center shrink-0">
-                            <Card project={project} />
+                            <div className="shrink-0 w-6" />
                         </div>
-                    ))}
-                    
-                    {/* CTA Mobile */}
-                    <div className="snap-center shrink-0 h-[400px] w-[300px] flex items-center justify-center rounded-3xl border border-white/10 bg-white/[0.02]">
-                        <div className="text-center p-6 flex flex-col items-center">
-                            <h3 className="text-xl font-bold text-white mb-4">Twój Projekt?</h3>
-                            <button className="px-6 py-3 bg-white text-black text-sm font-bold rounded-lg hover:bg-blue-50 transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none">
-                                Działajmy
-                            </button>
+                        
+                         <div className="flex justify-center items-center gap-2 mt-2 pointer-events-none" aria-hidden="true">
+                            {Array.from({ length: totalSlides }).map((_, index) => (
+                                <div 
+                                    key={index}
+                                    className={`h-1 rounded-full transition-all duration-300 ${
+                                        activeIndex === index 
+                                            ? 'w-4 bg-blue-500' 
+                                            : 'w-1 bg-slate-700'
+                                    }`}
+                                />
+                            ))}
                         </div>
                     </div>
-                    
-                    <div className="shrink-0 w-[calc(50vw-160px-12px)]" />
-                </div>
-
-                {/* --- NAWIGACJA MOBILE --- */}
-                <div className="md:hidden absolute bottom-8 left-0 w-full flex justify-center items-center gap-2 z-20 pointer-events-none" aria-hidden="true">
-                    {Array.from({ length: totalSlides }).map((_, index) => (
-                        <div 
-                            key={index}
-                            className={`h-1.5 rounded-full transition-all duration-300 ${
-                                activeIndex === index 
-                                    ? 'w-6 bg-blue-500' 
-                                    : 'w-1.5 bg-slate-700'
-                            }`}
-                        />
-                    ))}
-                </div>
-
+                )}
             </div>
         </section>
     </div>
   );
 };
 
-// --- ANIMACJA WEJŚCIA "ODBLOKOWANIE" ---
+// ... POZOSTAŁE KOMPONENTY (Card, RevealCard, FocusCard) BEZ ZMIAN ...
+// Upewnij się, że są one tutaj wklejone (tak jak poprzednio)
 const RevealCard = ({ children, delay, reduceMotion }: { children: React.ReactNode, delay: number, reduceMotion: boolean | null }) => {
     return (
         <motion.div
@@ -287,7 +282,6 @@ const RevealCard = ({ children, delay, reduceMotion }: { children: React.ReactNo
     );
 };
 
-// --- LOCKED CHARACTER EFFECT (Scroll Focus) ---
 const FocusCard = ({ children, index, total, progress, reduceMotion }: { children: React.ReactNode, index: number, total: number, progress: MotionValue<number>, reduceMotion: boolean | null }) => {
     const step = 1 / (total - 1);
     const target = index * step;
@@ -307,7 +301,6 @@ const FocusCard = ({ children, index, total, progress, reduceMotion }: { childre
     );
 };
 
-// --- KARTA PROJEKTU ---
 const Card = ({ project }: { project: any }) => {
   return (
     <div className="group relative h-[450px] w-[320px] md:h-[550px] md:w-[450px] overflow-hidden rounded-3xl bg-[#080808] border border-white/5 shrink-0 cursor-pointer transition-all duration-500 hover:border-blue-500/40 hover:shadow-[0_0_40px_-10px_rgba(37,99,235,0.2)]">
