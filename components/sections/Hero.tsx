@@ -1,55 +1,59 @@
 'use client';
 
-import { motion } from 'framer-motion';
+// ZMIANA 1: Dodajemy 'Variants' do importu
+import { motion, Variants } from 'framer-motion';
 import { ArrowRight, Calendar, MessageSquare, Mail, CheckCircle2, ShieldCheck, Clock } from 'lucide-react';
+
+// ZMIANA 2: Dodajemy typ ': Variants' do stałej
+const blobVariants: Variants = {
+  animateLeft: {
+    scale: [1, 1.5, 1],
+    opacity: [0.2, 0.4, 0.2],
+    x: [0, 50, 0],
+    y: [0, -30, 0],
+    transition: {
+      duration: 12,
+      repeat: Infinity,
+      ease: "easeInOut"
+    }
+  },
+  animateRight: {
+    scale: [1, 1.3, 1],
+    opacity: [0.2, 0.5, 0.2],
+    x: [0, -40, 0],
+    y: [0, 40, 0],
+    transition: {
+      duration: 15,
+      repeat: Infinity,
+      ease: "easeInOut",
+      delay: 2
+    }
+  }
+};
 
 export const Hero = () => {
   return (
     <section className="relative w-full min-h-[100dvh] flex items-center justify-center overflow-hidden bg-slate-950 text-white selection:bg-blue-500/30 pt-20 lg:pt-0">
       
-      {/* TŁO Z ANIMOWANYM GRADIENTEM */}
-    {/* --- TŁO (NAPRAWIONE: STYL HERO NA CZARNYM TLE) --- */}
-                <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-                    
-                    {/* Lewa kula - Parametry z Hero (blue-600/20) + dostrojona animacja */}
-                    <motion.div 
-                        animate={{
-                            scale: [1, 1.5, 1],       // Skala jak w Hero
-                            opacity: [0.2, 0.4, 0.2], // Opacity dostosowane do czerni (żeby nie krzyczało)
-                            x: [0, 50, 0],
-                            y: [0, -30, 0],
-                        }}
-                        transition={{
-                            duration: 12,             // Nieco wolniej dla relaksu
-                            repeat: Infinity,
-                            ease: "easeInOut"
-                        }}
-                        // ZMIANA: Dokładnie te same kolory co w Hero: bg-blue-600/20
-                        className="absolute top-[-20%] left-[5%] w-[70vw] h-[70vw] md:w-[50vw] md:h-[50vw] bg-blue-600/20 blur-[120px] rounded-full mix-blend-screen" 
-                    ></motion.div>
+      {/* --- TŁO (Zoptymalizowane pod GPU) --- */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden="true">
+        {/* Lewa kula */}
+        <motion.div 
+          variants={blobVariants}
+          animate="animateLeft"
+          className="absolute top-[-20%] left-[5%] w-[70vw] h-[70vw] md:w-[50vw] md:h-[50vw] bg-blue-600/20 blur-[120px] rounded-full mix-blend-screen will-change-transform transform-gpu" 
+        />
 
-                    {/* Prawa kula - Parametry z Hero (indigo-500/10) + dostrojona animacja */}
-                    <motion.div 
-                        animate={{
-                            scale: [1, 1.3, 1],       // Skala jak w Hero
-                            opacity: [0.2, 0.5, 0.2], // Opacity dostosowane do czerni
-                            x: [0, -40, 0],
-                            y: [0, 40, 0],
-                        }}
-                        transition={{
-                            duration: 15,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                            delay: 2
-                        }}
-                        // ZMIANA: Dokładnie te same kolory co w Hero: bg-indigo-500/10
-                        className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] md:w-[55vw] md:h-[55vw] bg-indigo-500/10 blur-[120px] rounded-full mix-blend-screen"
-                    ></motion.div>
-                </div>
+        {/* Prawa kula */}
+        <motion.div 
+          variants={blobVariants}
+          animate="animateRight"
+          className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] md:w-[55vw] md:h-[55vw] bg-indigo-500/10 blur-[120px] rounded-full mix-blend-screen will-change-transform transform-gpu"
+        />
+      </div>
 
-      {/* WRAPPER: ZMIANA NA max-w-[1800px] - szerszy kontener */}
+      {/* ... RESZTA KODU BEZ ZMIAN ... */}
       <div className="w-full max-w-[1800px] px-6 md:px-12 relative z-10 flex flex-col lg:flex-row items-center gap-16 lg:gap-32">
-        
         {/* LEWA STRONA */}
         <div className="flex-1 text-center lg:text-left space-y-10 relative z-20">
           
@@ -94,32 +98,39 @@ export const Hero = () => {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="flex flex-col sm:flex-row gap-5 justify-center lg:justify-start pt-6"
           >
-            <button className="relative overflow-hidden group px-10 py-5 bg-white text-slate-950 font-bold rounded-xl transition-all hover:shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] cursor-pointer hover:scale-[1.02] active:scale-[0.98] w-full sm:w-auto text-base">
+            <button 
+              type="button"
+              className="relative overflow-hidden group px-10 py-5 bg-white text-slate-950 font-bold rounded-xl transition-all hover:shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] cursor-pointer hover:scale-[1.02] active:scale-[0.98] w-full sm:w-auto text-base"
+            >
               <span className="relative flex items-center justify-center gap-2">
                 Rozwiń Biznes
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </span>
             </button>
             
-            <button className="group px-10 py-5 bg-transparent border border-slate-700 text-slate-300 font-medium rounded-xl hover:border-blue-500/50 hover:bg-slate-900/50 hover:text-white transition-all cursor-pointer backdrop-blur-sm w-full sm:w-auto flex items-center justify-center text-base">
+            <button 
+              type="button"
+              className="group px-10 py-5 bg-transparent border border-slate-700 text-slate-300 font-medium rounded-xl hover:border-blue-500/50 hover:bg-slate-900/50 hover:text-white transition-all cursor-pointer backdrop-blur-sm w-full sm:w-auto flex items-center justify-center text-base"
+            >
               Jak To Działa?
             </button>
           </motion.div>
         </div>
 
-        {/* PRAWA STRONA: MODAL */}
+        {/* PRAWA STRONA */}
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.2 }}
           className="hidden lg:block flex-1 w-full max-w-[650px] relative perspective-1000"
+          aria-hidden="true"
         >
-          {/* TŁO ZA MODALEM TEŻ MOŻE MIEĆ DELIKATNĄ ANIMACJĘ JEŚLI CHCESZ */}
+          {/* Tło za modalem */}
           <motion.div 
              animate={{ scale: [1, 1.05, 1], opacity: [0.5, 0.7, 0.5] }}
              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-blue-600/10 blur-[80px] -z-10 rounded-full"
-          ></motion.div>
+             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-blue-600/10 blur-[80px] -z-10 rounded-full will-change-transform"
+          />
 
           <div className="relative bg-slate-950/80 border border-slate-800 rounded-3xl p-8 backdrop-blur-xl shadow-2xl z-10 ring-1 ring-white/5 overflow-hidden">
             
@@ -136,7 +147,6 @@ export const Hero = () => {
             </div>
 
             <div className="space-y-5 relative">
-              {/* ITEM 1 */}
               <div className="flex items-center gap-5 p-4 rounded-2xl bg-slate-900/50 border border-slate-800 hover:bg-slate-900 hover:border-blue-500/30 transition-all group cursor-default">
                 <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors shrink-0 z-10 ring-4 ring-slate-950">
                   <Mail size={22} />
@@ -150,7 +160,6 @@ export const Hero = () => {
                 </div>
               </div>
 
-              {/* ITEM 2 */}
               <div className="flex items-center gap-5 p-4 rounded-2xl bg-slate-900/50 border border-slate-800 hover:bg-slate-900 hover:border-emerald-500/30 transition-all group cursor-default">
                 <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors shrink-0 z-10 ring-4 ring-slate-950">
                   <Calendar size={22} />
@@ -166,7 +175,6 @@ export const Hero = () => {
                 </div>
               </div>
 
-              {/* ITEM 3 */}
               <div className="flex items-center gap-5 p-4 rounded-2xl bg-slate-900/50 border border-slate-800 hover:bg-slate-900 hover:border-purple-500/30 transition-all group cursor-default">
                 <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-colors shrink-0 z-10 ring-4 ring-slate-950">
                   <MessageSquare size={22} />
