@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, ArrowRight, Github, Twitter, Linkedin } from 'lucide-react';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
+import { ArrowRight, Github, Twitter, Linkedin } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
@@ -14,8 +14,8 @@ const navLinks = [
   { title: "Kontakt", href: "#kontakt" },
 ];
 
-// WARIANTY ANIMACJI
-const menuVars = {
+// --- WARIANTY ANIMACJI (NAPRAWIONE TYPOWANIE) ---
+const menuVars: Variants = {
   initial: {
     scaleY: 0,
   },
@@ -23,7 +23,7 @@ const menuVars = {
     scaleY: 1,
     transition: {
       duration: 0.5,
-      ease: [0.12, 0, 0.39, 0],
+      ease: [0.12, 0, 0.39, 0] as const, // FIX: as const naprawia błąd TypeScript
     },
   },
   exit: {
@@ -31,12 +31,12 @@ const menuVars = {
     transition: {
       delay: 0.5,
       duration: 0.5,
-      ease: [0.22, 1, 0.36, 1],
+      ease: [0.22, 1, 0.36, 1] as const, // FIX: as const
     },
   },
 };
 
-const containerVars = {
+const containerVars: Variants = {
   initial: {
     transition: {
       staggerChildren: 0.09,
@@ -52,18 +52,18 @@ const containerVars = {
   },
 };
 
-const mobileLinkVars = {
+const mobileLinkVars: Variants = {
   initial: {
     y: "30vh",
     transition: {
       duration: 0.5,
-      ease: [0.37, 0, 0.63, 1],
+      ease: [0.37, 0, 0.63, 1] as const, // FIX: as const
     },
   },
   open: {
     y: 0,
     transition: {
-      ease: [0, 0.55, 0.45, 1],
+      ease: [0, 0.55, 0.45, 1] as const, // FIX: as const
       duration: 0.7,
     },
   },
@@ -77,10 +77,10 @@ export const Navbar = () => {
   const lastScrollY = useRef(0);
   const scrollDownAccumulator = useRef(0);
 
+  // Scroll Handler
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      
       setIsScrolled(currentScrollY > 20);
 
       const deltaY = currentScrollY - lastScrollY.current;
@@ -88,20 +88,13 @@ export const Navbar = () => {
       if (currentScrollY <= 0) {
         setIsVisible(true);
         scrollDownAccumulator.current = 0;
-      } 
-      else if (deltaY > 0) {
-        // Scroll w dół
+      } else if (deltaY > 0) {
         scrollDownAccumulator.current += deltaY;
-        if (scrollDownAccumulator.current > 400) { 
-          setIsVisible(false);
-        }
-      } 
-      else if (deltaY < 0) {
-        // Scroll w górę
+        if (scrollDownAccumulator.current > 400) setIsVisible(false);
+      } else if (deltaY < 0) {
         scrollDownAccumulator.current = 0;
         setIsVisible(true);
       }
-
       lastScrollY.current = currentScrollY;
     };
 
@@ -109,7 +102,7 @@ export const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Blokada scrollowania body gdy menu jest otwarte
+  // Body Lock
   useEffect(() => {
     if (isMobileMenuOpen) {
       document.body.style.overflow = 'hidden';
@@ -191,7 +184,7 @@ export const Navbar = () => {
         {isMobileMenuOpen && (
           <motion.div
             key="mobile-menu"
-            variants={menuVars as any} // FIX: Dodano as any
+            variants={menuVars} // Już nie potrzebujemy 'as any' dzięki poprawce wyżej
             initial="initial"
             animate="animate"
             exit="exit"
@@ -202,7 +195,7 @@ export const Navbar = () => {
 
             <div className="flex flex-col h-full container mx-auto px-6 pb-10 pt-32">
               
-              {/* LINKI */}
+              {/* LINKI - KASKADA */}
               <motion.div 
                 variants={containerVars}
                 initial="initial"
@@ -212,7 +205,7 @@ export const Navbar = () => {
               >
                 {navLinks.map((link, index) => (
                   <div key={index} className="overflow-hidden">
-                    <motion.div variants={mobileLinkVars as any}> {/* FIX: Dodano as any */}
+                    <motion.div variants={mobileLinkVars}>
                         <Link 
                             href={link.href}
                             onClick={() => setIsMobileMenuOpen(false)}
@@ -226,7 +219,7 @@ export const Navbar = () => {
                 ))}
               </motion.div>
 
-              {/* FOOTER W MENU */}
+              {/* FOOTER W MENU (Social + CTA) */}
               <motion.div 
                  initial={{ opacity: 0, y: 20 }}
                  animate={{ opacity: 1, y: 0, transition: { delay: 0.5 } }}
