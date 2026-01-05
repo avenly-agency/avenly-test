@@ -1,9 +1,10 @@
 'use client';
 
 import { useRef, useState, useLayoutEffect } from 'react';
-import { motion, useScroll, useTransform, MotionValue, useReducedMotion } from 'framer-motion';
+import { motion, useScroll, useTransform, useSpring, MotionValue, useReducedMotion } from 'framer-motion';
 import { ArrowUpRight, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
+
 // --- DANE PROJEKTÓW ---
 const projects = [
   {
@@ -46,38 +47,40 @@ const projects = [
 
 export const Portfolio = () => {
   const targetRef = useRef<HTMLDivElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null); // Ref do poziomego kontenera
+  const scrollContainerRef = useRef<HTMLDivElement>(null); 
   const mobileContainerRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [scrollRange, setScrollRange] = useState(0); // Przechowuje obliczoną długość scrolla
+  const [scrollRange, setScrollRange] = useState(0); 
   
   const shouldReduceMotion = useReducedMotion();
 
   const { scrollYProgress } = useScroll({ target: targetRef });
+
+  // --- NOWOŚĆ: Fizyka (Spring) dla płynności scrolla ---
+  // To eliminuje "klatkowanie" przy scrollowaniu myszką
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 90,   // Sprężystość (im mniejsza, tym bardziej "pływa")
+    damping: 20,     // Tłumienie (zapobiega drganiom na końcu)
+    restDelta: 0.001 // Precyzja zatrzymania
+  });
   
   // --- DYNAMICZNE OBLICZANIE SZEROKOŚCI SCROLLA ---
   useLayoutEffect(() => {
-    // Funkcja mierząca zawartość
     const updateScrollRange = () => {
         if (scrollContainerRef.current) {
             const scrollWidth = scrollContainerRef.current.scrollWidth;
             const clientWidth = window.innerWidth;
-            // Scrollujemy o tyle, ile wynosi szerokość zawartości minus szerokość ekranu
-            // Dzięki prawidłowemu padding-right, "koniec" scrolla wypadnie idealnie na środku CTA
             setScrollRange(scrollWidth - clientWidth);
         }
     };
 
-    // Odpalamy na starcie
     updateScrollRange();
-
-    // I przy każdej zmianie rozmiaru okna (np. obracanie tabletu, zmiana wielkości okna na laptopie)
     window.addEventListener('resize', updateScrollRange);
     return () => window.removeEventListener('resize', updateScrollRange);
-  }, []); // Pusta tablica zależności, bo refs są stabilne
+  }, []);
 
-  // Zamiast procentów, używamy teraz konkretnych pikseli obliczonych dynamicznie
-  const x = useTransform(scrollYProgress, [0, 1], [0, -scrollRange]);
+  // ZMIANA: Używamy 'smoothProgress' zamiast surowego 'scrollYProgress'
+  const x = useTransform(smoothProgress, [0, 1], [0, -scrollRange]);
 
   const totalSlides = 1 + projects.length + 1; 
 
@@ -95,7 +98,7 @@ export const Portfolio = () => {
         
         <section 
             ref={targetRef} 
-            className="relative h-[100vh] md:h-[350vh]"
+            className="relative h-[100vh] md:h-[350vh]" // Wysokość sekcji determinuje prędkość animacji
             aria-label="Portfolio Realizacji"
         >
         
@@ -121,7 +124,7 @@ export const Portfolio = () => {
                             repeat: Infinity,
                             ease: "easeInOut"
                         }}
-                        className="absolute top-[-20%] left-[5%] w-[70vw] h-[70vw] md:w-[50vw] md:h-[50vw] bg-blue-600/20 blur-[120px] rounded-full mix-blend-screen" 
+                        className="absolute top-[-20%] left-[5%] w-[70vw] h-[70vw] md:w-[50vw] md:h-[50vw] bg-blue-600/20 blur-[120px] rounded-full mix-blend-screen will-change-transform" 
                     ></motion.div>
 
                     <motion.div 
@@ -137,22 +140,21 @@ export const Portfolio = () => {
                             ease: "easeInOut",
                             delay: 2
                         }}
-                        className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] md:w-[55vw] md:h-[55vw] bg-indigo-500/10 blur-[120px] rounded-full mix-blend-screen"
+                        className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] md:w-[55vw] md:h-[55vw] bg-indigo-500/10 blur-[120px] rounded-full mix-blend-screen will-change-transform"
                     ></motion.div>
                 </div>
 
 
                 {/* --- TRACK (DESKTOP/TABLET) --- */}
                 <motion.div 
-                    ref={scrollContainerRef} // Dodajemy REF do pomiaru
+                    ref={scrollContainerRef}
                     style={{ x }} 
-                    // ZMIANA: Dodano pr-[calc(50vw-175px)]. 
-                    // 350px (szerokość CTA) / 2 = 175px. 
-                    // To sprawia, że koniec kontenera wypada idealnie w miejscu, gdzie środek CTA jest na środku ekranu.
-                    className="hidden md:flex gap-12 md:gap-16 items-center w-max h-full pl-[calc(50vw-225px)] pr-[calc(50vw-175px)] relative z-10"
+                    // Dodano will-change-transform dla lepszej wydajności renderowania
+                    className="hidden md:flex gap-12 md:gap-16 items-center w-max h-full pl-[calc(50vw-225px)] pr-[calc(50vw-175px)] relative z-10 will-change-transform"
                 >
                     {/* 1. KARTA TYTUŁOWA */}
-                    <FocusCard index={0} total={totalSlides} progress={scrollYProgress} reduceMotion={shouldReduceMotion}>
+                    {/* ZMIANA: Przekazujemy smoothProgress zamiast scrollYProgress */}
+                    <FocusCard index={0} total={totalSlides} progress={smoothProgress} reduceMotion={shouldReduceMotion}>
                         <div className="shrink-0 w-[450px] h-[550px] flex flex-col justify-center p-12">
                             <div className="flex items-center gap-4 mb-8">
                                 <span className="w-12 h-[2px] bg-blue-500" aria-hidden="true"></span>
@@ -172,7 +174,7 @@ export const Portfolio = () => {
 
                     {/* 2. KARTY PROJEKTÓW */}
                     {projects.map((project, i) => (
-                        <FocusCard key={project.id} index={i + 1} total={totalSlides} progress={scrollYProgress} reduceMotion={shouldReduceMotion}>
+                        <FocusCard key={project.id} index={i + 1} total={totalSlides} progress={smoothProgress} reduceMotion={shouldReduceMotion}>
                             <RevealCard delay={i * 0.2} reduceMotion={shouldReduceMotion}>
                                 <Card project={project} />
                             </RevealCard>
@@ -180,7 +182,7 @@ export const Portfolio = () => {
                     ))}
                     
                     {/* 3. CTA CARD */}
-                    <FocusCard index={totalSlides - 1} total={totalSlides} progress={scrollYProgress} reduceMotion={shouldReduceMotion}>
+                    <FocusCard index={totalSlides - 1} total={totalSlides} progress={smoothProgress} reduceMotion={shouldReduceMotion}>
                         <RevealCard delay={projects.length * 0.2} reduceMotion={shouldReduceMotion}>
                             <div className="relative h-[450px] w-[350px] flex items-center justify-center shrink-0 rounded-3xl border border-white/5 bg-white/[0.02] cursor-default transition-all group backdrop-blur-sm overflow-hidden">
                                 <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 to-indigo-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true"></div>
@@ -191,19 +193,17 @@ export const Portfolio = () => {
                                     <p className="text-slate-400 text-sm mb-8">Dołącz do liderów rynku i wyskaluj swój biznes.</p>
                                     
                                     <button className="px-8 py-4 bg-white text-black font-bold rounded-xl hover:bg-blue-50 hover:scale-105 transition-all shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] flex items-center gap-2 group/btn cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none">
-                                        Rozpocznij
-                                        <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" aria-hidden="true" />
+                                            Rozpocznij
+                                            <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" aria-hidden="true" />
                                     </button>
                                 </div>
                             </div>
                         </RevealCard>
                     </FocusCard>
-
-                    {/* USUNIĘTY SPACER 50vw - Teraz padding-right załatwia sprawę */}
                 </motion.div>
 
 
-                {/* --- MOBILE (SWIPE) --- */}
+                {/* --- MOBILE (SWIPE) - BEZ ZMIAN --- */}
                 <div 
                     ref={mobileContainerRef}
                     onScroll={handleMobileScroll}
@@ -261,7 +261,7 @@ export const Portfolio = () => {
   );
 };
 
-// --- ANIMACJA WEJŚCIA "ODBLOKOWANIE" (POPRAWIONA) ---
+// --- ANIMACJA WEJŚCIA "ODBLOKOWANIE" ---
 const RevealCard = ({ children, delay, reduceMotion }: { children: React.ReactNode, delay: number, reduceMotion: boolean | null }) => {
     return (
         <motion.div
@@ -312,16 +312,15 @@ const Card = ({ project }: { project: any }) => {
   return (
     <div className="group relative h-[450px] w-[320px] md:h-[550px] md:w-[450px] overflow-hidden rounded-3xl bg-[#080808] border border-white/5 shrink-0 cursor-pointer transition-all duration-500 hover:border-blue-500/40 hover:shadow-[0_0_40px_-10px_rgba(37,99,235,0.2)]">
       
-     <div className="absolute inset-0">
-         {/* ZMIANA: Używamy next/image dla automatycznej optymalizacji WebP/AVIF */}
+      <div className="absolute inset-0">
          <Image 
             src={project.image} 
             alt={project.title} 
-            fill // Zastępuje layout="fill", obrazek wypełnia rodzica
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" // Krytyczne dla Performance! Mówi przeglądarce jak duży obrazek pobrać
+            fill 
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" 
             className="object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-50"
-            loading="lazy" // Domyślne, ale warto być pewnym
-            quality={75} // Lekka redukcja jakości (niewidoczna dla oka, zbawienna dla wagi)
+            loading="lazy" 
+            quality={75} 
          />
       </div>
 

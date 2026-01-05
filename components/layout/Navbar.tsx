@@ -61,6 +61,7 @@ export const Navbar = () => {
           {/* MOBILE TOGGLE */}
           <button 
             className="md:hidden text-white z-50 relative cursor-pointer hover:text-blue-400 transition-colors p-2"
+            aria-label={isMobileMenuOpen ? "Zamknij menu" : "Otwórz menu nawigacji"}
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
