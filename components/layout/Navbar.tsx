@@ -14,7 +14,7 @@ const navLinks = [
   { title: "Kontakt", href: "#kontakt" },
 ];
 
-// WARIANTY ANIMACJI (TYPOWANE)
+// WARIANTY ANIMACJI (NAPRAWIONE TYPOWANIE 'as const')
 const menuVars: Variants = {
   initial: {
     scaleY: 0,
@@ -23,7 +23,8 @@ const menuVars: Variants = {
     scaleY: 1,
     transition: {
       duration: 0.5,
-      ease: [0.12, 0, 0.39, 0],
+      // FIX: Dodano 'as const', żeby TS wiedział, że to Tuple [n, n, n, n]
+      ease: [0.12, 0, 0.39, 0] as const, 
     },
   },
   exit: {
@@ -31,7 +32,8 @@ const menuVars: Variants = {
     transition: {
       delay: 0.5,
       duration: 0.5,
-      ease: [0.22, 1, 0.36, 1],
+      // FIX: Dodano 'as const'
+      ease: [0.22, 1, 0.36, 1] as const,
     },
   },
 };
@@ -57,13 +59,15 @@ const mobileLinkVars: Variants = {
     y: "30vh",
     transition: {
       duration: 0.5,
-      ease: [0.37, 0, 0.63, 1],
+      // FIX: Dodano 'as const'
+      ease: [0.37, 0, 0.63, 1] as const,
     },
   },
   open: {
     y: 0,
     transition: {
-      ease: [0, 0.55, 0.45, 1],
+      // FIX: Dodano 'as const'
+      ease: [0, 0.55, 0.45, 1] as const,
       duration: 0.7,
     },
   },
@@ -74,7 +78,6 @@ export const Navbar = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // useRef dla wartości, które nie wymagają re-renderowania przy zmianie
   const lastScrollY = useRef(0);
   const scrollDownAccumulator = useRef(0);
 
@@ -115,10 +118,8 @@ export const Navbar = () => {
     if (isMobileMenuOpen) {
       document.body.style.overflow = 'hidden';
     } else {
-      // FIX: Zmieniono 'unset' na '' (empty string), co jest bezpieczniejsze w TS/React
       document.body.style.overflow = '';
     }
-    // Cleanup function na wypadek odmontowania komponentu
     return () => { document.body.style.overflow = ''; };
   }, [isMobileMenuOpen]);
 
@@ -193,7 +194,7 @@ export const Navbar = () => {
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
-            key="mobile-menu" // FIX: Dodano klucz, wymagany dla AnimatePresence
+            key="mobile-menu"
             variants={menuVars}
             initial="initial"
             animate="animate"
