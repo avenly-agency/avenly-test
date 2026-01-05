@@ -3,7 +3,7 @@
 import { useRef, useState, useLayoutEffect } from 'react';
 import { motion, useScroll, useTransform, MotionValue, useReducedMotion } from 'framer-motion';
 import { ArrowUpRight, ArrowRight } from 'lucide-react';
-
+import Image from 'next/image';
 // --- DANE PROJEKTÓW ---
 const projects = [
   {
@@ -312,11 +312,16 @@ const Card = ({ project }: { project: any }) => {
   return (
     <div className="group relative h-[450px] w-[320px] md:h-[550px] md:w-[450px] overflow-hidden rounded-3xl bg-[#080808] border border-white/5 shrink-0 cursor-pointer transition-all duration-500 hover:border-blue-500/40 hover:shadow-[0_0_40px_-10px_rgba(37,99,235,0.2)]">
       
-      <div className="absolute inset-0">
-         <img 
+     <div className="absolute inset-0">
+         {/* ZMIANA: Używamy next/image dla automatycznej optymalizacji WebP/AVIF */}
+         <Image 
             src={project.image} 
             alt={project.title} 
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-50"
+            fill // Zastępuje layout="fill", obrazek wypełnia rodzica
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" // Krytyczne dla Performance! Mówi przeglądarce jak duży obrazek pobrać
+            className="object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-50"
+            loading="lazy" // Domyślne, ale warto być pewnym
+            quality={75} // Lekka redukcja jakości (niewidoczna dla oka, zbawienna dla wagi)
          />
       </div>
 
