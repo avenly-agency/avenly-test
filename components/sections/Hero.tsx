@@ -1,74 +1,79 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { motion, Variants } from 'framer-motion';
 import { ArrowRight, Calendar, MessageSquare, Mail, CheckCircle2, ShieldCheck, Clock } from 'lucide-react';
 
+// Warianty tylko dla desktopu, żeby nie zaśmiecać pamięci na mobile
 const blobVariants: Variants = {
   animateLeft: {
     scale: [1, 1.5, 1],
     opacity: [0.2, 0.4, 0.2],
     x: [0, 50, 0],
     y: [0, -30, 0],
-    transition: {
-      duration: 12,
-      repeat: Infinity,
-      ease: "easeInOut"
-    }
+    transition: { duration: 12, repeat: Infinity, ease: "easeInOut" }
   },
   animateRight: {
     scale: [1, 1.3, 1],
     opacity: [0.2, 0.5, 0.2],
     x: [0, -40, 0],
     y: [0, 40, 0],
-    transition: {
-      duration: 15,
-      repeat: Infinity,
-      ease: "easeInOut",
-      delay: 2
-    }
+    transition: { duration: 15, repeat: Infinity, ease: "easeInOut", delay: 2 }
   }
 };
 
 export const Hero = () => {
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  // Sprawdzamy szerokość ekranu tylko raz po załadowaniu
+  useEffect(() => {
+    const checkDesktop = () => setIsDesktop(window.innerWidth >= 768);
+    checkDesktop();
+    window.addEventListener('resize', checkDesktop);
+    return () => window.removeEventListener('resize', checkDesktop);
+  }, []);
+
   return (
     <section className="relative w-full min-h-[100dvh] flex items-center justify-center overflow-hidden bg-slate-950 text-white selection:bg-blue-500/30 pt-20 lg:pt-0">
       
-      {/* --- HYBRYDOWE TŁO --- */}
+      {/* --- TŁO HYBRYDOWE --- */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden="true">
         
-        {/* WERSJA MOBILE (Statyczna, lekka, bez Framer Motion) */}
-        {/* Używamy mniejszego blura i statycznych pozycji. Przeglądarka renderuje to raz. */}
+        {/* A. MOBILE (Static CSS) - Renderowane zawsze, ukrywane na MD */}
+        {/* To klucz do LCP. Przeglądarka renderuje to w 1 klatce bez czekania na JS */}
         <div className="md:hidden absolute inset-0">
-            <div className="absolute top-0 left-0 w-[80vw] h-[80vw] bg-blue-600/10 blur-[60px] rounded-full mix-blend-screen opacity-30"></div>
-            <div className="absolute bottom-0 right-0 w-[80vw] h-[80vw] bg-indigo-500/10 blur-[60px] rounded-full mix-blend-screen opacity-30"></div>
+            <div className="absolute top-[-10%] left-[-20%] w-[90vw] h-[90vw] bg-blue-600/15 blur-[80px] rounded-full mix-blend-screen"></div>
+            <div className="absolute bottom-[-10%] right-[-20%] w-[90vw] h-[90vw] bg-indigo-500/15 blur-[80px] rounded-full mix-blend-screen"></div>
         </div>
 
-        {/* WERSJA DESKTOP (Animowana, ukryta na mobile 'hidden md:block') */}
-        <div className="hidden md:block absolute inset-0">
-            <motion.div 
-            variants={blobVariants}
-            animate="animateLeft"
-            className="absolute top-[-20%] left-[5%] w-[50vw] h-[50vw] bg-blue-600/20 blur-[120px] rounded-full mix-blend-screen will-change-transform transform-gpu" 
-            />
-
-            <motion.div 
-            variants={blobVariants}
-            animate="animateRight"
-            className="absolute bottom-[-20%] right-[-10%] w-[55vw] h-[55vw] bg-indigo-500/10 blur-[120px] rounded-full mix-blend-screen will-change-transform transform-gpu"
-            />
-        </div>
+        {/* B. DESKTOP (Animated Framer Motion) - Renderowane tylko warunkowo */}
+        {isDesktop && (
+            <>
+                <motion.div 
+                    variants={blobVariants}
+                    animate="animateLeft"
+                    className="absolute top-[-20%] left-[5%] w-[50vw] h-[50vw] bg-blue-600/20 blur-[120px] rounded-full mix-blend-screen will-change-transform transform-gpu" 
+                />
+                <motion.div 
+                    variants={blobVariants}
+                    animate="animateRight"
+                    className="absolute bottom-[-20%] right-[-10%] w-[55vw] h-[55vw] bg-indigo-500/10 blur-[120px] rounded-full mix-blend-screen will-change-transform transform-gpu"
+                />
+            </>
+        )}
       </div>
 
       {/* WRAPPER TREŚCI */}
       <div className="w-full max-w-[1800px] px-6 md:px-12 relative z-10 flex flex-col lg:flex-row items-center gap-16 lg:gap-32">
         
-        {/* LEWA STRONA */}
+        {/* LEWA STRONA: CONTENT */}
+        {/* Używamy standardowych klas Tailwind dla layoutu, Framer Motion tylko do wejścia */}
         <div className="flex-1 text-center lg:text-left space-y-10 relative z-20">
           
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.4 }} // Szybciej na mobile
             className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-slate-900/80 border border-slate-800 text-slate-300 text-xs font-semibold tracking-wide backdrop-blur-sm"
           >
             <span className="relative flex h-2 w-2">
@@ -79,10 +84,11 @@ export const Hero = () => {
           </motion.div>
 
           <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[1.05]"
+            transition={{ duration: 0.4, delay: 0.1 }}
+            // Dodajemy 'will-change-opacity' żeby przeglądarka wiedziała co robić
+            className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[1.05] will-change-[opacity,transform]"
           >
             TWOJA FIRMA <br />
             <span className="text-white">WYŻSZY </span>
@@ -92,18 +98,18 @@ export const Hero = () => {
           </motion.h1>
 
           <motion.p 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
             className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto lg:mx-0 leading-relaxed"
           >
            Masz potencjał, teraz czas na narzędzia. Przekształćmy twój biznes w nowoczesną markę, gotową na skalowanie zysków i automatyzację sprzedaży.
           </motion.p>
 
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
             className="flex flex-col sm:flex-row gap-5 justify-center lg:justify-start pt-6"
           >
             <button 
@@ -125,22 +131,24 @@ export const Hero = () => {
           </motion.div>
         </div>
 
-        {/* PRAWA STRONA */}
-        {/* Na mobile ukrywamy ciężki modal z blurami, lub zostawiamy go statycznego jeśli jest kluczowy */}
-        {/* Zoptymalizowano: hidden na mobile (opcjonalnie), lub zachowanie z mniejszym blurem */}
+        {/* PRAWA STRONA: MODAL */}
+        {/* Na mobile ukrywamy to całkowicie z DOM jeśli nie jest isDesktop, lub używamy CSS hidden */}
+        {/* Użycie 'hidden lg:block' w CSS jest szybsze niż renderowanie warunkowe JS dla LCP */}
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
           className="hidden lg:block flex-1 w-full max-w-[650px] relative perspective-1000"
           aria-hidden="true"
         >
-          {/* Tło za modalem - TYLKO DESKTOP */}
-          <motion.div 
-             animate={{ scale: [1, 1.05, 1], opacity: [0.5, 0.7, 0.5] }}
-             transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-blue-600/10 blur-[80px] -z-10 rounded-full will-change-transform"
-          />
+          {/* Tło za modalem - TYLKO JEŚLI DESKTOP (Optymalizacja JS) */}
+          {isDesktop && (
+              <motion.div 
+                animate={{ scale: [1, 1.05, 1], opacity: [0.5, 0.7, 0.5] }}
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-blue-600/10 blur-[80px] -z-10 rounded-full will-change-transform"
+              />
+          )}
 
           <div className="relative bg-slate-950/80 border border-slate-800 rounded-3xl p-8 backdrop-blur-xl shadow-2xl z-10 ring-1 ring-white/5 overflow-hidden">
             
@@ -157,6 +165,7 @@ export const Hero = () => {
             </div>
 
             <div className="space-y-5 relative">
+              {/* Elementy listy - statyczne, bez ciężkich animacji */}
               <div className="flex items-center gap-5 p-4 rounded-2xl bg-slate-900/50 border border-slate-800 hover:bg-slate-900 hover:border-blue-500/30 transition-all group cursor-default">
                 <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors shrink-0 z-10 ring-4 ring-slate-950">
                   <Mail size={22} />

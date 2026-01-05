@@ -63,7 +63,6 @@ export const Portfolio = () => {
     restDelta: 0.001
   });
 
-  // --- KROK 1: Sprawdź czy to Desktop (po załadowaniu) ---
   useEffect(() => {
     const checkDesktop = () => setIsDesktop(window.innerWidth >= 768);
     checkDesktop();
@@ -71,26 +70,21 @@ export const Portfolio = () => {
     return () => window.removeEventListener('resize', checkDesktop);
   }, []);
 
-  // --- KROK 2: Zmierz szerokość DOPIERO gdy isDesktop == true ---
   useLayoutEffect(() => {
-    // Jeśli to nie desktop, lub ref jeszcze nie istnieje, nie mierzymy
     if (!isDesktop || !scrollContainerRef.current) return;
 
     const updateScrollRange = () => {
         if (scrollContainerRef.current) {
             const scrollWidth = scrollContainerRef.current.scrollWidth;
             const clientWidth = window.innerWidth;
-            // Ustawiamy zakres scrolla
             setScrollRange(scrollWidth - clientWidth);
         }
     };
 
-    // Mierzymy od razu po pojawieniu się elementu
     updateScrollRange();
-
     window.addEventListener('resize', updateScrollRange);
     return () => window.removeEventListener('resize', updateScrollRange);
-  }, [isDesktop]); // <--- KLUCZOWE: Odpalamy efekt ponownie, gdy zmienia się isDesktop
+  }, [isDesktop]);
 
   const x = useTransform(smoothProgress, [0, 1], [0, -scrollRange]);
 
@@ -106,7 +100,11 @@ export const Portfolio = () => {
   };
 
   return (
-    <div className="relative w-full bg-[#050505]">
+    // OPTYMALIZACJA 1: content-visibility dla całej sekcji
+    <div 
+        className="relative w-full bg-[#050505]"
+        style={{ contentVisibility: 'auto', containIntrinsicSize: '1px 900px' }}
+    >
         
         <section 
             ref={targetRef} 
@@ -121,7 +119,7 @@ export const Portfolio = () => {
 
             <div className="sticky top-0 flex h-screen items-center overflow-hidden w-full bg-[#050505] z-10">
                 
-                {/* TŁO AMBIENT (Tylko Desktop) */}
+                {/* TŁO AMBIENT (Tylko Desktop - oszczędność GPU na mobile) */}
                 {isDesktop && (
                     <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden="true">
                         <motion.div 
@@ -154,7 +152,6 @@ export const Portfolio = () => {
                         style={{ x }} 
                         className="hidden md:flex gap-12 md:gap-16 items-center w-max h-full pl-[calc(50vw-225px)] pr-[calc(50vw-175px)] relative z-10 will-change-transform"
                     >
-                        {/* Karta Tytułowa */}
                         <FocusCard index={0} total={totalSlides} progress={smoothProgress} reduceMotion={shouldReduceMotion}>
                             <div className="shrink-0 w-[450px] h-[550px] flex flex-col justify-center p-12">
                                 <div className="flex items-center gap-4 mb-8">
@@ -173,7 +170,6 @@ export const Portfolio = () => {
                             </div>
                         </FocusCard>
 
-                        {/* Projekty */}
                         {projects.map((project, i) => (
                             <FocusCard key={project.id} index={i + 1} total={totalSlides} progress={smoothProgress} reduceMotion={shouldReduceMotion}>
                                 <RevealCard delay={i * 0.2} reduceMotion={shouldReduceMotion}>
@@ -182,7 +178,6 @@ export const Portfolio = () => {
                             </FocusCard>
                         ))}
                         
-                        {/* CTA */}
                         <FocusCard index={totalSlides - 1} total={totalSlides} progress={smoothProgress} reduceMotion={shouldReduceMotion}>
                             <RevealCard delay={projects.length * 0.2} reduceMotion={shouldReduceMotion}>
                                 <div className="relative h-[450px] w-[350px] flex items-center justify-center shrink-0 rounded-3xl border border-white/5 bg-white/[0.02] cursor-default transition-all group backdrop-blur-sm overflow-hidden">
@@ -220,7 +215,8 @@ export const Portfolio = () => {
                         >
                             {projects.map((project) => (
                                 <div key={project.id} className="snap-center shrink-0">
-                                    <Card project={project} />
+                                    {/* OPTYMALIZACJA 2: Przekazujemy flagę isMobile */}
+                                    <Card project={project} isMobile={true} />
                                 </div>
                             ))}
                             
@@ -255,8 +251,7 @@ export const Portfolio = () => {
   );
 };
 
-// ... POZOSTAŁE KOMPONENTY (Card, RevealCard, FocusCard) BEZ ZMIAN ...
-// Upewnij się, że są one tutaj wklejone (tak jak poprzednio)
+// ... POZOSTAŁE KOMPONENTY (RevealCard, FocusCard) BEZ ZMIAN ...
 const RevealCard = ({ children, delay, reduceMotion }: { children: React.ReactNode, delay: number, reduceMotion: boolean | null }) => {
     return (
         <motion.div
@@ -301,7 +296,8 @@ const FocusCard = ({ children, index, total, progress, reduceMotion }: { childre
     );
 };
 
-const Card = ({ project }: { project: any }) => {
+// --- ZOPTYMALIZOWANA KARTA ---
+const Card = ({ project, isMobile = false }: { project: any, isMobile?: boolean }) => {
   return (
     <div className="group relative h-[450px] w-[320px] md:h-[550px] md:w-[450px] overflow-hidden rounded-3xl bg-[#080808] border border-white/5 shrink-0 cursor-pointer transition-all duration-500 hover:border-blue-500/40 hover:shadow-[0_0_40px_-10px_rgba(37,99,235,0.2)]">
       
@@ -310,15 +306,21 @@ const Card = ({ project }: { project: any }) => {
             src={project.image} 
             alt={project.title} 
             fill 
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" 
+            // OPTYMALIZACJA 3: Idealnie dopasowany sizes dla Mobile (350px)
+            sizes={isMobile ? "350px" : "(max-width: 1200px) 50vw, 33vw"}
             className="object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-50"
             loading="lazy" 
-            quality={75} 
+            // OPTYMALIZACJA 4: Mniejsza waga pliku na mobile
+            quality={isMobile ? 60 : 75} 
          />
       </div>
 
       <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/80 to-transparent opacity-90 transition-opacity" aria-hidden="true"></div>
-      <div className="absolute inset-0 bg-gradient-to-t from-blue-900/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true"></div>
+      
+      {/* OPTYMALIZACJA 5: Nie renderujemy gradientu hover na mobile (oszczędność DOM) */}
+      {!isMobile && (
+        <div className="absolute inset-0 bg-gradient-to-t from-blue-900/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true"></div>
+      )}
 
       <div className="absolute bottom-0 left-0 w-full p-8 flex flex-col justify-end z-10">
         <div className="transform transition-transform duration-500 ease-out lg:translate-y-[88px] group-hover:translate-y-0">
