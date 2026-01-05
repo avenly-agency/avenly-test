@@ -184,48 +184,34 @@ export const Navbar = () => {
         {isMobileMenuOpen && (
           <motion.div
             key="mobile-menu"
-            variants={menuVars} // Już nie potrzebujemy 'as any' dzięki poprawce wyżej
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="fixed inset-0 w-full h-screen bg-[#050505] z-40 origin-top flex flex-col justify-between"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="fixed inset-0 w-full h-[100dvh] bg-[#050505] z-40 origin-top flex flex-col justify-between"
           >
             {/* TŁO AMBIENT */}
             <div className="absolute top-[-20%] right-[-20%] w-[80vw] h-[80vw] bg-blue-900/20 blur-[100px] rounded-full pointer-events-none" />
 
-            <div className="flex flex-col h-full container mx-auto px-6 pb-10 pt-32">
+            <div className="flex flex-col h-full container mx-auto px-6 pb-10 pt-32 relative z-10">
               
-              {/* LINKI - KASKADA */}
-              <motion.div 
-                variants={containerVars}
-                initial="initial"
-                animate="open"
-                exit="initial"
-                className="flex flex-col gap-4 flex-1 justify-center"
-              >
+              {/* LINKI */}
+              <div className="flex flex-col gap-6 flex-1 justify-center">
                 {navLinks.map((link, index) => (
-                  <div key={index} className="overflow-hidden">
-                    <motion.div variants={mobileLinkVars}>
-                        <Link 
-                            href={link.href}
-                            onClick={() => setIsMobileMenuOpen(false)}
-                            className="text-5xl font-bold text-white tracking-tight hover:text-blue-500 transition-colors block py-2"
-                        >
-                            {link.title}
-                            <span className="text-blue-500 text-6xl leading-[0]">.</span>
-                        </Link>
-                    </motion.div>
-                  </div>
+                  <Link 
+                      key={index}
+                      href={link.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="text-5xl font-bold text-white tracking-tight hover:text-blue-500 transition-colors block py-2"
+                  >
+                      {link.title}
+                      <span className="text-blue-500 text-6xl leading-[0]">.</span>
+                  </Link>
                 ))}
-              </motion.div>
+              </div>
 
-              {/* FOOTER W MENU (Social + CTA) */}
-              <motion.div 
-                 initial={{ opacity: 0, y: 20 }}
-                 animate={{ opacity: 1, y: 0, transition: { delay: 0.5 } }}
-                 exit={{ opacity: 0, transition: { duration: 0.2 } }}
-                 className="border-t border-white/10 pt-8 mt-8"
-              >
+              {/* FOOTER W MENU */}
+              <div className="border-t border-white/10 pt-8 mt-8">
                   <div className="flex flex-col gap-6">
                       <div className="flex justify-between items-center">
                           <span className="text-slate-400 text-sm uppercase tracking-widest">Social Media</span>
@@ -241,7 +227,7 @@ export const Navbar = () => {
                           <ArrowRight className="group-hover:translate-x-1 transition-transform" />
                       </button>
                   </div>
-              </motion.div>
+              </div>
 
             </div>
           </motion.div>
