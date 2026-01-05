@@ -31,20 +31,30 @@ const Impact = dynamic(() => import('@/components/sections/Impact').then(mod => 
   loading: () => <SectionLoader height="h-screen" />
 });
 
+// app/page.tsx
+
+// ... importy
 
 export default function Home() {
   return (
-    <main className="bg-[#050505] min-h-screen selection:bg-blue-500/30">
+    <main className="bg-[#050505] min-h-screen">
+      <Hero /> {/* Hero musi być widoczne od razu, więc bez optymalizacji */}
       
-      {/* HERO ładujemy normalnie (Eager) - to musi być natychmiastowe dla LCP */}
-      <Hero />
+      <div className="render-optimize">
+        <TechStack />
+      </div>
       
-      {/* Reszta ładuje się dynamicznie */}
-      <TechStack />
-      <Portfolio />
-      <Process />
-      <Impact />
+      <div className="render-optimize">
+        <Portfolio />
+      </div>
       
+      <div className="render-optimize">
+        <Process />
+      </div>
+      
+      <div className="render-optimize">
+        <Impact />
+      </div>
     </main>
   );
 }

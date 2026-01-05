@@ -4,7 +4,13 @@ import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { SmoothScrolling } from "@/components/providers/SmoothScrolling"; // IMPORT
 
-const inter = Inter({ subsets: ["latin"] });
+
+const inter = Inter({ 
+  subsets: ['latin'],
+  display: 'swap', // To jest kluczowe dla Lighthouse!
+  variable: '--font-inter',
+});
+
 
 export const metadata: Metadata = {
   title: "Avenly Agency",

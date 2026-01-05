@@ -150,3 +150,10 @@ html.lenis, html.lenis body {
 .mh-screen{
   height: 85vh;
 }
+@layer utilities {
+  /* Klasa pomocnicza dla sekcji poniżej Hero */
+  .render-optimize {
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 800px; /* Szacowana wysokość sekcji, żeby scroll nie skakał */
+  }
+}
