@@ -1,16 +1,47 @@
 'use client';
 
-import { useRef } from 'react';
-import { motion, useReducedMotion, Variants } from 'framer-motion'; // Dodano import Variants
+import { useRef, useEffect } from 'react';
+import { motion, useReducedMotion, Variants, useSpring, useInView, useMotionValue } from 'framer-motion';
 import { TrendingUp, Bot, Zap, ArrowRight, ShieldCheck } from 'lucide-react';
+import Link from 'next/link';
+import { useLenis } from 'lenis/react';
+
+// --- SUBKOMPONENT: WYDAJNY LICZNIK ---
+// Używamy useRef i onChange, żeby nie renderować komponentu 60 razy na sekundę
+// To zapewnia super płynną animację bez obciążania procesora.
+function Counter({ value }: { value: number }) {
+    const ref = useRef<HTMLSpanElement>(null);
+    const isInView = useInView(ref, { once: true, margin: "-20px" }); // Startuje jak element wejdzie w ekran
+    const motionValue = useMotionValue(0);
+    const springValue = useSpring(motionValue, {
+        damping: 30,   // Tłumienie (jak szybko hamuje)
+        stiffness: 60, // Sztywność (jak szybko startuje)
+    });
+
+    useEffect(() => {
+        if (isInView) {
+            motionValue.set(value);
+        }
+    }, [isInView, value, motionValue]);
+
+    useEffect(() => {
+        // Subskrypcja zmian wartości "sprężyny" i wpisywanie ich bezpośrednio do HTML
+        return springValue.on("change", (latest) => {
+            if (ref.current) {
+                ref.current.textContent = Math.round(latest).toString();
+            }
+        });
+    }, [springValue]);
+
+    return <span ref={ref}>0</span>;
+}
 
 export const Impact = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const reducedMotion = useReducedMotion();
-  // Bezpiecznik dla TS (null check)
   const shouldReduceMotion = reducedMotion ?? false;
+  const lenis = useLenis();
 
-  // DEFINICJA WARIANTÓW (Otypowana jako Variants)
   const fadeInUpVariants: Variants = {
     hidden: { 
       opacity: 0, 
@@ -27,8 +58,22 @@ export const Impact = () => {
     })
   };
 
-  // Wspólna konfiguracja viewportu
   const viewportConfig = { once: true, margin: "-50px" } as const;
+
+  const handleScrollToOffer = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (window.location.pathname === '/') {
+        e.preventDefault();
+        const elem = document.getElementById('oferta');
+        if (elem && lenis) {
+            lenis.scrollTo(elem, { 
+                offset: -100,
+                duration: 1.5,
+                lock: false,
+                force: true
+            });
+        }
+    }
+  };
 
   return (
     <section 
@@ -37,7 +82,7 @@ export const Impact = () => {
         className="relative w-full py-24 lg:py-32 bg-[#050505] overflow-hidden"
     >
       
-      {/* --- TŁO --- */}
+      {/* TŁO */}
       <div className="absolute inset-0 z-0 pointer-events-none" aria-hidden="true">
           <div className="absolute top-1/4 left-1/4 w-[40vw] h-[40vw] bg-blue-900/10 blur-[120px] rounded-full mix-blend-screen opacity-30 animate-pulse"></div>
           <div className="absolute bottom-0 right-0 w-[40vw] h-[40vw] bg-indigo-900/10 blur-[120px] rounded-full mix-blend-screen opacity-20"></div>
@@ -45,7 +90,7 @@ export const Impact = () => {
 
       <div className="container mx-auto px-6 relative z-10">
         
-        {/* --- HEADER --- */}
+        {/* HEADER */}
         <div className="max-w-3xl mx-auto text-center mb-20">
             <motion.div 
                 custom={0}
@@ -71,7 +116,7 @@ export const Impact = () => {
             </motion.div>
         </div>
 
-        {/* --- BENTO GRID --- */}
+        {/* BENTO GRID */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
             {/* KAFEL 1: SKALOWALNY WZROST */}
@@ -83,7 +128,6 @@ export const Impact = () => {
                 viewport={viewportConfig}
                 className="md:col-span-2 relative group overflow-hidden rounded-3xl bg-[#080808] border border-white/5 p-8 md:p-12 min-h-[400px] flex flex-col justify-between hover:border-blue-500/30 transition-colors duration-700 ease-out"
             >
-                {/* Dekoracyjny Gradient */}
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-out" aria-hidden="true"></div>
 
                 <div className="relative z-10">
@@ -96,7 +140,6 @@ export const Impact = () => {
                     </p>
                 </div>
 
-                {/* Dekoracyjny Wykres */}
                 <div className="absolute bottom-0 right-0 w-2/3 h-1/2 opacity-30 md:opacity-50 pointer-events-none translate-y-4 translate-x-4" aria-hidden="true">
                      <div className="flex items-end justify-end gap-2 h-full">
                         {[40, 65, 50, 85, 70, 100].map((h, i) => (
@@ -136,7 +179,7 @@ export const Impact = () => {
                 </div>
             </motion.div>
 
-            {/* KAFEL 3: PERFORMANCE */}
+            {/* KAFEL 3: PERFORMANCE - Z LICZNIKIEM */}
             <motion.div 
                 custom={0.3}
                 variants={fadeInUpVariants}
@@ -151,9 +194,12 @@ export const Impact = () => {
                     <div className="w-12 h-12 rounded-xl bg-yellow-500/10 flex items-center justify-center text-yellow-400">
                         <Zap size={24} aria-hidden="true" />
                     </div>
-                    <span className="text-4xl font-bold text-white" aria-label="99 procent">
-                        99<span className="text-yellow-500 text-2xl" aria-hidden="true">%</span>
+                    {/* --- TUTAJ JEST LICZNIK --- */}
+                    <span className="text-4xl font-bold text-white flex items-baseline" aria-label="99 procent">
+                        <Counter value={99} />
+                        <span className="text-yellow-500 text-2xl" aria-hidden="true">%</span>
                     </span>
+                    {/* ------------------------- */}
                 </div>
                 <h3 className="text-xl font-bold text-white mb-2">Performance SEO</h3>
                 <p className="text-slate-400 text-sm">
@@ -161,7 +207,7 @@ export const Impact = () => {
                 </p>
             </motion.div>
 
-            {/* KAFEL 4: SECURITY */}
+            {/* KAFEL 4: SECURITY & CTA */}
             <motion.div 
                 custom={0.4}
                 variants={fadeInUpVariants}
@@ -185,10 +231,14 @@ export const Impact = () => {
                  </div>
                  
                  <div className="shrink-0 relative z-20">
-                    <button className="px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm font-bold hover:bg-white hover:text-black focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none transition-all duration-500 ease-out flex items-center gap-2 group/btn !cursor-pointer">
+                    <Link 
+                        href="/#oferta" 
+                        onClick={handleScrollToOffer}
+                        className="px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm font-bold hover:bg-white hover:text-black focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none transition-all duration-500 ease-out flex items-center gap-2 group/btn !cursor-pointer"
+                    >
                         Sprawdź Ofertę
                         <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform duration-500" aria-hidden="true" />
-                    </button>
+                    </Link>
                  </div>
             </motion.div>
 

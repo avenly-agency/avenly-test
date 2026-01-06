@@ -6,7 +6,7 @@ import { ArrowUpRight, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
-// --- KROK 1: DODAJEMY LIVE URL DO DANYCH ---
+// --- DANE PROJEKTÓW ---
 const projects = [
   {
     id: 1,
@@ -16,7 +16,7 @@ const projects = [
     tech: ["Next.js", "Tailwind"],
     image: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?q=80&w=2068&auto=format&fit=crop",
     href: "/realizacje/klinika",
-    liveUrl: "https://google.com" // Tutaj wstawisz prawdziwy link klienta
+    liveUrl: "https://google.com"
   },
   {
     id: 2,
@@ -181,6 +181,7 @@ export const Portfolio = () => {
                             </FocusCard>
                         ))}
                         
+                        {/* KARTA CTA - DESKTOP */}
                         <FocusCard index={totalSlides - 1} total={totalSlides} progress={smoothProgress} reduceMotion={shouldReduceMotion}>
                             <RevealCard delay={projects.length * 0.2} reduceMotion={shouldReduceMotion}>
                                 <div className="relative h-[450px] w-[350px] flex items-center justify-center shrink-0 rounded-3xl border border-white/5 bg-white/[0.02] cursor-default transition-all group backdrop-blur-sm overflow-hidden">
@@ -190,10 +191,14 @@ export const Portfolio = () => {
                                         <div className="h-[1px] w-12 bg-blue-500/50 mx-auto my-6 group-hover:w-24 transition-all" aria-hidden="true"></div>
                                         <p className="text-slate-400 text-sm mb-8">Dołącz do liderów rynku i wyskaluj swój biznes.</p>
                                         
-                                        <button className="w-full px-8 py-4 bg-white text-black font-bold rounded-xl hover:bg-blue-50 hover:scale-[1.02] transition-all shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] flex items-center justify-center gap-2 group/btn cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none mb-3">
+                                        {/* LINK DO KONTAKTU */}
+                                        <Link 
+                                            href="/kontakt"
+                                            className="w-full px-8 py-4 bg-white text-black font-bold rounded-xl hover:bg-blue-50 hover:scale-[1.02] transition-all shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] flex items-center justify-center gap-2 group/btn cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none mb-3"
+                                        >
                                             Rozpocznij
                                             <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" aria-hidden="true" />
-                                        </button>
+                                        </Link>
 
                                         <Link 
                                             href="/realizacje" 
@@ -232,12 +237,18 @@ export const Portfolio = () => {
                                 </div>
                             ))}
                             
+                            {/* KARTA CTA - MOBILE */}
                             <div className="snap-center shrink-0 h-[400px] w-[300px] flex items-center justify-center rounded-3xl border border-white/10 bg-white/[0.02]">
                                 <div className="text-center p-6 flex flex-col items-center w-full">
                                     <h3 className="text-xl font-bold text-white mb-4">Twój Projekt?</h3>
-                                    <button className="w-full px-6 py-3 bg-white text-black text-sm font-bold rounded-lg hover:bg-blue-50 transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none mb-3">
+                                    
+                                    {/* LINK DO KONTAKTU */}
+                                    <Link 
+                                        href="/kontakt"
+                                        className="w-full px-6 py-3 bg-white text-black text-sm font-bold rounded-lg hover:bg-blue-50 transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none mb-3 flex items-center justify-center"
+                                    >
                                         Działajmy
-                                    </button>
+                                    </Link>
 
                                     <Link 
                                         href="/realizacje" 
@@ -271,7 +282,8 @@ export const Portfolio = () => {
   );
 };
 
-// ... POZOSTAŁE KOMPONENTY (BEZ ZMIAN) ...
+// --- SUBKOMPONENTY ---
+
 const RevealCard = ({ children, delay, reduceMotion }: { children: React.ReactNode, delay: number, reduceMotion: boolean | null }) => {
     return (
         <motion.div
@@ -296,7 +308,6 @@ const FocusCard = ({ children, index, total, progress, reduceMotion }: { childre
     return <motion.div style={{ opacity, scale, filter }} className="origin-center">{children}</motion.div>;
 };
 
-// --- KROK 2: UPDATE KARTY ---
 const Card = ({ project, isMobile = false }: { project: any, isMobile?: boolean }) => {
   return (
     <div className="group relative h-[450px] w-[320px] md:h-[550px] md:w-[450px] overflow-hidden rounded-3xl bg-[#080808] border border-white/5 shrink-0 transition-all duration-500 hover:border-blue-500/40 hover:shadow-[0_0_40px_-10px_rgba(37,99,235,0.2)]">
@@ -349,7 +360,6 @@ const Card = ({ project, isMobile = false }: { project: any, isMobile?: boolean 
                     </Link>
                     
                     {/* BUTTON 2: LIVE PREVIEW (ZEWNĘTRZNY) */}
-                    {/* Renderujemy tylko jeśli liveUrl istnieje */}
                     {project.liveUrl && (
                         <a 
                             href={project.liveUrl} 
