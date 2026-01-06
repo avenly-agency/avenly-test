@@ -2,72 +2,46 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
-import { Menu, X, ArrowRight, Github, Twitter, Linkedin } from 'lucide-react';
+import { ArrowRight, Github, Twitter, Linkedin } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { useLenis } from 'lenis/react';
 import { cn } from '@/lib/utils';
 
-// --- DANE ---
+// --- DANE NAWIGACJI ---
 const NAV_LINKS = [
   { title: "Oferta", href: "#oferta" },
   { title: "Proces", href: "#proces" },
-  { title: "Realizacje", href: "#realizacje" },
+  { title: "Realizacje", href: "/realizacje" },
   { title: "Kontakt", href: "#kontakt" },
 ];
 
-// --- KONFIGURACJA ANIMACJI (NAPRAWIONA) ---
-// Definiujemy te zmienne TUTAJ, żeby nie było błędu "not defined"
-
+// --- ANIMACJE (VARIANTS) ---
 const menuVars: Variants = {
-  initial: {
-    scaleY: 0,
-  },
+  initial: { scaleY: 0 },
   animate: {
     scaleY: 1,
-    transition: {
-      duration: 0.5,
-      ease: [0.12, 0, 0.39, 0] as const, // 'as const' naprawia błąd TypeScript
-    },
+    transition: { duration: 0.5, ease: [0.12, 0, 0.39, 0] as const },
   },
   exit: {
     scaleY: 0,
-    transition: {
-      delay: 0.5,
-      duration: 0.5,
-      ease: [0.22, 1, 0.36, 1] as const, // 'as const' naprawia błąd TypeScript
-    },
+    transition: { delay: 0.5, duration: 0.5, ease: [0.22, 1, 0.36, 1] as const },
   },
 };
 
 const containerVars: Variants = {
-  initial: {
-    transition: {
-      staggerChildren: 0.09,
-      staggerDirection: -1,
-    },
-  },
-  open: {
-    transition: {
-      delayChildren: 0.3,
-      staggerChildren: 0.09,
-      staggerDirection: 1,
-    },
-  },
+  initial: { transition: { staggerChildren: 0.09, staggerDirection: -1 } },
+  open: { transition: { delayChildren: 0.3, staggerChildren: 0.09, staggerDirection: 1 } },
 };
 
 const mobileLinkVars: Variants = {
   initial: {
     y: "30vh",
-    transition: {
-      duration: 0.5,
-      ease: [0.37, 0, 0.63, 1] as const, // 'as const' naprawia błąd TypeScript
-    },
+    transition: { duration: 0.5, ease: [0.37, 0, 0.63, 1] as const },
   },
   open: {
     y: 0,
-    transition: {
-      ease: [0, 0.55, 0.45, 1] as const, // 'as const' naprawia błąd TypeScript
-      duration: 0.7,
-    },
+    transition: { ease: [0, 0.55, 0.45, 1] as const, duration: 0.7 },
   },
 };
 
@@ -75,11 +49,42 @@ export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  const pathname = usePathname();
+  const router = useRouter();
+  const lenis = useLenis(); // Hook do sterowania scrollem
+  const isHome = pathname === '/';
 
   const lastScrollY = useRef(0);
   const scrollDownAccumulator = useRef(0);
 
-  // --- LOGIKA SCROLLOWANIA (DESKTOP) ---
+  // --- HARDCORE FIX: NAWIGACJA ---
+  // Ta funkcja decyduje, czy robimy scroll, czy przekierowanie
+  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    // 1. Jeśli to link do podstrony (nie zaczyna się od #), pozwalamy działać normalnie
+    if (!href.startsWith('#')) {
+        setIsMobileMenuOpen(false);
+        return;
+    }
+
+    // 2. Jeśli to kotwica (#)
+    e.preventDefault(); // Blokujemy domyślny skok przeglądarki
+    setIsMobileMenuOpen(false);
+
+    if (isHome) {
+        // SCENARIUSZ A: Jesteśmy na Home -> Płynny scroll Lenis
+        // offset: -100 zapewnia, że sekcja nie chowa się pod navbarem
+        lenis?.scrollTo(href, { offset: -100, duration: 1.5 });
+    } else {
+        // SCENARIUSZ B: Jesteśmy na podstronie -> Przekierowanie z PARAMETREM
+        // Zamiast /#oferta robimy /?target=oferta
+        // To zapobiega natychmiastowemu skokowi przeglądarki i pozwala SmoothScrolling.tsx przejąć kontrolę
+        const targetId = href.replace('#', '');
+        router.push(`/?target=${targetId}`);
+    }
+  };
+
+  // --- LOGIKA UI (Scrollowanie - chowanie/pokazywanie navbaru) ---
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
@@ -91,9 +96,11 @@ export const Navbar = () => {
         setIsVisible(true);
         scrollDownAccumulator.current = 0;
       } else if (deltaY > 0) {
+        // Scroll w dół
         scrollDownAccumulator.current += deltaY;
-        if (scrollDownAccumulator.current > 400) setIsVisible(false);
+        if (scrollDownAccumulator.current > 200) setIsVisible(false); // Szybsza reakcja (200px)
       } else if (deltaY < 0) {
+        // Scroll w górę
         scrollDownAccumulator.current = 0;
         setIsVisible(true);
       }
@@ -104,7 +111,7 @@ export const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // --- BLOKADA SCROLLA (MOBILE) ---
+  // --- BLOKADA SCROLLA (MOBILE MENU) ---
   useEffect(() => {
     if (isMobileMenuOpen) {
       document.body.style.overflow = 'hidden';
@@ -133,31 +140,38 @@ export const Navbar = () => {
           <Link 
             href="/" 
             className="text-xl font-bold tracking-tighter text-white z-50 hover:opacity-80 transition-opacity cursor-pointer flex items-center gap-1 relative"
-            onClick={() => setIsMobileMenuOpen(false)}
+            // Kliknięcie w logo na Home scrolluje na górę, na podstronie wraca na Home
+            onClick={(e) => isHome ? handleLinkClick(e as any, '#top') : setIsMobileMenuOpen(false)}
           >
             AVENLY<span className="text-blue-500">.</span>
           </Link>
 
-          {/* DESKTOP MENU (PREMIUM) */}
+          {/* DESKTOP MENU */}
           <div className="hidden md:flex items-center gap-10">
             {NAV_LINKS.map((item) => (
-              <Link 
+              <a 
                 key={item.title} 
                 href={item.href} 
+                onClick={(e) => handleLinkClick(e, item.href)}
                 className="relative text-sm font-medium text-slate-400 transition-all duration-300 hover:text-white cursor-pointer group"
               >
                 {item.title}
                 <span className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-blue-400/20 blur-xl -z-10"></span>
                 <span className="absolute -bottom-1 left-1/2 w-0 h-[1px] bg-blue-500 group-hover:w-1/2 group-hover:-translate-x-1/2 transition-all duration-300"></span>
-              </Link>
+              </a>
             ))}
             
-            <button className="px-5 py-2.5 bg-white text-slate-950 text-sm font-bold rounded-lg hover:bg-slate-200 transition-all duration-300 cursor-pointer hover:scale-105 active:scale-95 shadow-[0_0_15px_-5px_rgba(255,255,255,0.4)]">
-              Darmowa Wycena
-            </button>
+            {/* PRZYCISK WYCENY */}
+            <a 
+                href="#kontakt"
+                onClick={(e) => handleLinkClick(e, '#kontakt')}
+                className="px-5 py-2.5 bg-white text-slate-950 text-sm font-bold rounded-lg hover:bg-slate-200 transition-all duration-300 cursor-pointer hover:scale-105 active:scale-95 shadow-[0_0_15px_-5px_rgba(255,255,255,0.4)]"
+            >
+                Darmowa Wycena
+            </a>
           </div>
 
-          {/* MOBILE HAMBURGER BUTTON */}
+          {/* MOBILE HAMBURGER */}
           <button 
             className="md:hidden text-white z-50 relative cursor-pointer hover:text-blue-400 transition-colors p-2 active:scale-90"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -181,7 +195,7 @@ export const Navbar = () => {
         </div>
       </nav>
 
-      {/* --- FANCY MOBILE MENU --- */}
+      {/* MOBILE MENU */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
@@ -197,7 +211,7 @@ export const Navbar = () => {
 
             <div className="flex flex-col h-full container mx-auto px-6 pb-10 pt-32 relative z-10">
               
-              {/* LINKI - KASKADOWE WEJŚCIE */}
+              {/* LINKI */}
               <motion.div 
                 variants={containerVars}
                 initial="initial"
@@ -208,14 +222,14 @@ export const Navbar = () => {
                 {NAV_LINKS.map((link, index) => (
                   <div key={index} className="overflow-hidden">
                     <motion.div variants={mobileLinkVars}>
-                        <Link 
+                        <a 
                             href={link.href}
-                            onClick={() => setIsMobileMenuOpen(false)}
-                            className="text-5xl font-bold text-white tracking-tight hover:text-blue-500 transition-colors block py-2"
+                            onClick={(e) => handleLinkClick(e, link.href)}
+                            className="text-5xl font-bold text-white tracking-tight hover:text-blue-500 transition-colors block py-2 cursor-pointer"
                         >
                             {link.title}
                             <span className="text-blue-500 text-6xl leading-[0]">.</span>
-                        </Link>
+                        </a>
                     </motion.div>
                   </div>
                 ))}
@@ -238,10 +252,16 @@ export const Navbar = () => {
                           </div>
                       </div>
                       
-                      <button className="w-full py-4 bg-white text-black text-lg font-bold rounded-xl hover:bg-blue-500 hover:text-white transition-all flex items-center justify-center gap-2 group cursor-pointer active:scale-95">
-                          Darmowa Wycena
-                          <ArrowRight className="group-hover:translate-x-1 transition-transform" />
-                      </button>
+                      <a 
+                        href="#kontakt" 
+                        onClick={(e) => handleLinkClick(e, '#kontakt')}
+                        className="w-full block"
+                      >
+                        <button className="w-full py-4 bg-white text-black text-lg font-bold rounded-xl hover:bg-blue-500 hover:text-white transition-all flex items-center justify-center gap-2 group cursor-pointer active:scale-95">
+                            Darmowa Wycena
+                            <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+                        </button>
+                      </a>
                   </div>
               </motion.div>
 

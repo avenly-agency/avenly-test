@@ -4,7 +4,9 @@ import { useRef, useState, useEffect, useLayoutEffect } from 'react';
 import { motion, useScroll, useTransform, useSpring, MotionValue, useReducedMotion } from 'framer-motion';
 import { ArrowUpRight, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 
+// --- KROK 1: DODAJEMY LIVE URL DO DANYCH ---
 const projects = [
   {
     id: 1,
@@ -13,7 +15,8 @@ const projects = [
     description: "Rebranding i system rezerwacji. Konwersja +150% w Q1.",
     tech: ["Next.js", "Tailwind"],
     image: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?q=80&w=2068&auto=format&fit=crop",
-    href: "/realizacje/klinika"
+    href: "/realizacje/klinika",
+    liveUrl: "https://google.com" // Tutaj wstawisz prawdziwy link klienta
   },
   {
     id: 2,
@@ -22,7 +25,8 @@ const projects = [
     description: "Sklep na WooCommerce z wyszukiwarką części po VIN.",
     tech: ["WooCommerce", "React"],
     image: "https://images.unsplash.com/photo-1486262715619-01b80258e0a5?q=80&w=2070&auto=format&fit=crop",
-    href: "/realizacje/auto-parts"
+    href: "/realizacje/auto-parts",
+    liveUrl: "https://google.com"
   },
   {
     id: 3,
@@ -31,7 +35,8 @@ const projects = [
     description: "Asystent dla kancelarii. Kwalifikacja leadów 24/7.",
     tech: ["OpenAI", "Python"],
     image: "https://images.unsplash.com/photo-1589216532372-1c2a367900d9?q=80&w=2071&auto=format&fit=crop",
-    href: "/realizacje/law-ai"
+    href: "/realizacje/law-ai",
+    liveUrl: "https://google.com"
   },
   {
     id: 4,
@@ -40,7 +45,8 @@ const projects = [
     description: "Interaktywna mapa mieszkań 3D i system CRM dla dewelopera.",
     tech: ["Vue.js", "Mapbox"],
     image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop",
-    href: "/realizacje/deweloper"
+    href: "/realizacje/deweloper",
+    liveUrl: "https://google.com"
   },
 ];
 
@@ -100,7 +106,6 @@ export const Portfolio = () => {
   };
 
   return (
-    // OPTYMALIZACJA 1: content-visibility dla całej sekcji
     <div 
         className="relative w-full bg-[#050505]"
         style={{ contentVisibility: 'auto', containIntrinsicSize: '1px 900px' }}
@@ -119,7 +124,6 @@ export const Portfolio = () => {
 
             <div className="sticky top-0 flex h-screen items-center overflow-hidden w-full bg-[#050505] z-10">
                 
-                {/* TŁO AMBIENT (Tylko Desktop - oszczędność GPU na mobile) */}
                 {isDesktop && (
                     <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden="true">
                         <motion.div 
@@ -145,7 +149,6 @@ export const Portfolio = () => {
                     </div>
                 )}
 
-                {/* TRACK DESKTOP */}
                 {isDesktop ? (
                     <motion.div 
                         ref={scrollContainerRef}
@@ -186,10 +189,20 @@ export const Portfolio = () => {
                                         <h3 className="text-3xl font-bold text-white mb-2 group-hover:scale-105 transition-transform duration-500">Twój Projekt?</h3>
                                         <div className="h-[1px] w-12 bg-blue-500/50 mx-auto my-6 group-hover:w-24 transition-all" aria-hidden="true"></div>
                                         <p className="text-slate-400 text-sm mb-8">Dołącz do liderów rynku i wyskaluj swój biznes.</p>
-                                        <button className="px-8 py-4 bg-white text-black font-bold rounded-xl hover:bg-blue-50 hover:scale-105 transition-all shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] flex items-center gap-2 group/btn cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none">
-                                                Rozpocznij
-                                                <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" aria-hidden="true" />
+                                        
+                                        <button className="w-full px-8 py-4 bg-white text-black font-bold rounded-xl hover:bg-blue-50 hover:scale-[1.02] transition-all shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] flex items-center justify-center gap-2 group/btn cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none mb-3">
+                                            Rozpocznij
+                                            <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" aria-hidden="true" />
                                         </button>
+
+                                        <Link 
+                                            href="/realizacje" 
+                                            className="w-full px-6 py-3 rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-300 flex items-center justify-center gap-2 group/link cursor-pointer"
+                                        >
+                                            <span className="font-medium text-sm">Wszystkie realizacje</span>
+                                            <ArrowUpRight className="w-4 h-4 transition-transform duration-300 group-hover/link:-translate-y-0.5 group-hover/link:translate-x-0.5" />
+                                        </Link>
+
                                     </div>
                                 </div>
                             </RevealCard>
@@ -215,17 +228,24 @@ export const Portfolio = () => {
                         >
                             {projects.map((project) => (
                                 <div key={project.id} className="snap-center shrink-0">
-                                    {/* OPTYMALIZACJA 2: Przekazujemy flagę isMobile */}
                                     <Card project={project} isMobile={true} />
                                 </div>
                             ))}
                             
                             <div className="snap-center shrink-0 h-[400px] w-[300px] flex items-center justify-center rounded-3xl border border-white/10 bg-white/[0.02]">
-                                <div className="text-center p-6 flex flex-col items-center">
+                                <div className="text-center p-6 flex flex-col items-center w-full">
                                     <h3 className="text-xl font-bold text-white mb-4">Twój Projekt?</h3>
-                                    <button className="px-6 py-3 bg-white text-black text-sm font-bold rounded-lg hover:bg-blue-50 transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none">
+                                    <button className="w-full px-6 py-3 bg-white text-black text-sm font-bold rounded-lg hover:bg-blue-50 transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none mb-3">
                                         Działajmy
                                     </button>
+
+                                    <Link 
+                                        href="/realizacje" 
+                                        className="w-full px-6 py-3 rounded-lg border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+                                    >
+                                        Wszystkie realizacje
+                                        <ArrowUpRight className="w-4 h-4" />
+                                    </Link>
                                 </div>
                             </div>
                             <div className="shrink-0 w-6" />
@@ -251,26 +271,14 @@ export const Portfolio = () => {
   );
 };
 
-// ... POZOSTAŁE KOMPONENTY (RevealCard, FocusCard) BEZ ZMIAN ...
+// ... POZOSTAŁE KOMPONENTY (BEZ ZMIAN) ...
 const RevealCard = ({ children, delay, reduceMotion }: { children: React.ReactNode, delay: number, reduceMotion: boolean | null }) => {
     return (
         <motion.div
-            initial={{ 
-                opacity: 0, 
-                y: reduceMotion ? 0 : 50, 
-                scale: reduceMotion ? 1 : 0.95 
-            }}
-            whileInView={{ 
-                opacity: 1, 
-                y: 0, 
-                scale: 1 
-            }}
+            initial={{ opacity: 0, y: reduceMotion ? 0 : 50, scale: reduceMotion ? 1 : 0.95 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
             viewport={{ once: true, margin: "-50px" }}
-            transition={{ 
-                duration: 0.6, 
-                delay: reduceMotion ? 0 : delay, 
-                ease: "easeOut" 
-            }}
+            transition={{ duration: 0.6, delay: reduceMotion ? 0 : delay, ease: "easeOut" }}
         >
             {children}
         </motion.div>
@@ -281,49 +289,39 @@ const FocusCard = ({ children, index, total, progress, reduceMotion }: { childre
     const step = 1 / (total - 1);
     const target = index * step;
     const range = [target - 0.15, target, target + 0.15];
-
     const opacity = useTransform(progress, range, reduceMotion ? [1, 1, 1] : [0.6, 1, 0.6]);
     const scale = useTransform(progress, range, reduceMotion ? [1, 1, 1] : [0.95, 1, 0.95]);
-    const filter = useTransform(progress, range, reduceMotion ? 
-        ["none", "none", "none"] : 
-        ["grayscale(40%) blur(1px)", "grayscale(0%) blur(0px)", "grayscale(40%) blur(1px)"]
-    );
+    const filter = useTransform(progress, range, reduceMotion ? ["none", "none", "none"] : ["grayscale(40%) blur(1px)", "grayscale(0%) blur(0px)", "grayscale(40%) blur(1px)"]);
 
-    return (
-        <motion.div style={{ opacity, scale, filter }} className="origin-center">
-            {children}
-        </motion.div>
-    );
+    return <motion.div style={{ opacity, scale, filter }} className="origin-center">{children}</motion.div>;
 };
 
-// --- ZOPTYMALIZOWANA KARTA ---
+// --- KROK 2: UPDATE KARTY ---
 const Card = ({ project, isMobile = false }: { project: any, isMobile?: boolean }) => {
   return (
-    <div className="group relative h-[450px] w-[320px] md:h-[550px] md:w-[450px] overflow-hidden rounded-3xl bg-[#080808] border border-white/5 shrink-0 cursor-pointer transition-all duration-500 hover:border-blue-500/40 hover:shadow-[0_0_40px_-10px_rgba(37,99,235,0.2)]">
+    <div className="group relative h-[450px] w-[320px] md:h-[550px] md:w-[450px] overflow-hidden rounded-3xl bg-[#080808] border border-white/5 shrink-0 transition-all duration-500 hover:border-blue-500/40 hover:shadow-[0_0_40px_-10px_rgba(37,99,235,0.2)]">
       
       <div className="absolute inset-0">
          <Image 
             src={project.image} 
             alt={project.title} 
             fill 
-            // OPTYMALIZACJA 3: Idealnie dopasowany sizes dla Mobile (350px)
             sizes={isMobile ? "350px" : "(max-width: 1200px) 50vw, 33vw"}
             className="object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-50"
             loading="lazy" 
-            // OPTYMALIZACJA 4: Mniejsza waga pliku na mobile
             quality={isMobile ? 60 : 75} 
          />
       </div>
 
       <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/80 to-transparent opacity-90 transition-opacity" aria-hidden="true"></div>
       
-      {/* OPTYMALIZACJA 5: Nie renderujemy gradientu hover na mobile (oszczędność DOM) */}
       {!isMobile && (
         <div className="absolute inset-0 bg-gradient-to-t from-blue-900/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true"></div>
       )}
 
-      <div className="absolute bottom-0 left-0 w-full p-8 flex flex-col justify-end z-10">
+      <div className="absolute bottom-0 left-0 w-full p-8 flex flex-col justify-end z-10 pointer-events-none">
         <div className="transform transition-transform duration-500 ease-out lg:translate-y-[88px] group-hover:translate-y-0">
+            
             <div className="mb-4">
                 <div className="flex items-center gap-3 mb-3">
                     <span className="w-8 h-[2px] bg-blue-500 rounded-full" aria-hidden="true"></span>
@@ -340,17 +338,41 @@ const Card = ({ project, isMobile = false }: { project: any, isMobile?: boolean 
                 <p className="text-slate-300 text-sm leading-relaxed mb-6 border-l-2 border-white/20 pl-4 h-[3rem] line-clamp-2 drop-shadow-md">
                     {project.description}
                 </p>
-                <div className="flex items-center gap-3">
-                    <button className="px-6 py-3 rounded-lg bg-white text-black text-sm font-bold hover:bg-blue-50 transition-colors flex items-center gap-2 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none">
-                        Zobacz Realizację
-                    </button>
-                    <div className="p-3 rounded-lg border border-white/20 bg-white/5 hover:bg-white/10 transition-colors text-white backdrop-blur-sm" aria-hidden="true">
-                        <ArrowUpRight className="w-4 h-4" />
-                    </div>
+                
+                {/* --- SEKCJA BUTTONÓW (POINTER EVENTS AUTO) --- */}
+                <div className="flex items-center gap-3 pointer-events-auto">
+                    {/* BUTTON 1: WEWNĘTRZNY CASE STUDY */}
+                    <Link href={project.href}>
+                        <button className="px-6 py-3 rounded-lg bg-white text-black text-sm font-bold hover:bg-blue-50 transition-colors flex items-center gap-2 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none">
+                            Zobacz Realizację
+                        </button>
+                    </Link>
+                    
+                    {/* BUTTON 2: LIVE PREVIEW (ZEWNĘTRZNY) */}
+                    {/* Renderujemy tylko jeśli liveUrl istnieje */}
+                    {project.liveUrl && (
+                        <a 
+                            href={project.liveUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="p-3 rounded-lg border border-white/20 bg-white/5 hover:bg-white/10 transition-colors text-white backdrop-blur-sm cursor-pointer block hover:scale-105 active:scale-95"
+                            aria-label="Zobacz stronę na żywo"
+                        >
+                            <ArrowUpRight className="w-4 h-4" />
+                        </a>
+                    )}
                 </div>
             </div>
         </div>
       </div>
+
+      {/* GŁÓWNY LINK NA TŁO (CASE STUDY) */}
+      <Link 
+        href={project.href}
+        className="absolute inset-0 z-0 focus:outline-none" 
+        aria-label={`Zobacz projekt ${project.title}`}
+      />
+      
     </div>
   );
 };

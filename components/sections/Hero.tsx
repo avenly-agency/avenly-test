@@ -114,17 +114,19 @@ export const Hero = () => {
           >
             <button 
               type="button"
-              className="relative overflow-hidden group px-10 py-5 bg-white text-slate-950 font-bold rounded-xl transition-all hover:shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] cursor-pointer hover:scale-[1.02] active:scale-[0.98] w-full sm:w-auto text-base"
+              // ZMIANA: Dodano duration-500 dla dłuższego hovera
+              className="relative overflow-hidden group px-10 py-5 bg-white text-slate-950 font-bold rounded-xl transition-all duration-500 hover:shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] cursor-pointer hover:scale-[1.02] active:scale-[0.98] w-full sm:w-auto text-base"
             >
               <span className="relative flex items-center justify-center gap-2">
                 Rozwiń Biznes
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-500" />
               </span>
             </button>
             
             <button 
               type="button"
-              className="group px-10 py-5 bg-transparent border border-slate-700 text-slate-300 font-medium rounded-xl hover:border-blue-500/50 hover:bg-slate-900/50 hover:text-white transition-all cursor-pointer backdrop-blur-sm w-full sm:w-auto flex items-center justify-center text-base"
+              // ZMIANA: Dodano duration-500 dla dłuższego hovera
+              className="group px-10 py-5 bg-transparent border border-slate-700 text-slate-300 font-medium rounded-xl hover:border-blue-500/50 hover:bg-slate-900/50 hover:text-white transition-all duration-500 cursor-pointer backdrop-blur-sm w-full sm:w-auto flex items-center justify-center text-base"
             >
               Jak To Działa?
             </button>
@@ -166,8 +168,9 @@ export const Hero = () => {
 
             <div className="space-y-5 relative">
               {/* Elementy listy - statyczne, bez ciężkich animacji */}
-              <div className="flex items-center gap-5 p-4 rounded-2xl bg-slate-900/50 border border-slate-800 hover:bg-slate-900 hover:border-blue-500/30 transition-all group cursor-default">
-                <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors shrink-0 z-10 ring-4 ring-slate-950">
+              {/* ZMIANA: Dodano duration-500 do kafelków powiadomień */}
+              <div className="flex items-center gap-5 p-4 rounded-2xl bg-slate-900/50 border border-slate-800 hover:bg-slate-900 hover:border-blue-500/30 transition-all duration-500 group cursor-default">
+                <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors duration-500 shrink-0 z-10 ring-4 ring-slate-950">
                   <Mail size={22} />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -179,8 +182,9 @@ export const Hero = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-5 p-4 rounded-2xl bg-slate-900/50 border border-slate-800 hover:bg-slate-900 hover:border-emerald-500/30 transition-all group cursor-default">
-                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors shrink-0 z-10 ring-4 ring-slate-950">
+              {/* ZMIANA: Dodano duration-500 */}
+              <div className="flex items-center gap-5 p-4 rounded-2xl bg-slate-900/50 border border-slate-800 hover:bg-slate-900 hover:border-emerald-500/30 transition-all duration-500 group cursor-default">
+                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors duration-500 shrink-0 z-10 ring-4 ring-slate-950">
                   <Calendar size={22} />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -194,8 +198,9 @@ export const Hero = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-5 p-4 rounded-2xl bg-slate-900/50 border border-slate-800 hover:bg-slate-900 hover:border-purple-500/30 transition-all group cursor-default">
-                <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-colors shrink-0 z-10 ring-4 ring-slate-950">
+              {/* ZMIANA: Dodano duration-500 */}
+              <div className="flex items-center gap-5 p-4 rounded-2xl bg-slate-900/50 border border-slate-800 hover:bg-slate-900 hover:border-purple-500/30 transition-all duration-500 group cursor-default">
+                <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-colors duration-500 shrink-0 z-10 ring-4 ring-slate-950">
                   <MessageSquare size={22} />
                 </div>
                 <div className="flex-1 min-w-0">

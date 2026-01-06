@@ -3,69 +3,79 @@ import { Hero } from '@/components/sections/Hero';
 
 // --- KONFIGURACJA LAZY LOADING ---
 
-// Funkcja pomocnicza do tworzenia placeholderów (szkieletów)
-// Zapobiega przesunięciom układu (CLS) zanim sekcja się załaduje
 const SectionLoader = ({ height = "h-screen" }: { height?: string }) => (
   <div className={`w-full ${height} bg-[#050505] flex items-center justify-center`}>
-      {/* Opcjonalnie: mały spinner lub po prostu puste tło */}
+      {/* Placeholder */}
   </div>
 );
 
-// 1. TechStack - lekki, ale można go opóźnić
+// 1. TechStack
 const TechStack = dynamic(() => import('@/components/sections/TechStack').then(mod => mod.TechStack), {
   loading: () => <div className="w-full h-[150px] bg-[#050505]" />
 });
 
-// 2. Portfolio - ciężka sekcja (Sticky Scroll)
+// 2. Portfolio (Sekcja na głównej - teaser)
 const Portfolio = dynamic(() => import('@/components/sections/Portfolio').then(mod => mod.Portfolio), {
-  loading: () => <SectionLoader height="h-[350vh]" /> // Ważne: Taka sama wysokość jak w komponencie!
-});
-const CallToAction = dynamic(() => import('@/components/sections/CallToAction').then(mod => mod.CallToAction), {
-  loading: () => <SectionLoader height="h-[350vh]" /> // Ważne: Taka sama wysokość jak w komponencie!
+  loading: () => <SectionLoader height="h-[350vh]" />
 });
 
-// 3. Process - ciężka sekcja (Sticky Scroll)
+// 3. Process
 const Process = dynamic(() => import('@/components/sections/Process').then(mod => mod.Process), {
   loading: () => <SectionLoader height="h-[300vh]" />
 });
 
-// 4. Impact - standardowa sekcja
+// 4. Impact
 const Impact = dynamic(() => import('@/components/sections/Impact').then(mod => mod.Impact), {
   loading: () => <SectionLoader height="h-screen" />
 });
-const Services = dynamic(() => import('@/components/sections/Services').then(mod => mod.Services), {
-  loading: () => <div className="h-[800px] bg-[#050505]" /> // Placeholder
-});
-// app/page.tsx
 
-// ... importy
+// 5. Services
+const Services = dynamic(() => import('@/components/sections/Services').then(mod => mod.Services), {
+  loading: () => <div className="h-[800px] bg-[#050505]" />
+});
+
+// 6. CallToAction
+const CallToAction = dynamic(() => import('@/components/sections/CallToAction').then(mod => mod.CallToAction), {
+  loading: () => <SectionLoader height="h-[80vh]" /> // FIX: Poprawiona wysokość
+});
 
 export default function Home() {
   return (
     <main className="bg-[#050505] min-h-screen">
-      <Hero /> {/* Hero musi być widoczne od razu, więc bez optymalizacji */}
+      
+      {/* HERO (Start) */}
+      <Hero /> 
       
       <div className="render-optimize">
         <TechStack />
       </div>
       
+      {/* PORTFOLIO (Teaser na głównej) */}
+      {/* Uwaga: W nawigacji link "Realizacje" prowadzi do /realizacje, ale sekcja tu zostaje jako showcase */}
       <div className="render-optimize">
         <Portfolio />
       </div>
       
-      <div className="render-optimize">
+      {/* PROCES (Kotwica #proces) */}
+      <div className="render-optimize" id="proces">
         <Process />
       </div>
       
       <div className="render-optimize">
         <Impact />
       </div>
-      <div className="render-optimize">
+
+      {/* OFERTA (Kotwica #oferta) */}
+      {/* Tura: Tutaj dodajemy ID, żeby link z menu działał */}
+      <div className="render-optimize" id="oferta">
         <Services />
       </div>
-      <div className="render-optimize">
-       <CallToAction />
+      
+      {/* KONTAKT (Kotwica #kontakt) */}
+      <div className="render-optimize" id="kontakt">
+        <CallToAction />
       </div>
+
     </main>
   );
 }
