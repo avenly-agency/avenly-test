@@ -147,7 +147,7 @@ export const Navbar = () => {
                   </div>
                   
                   <button className="w-full py-4 bg-white text-black text-lg font-bold rounded-xl hover:bg-blue-500 hover:text-white transition-all flex items-center justify-center gap-2 group cursor-pointer active:scale-95">
-                      Darmowa Wycena
+                      Darmowa Wycenaf
                       <ArrowRight className="group-hover:translate-x-1 transition-transform" />
                   </button>
               </div>
