@@ -66,7 +66,7 @@ export const Services = () => {
     whileInView: { opacity: 1, y: 0 },
     viewport: { once: true, margin: "-50px" },
     transition: { duration: 0.6, ease: "easeOut" }
-  };
+  } as const;
 
   return (
     <section className="relative w-full py-20 md:py-24 bg-[#050505] overflow-hidden" id="uslugi">
@@ -136,7 +136,7 @@ export const Services = () => {
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
-                            transition={{ duration: 0.3 }}
+                            transition={{ duration: 0.3 } as const}
                         >
                             <div className="mb-8">
                                 <h3 className="text-2xl font-bold text-white mb-2 flex items-center gap-3">
@@ -154,7 +154,7 @@ export const Services = () => {
                                         key={index}
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.4, delay: index * 0.1 }}
+                                        transition={{ duration: 0.4, delay: index * 0.1 } as const}
                                         className="group p-6 rounded-2xl bg-[#080808] border border-white/5 hover:border-blue-500/30 transition-colors duration-300 flex flex-col gap-4"
                                     >
                                         <div className="w-10 h-10 rounded-lg bg-blue-900/10 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
@@ -188,7 +188,7 @@ export const Services = () => {
         {/* --- WERSJA MOBILE (ACCORDION XXL) --- */}
         <motion.div 
             {...fadeInUp}
-            transition={{ ...fadeInUp.transition, delay: 0.2 }}
+            transition={{ ...fadeInUp.transition, delay: 0.2 }} 
             className="flex flex-col gap-5 lg:hidden"
         >
             {servicesData.map((service) => {
@@ -226,7 +226,7 @@ export const Services = () => {
                                     initial={{ height: 0, opacity: 0 }}
                                     animate={{ height: "auto", opacity: 1 }}
                                     exit={{ height: 0, opacity: 0 }}
-                                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                                    transition={{ duration: 0.3, ease: "easeInOut" } as const}
                                 >
                                     <div className="px-6 pb-8 pt-2 border-t border-white/5">
                                         <p className="text-slate-400 text-lg mb-8 leading-relaxed">
