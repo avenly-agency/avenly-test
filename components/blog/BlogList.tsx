@@ -4,69 +4,31 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Search, ArrowUpRight, Calendar, Clock, Tag } from 'lucide-react';
+import { Search, ArrowUpRight, Calendar, Clock } from 'lucide-react';
+// Importujemy Twój typ danych z pliku
+import type { BlogPost } from '../../app/data/posts';
 
-// --- MOCK DATA (Struktura 1:1 pod Sanity.io) ---
-// Później zamienimy to na fetch z CMS
-const MOCK_POSTS = [
-    {
-        id: '1',
-        title: 'Jak wdrożyć AI w małej firmie i nie zbankrutować?',
-        slug: 'wdrozenie-ai-w-malej-firmie',
-        excerpt: 'Automatyzacja nie jest zarezerwowana dla gigantów. Pokazujemy 5 narzędzi, które realnie oszczędzają czas i kosztują grosze.',
-        mainImage: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=1000&auto=format&fit=crop',
-        publishedAt: '2024-05-15',
-        readTime: '5 min',
-        author: { name: 'Kamil Nowak', image: 'https://i.pravatar.cc/150?u=a042581f4e29026024d' },
-        categories: ['AI & Automatyzacja', 'Biznes']
-    },
-    {
-        id: '2',
-        title: 'Next.js 14 vs 15 – Czy warto już migrować?',
-        slug: 'nextjs-14-vs-15-migracja',
-        excerpt: 'Analiza wydajności i nowych ficzerów. Sprawdzamy Server Actions i Partial Prerendering w praktyce.',
-        mainImage: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?q=80&w=1000&auto=format&fit=crop',
-        publishedAt: '2024-05-10',
-        readTime: '8 min',
-        author: { name: 'Jan Kowalski', image: 'https://i.pravatar.cc/150?u=a04258114e29026302d' },
-        categories: ['Development', 'Tech']
-    },
-    {
-        id: '3',
-        title: 'Dlaczego Twoja strona nie sprzedaje? 5 błędów UX.',
-        slug: 'dlaczego-strona-nie-sprzedaje-ux',
-        excerpt: 'Masz ruch, ale nie masz leadów? Prawdopodobnie popełniasz jeden z tych krytycznych błędów w designie.',
-        mainImage: 'https://images.unsplash.com/photo-1586717791821-3f44a5638d48?q=80&w=1000&auto=format&fit=crop',
-        publishedAt: '2024-04-28',
-        readTime: '6 min',
-        author: { name: 'Anna Nowak', image: 'https://i.pravatar.cc/150?u=a042581f4e29026704d' },
-        categories: ['Design & UX', 'Marketing']
-    },
-    {
-        id: '4',
-        title: 'Headless CMS – Przyszłość czy modny buzzword?',
-        slug: 'headless-cms-przyszlosc',
-        excerpt: 'Porównanie Sanity, Strapi i WordPressa. Kiedy warto odciąć głowę od CMS-a?',
-        mainImage: 'https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?q=80&w=1000&auto=format&fit=crop',
-        publishedAt: '2024-04-15',
-        readTime: '7 min',
-        author: { name: 'Kamil Nowak', image: 'https://i.pravatar.cc/150?u=a042581f4e29026024d' },
-        categories: ['Tech', 'Development']
-    }
-];
+// Kategorie do filtrowania
+const CATEGORIES = ["Wszystkie", "Development", "Design & UX", "AI & Automatyzacja", "Biznes", "Marketing", "News", "Tech"];
 
-const CATEGORIES = ["Wszystkie", "Development", "Design & UX", "AI & Automatyzacja", "Biznes", "Marketing"];
+// Definicja propsów - to naprawia Twój błąd!
+interface BlogListProps {
+  allPosts: BlogPost[]; // Musi się nazywać allPosts, tak jak w page.tsx
+}
 
-export default function BlogList() {
+export default function BlogList({ allPosts }: BlogListProps) {
     const [filter, setFilter] = useState("Wszystkie");
     const [search, setSearch] = useState("");
 
     // --- LOGIKA FILTROWANIA ---
-    const filteredPosts = MOCK_POSTS.filter(post => {
+    const filteredPosts = allPosts.filter(post => {
         const matchesCategory = filter === "Wszystkie" || post.categories.includes(filter);
-        const matchesSearch = post.title.toLowerCase().includes(search.toLowerCase()) || 
-                              post.excerpt.toLowerCase().includes(search.toLowerCase());
-        return matchesCategory && matchesSearch;
+        
+        // Zabezpieczenie na wypadek gdyby title/excerpt były puste
+        const titleMatch = post.title?.toLowerCase().includes(search.toLowerCase()) || false;
+        const excerptMatch = post.excerpt?.toLowerCase().includes(search.toLowerCase()) || false;
+
+        return matchesCategory && (titleMatch || excerptMatch);
     });
 
     return (
@@ -120,19 +82,28 @@ export default function BlogList() {
                                 className="group flex flex-col h-full bg-[#080808] border border-white/5 rounded-3xl overflow-hidden hover:border-blue-500/30 transition-all duration-500 hover:shadow-[0_0_30px_-10px_rgba(37,99,235,0.15)]"
                             >
                                 {/* IMAGE */}
-                                <Link href={`/blog/${post.slug}`} className="relative h-56 w-full overflow-hidden block">
-                                    <Image 
-                                        src={post.mainImage} 
-                                        alt={post.title}
-                                        fill
-                                        className="object-cover transition-transform duration-700 group-hover:scale-105"
-                                    />
+                                <Link href={`/blog/${post.slug}`} className="relative h-56 w-full overflow-hidden block bg-slate-900">
+                                    {post.mainImage ? (
+                                        <Image 
+                                            src={post.mainImage} 
+                                            alt={post.title}
+                                            fill
+                                            className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                        />
+                                    ) : (
+                                        <div className="flex items-center justify-center h-full w-full text-slate-700 bg-white/5">
+                                            <span className="text-xs">Brak zdjęcia</span>
+                                        </div>
+                                    )}
+                                    
                                     {/* Kategoria Badge */}
-                                    <div className="absolute top-4 left-4">
-                                        <span className="px-3 py-1 text-xs font-bold bg-black/60 backdrop-blur-md text-white rounded-lg border border-white/10">
-                                            {post.categories[0]}
-                                        </span>
-                                    </div>
+                                    {post.categories && post.categories[0] && (
+                                        <div className="absolute top-4 left-4">
+                                            <span className="px-3 py-1 text-xs font-bold bg-black/60 backdrop-blur-md text-white rounded-lg border border-white/10">
+                                                {post.categories[0]}
+                                            </span>
+                                        </div>
+                                    )}
                                 </Link>
 
                                 {/* CONTENT */}
@@ -162,9 +133,6 @@ export default function BlogList() {
                                     {/* Footer: Author & Link */}
                                     <div className="flex items-center justify-between mt-auto pt-6 border-t border-white/5">
                                         <div className="flex items-center gap-3">
-                                            <div className="relative w-8 h-8 rounded-full overflow-hidden border border-white/10">
-                                                <Image src={post.author.image} alt={post.author.name} fill className="object-cover" />
-                                            </div>
                                             <span className="text-xs text-slate-300 font-medium">{post.author.name}</span>
                                         </div>
 

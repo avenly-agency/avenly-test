@@ -157,3 +157,45 @@ html.lenis, html.lenis body {
     contain-intrinsic-size: 1px 800px; /* Szacowana wysokość sekcji, żeby scroll nie skakał */
   }
 }
+/* --- STYLE DLA TREŚCI BLOGA --- */
+
+.blog-content h2 {
+  @apply text-3xl font-bold text-white mt-12 mb-6;
+}
+
+.blog-content h3 {
+  @apply text-2xl font-semibold text-white mt-8 mb-4;
+}
+
+/* app/globals.css */
+
+.blog-content p {
+  /* Zmiana z leading-relaxed na leading-loose 👇 */
+  @apply text-lg text-slate-300 leading-loose mb-8;
+}
+
+/* Opcjonalnie: Zwiększ też margines dolny (mb-8), żeby akapity były wyraźniej oddzielone */
+
+.blog-content ul {
+  @apply list-disc list-inside text-slate-300 mb-6 pl-4;
+}
+
+.blog-content ol {
+  @apply list-decimal list-inside text-slate-300 mb-6 pl-4;
+}
+
+.blog-content li {
+  @apply mb-2 marker:text-blue-500;
+}
+
+.blog-content strong {
+  @apply text-white font-bold;
+}
+
+.blog-content a {
+  @apply text-blue-400 underline decoration-blue-400/30 hover:decoration-blue-400 transition-all;
+}
+
+.blog-content blockquote {
+  @apply border-l-4 border-blue-500 bg-white/5 pl-6 py-4 my-8 rounded-r-xl text-slate-200 italic;
+}
