@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react';
 import { motion, Variants } from 'framer-motion';
 import { ArrowRight, Calendar, MessageSquare, Mail, CheckCircle2, ShieldCheck, Clock } from 'lucide-react';
+import Link from 'next/link';
+import { useLenis } from 'lenis/react'; // <--- IMPORT LENIS
 
-// Warianty tylko dla desktopu, żeby nie zaśmiecać pamięci na mobile
+// Warianty tylko dla desktopu
 const blobVariants: Variants = {
   animateLeft: {
     scale: [1, 1.5, 1],
@@ -24,8 +26,8 @@ const blobVariants: Variants = {
 
 export const Hero = () => {
   const [isDesktop, setIsDesktop] = useState(false);
+  const lenis = useLenis(); // <--- HOOK DO SCROLLA
 
-  // Sprawdzamy szerokość ekranu tylko raz po załadowaniu
   useEffect(() => {
     const checkDesktop = () => setIsDesktop(window.innerWidth >= 768);
     checkDesktop();
@@ -33,20 +35,34 @@ export const Hero = () => {
     return () => window.removeEventListener('resize', checkDesktop);
   }, []);
 
+  // --- FUNKCJA WYMUSZAJĄCA SCROLL ---
+  const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
+    e.preventDefault(); // Blokujemy domyślne zachowanie przeglądarki (która by nic nie zrobiła)
+    
+    // Ręczne wywołanie scrolla
+    const elem = document.getElementById(targetId);
+    if (elem && lenis) {
+        lenis.scrollTo(elem, { 
+            offset: -120, // Offset na navbar
+            duration: 1.5,
+            lock: false,
+            force: true // Wymuszenie
+        });
+    }
+  };
+
   return (
-    <section className="relative w-full min-h-[100dvh] flex items-center justify-center overflow-hidden bg-slate-950 text-white selection:bg-blue-500/30 pt-20 lg:pt-0">
+    <section 
+        className="relative w-full min-h-[100dvh] flex items-center justify-center overflow-hidden bg-slate-950 text-white selection:bg-blue-500/30 pt-32 pb-20 lg:py-0"
+    >
       
       {/* --- TŁO HYBRYDOWE --- */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden="true">
-        
-        {/* A. MOBILE (Static CSS) - Renderowane zawsze, ukrywane na MD */}
-        {/* To klucz do LCP. Przeglądarka renderuje to w 1 klatce bez czekania na JS */}
         <div className="md:hidden absolute inset-0">
             <div className="absolute top-[-10%] left-[-20%] w-[90vw] h-[90vw] bg-blue-600/15 blur-[80px] rounded-full mix-blend-screen"></div>
             <div className="absolute bottom-[-10%] right-[-20%] w-[90vw] h-[90vw] bg-indigo-500/15 blur-[80px] rounded-full mix-blend-screen"></div>
         </div>
 
-        {/* B. DESKTOP (Animated Framer Motion) - Renderowane tylko warunkowo */}
         {isDesktop && (
             <>
                 <motion.div 
@@ -67,14 +83,13 @@ export const Hero = () => {
       <div className="w-full max-w-[1800px] px-6 md:px-12 relative z-10 flex flex-col lg:flex-row items-center gap-16 lg:gap-32">
         
         {/* LEWA STRONA: CONTENT */}
-        {/* Używamy standardowych klas Tailwind dla layoutu, Framer Motion tylko do wejścia */}
         <div className="flex-1 text-center lg:text-left space-y-10 relative z-20">
           
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }} // Szybciej na mobile
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-slate-900/80 border border-slate-800 text-slate-300 text-xs font-semibold tracking-wide backdrop-blur-sm"
+            transition={{ duration: 0.4 }}
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-slate-900/80 border border-slate-800 text-slate-300 text-xs font-semibold tracking-wide backdrop-blur-sm mx-auto lg:mx-0"
           >
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -87,7 +102,6 @@ export const Hero = () => {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
-            // Dodajemy 'will-change-opacity' żeby przeglądarka wiedziała co robić
             className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[1.05] will-change-[opacity,transform]"
           >
             TWOJA FIRMA <br />
@@ -112,30 +126,28 @@ export const Hero = () => {
             transition={{ duration: 0.4, delay: 0.3 }}
             className="flex flex-col sm:flex-row gap-5 justify-center lg:justify-start pt-6"
           >
-            <button 
-              type="button"
-              // ZMIANA: Dodano duration-500 dla dłuższego hovera
-              className="relative overflow-hidden group px-10 py-5 bg-white text-slate-950 font-bold rounded-xl transition-all duration-500 hover:shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] cursor-pointer hover:scale-[1.02] active:scale-[0.98] w-full sm:w-auto text-base"
+            {/* PRZYCISK 1: Link do Oferty */}
+            <Link 
+              href="/#oferta"
+              onClick={(e) => handleScroll(e, 'oferta')} // <--- OBSŁUGA KLIKNIĘCIA
+              className="relative overflow-hidden group px-10 py-5 bg-white text-slate-950 font-bold rounded-xl transition-all duration-500 hover:shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] cursor-pointer hover:scale-[1.02] active:scale-[0.98] w-full sm:w-auto text-base flex items-center justify-center gap-2"
             >
-              <span className="relative flex items-center justify-center gap-2">
                 Rozwiń Biznes
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-500" />
-              </span>
-            </button>
+            </Link>
             
-            <button 
-              type="button"
-              // ZMIANA: Dodano duration-500 dla dłuższego hovera
+            {/* PRZYCISK 2: Link do Procesu */}
+            <Link 
+              href="/#proces"
+              onClick={(e) => handleScroll(e, 'proces')} // <--- OBSŁUGA KLIKNIĘCIA
               className="group px-10 py-5 bg-transparent border border-slate-700 text-slate-300 font-medium rounded-xl hover:border-blue-500/50 hover:bg-slate-900/50 hover:text-white transition-all duration-500 cursor-pointer backdrop-blur-sm w-full sm:w-auto flex items-center justify-center text-base"
             >
               Jak To Działa?
-            </button>
+            </Link>
           </motion.div>
         </div>
 
         {/* PRAWA STRONA: MODAL */}
-        {/* Na mobile ukrywamy to całkowicie z DOM jeśli nie jest isDesktop, lub używamy CSS hidden */}
-        {/* Użycie 'hidden lg:block' w CSS jest szybsze niż renderowanie warunkowe JS dla LCP */}
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -143,7 +155,6 @@ export const Hero = () => {
           className="hidden lg:block flex-1 w-full max-w-[650px] relative perspective-1000"
           aria-hidden="true"
         >
-          {/* Tło za modalem - TYLKO JEŚLI DESKTOP (Optymalizacja JS) */}
           {isDesktop && (
               <motion.div 
                 animate={{ scale: [1, 1.05, 1], opacity: [0.5, 0.7, 0.5] }}
@@ -167,8 +178,6 @@ export const Hero = () => {
             </div>
 
             <div className="space-y-5 relative">
-              {/* Elementy listy - statyczne, bez ciężkich animacji */}
-              {/* ZMIANA: Dodano duration-500 do kafelków powiadomień */}
               <div className="flex items-center gap-5 p-4 rounded-2xl bg-slate-900/50 border border-slate-800 hover:bg-slate-900 hover:border-blue-500/30 transition-all duration-500 group cursor-default">
                 <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors duration-500 shrink-0 z-10 ring-4 ring-slate-950">
                   <Mail size={22} />
@@ -182,7 +191,6 @@ export const Hero = () => {
                 </div>
               </div>
 
-              {/* ZMIANA: Dodano duration-500 */}
               <div className="flex items-center gap-5 p-4 rounded-2xl bg-slate-900/50 border border-slate-800 hover:bg-slate-900 hover:border-emerald-500/30 transition-all duration-500 group cursor-default">
                 <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors duration-500 shrink-0 z-10 ring-4 ring-slate-950">
                   <Calendar size={22} />
@@ -198,7 +206,6 @@ export const Hero = () => {
                 </div>
               </div>
 
-              {/* ZMIANA: Dodano duration-500 */}
               <div className="flex items-center gap-5 p-4 rounded-2xl bg-slate-900/50 border border-slate-800 hover:bg-slate-900 hover:border-purple-500/30 transition-all duration-500 group cursor-default">
                 <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-colors duration-500 shrink-0 z-10 ring-4 ring-slate-950">
                   <MessageSquare size={22} />
