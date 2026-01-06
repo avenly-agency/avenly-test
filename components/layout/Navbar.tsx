@@ -13,6 +13,7 @@ const NAV_LINKS = [
 	{ title: 'Oferta', href: '#oferta' },
 	{ title: 'Proces', href: '#proces' },
 	{ title: 'Realizacje', href: '/realizacje' },
+	{ title: 'Blog', href: '/blog' },
 	{ title: 'Kontakt', href: '/kontakt' },
 ]
 
