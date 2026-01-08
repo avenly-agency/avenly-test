@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils'
 const NAV_LINKS = [
 	{ title: 'Oferta', href: '#oferta' },
 	{ title: 'Proces', href: '#proces' },
+	{ title: 'O nas', href: '/o-nas' },
 	{ title: 'Realizacje', href: '/realizacje' },
 	{ title: 'Blog', href: '/blog' },
 	{ title: 'Kontakt', href: '/kontakt' },
