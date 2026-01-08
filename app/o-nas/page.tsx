@@ -99,25 +99,25 @@ export default function AboutPage() {
         
         <div className="absolute inset-0 w-full h-[100dvh] flex items-center justify-center overflow-hidden">
 
-            {/* --- TŁO "DIGITAL NEBULA" - ZMIENIONE KOLORY --- */}
-            <div ref={bgRef} className="absolute inset-0 w-full h-[120%] bg-[#020202] will-change-transform overflow-hidden">
+            {/* --- TŁO "DIGITAL NEBULA" --- */}
+            {/* Dodano brightness-125 na mobile, żeby wyciągnąć kolory z czerni */}
+            <div ref={bgRef} className="absolute inset-0 w-full h-[120%] bg-[#020202] will-change-transform overflow-hidden brightness-125 md:brightness-100">
                 
                 {/* 1. Tło bazowe */}
                 <div className="absolute inset-0 bg-black" />
 
                 {/* 2. Pierwsza warstwa mgławicy (Ciemny Błękit) */}
                 <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] opacity-70 mix-blend-screen animate-spin-very-slow">
-                     {/* Zmieniono kolory na odcienie niebieskiego i granatu */}
-                     <div className="w-full h-full bg-[conic-gradient(from_0deg_at_50%_50%,#000000_0%,#1e3a8a_25%,#000000_50%,#172554_75%,#000000_100%)] blur-[80px]" />
+                     {/* MOBILE: Jaśniejszy niebieski (#2563eb - blue-600) | DESKTOP: Ciemny granat (#1e3a8a) */}
+                     <div className="w-full h-full bg-[conic-gradient(from_0deg_at_50%_50%,#000000_0%,#2563eb_25%,#000000_50%,#1d4ed8_75%,#000000_100%)] md:bg-[conic-gradient(from_0deg_at_50%_50%,#000000_0%,#1e3a8a_25%,#000000_50%,#172554_75%,#000000_100%)] blur-[80px]" />
                 </div>
 
-                {/* 3. Druga warstwa (Jaśniejszy Błękit - zamiast różu) */}
+                {/* 3. Druga warstwa (Kontra) */}
                 <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] opacity-60 mix-blend-hard-light animate-spin-reverse-slow">
-                     {/* Zastąpiono różowy (#be185d) błękitem królewskim (#2563eb) */}
-                     <div className="w-full h-full bg-[conic-gradient(from_180deg_at_50%_50%,#000000_0%,#2563eb_30%,#000000_50%,#3b82f6_70%,#000000_100%)] blur-[90px]" />
+                     {/* MOBILE: Bardzo jasny błękit (#60a5fa - blue-400) | DESKTOP: Standardowy niebieski (#2563eb) */}
+                     <div className="w-full h-full bg-[conic-gradient(from_180deg_at_50%_50%,#000000_0%,#60a5fa_30%,#000000_50%,#3b82f6_70%,#000000_100%)] md:bg-[conic-gradient(from_180deg_at_50%_50%,#000000_0%,#2563eb_30%,#000000_50%,#3b82f6_70%,#000000_100%)] blur-[90px]" />
                 </div>
 
-                {/* USUNIĘTO warstwę Noise (Ziarno) dla efektu "smooth" */}
             </div>
 
             {/* MASKA Z NAPISEM */}
