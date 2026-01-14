@@ -29,17 +29,22 @@ const Impact = dynamic(() => import('@/components/sections/Impact').then(mod => 
   loading: () => <SectionLoader height="h-screen" />
 });
 
-// 5. Services
+// 5. AiConsultant (NOWA SEKCJA - Voiceflow/Chatbot)
+const AiConsultant = dynamic(() => import('@/components/sections/AiConsultant').then(mod => mod.AiConsultant), {
+  loading: () => <div className="h-[800px] bg-[#050505]" /> // Przybliżona wysokość sekcji
+});
+
+// 6. Services
 const Services = dynamic(() => import('@/components/sections/Services').then(mod => mod.Services), {
   loading: () => <div className="h-[800px] bg-[#050505]" />
 });
 
-// 6. BlogTeaser (NOWOŚĆ)
+// 7. BlogTeaser
 const BlogTeaser = dynamic(() => import('@/components/sections/BlogTeaser').then(mod => mod.BlogTeaser), {
-  loading: () => <div className="h-[600px] bg-[#050505]" /> // Przybliżona wysokość sekcji
+  loading: () => <div className="h-[600px] bg-[#050505]" /> 
 });
 
-// 7. CallToAction
+// 8. CallToAction
 const CallToAction = dynamic(() => import('@/components/sections/CallToAction').then(mod => mod.CallToAction), {
   loading: () => <SectionLoader height="h-[80vh]" />
 });
@@ -69,12 +74,17 @@ export default function Home() {
         <Impact />
       </div>
 
+      {/* AI CONSULTANT (Nowa sekcja promocyjna) */}
+      <div className="render-optimize">
+        <AiConsultant />
+      </div>
+
       {/* OFERTA (Kotwica #oferta) */}
       <div className="render-optimize" id="oferta">
         <Services />
       </div>
 
-      {/* BLOG TEASER (NOWOŚĆ - Tutaj pasuje idealnie) */}
+      {/* BLOG TEASER */}
       <div className="render-optimize">
         <BlogTeaser />
       </div>

@@ -12,6 +12,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://avenly.pl'),
   title: "Avenly Agency",
   description: "High-Performance Web & AI Automation",
 };
