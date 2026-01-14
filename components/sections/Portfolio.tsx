@@ -213,7 +213,7 @@ export const Portfolio = () => {
                             </RevealCard>
                         </FocusCard>
                     </motion.div>
-                ) : (
+               ) : (
                     // MOBILE VIEW
                     <div className="md:hidden absolute inset-0 w-full h-full flex flex-col justify-center relative z-10">
                          <div className="container mx-auto px-6 mb-4">
@@ -262,8 +262,10 @@ export const Portfolio = () => {
                             <div className="shrink-0 w-6" />
                         </div>
                         
+                        {/* --- POPRAWIONA NAWIGACJA (KROPKI) --- */}
+                        {/* Zmieniono totalSlides na (projects.length + 1), aby pominąć slajd tytułowy z desktopu */}
                          <div className="flex justify-center items-center gap-2 mt-2 pointer-events-none" aria-hidden="true">
-                            {Array.from({ length: totalSlides }).map((_, index) => (
+                            {Array.from({ length: projects.length + 1 }).map((_, index) => (
                                 <div 
                                     key={index}
                                     className={`h-1 rounded-full transition-all duration-300 ${

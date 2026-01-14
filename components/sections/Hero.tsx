@@ -58,11 +58,13 @@ export const Hero = () => {
       .animate-blob-left {
         animation: floatBlobLeft 12s infinite ease-in-out;
         will-change: transform, opacity;
+        animation-fill-mode: backwards; /* Zapobiega błyskom przy starcie */
       }
       .animate-blob-right {
         animation: floatBlobRight 15s infinite ease-in-out;
         animation-delay: 2s;
         will-change: transform, opacity;
+        animation-fill-mode: backwards; /* KLUCZOWA POPRAWKA: stosuje styl 0% podczas delay */
       }
     `}</style>
 
