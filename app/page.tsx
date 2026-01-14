@@ -5,7 +5,7 @@ import { Hero } from '@/components/sections/Hero';
 
 const SectionLoader = ({ height = "h-screen" }: { height?: string }) => (
   <div className={`w-full ${height} bg-[#050505] flex items-center justify-center`}>
-      {/* Placeholder */}
+      {/* Placeholder - można tu dodać spinner jeśli chcesz */}
   </div>
 );
 
@@ -14,7 +14,7 @@ const TechStack = dynamic(() => import('@/components/sections/TechStack').then(m
   loading: () => <div className="w-full h-[150px] bg-[#050505]" />
 });
 
-// 2. Portfolio (Sekcja na głównej - teaser)
+// 2. Portfolio (Teaser)
 const Portfolio = dynamic(() => import('@/components/sections/Portfolio').then(mod => mod.Portfolio), {
   loading: () => <SectionLoader height="h-[350vh]" />
 });
@@ -34,9 +34,14 @@ const Services = dynamic(() => import('@/components/sections/Services').then(mod
   loading: () => <div className="h-[800px] bg-[#050505]" />
 });
 
-// 6. CallToAction
+// 6. BlogTeaser (NOWOŚĆ)
+const BlogTeaser = dynamic(() => import('@/components/sections/BlogTeaser').then(mod => mod.BlogTeaser), {
+  loading: () => <div className="h-[600px] bg-[#050505]" /> // Przybliżona wysokość sekcji
+});
+
+// 7. CallToAction
 const CallToAction = dynamic(() => import('@/components/sections/CallToAction').then(mod => mod.CallToAction), {
-  loading: () => <SectionLoader height="h-[80vh]" /> // FIX: Poprawiona wysokość
+  loading: () => <SectionLoader height="h-[80vh]" />
 });
 
 export default function Home() {
@@ -51,7 +56,6 @@ export default function Home() {
       </div>
       
       {/* PORTFOLIO (Teaser na głównej) */}
-      {/* Uwaga: W nawigacji link "Realizacje" prowadzi do /realizacje, ale sekcja tu zostaje jako showcase */}
       <div className="render-optimize">
         <Portfolio />
       </div>
@@ -66,9 +70,13 @@ export default function Home() {
       </div>
 
       {/* OFERTA (Kotwica #oferta) */}
-      {/* Tura: Tutaj dodajemy ID, żeby link z menu działał */}
       <div className="render-optimize" id="oferta">
         <Services />
+      </div>
+
+      {/* BLOG TEASER (NOWOŚĆ - Tutaj pasuje idealnie) */}
+      <div className="render-optimize">
+        <BlogTeaser />
       </div>
       
       {/* KONTAKT (Kotwica #kontakt) */}

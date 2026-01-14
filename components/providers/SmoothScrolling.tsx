@@ -1,11 +1,12 @@
 'use client';
 
 import { ReactLenis, useLenis } from 'lenis/react';
-import { useSearchParams } from 'next/navigation';
-import { useEffect, Suspense, useRef } from 'react';
+import { useSearchParams, usePathname } from 'next/navigation';
+import { useEffect, Suspense } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 // --- EFEKT PREMIUM ---
-// Funkcja matematyczna, która sprawia, że scroll "ląduje" miękko jak samolot
 function easeOutExpo(x: number): number {
     return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
 }
@@ -31,19 +32,34 @@ export const SmoothScrolling = ({ children }: { children: React.ReactNode }) => 
 function AnchorManager() {
     const lenis = useLenis();
     const searchParams = useSearchParams();
+    const pathname = usePathname(); // Śledzimy zmianę URL (np. przejście z Home na Blog)
 
-    // 1. BLOKADA NATYWNEGO SKOKU
+    // 1. INTEGRACJA GSAP (Ważne dla animacji ScrollTrigger przy Lenis)
+    useEffect(() => {
+        if (lenis) {
+            lenis.on('scroll', ScrollTrigger.update);
+            gsap.ticker.add((time) => {
+                lenis.raf(time * 1000);
+            });
+            gsap.ticker.lagSmoothing(0);
+        }
+    }, [lenis]);
+
+    // 2. BLOKADA NATYWNEGO SKOKU
     useEffect(() => {
         if ('scrollRestoration' in history) {
             history.scrollRestoration = 'manual';
         }
     }, []);
 
-    // 2. LOGIKA SCROLLA (HYBRYDA: TIMERY + EASING)
+    // 3. GŁÓWNA LOGIKA NAWIGACJI
     useEffect(() => {
+        if (!lenis) return;
+
         const targetSection = searchParams.get('target');
 
-        if (targetSection && lenis) {
+        // SCENARIUSZ A: Mamy cel (kotwicę) -> Scrolluj do sekcji
+        if (targetSection) {
             const targetId = targetSection.replace('#', '');
             
             const performScroll = (forceDuration: number, useEasing: boolean) => {
@@ -52,7 +68,6 @@ function AnchorManager() {
                     lenis.scrollTo(elem, { 
                         offset: -120, 
                         duration: forceDuration, 
-                        // Tu jest magia: Pierwszy strzał ma easing, korekty są liniowe
                         easing: useEasing ? easeOutExpo : undefined, 
                         lock: false,
                         force: true, 
@@ -60,34 +75,29 @@ function AnchorManager() {
                 }
             };
 
-            // KROK A: Reset na górę
+            // Najpierw reset na górę, żeby "rozbieg" był zawsze z góry (opcjonalne, ale wygląda lepiej)
             window.scrollTo(0, 0);
             lenis.scrollTo(0, { immediate: true });
 
-            // KROK B: Główny strzał (Smooth & Premium)
-            // Używamy easeOutExpo i dłuższego czasu (2.2s)
-            const timer1 = setTimeout(() => {
-                performScroll(2.2, true); 
-            }, 100);
-
-            // KROK C: Korekta I (Safety Net)
-            // Bez easingu, żeby szybko dociągnąć, jeśli layout uciekł
-            const timer2 = setTimeout(() => {
-                performScroll(1.0, false);
-            }, 1500);
-
-            // KROK D: Korekta II (Dla wolnego internetu)
-            const timer3 = setTimeout(() => {
-                performScroll(0.5, false);
-            }, 2500);
+            // Sekwencja timerów (Twoja logika Premium)
+            const timer1 = setTimeout(() => performScroll(2.2, true), 100);   // Start
+            const timer2 = setTimeout(() => performScroll(1.0, false), 1500); // Korekta 1
+            const timer3 = setTimeout(() => performScroll(0.5, false), 2500); // Korekta 2
 
             return () => {
                 clearTimeout(timer1);
                 clearTimeout(timer2);
                 clearTimeout(timer3);
             };
+        } 
+        
+        // SCENARIUSZ B: Zwykła zmiana strony (bez kotwicy) -> Reset na górę
+        else {
+            lenis.scrollTo(0, { immediate: true });
+            window.scrollTo(0, 0);
         }
-    }, [searchParams, lenis]);
+
+    }, [pathname, searchParams, lenis]); // Uruchom przy zmianie ścieżki LUB parametrów
 
     return null;
 }
