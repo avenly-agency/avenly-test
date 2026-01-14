@@ -1,98 +1,85 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, Variants } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { ArrowRight, Calendar, MessageSquare, Mail, CheckCircle2, ShieldCheck, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { useLenis } from 'lenis/react';
 
-const blobVariants: Variants = {
-  animateLeft: {
-    scale: [1, 1.5, 1],
-    opacity: [0.2, 0.4, 0.2],
-    x: [0, 50, 0],
-    y: [0, -30, 0],
-    transition: { duration: 12, repeat: Infinity, ease: "easeInOut" }
-  },
-  animateRight: {
-    scale: [1, 1.3, 1],
-    opacity: [0.2, 0.5, 0.2],
-    x: [0, -40, 0],
-    y: [0, 40, 0],
-    transition: { duration: 15, repeat: Infinity, ease: "easeInOut", delay: 2 }
-  }
-};
-
 export const Hero = () => {
-  const [isDesktop, setIsDesktop] = useState(false);
+  const [showHeavyContent, setShowHeavyContent] = useState(false);
   const lenis = useLenis();
 
   useEffect(() => {
-    // Sprawdź szerokość i ustaw flagę
-    const checkDesktop = () => setIsDesktop(window.innerWidth >= 1024); // Zmienione na 1024 (LG)
-    checkDesktop();
-    
-    // Optymalizacja Lenis: Wyłączamy na mobile, żeby nie obciążać JS
-    if (lenis) {
-        if (window.innerWidth < 1024) {
-            lenis.stop(); // Stop Lenis on mobile
-        } else {
-            lenis.start();
-        }
-    }
+    // Opóźniamy ładowanie ciężkich elementów (tło, modal)
+    const timer = setTimeout(() => {
+        setShowHeavyContent(window.innerWidth >= 1024);
+    }, 0);
 
-    window.addEventListener('resize', checkDesktop);
-    return () => window.removeEventListener('resize', checkDesktop);
-  }, [lenis]);
+    const handleResize = () => setShowHeavyContent(window.innerWidth >= 1024);
+    window.addEventListener('resize', handleResize);
+    
+    // --- USUNIĘTO BLOKADĘ SCROLLA ---
+    // Wcześniej tu był kod lenis.stop(), który blokował telefon.
+    // Teraz scroll na mobile będzie działał natywnie i płynnie.
+
+    return () => {
+        clearTimeout(timer);
+        window.removeEventListener('resize', handleResize);
+    };
+  }, []); // Usunięto zależność [lenis], bo nie sterujemy nim stąd
 
   const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
     e.preventDefault();
     const elem = document.getElementById(targetId);
     if (elem) {
-        // Na mobile używamy natywnego scrolla (lżejszy), na desktopie Lenis
-        if (isDesktop && lenis) {
-            lenis.scrollTo(elem, { 
-                offset: -120,
-                duration: 1.5,
-                lock: false,
-                force: true
-            });
+        // Logika scrolla: Lenis na desktopie, Native na mobile
+        if (showHeavyContent && lenis) {
+            lenis.scrollTo(elem, { offset: -120, duration: 1.5, lock: false, force: true });
         } else {
-            // Fallback dla mobile - natywny scroll
-            const offsetPosition = elem.getBoundingClientRect().top + window.pageYOffset - 100;
-            window.scrollTo({
-                top: offsetPosition,
-                behavior: "smooth"
-            });
+            // Natywny scroll dla mobile (niezawodny)
+            const offsetPosition = elem.getBoundingClientRect().top + window.pageYOffset - 80;
+            window.scrollTo({ top: offsetPosition, behavior: "smooth" });
         }
     }
   };
 
   return (
+    <>
+    <style jsx global>{`
+      @keyframes floatBlobLeft {
+        0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.2; }
+        50% { transform: translate(50px, -30px) scale(1.5); opacity: 0.4; }
+      }
+      @keyframes floatBlobRight {
+        0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.2; }
+        50% { transform: translate(-40px, 40px) scale(1.3); opacity: 0.5; }
+      }
+      .animate-blob-left {
+        animation: floatBlobLeft 12s infinite ease-in-out;
+        will-change: transform, opacity;
+      }
+      .animate-blob-right {
+        animation: floatBlobRight 15s infinite ease-in-out;
+        animation-delay: 2s;
+        will-change: transform, opacity;
+      }
+    `}</style>
+
     <section 
         className="relative w-full min-h-[100dvh] flex items-center justify-center overflow-hidden bg-slate-950 text-white selection:bg-blue-500/30 pt-32 pb-20 lg:py-0 content-visibility-auto"
     >
       
       {/* --- TŁO --- */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden="true">
-        {/* MOBILE: Statyczny CSS Gradient - Zero JS */}
-        {!isDesktop && (
-             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(37,99,235,0.12),transparent_60%)]"></div>
-        )}
+        {/* MOBILE: Statyczny Gradient */}
+        <div className="lg:hidden absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(37,99,235,0.12),transparent_60%)]"></div>
 
-        {/* DESKTOP: Ciężkie animacje tylko tutaj */}
-        {isDesktop && (
+        {/* DESKTOP: Animacje CSS */}
+        {showHeavyContent && (
             <>
-                <motion.div 
-                    variants={blobVariants}
-                    animate="animateLeft"
-                    className="absolute top-[-20%] left-[5%] w-[50vw] h-[50vw] bg-blue-600/20 blur-[120px] rounded-full mix-blend-screen will-change-transform" 
-                />
-                <motion.div 
-                    variants={blobVariants}
-                    animate="animateRight"
-                    className="absolute bottom-[-20%] right-[-10%] w-[55vw] h-[55vw] bg-indigo-500/10 blur-[120px] rounded-full mix-blend-screen will-change-transform"
-                />
+                <div className="absolute top-[-20%] left-[5%] w-[50vw] h-[50vw] bg-blue-600/20 blur-[120px] rounded-full mix-blend-screen animate-blob-left" />
+                <div className="absolute bottom-[-20%] right-[-10%] w-[55vw] h-[55vw] bg-indigo-500/10 blur-[120px] rounded-full mix-blend-screen animate-blob-right" />
             </>
         )}
       </div>
@@ -103,46 +90,56 @@ export const Hero = () => {
         {/* LEWA STRONA (TEXT) */}
         <div className="flex-1 text-center lg:text-left space-y-8 lg:space-y-10 relative z-20">
           
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-slate-900/80 border border-slate-800 text-slate-300 text-xs font-semibold tracking-wide backdrop-blur-sm mx-auto lg:mx-0">
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-slate-900/80 border border-slate-800 text-slate-300 text-xs font-semibold tracking-wide backdrop-blur-sm mx-auto lg:mx-0"
+          >
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
             STRATEGIA I REALIZACJA
-          </div>
+          </motion.div>
 
-          {/* H1 - BEZ FRAMER MOTION NA MOBILE (Czysty HTML dla LCP) */}
-          {isDesktop ? (
-               <motion.h1 
-                initial={{ opacity: 0, y: 15 }}
+          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[1.05]">
+            <motion.span
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.1 }}
-                className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[1.05]"
-              >
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="block"
+            >
                 TWOJA FIRMA <br />
+            </motion.span>
+            <motion.span
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="block"
+            >
                 <span className="text-white">WYŻSZY </span>
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">
                   POZIOM.
                 </span>
-              </motion.h1>
-          ) : (
-              <h1 className="text-5xl sm:text-6xl font-bold tracking-tight leading-[1.05]">
-                TWOJA FIRMA <br />
-                <span className="text-white">WYŻSZY </span>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">
-                  POZIOM.
-                </span>
-              </h1>
-          )}
+            </motion.span>
+          </h1>
 
-          {/* Opis */}
-          <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+          <motion.p 
+             initial={{ opacity: 0, y: 20 }}
+             animate={{ opacity: 1, y: 0 }}
+             transition={{ duration: 0.5, delay: 0.3 }}
+             className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto lg:mx-0 leading-relaxed"
+          >
            Masz potencjał, teraz czas na narzędzia. Przekształćmy twój biznes w nowoczesną markę, gotową na skalowanie zysków i automatyzację sprzedaży.
-          </p>
+          </motion.p>
 
-          {/* Przyciski */}
-          <div className="flex flex-col sm:flex-row gap-5 justify-center lg:justify-start pt-4 lg:pt-6">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="flex flex-col sm:flex-row gap-5 justify-center lg:justify-start pt-4 lg:pt-6"
+          >
             <Link 
               href="/#oferta"
               onClick={(e) => handleScroll(e, 'oferta')}
@@ -159,23 +156,18 @@ export const Hero = () => {
             >
               Jak To Działa?
             </Link>
-          </div>
+          </motion.div>
         </div>
 
-        {/* PRAWA STRONA - RENDERING WARUNKOWY (To jest klucz do 90+) */}
-        {/* Na mobile ten kod w ogóle nie istnieje w DOM */}
-        {isDesktop && (
-            <div className="flex-1 w-full max-w-[650px] relative perspective-1000">
+        {/* PRAWA STRONA (Tylko desktop) */}
+        {showHeavyContent && (
+            <div className="hidden lg:block flex-1 w-full max-w-[650px] relative perspective-1000">
                 <motion.div 
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.6, delay: 0.2 }}
+                    transition={{ duration: 0.8, delay: 0.2 }}
                 >
-                    <motion.div 
-                        animate={{ scale: [1, 1.05, 1], opacity: [0.5, 0.7, 0.5] }}
-                        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-blue-600/10 blur-[80px] -z-10 rounded-full will-change-transform"
-                    />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-blue-600/10 blur-[80px] -z-10 rounded-full animate-blob-left" />
 
                     <div className="relative bg-slate-950/80 border border-slate-800 rounded-3xl p-8 backdrop-blur-xl shadow-2xl z-10 ring-1 ring-white/5 overflow-hidden">
                         
@@ -192,7 +184,7 @@ export const Hero = () => {
                         </div>
 
                         <div className="space-y-5 relative">
-                            {/* Karty Powiadomień */}
+                            {/* Karta 1 */}
                             <div className="flex items-center gap-5 p-4 rounded-2xl bg-slate-900/50 border border-slate-800">
                                 <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 shrink-0">
                                     <Mail size={22} />
@@ -206,6 +198,7 @@ export const Hero = () => {
                                 </div>
                             </div>
 
+                            {/* Karta 2 */}
                             <div className="flex items-center gap-5 p-4 rounded-2xl bg-slate-900/50 border border-slate-800">
                                 <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
                                     <Calendar size={22} />
@@ -219,6 +212,7 @@ export const Hero = () => {
                                 </div>
                             </div>
 
+                            {/* Karta 3 */}
                             <div className="flex items-center gap-5 p-4 rounded-2xl bg-slate-900/50 border border-slate-800">
                                 <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 shrink-0">
                                     <MessageSquare size={22} />
@@ -252,5 +246,6 @@ export const Hero = () => {
 
       </div>
     </section>
+    </>
   );
 };
