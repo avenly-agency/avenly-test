@@ -1,13 +1,16 @@
 import { MetadataRoute } from 'next';
 
+// 👇 DODAJ TĘ LINIĘ:
+export const dynamic = 'force-static';
+
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: '/private/', // Przykładowo, jeśli kiedyś dodasz panel admina
+      disallow: '/private/',
     },
-    // Zmień poniższy adres na swoją prawdziwą domenę!
+    // Zmień na swoją domenę
     sitemap: 'https://avenly.pl/sitemap.xml', 
   };
 }
