@@ -5,50 +5,10 @@ import { motion, useScroll, useTransform, useSpring, MotionValue, useReducedMoti
 import { ArrowUpRight, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { projects as allProjects } from '@/app/data/projects';
 
-// --- DANE PROJEKTÓW ---
-const projects = [
-  {
-    id: 1,
-    title: "Klinika Stomatologiczna",
-    category: "Strona WWW",
-    description: "Rebranding i system rezerwacji. Konwersja +150% w Q1.",
-    tech: ["Next.js", "Tailwind"],
-    image: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?q=80&w=2068&auto=format&fit=crop",
-    href: "/realizacje/klinika",
-    liveUrl: "https://google.com"
-  },
-  {
-    id: 2,
-    title: "E-commerce Auto Parts",
-    category: "Sklep Online",
-    description: "Sklep na WooCommerce z wyszukiwarką części po VIN.",
-    tech: ["WooCommerce", "React"],
-    image: "https://images.unsplash.com/photo-1486262715619-01b80258e0a5?q=80&w=2070&auto=format&fit=crop",
-    href: "/realizacje/auto-parts",
-    liveUrl: "https://google.com"
-  },
-  {
-    id: 3,
-    title: "AI Law Chatbot System",
-    category: "Automatyzacja AI",
-    description: "Asystent dla kancelarii. Kwalifikacja leadów 24/7.",
-    tech: ["OpenAI", "Python"],
-    image: "https://images.unsplash.com/photo-1589216532372-1c2a367900d9?q=80&w=2071&auto=format&fit=crop",
-    href: "/realizacje/law-ai",
-    liveUrl: "https://google.com"
-  },
-  {
-    id: 4,
-    title: "Inwestycja Deweloperska",
-    category: "Landing Page",
-    description: "Interaktywna mapa mieszkań 3D i system CRM dla dewelopera.",
-    tech: ["Vue.js", "Mapbox"],
-    image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop",
-    href: "/realizacje/deweloper",
-    liveUrl: "https://google.com"
-  },
-];
+// 1. ZMIANA: Ograniczamy do 4 projektów, aby pasowało do Twojej prośby
+const displayedProjects = allProjects.slice(0, 4);
 
 export const Portfolio = () => {
   const targetRef = useRef<HTMLDivElement>(null);
@@ -83,6 +43,7 @@ export const Portfolio = () => {
         if (scrollContainerRef.current) {
             const scrollWidth = scrollContainerRef.current.scrollWidth;
             const clientWidth = window.innerWidth;
+            // Obliczamy ile scrolla potrzeba, aby dojść do końca kontenera
             setScrollRange(scrollWidth - clientWidth);
         }
     };
@@ -94,7 +55,8 @@ export const Portfolio = () => {
 
   const x = useTransform(smoothProgress, [0, 1], [0, -scrollRange]);
 
-  const totalSlides = 1 + projects.length + 1; 
+  // Liczba slajdów: 1 (Intro) + 4 (Projekty) + 1 (CTA) = 6
+  const totalSlides = 1 + displayedProjects.length + 1; 
 
   const handleMobileScroll = () => {
     if (mobileContainerRef.current) {
@@ -113,7 +75,9 @@ export const Portfolio = () => {
         
         <section 
             ref={targetRef} 
-            className="relative h-[100vh] md:h-[350vh]" 
+            // 2. ZMIANA: Wysokość sekcji (scroll distance). 
+            // 300vh jest optymalne dla 4 projektów (nie za szybko, nie za wolno)
+            className="relative h-[100vh] md:h-[300vh]" 
             aria-label="Portfolio Realizacji"
         >
         
@@ -153,8 +117,12 @@ export const Portfolio = () => {
                     <motion.div 
                         ref={scrollContainerRef}
                         style={{ x }} 
+                        // 3. ZMIANA: PADDINGI CENTRUJĄCE
+                        // pl (Intro): 50vw - połowa szerokości karty intro (450/2 = 225)
+                        // pr (CTA): 50vw - połowa szerokości karty CTA (350/2 = 175) -> To zapewnia stop na środku
                         className="hidden md:flex gap-12 md:gap-16 items-center w-max h-full pl-[calc(50vw-225px)] pr-[calc(50vw-175px)] relative z-10 will-change-transform"
                     >
+                        {/* KARTA INTRO */}
                         <FocusCard index={0} total={totalSlides} progress={smoothProgress} reduceMotion={shouldReduceMotion}>
                             <div className="shrink-0 w-[450px] h-[550px] flex flex-col justify-center p-12">
                                 <div className="flex items-center gap-4 mb-8">
@@ -173,7 +141,8 @@ export const Portfolio = () => {
                             </div>
                         </FocusCard>
 
-                        {projects.map((project, i) => (
+                        {/* KARTY PROJEKTÓW */}
+                        {displayedProjects.map((project, i) => (
                             <FocusCard key={project.id} index={i + 1} total={totalSlides} progress={smoothProgress} reduceMotion={shouldReduceMotion}>
                                 <RevealCard delay={i * 0.2} reduceMotion={shouldReduceMotion}>
                                     <Card project={project} />
@@ -183,7 +152,7 @@ export const Portfolio = () => {
                         
                         {/* KARTA CTA - DESKTOP */}
                         <FocusCard index={totalSlides - 1} total={totalSlides} progress={smoothProgress} reduceMotion={shouldReduceMotion}>
-                            <RevealCard delay={projects.length * 0.2} reduceMotion={shouldReduceMotion}>
+                            <RevealCard delay={displayedProjects.length * 0.2} reduceMotion={shouldReduceMotion}>
                                 <div className="relative h-[450px] w-[350px] flex items-center justify-center shrink-0 rounded-3xl border border-white/5 bg-white/[0.02] cursor-default transition-all group backdrop-blur-sm overflow-hidden">
                                     <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 to-indigo-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true"></div>
                                     <div className="text-center p-8 relative z-10 flex flex-col items-center">
@@ -191,7 +160,6 @@ export const Portfolio = () => {
                                         <div className="h-[1px] w-12 bg-blue-500/50 mx-auto my-6 group-hover:w-24 transition-all" aria-hidden="true"></div>
                                         <p className="text-slate-400 text-sm mb-8">Dołącz do liderów rynku i wyskaluj swój biznes.</p>
                                         
-                                        {/* LINK DO KONTAKTU */}
                                         <Link 
                                             href="/kontakt"
                                             className="w-full px-8 py-4 bg-white text-black font-bold rounded-xl hover:bg-blue-50 hover:scale-[1.02] transition-all shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] flex items-center justify-center gap-2 group/btn cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none mb-3"
@@ -231,7 +199,7 @@ export const Portfolio = () => {
                             onScroll={handleMobileScroll}
                             className="flex items-center overflow-x-auto gap-4 px-6 snap-x snap-mandatory scrollbar-hide pb-8"
                         >
-                            {projects.map((project) => (
+                            {displayedProjects.map((project) => (
                                 <div key={project.id} className="snap-center shrink-0">
                                     <Card project={project} isMobile={true} />
                                 </div>
@@ -242,7 +210,6 @@ export const Portfolio = () => {
                                 <div className="text-center p-6 flex flex-col items-center w-full">
                                     <h3 className="text-xl font-bold text-white mb-4">Twój Projekt?</h3>
                                     
-                                    {/* LINK DO KONTAKTU */}
                                     <Link 
                                         href="/kontakt"
                                         className="w-full px-6 py-3 bg-white text-black text-sm font-bold rounded-lg hover:bg-blue-50 transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none mb-3 flex items-center justify-center"
@@ -262,10 +229,9 @@ export const Portfolio = () => {
                             <div className="shrink-0 w-6" />
                         </div>
                         
-                        {/* --- POPRAWIONA NAWIGACJA (KROPKI) --- */}
-                        {/* Zmieniono totalSlides na (projects.length + 1), aby pominąć slajd tytułowy z desktopu */}
+                        {/* --- NAWIGACJA (KROPKI) --- */}
                          <div className="flex justify-center items-center gap-2 mt-2 pointer-events-none" aria-hidden="true">
-                            {Array.from({ length: projects.length + 1 }).map((_, index) => (
+                            {Array.from({ length: displayedProjects.length + 1 }).map((_, index) => (
                                 <div 
                                     key={index}
                                     className={`h-1 rounded-full transition-all duration-300 ${
@@ -299,24 +265,34 @@ const RevealCard = ({ children, delay, reduceMotion }: { children: React.ReactNo
     );
 };
 
+// 4. ZMIANA: Synchronizacja Blura
 const FocusCard = ({ children, index, total, progress, reduceMotion }: { children: React.ReactNode, index: number, total: number, progress: MotionValue<number>, reduceMotion: boolean | null }) => {
-    const step = 1 / (total - 1);
+    // Obliczamy "krok" (odległość między środkami kart w skali 0-1)
+    const step = 1 / (total - 1); 
     const target = index * step;
-    const range = [target - 0.15, target, target + 0.15];
-    const opacity = useTransform(progress, range, reduceMotion ? [1, 1, 1] : [0.6, 1, 0.6]);
-    const scale = useTransform(progress, range, reduceMotion ? [1, 1, 1] : [0.95, 1, 0.95]);
-    const filter = useTransform(progress, range, reduceMotion ? ["none", "none", "none"] : ["grayscale(40%) blur(1px)", "grayscale(0%) blur(0px)", "grayscale(40%) blur(1px)"]);
+    
+    // ZMIANA TUTAJ: Zamiast sztywnego +/- 0.15, używamy 'step'.
+    // To sprawia, że focus "spotyka się" w połowie drogi między kartami.
+    const range = [target - step, target, target + step];
+    
+    const opacity = useTransform(progress, range, reduceMotion ? [1, 1, 1] : [0.3, 1, 0.3]);
+    const scale = useTransform(progress, range, reduceMotion ? [1, 1, 1] : [0.9, 1, 0.9]);
+    const filter = useTransform(progress, range, reduceMotion ? ["none", "none", "none"] : ["grayscale(100%) blur(3px)", "grayscale(0%) blur(0px)", "grayscale(100%) blur(3px)"]);
 
     return <motion.div style={{ opacity, scale, filter }} className="origin-center">{children}</motion.div>;
 };
 
 const Card = ({ project, isMobile = false }: { project: any, isMobile?: boolean }) => {
+  const isExternal = !project.hasCaseStudy;
+  const href = isExternal ? (project.externalLink || '#') : `/realizacje/${project.slug}`;
+  const target = isExternal ? "_blank" : "_self";
+
   return (
     <div className="group relative h-[450px] w-[320px] md:h-[550px] md:w-[450px] overflow-hidden rounded-3xl bg-[#080808] border border-white/5 shrink-0 transition-all duration-500 hover:border-blue-500/40 hover:shadow-[0_0_40px_-10px_rgba(37,99,235,0.2)]">
       
       <div className="absolute inset-0">
          <Image 
-            src={project.image} 
+            src={project.mainImage} 
             alt={project.title} 
             fill 
             sizes={isMobile ? "350px" : "(max-width: 1200px) 50vw, 33vw"}
@@ -352,19 +328,22 @@ const Card = ({ project, isMobile = false }: { project: any, isMobile?: boolean 
                     {project.description}
                 </p>
                 
-                {/* --- SEKCJA BUTTONÓW (POINTER EVENTS AUTO) --- */}
                 <div className="flex items-center gap-3 pointer-events-auto">
-                    {/* BUTTON 1: WEWNĘTRZNY CASE STUDY */}
-                    <Link href={project.href}>
-                        <button className="px-6 py-3 rounded-lg bg-white text-black text-sm font-bold hover:bg-blue-50 transition-colors flex items-center gap-2 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none">
-                            Zobacz Realizację
+                    <Link href={href} target={target}>
+                        <button className={
+                            `px-6 py-3 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none ${
+                                isExternal 
+                                ? "bg-white/10 text-white hover:bg-white/20 border border-white/10" 
+                                : "bg-white text-black hover:bg-blue-50"
+                            }`
+                        }>
+                            {isExternal ? "Zobacz Online" : "Zobacz Realizację"}
                         </button>
                     </Link>
                     
-                    {/* BUTTON 2: LIVE PREVIEW (ZEWNĘTRZNY) */}
-                    {project.liveUrl && (
+                    {!isExternal && project.externalLink && (
                         <a 
-                            href={project.liveUrl} 
+                            href={project.externalLink} 
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="p-3 rounded-lg border border-white/20 bg-white/5 hover:bg-white/10 transition-colors text-white backdrop-blur-sm cursor-pointer block hover:scale-105 active:scale-95"
@@ -378,9 +357,9 @@ const Card = ({ project, isMobile = false }: { project: any, isMobile?: boolean 
         </div>
       </div>
 
-      {/* GŁÓWNY LINK NA TŁO (CASE STUDY) */}
       <Link 
-        href={project.href}
+        href={href}
+        target={target}
         className="absolute inset-0 z-0 focus:outline-none" 
         aria-label={`Zobacz projekt ${project.title}`}
       />

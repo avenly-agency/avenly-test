@@ -95,13 +95,13 @@ export function AiConsultant() {
              {/* Efekt Glow */}
             <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/20 to-purple-600/20 rounded-[2.5rem] blur-2xl transform rotate-3 scale-95" />
 
-            {/* Kontener Telefonu/Chatu */}
+            {/* Kontener Telefonu/Chatu - STATIC (cursor-default) */}
             <motion.div 
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.8 }}
-                className="relative bg-[#0a0a0a] border border-white/10 rounded-[2rem] md:rounded-[2.5rem] overflow-hidden shadow-2xl w-full max-w-md mx-auto"
+                className="relative bg-[#0a0a0a] border border-white/10 rounded-[2rem] md:rounded-[2.5rem] overflow-hidden shadow-2xl w-full max-w-md mx-auto cursor-default"
             >
                 {/* Header */}
                 <div className="bg-[#111] p-4 md:p-6 border-b border-white/5 flex items-center justify-between relative z-20">
@@ -117,13 +117,13 @@ export function AiConsultant() {
                             <p className="text-[10px] md:text-xs text-blue-400">Online • Odpisuje natychmiast</p>
                         </div>
                     </div>
-                    <div onClick={handleOpenChat} className="p-2 rounded-full hover:bg-white/5 cursor-pointer transition-colors">
-                        <MessageSquare size={18} className="text-slate-500 hover:text-white" />
+                    {/* IKONA U GÓRY - USUNIĘTO CURSOR-POINTER I ONCLICK */}
+                    <div className="p-2 rounded-full transition-colors">
+                        <MessageSquare size={18} className="text-slate-500" />
                     </div>
                 </div>
 
-                {/* Obszar Wiadomości - ZMNIEJSZONA WYSOKOŚĆ NA DESKTOPIE */}
-                {/* ZMIANA TUTAJ: md:h-[360px] (było 400px) */}
+                {/* Obszar Wiadomości */}
                 <div className="p-4 md:p-6 h-[350px] md:h-[360px] flex flex-col justify-end gap-3 md:gap-4 overflow-hidden relative">
                      
                      {/* Gradient maskujący na górze */}
@@ -162,10 +162,10 @@ export function AiConsultant() {
                      </motion.div>
                 </div>
 
-                {/* Input */}
-                <div className="p-4 border-t border-white/5 bg-[#111] cursor-pointer relative z-20" onClick={handleOpenChat}>
-                    <div className="flex items-center gap-3 bg-[#0a0a0a] border border-white/10 rounded-full px-4 py-3 group hover:border-blue-500/30 transition-colors">
-                        <span className="text-slate-500 text-xs md:text-sm group-hover:text-slate-400">Zapytaj o wdrożenie...</span>
+                {/* Input - USUNIĘTO CURSOR-POINTER I ONCLICK */}
+                <div className="p-4 border-t border-white/5 bg-[#111] relative z-20">
+                    <div className="flex items-center gap-3 bg-[#0a0a0a] border border-white/10 rounded-full px-4 py-3">
+                        <span className="text-slate-500 text-xs md:text-sm">Zapytaj o wdrożenie...</span>
                         <div className="ml-auto w-7 h-7 md:w-8 md:h-8 rounded-full bg-blue-600/20 flex items-center justify-center text-blue-500">
                             <ArrowRight size={14} />
                         </div>
