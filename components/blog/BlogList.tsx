@@ -43,7 +43,7 @@ export default function BlogList({ allPosts }: BlogListProps) {
                         <button
                             key={cat}
                             onClick={() => setFilter(cat)}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap border ${
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap border cursor-pointer ${
                                 filter === cat 
                                 ? 'bg-white text-black border-white' 
                                 : 'bg-white/5 text-slate-400 border-white/5 hover:bg-white/10 hover:text-white'
@@ -81,8 +81,8 @@ export default function BlogList({ allPosts }: BlogListProps) {
                                 transition={{ duration: 0.3 }}
                                 className="group flex flex-col h-full bg-[#080808] border border-white/5 rounded-3xl overflow-hidden hover:border-blue-500/30 transition-all duration-500 hover:shadow-[0_0_30px_-10px_rgba(37,99,235,0.15)]"
                             >
-                                {/* IMAGE */}
-                                <Link href={`/blog/${post.slug}`} className="relative h-56 w-full overflow-hidden block bg-slate-900">
+                                {/* IMAGE - DODANO CURSOR POINTER */}
+                                <Link href={`/blog/${post.slug}`} className="relative h-56 w-full overflow-hidden block bg-slate-900 cursor-pointer">
                                     {post.mainImage ? (
                                         <Image 
                                             src={post.mainImage} 
@@ -120,7 +120,7 @@ export default function BlogList({ allPosts }: BlogListProps) {
                                         </div>
                                     </div>
 
-                                    <Link href={`/blog/${post.slug}`} className="block group-hover:text-blue-400 transition-colors">
+                                    <Link href={`/blog/${post.slug}`} className="block group-hover:text-blue-400 transition-colors cursor-pointer">
                                         <h2 className="text-xl font-bold text-white mb-3 line-clamp-2">
                                             {post.title}
                                         </h2>
@@ -138,7 +138,7 @@ export default function BlogList({ allPosts }: BlogListProps) {
 
                                         <Link 
                                             href={`/blog/${post.slug}`}
-                                            className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white group-hover:bg-blue-600 group-hover:scale-110 transition-all duration-300"
+                                            className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white group-hover:bg-blue-600 group-hover:scale-110 transition-all duration-300 cursor-pointer"
                                             aria-label="Czytaj dalej"
                                         >
                                             <ArrowUpRight size={16} />
@@ -159,7 +159,7 @@ export default function BlogList({ allPosts }: BlogListProps) {
                     <p className="text-slate-400">Spróbuj zmienić kategorię lub wpisać inne hasło.</p>
                     <button 
                         onClick={() => { setFilter("Wszystkie"); setSearch(""); }}
-                        className="mt-6 text-blue-400 hover:text-blue-300 text-sm font-bold"
+                        className="mt-6 text-blue-400 hover:text-blue-300 text-sm font-bold cursor-pointer"
                     >
                         Wyczyść filtry
                     </button>
