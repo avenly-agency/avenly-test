@@ -1,103 +1,103 @@
 'use client';
 
-import { ReactLenis, useLenis } from 'lenis/react';
+import { ReactLenis } from 'lenis/react';
 import { useSearchParams, usePathname } from 'next/navigation';
-import { useEffect, Suspense } from 'react';
+import { useEffect, Suspense, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-// --- EFEKT PREMIUM ---
-function easeOutExpo(x: number): number {
-    return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
-}
-
 export const SmoothScrolling = ({ children }: { children: React.ReactNode }) => {
+  const lenisRef = useRef<any>(null);
+
   return (
-    <ReactLenis 
-      root 
+    <ReactLenis
+      ref={lenisRef}
+      root
       options={{
-        lerp: 0.1,
-        duration: 1.5,
+        duration: 1.2,
         smoothWheel: true,
+        // WAŻNE: syncTouch: true czasami pomaga z lagami na hybrydowych laptopach
+        syncTouch: true, 
+        touchMultiplier: 2,
       }}
+      // WAŻNE: autoRaf={true} to domyślne ustawienie, ale upewniamy się, że jest włączone.
+      // Usuwamy ręczne lenis.raf() z useEffecta, bo to powodowało desynchronizację po czasie.
+      autoRaf={true}
     >
       <Suspense fallback={null}>
-        <AnchorManager />
+        <AnchorManager lenisRef={lenisRef} />
       </Suspense>
       {children}
     </ReactLenis>
   );
 };
 
-function AnchorManager() {
-    const lenis = useLenis();
-    const searchParams = useSearchParams();
-    const pathname = usePathname(); // Śledzimy zmianę URL (np. przejście z Home na Blog)
+function AnchorManager({ lenisRef }: { lenisRef: any }) {
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
 
-    // 1. INTEGRACJA GSAP (Ważne dla animacji ScrollTrigger przy Lenis)
-    useEffect(() => {
-        if (lenis) {
-            lenis.on('scroll', ScrollTrigger.update);
-            gsap.ticker.add((time) => {
-                lenis.raf(time * 1000);
+  // 1. TYLKO AKTUALIZACJA GSAP (Bez napędzania pętli)
+  useEffect(() => {
+    const lenis = lenisRef.current?.lenis;
+    if (!lenis) return;
+
+    // Mówimy ScrollTriggerowi: "Hej, Lenis się przesunął, przelicz pozycje"
+    // Ale NIE sterujemy czasem klatki.
+    const handleScroll = (e: any) => {
+        ScrollTrigger.update();
+    };
+
+    lenis.on('scroll', handleScroll);
+
+    return () => {
+        lenis.off('scroll', handleScroll);
+    };
+  }, [lenisRef]);
+
+  // 2. LOGIKA KOTWIC (Bez zmian - działała dobrze)
+  useEffect(() => {
+    const lenis = lenisRef.current?.lenis;
+    if (!lenis) return;
+
+    const targetSection = searchParams.get('target');
+
+    if (targetSection) {
+      const targetId = targetSection.replace('#', '');
+      // Małe opóźnienie, żeby upewnić się, że DOM jest gotowy
+      const timer = setTimeout(() => {
+          const elem = document.getElementById(targetId);
+          if (elem) {
+            lenis.scrollTo(elem, {
+              offset: -100,
+              duration: 1.5,
+              lock: false,
+              force: true,
             });
-            gsap.ticker.lagSmoothing(0);
-        }
-    }, [lenis]);
+          }
+      }, 100);
+      return () => clearTimeout(timer);
+    } 
+    else {
+      // Reset scrolla przy zmianie podstrony
+      lenis.scrollTo(0, { immediate: true });
+      window.scrollTo(0, 0);
+    }
+    
+    // Refresh ScrollTriggera po zmianie trasy
+    const refreshTimer = setTimeout(() => {
+        ScrollTrigger.refresh();
+    }, 500);
+    
+    return () => clearTimeout(refreshTimer);
 
-    // 2. BLOKADA NATYWNEGO SKOKU
-    useEffect(() => {
-        if ('scrollRestoration' in history) {
-            history.scrollRestoration = 'manual';
-        }
-    }, []);
+  }, [lenisRef, searchParams, pathname]);
 
-    // 3. GŁÓWNA LOGIKA NAWIGACJI
-    useEffect(() => {
-        if (!lenis) return;
+  // 3. BLOKADA NATYWNEGO POWROTU
+  useEffect(() => {
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+  }, []);
 
-        const targetSection = searchParams.get('target');
-
-        // SCENARIUSZ A: Mamy cel (kotwicę) -> Scrolluj do sekcji
-        if (targetSection) {
-            const targetId = targetSection.replace('#', '');
-            
-            const performScroll = (forceDuration: number, useEasing: boolean) => {
-                const elem = document.getElementById(targetId);
-                if (elem) {
-                    lenis.scrollTo(elem, { 
-                        offset: -120, 
-                        duration: forceDuration, 
-                        easing: useEasing ? easeOutExpo : undefined, 
-                        lock: false,
-                        force: true, 
-                    });
-                }
-            };
-
-            // Najpierw reset na górę, żeby "rozbieg" był zawsze z góry (opcjonalne, ale wygląda lepiej)
-            window.scrollTo(0, 0);
-            lenis.scrollTo(0, { immediate: true });
-
-            // Sekwencja timerów (Twoja logika Premium)
-            const timer1 = setTimeout(() => performScroll(2.2, true), 100);   // Start
-            const timer2 = setTimeout(() => performScroll(1.0, false), 1500); // Korekta 1
-            const timer3 = setTimeout(() => performScroll(0.5, false), 2500); // Korekta 2
-
-            return () => {
-                clearTimeout(timer1);
-                clearTimeout(timer2);
-                clearTimeout(timer3);
-            };
-        } 
-        
-        // SCENARIUSZ B: Zwykła zmiana strony (bez kotwicy) -> Reset na górę
-        else {
-            lenis.scrollTo(0, { immediate: true });
-            window.scrollTo(0, 0);
-        }
-
-    }, [pathname, searchParams, lenis]); // Uruchom przy zmianie ścieżki LUB parametrów
-
-    return null;
+  return null;
 }

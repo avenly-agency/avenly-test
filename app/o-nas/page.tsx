@@ -257,7 +257,8 @@ export default function AboutPage() {
                               </div>
                               <div className="md:w-1/2 flex items-start gap-6">
                                   <p className="text-slate-300 text-lg leading-relaxed max-w-lg">{cap.desc}</p>
-                                  <div className="hidden md:flex w-10 h-10 rounded-full border border-white/20 items-center justify-center text-white bg-blue-500/10 ml-auto shrink-0 transition-all group-hover:bg-blue-500 group-hover:border-blue-500 group-hover:scale-110">
+                                  {/* ZMIANA TUTAJ: dodano mr-4 */}
+                                  <div className="hidden md:flex w-10 h-10 rounded-full border border-white/20 items-center justify-center text-white bg-blue-500/10 ml-auto mr-4 shrink-0 transition-all group-hover:bg-blue-500 group-hover:border-blue-500 group-hover:scale-110">
                                       <cap.icon size={18} />
                                   </div>
                               </div>
