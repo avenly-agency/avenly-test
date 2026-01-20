@@ -12,7 +12,7 @@ export const projects = [
         
         // Logika linkowania
         hasCaseStudy: true, 
-        externalLink: "mcentrumfizjoterapia.pl", // Opcjonalny link Live
+        externalLink: "https://mcentrumfizjoterapia.pl", // Opcjonalny link Live
 
         // Szczegóły Case Study
         challenge: "Klient tracił pacjentów przez przestarzałą stronę, która nie działała na telefonach. Recepcja była przeciążona telefonami.",
