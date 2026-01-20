@@ -7,7 +7,7 @@ export const projects = [
         year: "2024",
         client: "Estetic Dent",
         description: "Rebranding marki i wdrożenie systemu rezerwacji wizyt online. Skrócenie czasu obsługi recepcji o 40%.",
-        mainImage: "/portfolio/dental-clinic.jpg", // Pamiętaj o folderze public
+        mainImage: "/portfolio/mcentrumgabinet.webp", // Pamiętaj o folderze public
         gallery: ["/portfolio/dental-1.jpg", "/portfolio/dental-2.jpg"], // Dodatkowe zdjęcia
         
         // Logika linkowania

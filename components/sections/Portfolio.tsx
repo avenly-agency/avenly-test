@@ -290,6 +290,7 @@ const Card = ({ project, isMobile = false }: { project: any, isMobile?: boolean 
   return (
     <div className="group relative h-[450px] w-[320px] md:h-[550px] md:w-[450px] overflow-hidden rounded-3xl bg-[#080808] border border-white/5 shrink-0 transition-all duration-500 hover:border-blue-500/40 hover:shadow-[0_0_40px_-10px_rgba(37,99,235,0.2)]">
       
+      {/* --- OBRAZEK (Bez zmian) --- */}
       <div className="absolute inset-0">
          <Image 
             src={project.mainImage} 
@@ -302,15 +303,18 @@ const Card = ({ project, isMobile = false }: { project: any, isMobile?: boolean 
          />
       </div>
 
+      {/* --- GRADIENTY (Bez zmian) --- */}
       <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/80 to-transparent opacity-90 transition-opacity" aria-hidden="true"></div>
-      
       {!isMobile && (
         <div className="absolute inset-0 bg-gradient-to-t from-blue-900/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true"></div>
       )}
 
+      {/* --- TREŚĆ KARTY --- */}
       <div className="absolute bottom-0 left-0 w-full p-8 flex flex-col justify-end z-10 pointer-events-none">
+        {/* Kontener animowany */}
         <div className="transform transition-transform duration-500 ease-out lg:translate-y-[88px] group-hover:translate-y-0">
             
+            {/* 1. SEKCJA GÓRNA (Kategoria + Tytuł) */}
             <div className="mb-4">
                 <div className="flex items-center gap-3 mb-3">
                     <span className="w-8 h-[2px] bg-blue-500 rounded-full" aria-hidden="true"></span>
@@ -318,13 +322,18 @@ const Card = ({ project, isMobile = false }: { project: any, isMobile?: boolean 
                         {project.category}
                     </p>
                 </div>
-                <h3 className="text-3xl md:text-4xl font-bold text-white leading-tight h-[5rem] md:h-[6rem] line-clamp-2 drop-shadow-lg">
+                
+                {/* NAPRAWA: Usunięto sztywne h-[...] */}
+                {/* Dodano min-h-[4.5rem] tylko po to, by karty były równe przed hoverem, */}
+                {/* ale flexbox poniżej i tak dociągnie opis do góry. */}
+                <h3 className="text-3xl md:text-4xl font-bold text-white leading-tight line-clamp-2 drop-shadow-lg min-h-[2.5rem] md:min-h-[5rem] flex items-end">
                     {project.title}
                 </h3>
             </div>
             
+            {/* 2. SEKCJA UKRYTA (Opis + Buttony) */}
             <div className="opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-75">
-                <p className="text-slate-300 text-sm leading-relaxed mb-6 border-l-2 border-white/20 pl-4 h-[3rem] line-clamp-2 drop-shadow-md">
+                <p className="text-slate-300 text-sm leading-relaxed mb-6 border-l-2 border-white/20 pl-4 line-clamp-2 drop-shadow-md mt-2">
                     {project.description}
                 </p>
                 
