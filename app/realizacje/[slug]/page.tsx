@@ -2,18 +2,18 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, ArrowUpRight, Layers } from 'lucide-react';
-import { projects } from '@/app/data/projects'; // Upewnij się, że ścieżka jest poprawna
+import { projects } from '@/app/data/projects'; 
 
-// --- 1. GENEROWANIE ŚCIEŻEK (Tak jak w blogu) ---
+// --- 1. GENEROWANIE ŚCIEŻEK ---
 export function generateStaticParams() {
   return projects
-    .filter((p) => p.hasCaseStudy) // Generujemy podstrony TYLKO dla projektów z Case Study
+    .filter((p) => p.hasCaseStudy)
     .map((p) => ({
       slug: p.slug,
     }));
 }
 
-// --- 2. SEO / METADATA (Tak jak w blogu) ---
+// --- 2. SEO / METADATA ---
 type Props = {
   params: Promise<{ slug: string }>;
 };
@@ -30,23 +30,29 @@ export async function generateMetadata({ params }: Props) {
   };
 }
 
-// --- 3. KOMPONENT GŁÓWNY (Server Component - jak Blog) ---
+// --- 3. KOMPONENT GŁÓWNY ---
 export default async function ProjectPage({ params }: Props) {
   const { slug } = await params;
-  
-  // Szukamy projektu
   const project = projects.find((p) => p.slug === slug);
 
-  // Jeśli brak projektu lub nie ma on Case Study -> 404
   if (!project || !project.hasCaseStudy) {
     notFound();
   }
 
   return (
-    <main className="min-h-screen bg-[#050505] text-white selection:bg-blue-500/30">
+    <main className="min-h-screen bg-[#050505] text-white selection:bg-blue-500/30 relative overflow-hidden">
         
-        {/* --- NAV BACK --- */}
-        <div className="container mx-auto px-6 pt-32 mb-12">
+        {/* --- NOWE TŁO DEKORACYJNE (HEADER GLOW) --- */}
+        <div className="absolute top-0 left-0 w-full h-[600px] pointer-events-none z-0">
+            {/* Główny gradient z góry */}
+            <div className="absolute top-[-30%] left-1/2 -translate-x-1/2 w-[80%] h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-[#050505]/10 to-transparent blur-[80px]" />
+            
+            {/* Subtelna linia na samej górze */}
+            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-500/20 to-transparent" />
+        </div>
+
+        {/* --- NAV BACK (Dodano relative z-10, żeby było nad tłem) --- */}
+        <div className="container mx-auto px-6 pt-32 mb-12 relative z-10">
             <Link 
                 href="/realizacje" 
                 className="inline-flex items-center gap-2 text-slate-500 hover:text-white transition-colors group text-sm font-medium"
@@ -56,8 +62,8 @@ export default async function ProjectPage({ params }: Props) {
             </Link>
         </div>
 
-        {/* --- HERO SEKCYJNE --- */}
-        <section className="container mx-auto px-6 mb-24">
+        {/* --- HERO SEKCYJNE (Dodano relative z-10) --- */}
+        <section className="container mx-auto px-6 mb-24 relative z-10">
             <div className="grid lg:grid-cols-2 gap-16 items-end">
                 <div>
                     <div className="flex items-center gap-4 text-blue-500 font-mono text-sm tracking-widest uppercase mb-6">
@@ -99,8 +105,8 @@ export default async function ProjectPage({ params }: Props) {
             </div>
         </section>
 
-        {/* --- GŁÓWNE ZDJĘCIE --- */}
-        <div className="w-full h-[50vh] md:h-[80vh] relative overflow-hidden mb-24 bg-[#111]">
+        {/* --- GŁÓWNE ZDJĘCIE (Dodano relative z-10) --- */}
+        <div className="w-full h-[50vh] md:h-[80vh] relative overflow-hidden mb-24 bg-[#111] z-10 border-y border-white/5">
             {project.mainImage ? (
                 <Image 
                     src={project.mainImage}
@@ -114,7 +120,7 @@ export default async function ProjectPage({ params }: Props) {
             )}
         </div>
 
-        <div className="container mx-auto px-6">
+        <div className="container mx-auto px-6 relative z-10">
             
             {/* --- CHALLENGE & SOLUTION --- */}
             <div className="grid lg:grid-cols-2 gap-20 mb-32 border-b border-white/10 pb-20">
