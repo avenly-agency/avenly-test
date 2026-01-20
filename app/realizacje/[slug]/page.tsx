@@ -33,8 +33,11 @@ export async function generateMetadata({ params }: Props) {
 // --- 3. KOMPONENT GŁÓWNY ---
 export default async function ProjectPage({ params }: Props) {
   const { slug } = await params;
+  
+  // Szukamy projektu w bazie danych
   const project = projects.find((p) => p.slug === slug);
 
+  // Jeśli brak projektu lub nie ma on Case Study -> 404
   if (!project || !project.hasCaseStudy) {
     notFound();
   }
@@ -43,15 +46,15 @@ export default async function ProjectPage({ params }: Props) {
     <main className="min-h-screen bg-[#050505] text-white selection:bg-blue-500/30 relative overflow-hidden">
         
         {/* --- NOWE TŁO DEKORACYJNE (HEADER GLOW) --- */}
-        <div className="absolute top-0 left-0 w-full h-[600px] pointer-events-none z-0">
-            {/* Główny gradient z góry */}
-            <div className="absolute top-[-30%] left-1/2 -translate-x-1/2 w-[80%] h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-[#050505]/10 to-transparent blur-[80px]" />
+        <div className="absolute top-0 left-0 w-full h-[800px] pointer-events-none z-0">
+            {/* Główny gradient (niebieska poświata od góry) */}
+            <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[90%] h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/15 via-[#050505]/10 to-transparent blur-[100px]" />
             
             {/* Subtelna linia na samej górze */}
             <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-500/20 to-transparent" />
         </div>
 
-        {/* --- NAV BACK (Dodano relative z-10, żeby było nad tłem) --- */}
+        {/* --- NAV BACK (Z-INDEX 10, żeby było klikalne) --- */}
         <div className="container mx-auto px-6 pt-32 mb-12 relative z-10">
             <Link 
                 href="/realizacje" 
@@ -62,7 +65,7 @@ export default async function ProjectPage({ params }: Props) {
             </Link>
         </div>
 
-        {/* --- HERO SEKCYJNE (Dodano relative z-10) --- */}
+        {/* --- HERO SEKCYJNE --- */}
         <section className="container mx-auto px-6 mb-24 relative z-10">
             <div className="grid lg:grid-cols-2 gap-16 items-end">
                 <div>
@@ -96,7 +99,7 @@ export default async function ProjectPage({ params }: Props) {
                 {/* STATYSTYKI */}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {project.stats?.map((stat, i) => (
-                        <div key={i} className="p-6 rounded-2xl bg-white/[0.03] border border-white/5 backdrop-blur-sm">
+                        <div key={i} className="p-6 rounded-2xl bg-white/[0.03] border border-white/5 backdrop-blur-sm hover:bg-white/[0.05] transition-colors">
                             <div className="text-3xl font-bold text-white mb-1">{stat.value}</div>
                             <div className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">{stat.label}</div>
                         </div>
@@ -105,7 +108,7 @@ export default async function ProjectPage({ params }: Props) {
             </div>
         </section>
 
-        {/* --- GŁÓWNE ZDJĘCIE (Dodano relative z-10) --- */}
+        {/* --- GŁÓWNE ZDJĘCIE (Z-INDEX 10) --- */}
         <div className="w-full h-[50vh] md:h-[80vh] relative overflow-hidden mb-24 bg-[#111] z-10 border-y border-white/5">
             {project.mainImage ? (
                 <Image 
