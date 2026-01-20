@@ -18,7 +18,7 @@ export const SmoothScrolling = ({ children }: { children: React.ReactNode }) => 
         smoothWheel: true,
         // WAŻNE: syncTouch: true czasami pomaga z lagami na hybrydowych laptopach
         syncTouch: true, 
-        touchMultiplier: 2,
+        touchMultiplier: 1,
       }}
       // WAŻNE: autoRaf={true} to domyślne ustawienie, ale upewniamy się, że jest włączone.
       // Usuwamy ręczne lenis.raf() z useEffecta, bo to powodowało desynchronizację po czasie.

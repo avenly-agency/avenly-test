@@ -1,8 +1,8 @@
 export const projects = [
     {
-        id: 1,
-        slug: "klinika-stomatologiczna", // To będzie w adresie URL
-        title: "Klinika Stomatologiczna",
+        id: 4,
+        slug: "mcentrumfizjoterapia", // To będzie w adresie URL
+        title: "Mcentrumfizjoterapia",
         category: "Strona WWW", // Musi pasować do filtrów
         year: "2024",
         client: "Estetic Dent",
@@ -12,7 +12,7 @@ export const projects = [
         
         // Logika linkowania
         hasCaseStudy: true, 
-        externalLink: "https://estetic-dent.pl", // Opcjonalny link Live
+        externalLink: "mcentrumfizjoterapia.pl", // Opcjonalny link Live
 
         // Szczegóły Case Study
         challenge: "Klient tracił pacjentów przez przestarzałą stronę, która nie działała na telefonach. Recepcja była przeciążona telefonami.",
@@ -22,7 +22,7 @@ export const projects = [
             { label: "Czas ładowania", value: "0.5s" },
             { label: "Mniej telefonów", value: "-40%" }
         ],
-        techStack: ["Next.js", "Tailwind", "Framer Motion", "Calendly API"]
+        techStack: ["Wordpress", "IMPREZA", "Booksy"]
     },
     {
         id: 2,
