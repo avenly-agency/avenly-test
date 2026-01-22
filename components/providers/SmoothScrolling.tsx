@@ -1,20 +1,17 @@
 'use client';
 
-import { ReactLenis } from 'lenis/react';
+import { ReactLenis, useLenis } from 'lenis/react'; // Dodano import useLenis
 import { useSearchParams } from 'next/navigation';
-import { useEffect, Suspense, useRef, useLayoutEffect, useState } from 'react';
+import { useEffect, Suspense, useLayoutEffect, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 export const SmoothScrolling = ({ children }: { children: React.ReactNode }) => {
-  const lenisRef = useRef<any>(null);
-
   return (
     <ReactLenis
-      ref={lenisRef}
       root
       options={{
-        duration: 1.2, // Nieco wolniej dla płynności przy dużych skokach
+        duration: 1.2,
         smoothWheel: true,
         syncTouch: true,
         touchMultiplier: 1,
@@ -22,28 +19,27 @@ export const SmoothScrolling = ({ children }: { children: React.ReactNode }) => 
       autoRaf={true}
     >
       <Suspense fallback={null}>
-        <AnchorManager lenisRef={lenisRef} />
+        <AnchorManager />
       </Suspense>
       {children}
     </ReactLenis>
   );
 };
 
-function AnchorManager({ lenisRef }: { lenisRef: any }) {
+function AnchorManager() {
+  const lenis = useLenis(); // ✅ Hook zamiast Refa (Klucz do naprawy pierwszego kliknięcia)
   const searchParams = useSearchParams();
   const [isMounted, setIsMounted] = useState(false);
 
   // 1. INTEGRACJA GSAP
   useLayoutEffect(() => {
-    const lenis = lenisRef.current?.lenis;
+    // Czekamy aż lenis będzie dostępny z hooka
     if (!lenis || typeof window === 'undefined') return;
 
     gsap.registerPlugin(ScrollTrigger);
     
-    // Kluczowe: manualna aktualizacja ScrollTriggera przez Lenis
+    // Synchronizacja
     lenis.on('scroll', ScrollTrigger.update);
-    
-    // Wyłączamy "wygładzanie" GSAP, bo Lenis to robi
     gsap.ticker.lagSmoothing(0);
 
     setIsMounted(true);
@@ -51,85 +47,79 @@ function AnchorManager({ lenisRef }: { lenisRef: any }) {
     return () => {
       lenis.off('scroll', ScrollTrigger.update);
     };
-  }, [lenisRef]);
+  }, [lenis]); // Uruchom ponownie, gdy lenis będzie gotowy
 
-  // 2. LOGIKA KOTWIC Z KOREKTĄ LAYOUT SHIFT (PINNING)
+  // 2. LOGIKA KOTWIC (Double-Check Strategy)
   useEffect(() => {
     const targetSection = searchParams.get('target');
-    const lenis = lenisRef.current?.lenis;
 
-    if (targetSection && lenis && isMounted) {
+    // Uruchamiamy tylko gdy mamy instancję Lenisa i parametr w URL
+    if (targetSection && lenis) {
       const targetId = targetSection.replace('#', '');
       
-      // Wyłączamy domyślny scroll przeglądarki
+      // Wyłączamy domyślny scroll przeglądarki na czas operacji
       if ('scrollRestoration' in history) {
         history.scrollRestoration = 'manual';
       }
 
-      // Funkcja wykonująca scroll z weryfikacją pozycji
       const performScroll = (attempt = 1) => {
           const elem = document.getElementById(targetId);
           
-          // Jeśli elementu nie ma, czekamy (max 10 prób po 100ms)
+          // Jeśli elementu nie ma, czekamy (max 15 prób po 100ms)
           if (!elem) {
-              if (attempt < 10) setTimeout(() => performScroll(attempt + 1), 100);
+              if (attempt < 15) setTimeout(() => performScroll(attempt + 1), 100);
               return;
           }
 
-          // KROK 1: Wymuś przeliczenie layoutu PRZED ruchem
-          ScrollTrigger.refresh();
-          lenis.resize();
+          // --- Faza 1: Przygotowanie ---
+          ScrollTrigger.refresh(); // Przeliczamy piny GSAP
+          lenis.resize();          // Przeliczamy wysokość Lenisa
 
-          // KROK 2: Jedź do celu
+          // --- Faza 2: Scroll ---
           lenis.scrollTo(elem, {
-            offset: -80, // Twój offset na header
+            offset: -80, // Offset na header
             duration: 1.5,
-            lock: true,  // Zablokuj usera
-            force: true, // Ignoruj obecną pozycję
+            lock: true,
+            force: true,
             immediate: false,
             
-            // KROK 3: Weryfikacja po dojechaniu (Recursion Check)
+            // --- Faza 3: Weryfikacja (Double Check) ---
             onComplete: () => {
-                // Sprawdzamy, gdzie JESTEŚMY vs gdzie jest ELEMENT
-                // Po scrollu GSAP mógł rozwinąć piny, więc pozycja elementu mogła uciec
                 const rect = elem.getBoundingClientRect();
-                const distance = rect.top - 80; // Powinno być ~0
+                const distance = rect.top - 80;
 
-                // Jeśli różnica jest duża (>5px) i nie próbowaliśmy za dużo razy
+                // Sprawdzamy czy trafiliśmy (z tolerancją 5px)
+                // Jeśli GSAP rozwinął piny w trakcie jazdy, możemy być w złym miejscu
                 if (Math.abs(distance) > 5 && attempt < 3) {
-                    // console.log("GSAP Pin Shift wykryty! Korekta scrolla...", distance);
+                    console.log("Korekta pozycji...", distance);
+                    ScrollTrigger.refresh();
                     
-                    // Wymuszamy ponowne przeliczenie, bo jesteśmy w nowym miejscu scrolla
-                    ScrollTrigger.refresh(); 
-                    
-                    // Jedziemy jeszcze raz (KOREKTA) - tym razem krócej
+                    // Szybka korekta
                     lenis.scrollTo(elem, {
                         offset: -80,
-                        duration: 0.8, // Szybsza korekta
+                        duration: 0.5,
                         lock: true,
                         force: true,
                         onComplete: () => {
-                           // Czyścimy URL po sukcesie
                            window.history.replaceState({}, '', window.location.pathname);
                         }
                     });
                 } else {
-                    // Sukces (lub poddajemy się po 3 korektach)
+                    // Sukces - czyścimy URL
                     window.history.replaceState({}, '', window.location.pathname);
                 }
             }
           });
       };
 
-      // Start z opóźnieniem (aby React wyrenderował DOM)
-      // 500ms to bezpieczny margines dla ciężkich stron z animacjami
-      const initialTimer = setTimeout(() => {
+      // Małe opóźnienie startowe dla stabilności DOM
+      const timer = setTimeout(() => {
           performScroll(1);
-      }, 500);
+      }, 200);
 
-      return () => clearTimeout(initialTimer);
+      return () => clearTimeout(timer);
     }
-  }, [searchParams, lenisRef, isMounted]);
+  }, [lenis, searchParams]); // Zależność od 'lenis' gwarantuje start po załadowaniu
 
   return null;
 }
