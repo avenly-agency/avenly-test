@@ -39,6 +39,11 @@ export default async function ProjectPage({ params }: Props) {
 
   const safeExternalLink = project.externalLink ? ensureHttp(project.externalLink) : null;
 
+  // --- LOGIKA WYBORU ZDJĘCIA ---
+  // Jeśli w projects.ts jest 'mockupImage', użyj go. Jeśli nie, weź 'mainImage'.
+  // @ts-ignore - ignorujemy błąd TS jeśli nie zaktualizowałeś jeszcze typów, ale w JS zadziała
+  const displayImage = project.mockupImage || project.mainImage;
+
   return (
     <main className="min-h-screen bg-[#050505] text-white selection:bg-blue-500/30 relative overflow-hidden">
         
@@ -96,7 +101,7 @@ export default async function ProjectPage({ params }: Props) {
             </div>
         </section>
 
-        {/* --- NOWA SEKCJA: MAKIETA PRZEGLĄDARKI (Zamiast dużego zdjęcia) --- */}
+        {/* --- MAKIETA PRZEGLĄDARKI --- */}
         <section className="container mx-auto px-6 mb-32 relative z-10">
             <div className="relative group">
                 {/* Dekoracyjny Glow pod makietą */}
@@ -104,24 +109,23 @@ export default async function ProjectPage({ params }: Props) {
                 
                 {/* Kontener "Przeglądarki" */}
                 <div className="relative rounded-2xl border border-white/10 bg-[#0a0a0a] overflow-hidden shadow-2xl">
-                    {/* Pasek adresu (Header przeglądarki) */}
+                    {/* Pasek adresu */}
                     <div className="h-12 border-b border-white/5 bg-white/[0.02] flex items-center px-4 gap-2">
                         <div className="flex gap-2">
                             <div className="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/30" />
                             <div className="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/30" />
                             <div className="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/30" />
                         </div>
-                        {/* Fake Address Bar */}
                         <div className="ml-4 px-4 py-1 rounded-full bg-white/5 border border-white/5 text-[10px] text-slate-500 font-mono hidden md:block">
                             avenly.pl/projekty/{project.slug}
                         </div>
                     </div>
 
-                    {/* Zdjęcie projektu w środku */}
+                    {/* Zdjęcie projektu (ZMIENIONA LOGIKA: displayImage) */}
                     <div className="relative aspect-video w-full bg-[#111]">
-                        {project.mainImage ? (
+                        {displayImage ? (
                             <Image 
-                                src={project.mainImage} 
+                                src={displayImage} 
                                 alt={project.title} 
                                 fill 
                                 className="object-cover"
@@ -132,7 +136,7 @@ export default async function ProjectPage({ params }: Props) {
                                 Brak zdjęcia
                             </div>
                         )}
-                        {/* Cień wewnętrzny dla realizmu */}
+                        {/* Cień wewnętrzny */}
                         <div className="absolute inset-0 shadow-[inset_0_0_100px_rgba(0,0,0,0.5)] pointer-events-none" />
                     </div>
                 </div>
