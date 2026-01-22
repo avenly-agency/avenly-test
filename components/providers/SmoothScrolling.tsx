@@ -2,7 +2,7 @@
 
 import { ReactLenis } from 'lenis/react';
 import { useSearchParams } from 'next/navigation';
-import { useEffect, Suspense, useRef, useLayoutEffect } from 'react';
+import { useEffect, Suspense, useRef, useLayoutEffect, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -31,56 +31,86 @@ export const SmoothScrolling = ({ children }: { children: React.ReactNode }) => 
 
 function AnchorManager({ lenisRef }: { lenisRef: any }) {
   const searchParams = useSearchParams();
+  const [isMounted, setIsMounted] = useState(false);
 
-  // 1. Integracja GSAP
+  // 1. INTEGRACJA GSAP
   useLayoutEffect(() => {
     const lenis = lenisRef.current?.lenis;
     if (!lenis || typeof window === 'undefined') return;
 
     gsap.registerPlugin(ScrollTrigger);
+    
+    // Synchronizacja Lenis -> ScrollTrigger
     lenis.on('scroll', ScrollTrigger.update);
+    
+    // Wyłączenie lagów GSAP (Lenis to ogarnia)
     gsap.ticker.lagSmoothing(0);
+
+    setIsMounted(true);
 
     return () => {
       lenis.off('scroll', ScrollTrigger.update);
     };
   }, [lenisRef]);
 
-  // 2. Obsługa nawigacji między stronami
+  // 2. LOGIKA KOTWIC Z KOREKTĄ DLA PINOWANYCH SEKCJI
   useEffect(() => {
     const targetSection = searchParams.get('target');
     const lenis = lenisRef.current?.lenis;
 
-    if (targetSection && lenis) {
+    if (targetSection && lenis && isMounted) {
       const targetId = targetSection.replace('#', '');
       
-      // Magiczne opóźnienie - dajemy przeglądarce 100ms na render nowej strony
-      // Dzięki scroll={false} w Linku, strona zostanie w miejscu, a potem Lenis płynnie zjedzie
-      const timer = setTimeout(() => {
+      // Funkcja wykonująca scroll z korektą
+      const scrollToTarget = (attempt = 1) => {
           const elem = document.getElementById(targetId);
           
-          if (elem) {
-              // Wymuszamy odświeżenie Lenisa i ScrollTriggera po załadowaniu nowej strony
-              lenis.resize();
-              ScrollTrigger.refresh();
-
-              lenis.scrollTo(elem, {
-                  offset: -80, // Offset na header
-                  duration: 1.5,
-                  lock: true,
-                  force: true,
-                  immediate: false, // Ważne: false oznacza "animuj", true oznacza "teleportuj"
-                  onComplete: () => {
-                      // Opcjonalnie: wyczyść URL
-                      window.history.replaceState({}, '', window.location.pathname);
-                  }
-              });
+          if (!elem) {
+              // Jeśli elementu jeszcze nie ma, próbujemy za chwilę (max 5 prób)
+              if (attempt < 5) setTimeout(() => scrollToTarget(attempt + 1), 200);
+              return;
           }
-      }, 300); // 300ms to bezpieczny czas dla Next.js na pełne załadowanie DOM
+
+          // KROK KLUCZOWY: Wymuszamy na GSAP przeliczenie wysokości WSZYSTKICH sekcji
+          // (w tym karuzeli portfolio) zanim zaczniemy scrollować.
+          ScrollTrigger.refresh();
+          lenis.resize();
+
+          lenis.scrollTo(elem, {
+            offset: -80, // Offset na navbar
+            duration: 1.5,
+            lock: true,  // Blokujemy scroll użytkownika podczas animacji
+            force: true, // Wymuszamy scroll nawet jak Lenis myśli, że jest blisko
+            
+            // KROK KOREKCYJNY (Double Check)
+            onComplete: () => {
+                // Sprawdzamy, gdzie fizycznie wylądowaliśmy względem elementu
+                const rect = elem.getBoundingClientRect();
+                const distanceToHeader = rect.top - 80; // Powinno być bliskie 0
+
+                // Jeśli różnica jest większa niż 5px (np. bo karuzela się rozwinęła w trakcie)
+                // wykonujemy scrolla jeszcze raz (korekta)
+                if (Math.abs(distanceToHeader) > 5 && attempt < 3) {
+                    console.log("Korekta scrolla...", distanceToHeader);
+                    scrollToTarget(attempt + 1);
+                } else {
+                    // Sukces - czyścimy URL
+                    const newUrl = window.location.pathname;
+                    window.history.replaceState({}, '', newUrl);
+                }
+            }
+          });
+      };
+
+      // Dajemy lekkie opóźnienie na start, żeby React wyrenderował komponenty
+      // a GSAP zdążył zainicjować piny.
+      const timer = setTimeout(() => {
+          scrollToTarget(1);
+      }, 500); // 500ms to bezpieczny czas dla ciężkich animacji
 
       return () => clearTimeout(timer);
     }
-  }, [searchParams, lenisRef]); // Uruchom ponownie, gdy zmienią się parametry URL
+  }, [searchParams, lenisRef, isMounted]);
 
   return null;
 }
