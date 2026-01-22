@@ -14,7 +14,7 @@ export const SmoothScrolling = ({ children }: { children: React.ReactNode }) => 
       ref={lenisRef}
       root
       options={{
-        duration: 1.2,
+        duration: 1.2, // Nieco wolniej dla płynności przy dużych skokach
         smoothWheel: true,
         syncTouch: true,
         touchMultiplier: 1,
@@ -40,10 +40,10 @@ function AnchorManager({ lenisRef }: { lenisRef: any }) {
 
     gsap.registerPlugin(ScrollTrigger);
     
-    // Synchronizacja Lenis -> ScrollTrigger
+    // Kluczowe: manualna aktualizacja ScrollTriggera przez Lenis
     lenis.on('scroll', ScrollTrigger.update);
     
-    // Wyłączenie lagów GSAP (Lenis to ogarnia)
+    // Wyłączamy "wygładzanie" GSAP, bo Lenis to robi
     gsap.ticker.lagSmoothing(0);
 
     setIsMounted(true);
@@ -53,7 +53,7 @@ function AnchorManager({ lenisRef }: { lenisRef: any }) {
     };
   }, [lenisRef]);
 
-  // 2. LOGIKA KOTWIC Z KOREKTĄ DLA PINOWANYCH SEKCJI
+  // 2. LOGIKA KOTWIC Z KOREKTĄ LAYOUT SHIFT (PINNING)
   useEffect(() => {
     const targetSection = searchParams.get('target');
     const lenis = lenisRef.current?.lenis;
@@ -61,54 +61,73 @@ function AnchorManager({ lenisRef }: { lenisRef: any }) {
     if (targetSection && lenis && isMounted) {
       const targetId = targetSection.replace('#', '');
       
-      // Funkcja wykonująca scroll z korektą
-      const scrollToTarget = (attempt = 1) => {
+      // Wyłączamy domyślny scroll przeglądarki
+      if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+      }
+
+      // Funkcja wykonująca scroll z weryfikacją pozycji
+      const performScroll = (attempt = 1) => {
           const elem = document.getElementById(targetId);
           
+          // Jeśli elementu nie ma, czekamy (max 10 prób po 100ms)
           if (!elem) {
-              // Jeśli elementu jeszcze nie ma, próbujemy za chwilę (max 5 prób)
-              if (attempt < 5) setTimeout(() => scrollToTarget(attempt + 1), 200);
+              if (attempt < 10) setTimeout(() => performScroll(attempt + 1), 100);
               return;
           }
 
-          // KROK KLUCZOWY: Wymuszamy na GSAP przeliczenie wysokości WSZYSTKICH sekcji
-          // (w tym karuzeli portfolio) zanim zaczniemy scrollować.
+          // KROK 1: Wymuś przeliczenie layoutu PRZED ruchem
           ScrollTrigger.refresh();
           lenis.resize();
 
+          // KROK 2: Jedź do celu
           lenis.scrollTo(elem, {
-            offset: -80, // Offset na navbar
+            offset: -80, // Twój offset na header
             duration: 1.5,
-            lock: true,  // Blokujemy scroll użytkownika podczas animacji
-            force: true, // Wymuszamy scroll nawet jak Lenis myśli, że jest blisko
+            lock: true,  // Zablokuj usera
+            force: true, // Ignoruj obecną pozycję
+            immediate: false,
             
-            // KROK KOREKCYJNY (Double Check)
+            // KROK 3: Weryfikacja po dojechaniu (Recursion Check)
             onComplete: () => {
-                // Sprawdzamy, gdzie fizycznie wylądowaliśmy względem elementu
+                // Sprawdzamy, gdzie JESTEŚMY vs gdzie jest ELEMENT
+                // Po scrollu GSAP mógł rozwinąć piny, więc pozycja elementu mogła uciec
                 const rect = elem.getBoundingClientRect();
-                const distanceToHeader = rect.top - 80; // Powinno być bliskie 0
+                const distance = rect.top - 80; // Powinno być ~0
 
-                // Jeśli różnica jest większa niż 5px (np. bo karuzela się rozwinęła w trakcie)
-                // wykonujemy scrolla jeszcze raz (korekta)
-                if (Math.abs(distanceToHeader) > 5 && attempt < 3) {
-                    console.log("Korekta scrolla...", distanceToHeader);
-                    scrollToTarget(attempt + 1);
+                // Jeśli różnica jest duża (>5px) i nie próbowaliśmy za dużo razy
+                if (Math.abs(distance) > 5 && attempt < 3) {
+                    // console.log("GSAP Pin Shift wykryty! Korekta scrolla...", distance);
+                    
+                    // Wymuszamy ponowne przeliczenie, bo jesteśmy w nowym miejscu scrolla
+                    ScrollTrigger.refresh(); 
+                    
+                    // Jedziemy jeszcze raz (KOREKTA) - tym razem krócej
+                    lenis.scrollTo(elem, {
+                        offset: -80,
+                        duration: 0.8, // Szybsza korekta
+                        lock: true,
+                        force: true,
+                        onComplete: () => {
+                           // Czyścimy URL po sukcesie
+                           window.history.replaceState({}, '', window.location.pathname);
+                        }
+                    });
                 } else {
-                    // Sukces - czyścimy URL
-                    const newUrl = window.location.pathname;
-                    window.history.replaceState({}, '', newUrl);
+                    // Sukces (lub poddajemy się po 3 korektach)
+                    window.history.replaceState({}, '', window.location.pathname);
                 }
             }
           });
       };
 
-      // Dajemy lekkie opóźnienie na start, żeby React wyrenderował komponenty
-      // a GSAP zdążył zainicjować piny.
-      const timer = setTimeout(() => {
-          scrollToTarget(1);
-      }, 500); // 500ms to bezpieczny czas dla ciężkich animacji
+      // Start z opóźnieniem (aby React wyrenderował DOM)
+      // 500ms to bezpieczny margines dla ciężkich stron z animacjami
+      const initialTimer = setTimeout(() => {
+          performScroll(1);
+      }, 500);
 
-      return () => clearTimeout(timer);
+      return () => clearTimeout(initialTimer);
     }
   }, [searchParams, lenisRef, isMounted]);
 
