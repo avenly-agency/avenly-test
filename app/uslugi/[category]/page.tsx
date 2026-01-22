@@ -3,7 +3,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ArrowUpRight } from 'lucide-react';
-import { services } from '@/app/data/services'; // Import danych
+import { services } from '../../data/services';
 
 // 1. GENEROWANIE ŚCIEŻEK
 export function generateStaticParams() {

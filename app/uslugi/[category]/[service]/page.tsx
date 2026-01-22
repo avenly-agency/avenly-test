@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle2 } from 'lucide-react';
-import { services } from '@/app/data/services';
+import { services } from '../../../data/services';
 import { Button } from '@/components/ui/button'; // Upewnij się, że masz ten komponent lub użyj zwykłego <button>
 
 // 1. GENEROWANIE ŚCIEŻEK STATYCZNYCH (Dla wydajności i SEO)
