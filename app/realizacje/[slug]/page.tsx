@@ -117,7 +117,7 @@ export default async function ProjectPage({ params }: Props) {
                             <div className="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/30" />
                         </div>
                         <div className="ml-4 px-4 py-1 rounded-full bg-white/5 border border-white/5 text-[10px] text-slate-500 font-mono hidden md:block">
-                            avenly.pl/projekty/{project.slug}
+                            avenly.pl/realizacje/{project.slug}
                         </div>
                     </div>
 

@@ -9,7 +9,7 @@ export const projects = [
         description: "Start nowej marki i całkowita dominacja lokalnego rynku SEO.",
         mainImage: "/portfolio/mcentrumgabinet.webp", // Pamiętaj o folderze public
         mockupImage: "/portfolio/mcentrum-full-screen.webp",
-        gallery: ["/portfolio/dental-1.jpg", "/portfolio/dental-2.jpg"], // Dodatkowe zdjęcia
+        gallery: ["/portfolio/galeria-0.webp", "/portfolio/dental-2.jpg"], // Dodatkowe zdjęcia
         
         // Logika linkowania
         hasCaseStudy: true, 
