@@ -7,7 +7,6 @@ import { useLenis } from 'lenis/react';
 import { 
   Github, 
   Twitter, 
-  Linkedin, 
   Instagram, 
   Facebook, 
   FileCheck, 
@@ -15,13 +14,12 @@ import {
 } from 'lucide-react';
 
 // --- KONFIGURACJA LINKÓW ---
-// Ważne: Kotwice zostawiamy z samym '#', strony z '/'
 const footerLinks = {
   main: [
     { name: 'Oferta', href: '#oferta' },
     { name: 'Proces', href: '#proces' },
-    { name: 'Realizacje', href: '/realizacje' }, // To jest osobna podstrona
-    { name: 'Kontakt', href: '#kontakt' },       // To jest sekcja na stronie głównej
+    { name: 'Realizacje', href: '/realizacje' },
+    { name: 'Kontakt', href: '#kontakt' },
   ],
   legal: [
     { name: 'Polityka Prywatności', href: '/polityka-prywatnosci' },
@@ -32,20 +30,20 @@ const footerLinks = {
     { 
       name: 'Facebook',
       icon: Facebook, 
-      href: 'https://facebook.com', 
+      href: 'https://www.facebook.com/profile.php?id=61581862509345', 
       color: 'hover:bg-[#1877F2] hover:border-[#1877F2] hover:text-white' 
     },
     { 
       name: 'Instagram',
       icon: Instagram, 
-      href: 'https://instagram.com', 
+      href: 'https://www.instagram.com/avenly.pl/', 
       color: 'hover:bg-[#E4405F] hover:border-[#E4405F] hover:text-white' 
     },
     { 
-      name: 'LinkedIn',
-      icon: Linkedin, 
-      href: 'https://linkedin.com', 
-      color: 'hover:bg-[#0A66C2] hover:border-[#0A66C2] hover:text-white' 
+      name: 'GitHub',
+      icon: Github,
+      href: 'https://github.com/avenly-agency', 
+      color: 'hover:bg-[#333] hover:border-[#333] hover:text-white'
     },
     { 
       name: 'Useme',
@@ -59,24 +57,19 @@ const footerLinks = {
 export const Footer = () => {
   const currentYear = new Date().getFullYear();
   
-  // --- LOGIKA OBSŁUGI NAWIGACJI (Ta sama co w Navbarze) ---
+  // --- LOGIKA OBSŁUGI NAWIGACJI ---
   const pathname = usePathname();
   const router = useRouter();
   const lenis = useLenis();
   const isHome = pathname === '/';
 
   const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    // 1. Jeśli to link zewnętrzny (http) lub zwykła podstrona (/blog), nic nie rób (niech działa domyślnie)
     if (!href.startsWith('#')) return;
-
-    // 2. Jeśli to kotwica (#kontakt), przejmujemy kontrolę
     e.preventDefault();
 
     if (isHome) {
-      // Jesteśmy na głównej -> Płynny scroll
       lenis?.scrollTo(href, { offset: -100, duration: 1.5 });
     } else {
-      // Jesteśmy na podstronie -> Przekieruj z parametrem target
       const targetId = href.replace('#', '');
       router.push(`/?target=${targetId}`);
     }
@@ -86,33 +79,35 @@ export const Footer = () => {
     <footer className="relative bg-[#050505] border-t border-white/10 overflow-hidden pt-20 pb-10">
       
       <div className="container mx-auto px-6 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-20">
+        
+        <div className="grid grid-cols-2 md:grid-cols-12 gap-10 md:gap-12 mb-20">
           
-          {/* KOLUMNA 1: MARKA + MISJA */}
-          <div className="md:col-span-5 flex flex-col gap-6">
+          {/* KOLUMNA 1: MARKA */}
+          <div className="col-span-2 md:col-span-5 flex flex-col gap-6">
             <Link href="/" className="text-2xl font-bold tracking-tighter text-white flex items-center gap-1">
               AVENLY<span className="text-blue-500">.</span>
             </Link>
             <p className="text-slate-400 leading-relaxed max-w-sm">
-              Tworzymy cyfrową przyszłość dla ambitnych marek. 
-              Design, Technologia, Automatyzacja. 
-              Bez kompromisów.
+              Twój partner w cyfrowym świecie. 
+              Przekuwamy Twoje cele w skuteczne działania w internecie. 
+              Strategia, kreacja i technologia w jednym miejscu.
             </p>
           </div>
 
-          {/* KOLUMNA 2: NAVIGACJA (Z LOGIKĄ KLIKNIĘCIA) */}
-          <div className="md:col-span-3 md:col-start-7">
+          {/* KOLUMNA 2: MENU */}
+          <div className="col-span-1 md:col-span-3 md:col-start-7">
             <h4 className="text-white font-bold mb-6">Menu</h4>
             <ul className="space-y-4">
               {footerLinks.main.map((link) => (
                 <li key={link.name}>
-                  {/* Używamy zwykłego <a> lub Link z obsługą onClick */}
                   <Link 
                     href={link.href} 
                     onClick={(e) => handleLinkClick(e, link.href)}
-                    className="text-slate-400 hover:text-blue-400 transition-colors flex items-center gap-2 group w-fit cursor-pointer"
+                    // ZMIANA: gap-0 na mobile, gap-2 na desktop
+                    className="text-slate-400 hover:text-blue-400 transition-colors flex items-center gap-0 md:gap-2 group w-fit cursor-pointer text-sm"
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                    {/* ZMIANA: hidden md:block - kropka znika na mobile */}
+                    <span className="hidden md:block w-1.5 h-1.5 rounded-full bg-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"></span>
                     {link.name}
                   </Link>
                 </li>
@@ -120,8 +115,8 @@ export const Footer = () => {
             </ul>
           </div>
 
-          {/* KOLUMNA 3: LEGAL & INFO */}
-          <div className="md:col-span-3">
+          {/* KOLUMNA 3: LEGAL */}
+          <div className="col-span-1 md:col-span-3">
             <h4 className="text-white font-bold mb-6">Legal</h4>
             <ul className="space-y-4">
               {footerLinks.legal.map((link) => (
@@ -142,13 +137,11 @@ export const Footer = () => {
         {/* --- STOPKA DOLNA (BOTTOM BAR) --- */}
         <div className="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-white/5 text-slate-500 text-sm gap-6">
             
-            {/* LEWA STRONA: COPYRIGHT + SYSTEM STATUS */}
+            {/* LEWA STRONA */}
             <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
-                <p>&copy; {currentYear} Avenly Agency.</p>
-                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                    <span className="text-xs font-medium text-slate-300">All Systems Operational</span>
-                </div>
+                <p>&copy; {currentYear} Avenly.</p>
+                
+
             </div>
 
             {/* PRAWA STRONA: SOCIAL MEDIA */}
@@ -170,7 +163,7 @@ export const Footer = () => {
         </div>
       </div>
 
-      {/* GIANT TYPOGRAPHY BACKGROUND */}
+      {/* TŁO TYPOGRAFICZNE */}
       <div className="absolute bottom-0 left-0 right-0 pointer-events-none select-none overflow-hidden flex justify-center opacity-5">
         <motion.h1 
             initial={{ y: 100 }}

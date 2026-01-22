@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence, Variants } from 'framer-motion'
-import { ArrowRight, Github, Twitter, Linkedin } from 'lucide-react'
+import { ArrowRight, Github, Facebook, Instagram } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useLenis } from 'lenis/react'
@@ -16,6 +16,13 @@ const NAV_LINKS = [
     { title: 'Realizacje', href: '/realizacje' },
     { title: 'Blog', href: '/blog' },
     { title: 'Kontakt', href: '/kontakt' },
+]
+
+// --- SOCIAL MEDIA LINKI (TUTAJ WPISZ SWOJE ADRESY) ---
+const SOCIAL_LINKS = [
+    { icon: Facebook, href: 'https://www.facebook.com/profile.php?id=61581862509345' },
+    { icon: Instagram, href: 'https://www.instagram.com/avenly.pl/' },
+    { icon: Github, href: 'https://github.com/avenly-agency' },
 ]
 
 // --- ANIMACJE (VARIANTS) ---
@@ -142,7 +149,6 @@ export const Navbar = () => {
                     </Link>
 
                     {/* DESKTOP MENU */}
-                    {/* ZMIANA: 'hidden lg:flex' (ukryte do 1024px) oraz responsywny gap (gap-5 dla laptopów, gap-8 dla dużych ekranów) */}
                     <div className="hidden lg:flex items-center gap-5 xl:gap-10">
                         {NAV_LINKS.map(item => (
                             <a
@@ -166,7 +172,6 @@ export const Navbar = () => {
                     </div>
 
                     {/* MOBILE HAMBURGER */}
-                    {/* ZMIANA: 'lg:hidden' (widoczne tylko poniżej 1024px) */}
                     <button
                         className="lg:hidden text-white z-50 relative cursor-pointer hover:text-blue-400 transition-colors p-2 active:scale-90"
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -233,10 +238,17 @@ export const Navbar = () => {
                                     <div className="flex justify-between items-center">
                                         <span className="text-slate-400 text-sm uppercase tracking-widest">Social Media</span>
                                         <div className="flex gap-4">
-                                            {[Github, Twitter, Linkedin].map((Icon, i) => (
-                                                <div key={i} className="p-2 bg-white/5 rounded-full hover:bg-blue-600 transition-colors cursor-pointer">
-                                                    <Icon size={20} className="text-white" />
-                                                </div>
+                                            {/* ZMIANA: Mapujemy teraz obiekty z linkami */}
+                                            {SOCIAL_LINKS.map((item, i) => (
+                                                <a 
+                                                    key={i} 
+                                                    href={item.href} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="p-2 bg-white/5 rounded-full hover:bg-blue-600 transition-colors cursor-pointer"
+                                                >
+                                                    <item.icon size={20} className="text-white" />
+                                                </a>
                                             ))}
                                         </div>
                                     </div>
