@@ -13,7 +13,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 // --- DANE NAWIGACJI ---
 const NAV_LINKS = [
-    { title: 'Oferta', href: '#oferta' },
+    { title: 'Usługi', href: '#uslugi' },
     { title: 'Proces', href: '#proces' },
     { title: 'O nas', href: '/o-nas' },
     { title: 'Realizacje', href: '/realizacje' },

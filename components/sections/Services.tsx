@@ -26,7 +26,7 @@ export const Services = () => {
     } as const
 
     return (
-        <section className="relative w-full py-20 md:py-24 bg-[#050505] overflow-hidden" id="oferta">
+        <section className="relative w-full py-20 md:py-24 bg-[#050505] overflow-hidden" id="uslugi">
             <div
                 className="absolute top-0 right-0 w-[40vw] h-[40vw] bg-blue-900/5 blur-[100px] rounded-full pointer-events-none"
                 aria-hidden="true"

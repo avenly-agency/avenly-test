@@ -16,7 +16,7 @@ import {
 // --- KONFIGURACJA LINKÓW ---
 const footerLinks = {
   main: [
-    { name: 'Oferta', href: '#oferta' },
+    { name: 'Usługi', href: '#uslugi' },
     { name: 'Proces', href: '#proces' },
     { name: 'Realizacje', href: '/realizacje' },
     { name: 'Kontakt', href: '#kontakt' },
