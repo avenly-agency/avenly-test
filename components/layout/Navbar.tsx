@@ -67,7 +67,6 @@ export const Navbar = () => {
     const lastScrollY = useRef(0)
     const scrollDownAccumulator = useRef(0)
 
-    // --- HARDCORE FIX: NAWIGACJA ---
     const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
         if (!href.startsWith('#')) {
             setIsMobileMenuOpen(false)
@@ -85,7 +84,6 @@ export const Navbar = () => {
         }
     }
 
-    // --- LOGIKA UI ---
     useEffect(() => {
         const handleScroll = () => {
             const currentScrollY = window.scrollY
@@ -110,8 +108,6 @@ export const Navbar = () => {
         return () => window.removeEventListener('scroll', handleScroll)
     }, [])
 
-    // --- BLOKADA SCROLLA ---
-    // ZMIANA: Blokujemy scroll body, ale pozwalamy na scroll wewnątrz menu
     useEffect(() => {
         if (isMobileMenuOpen) {
             document.body.style.overflow = 'hidden'
@@ -163,7 +159,6 @@ export const Navbar = () => {
                             </a>
                         ))}
 
-                        {/* PRZYCISK WYCENY */}
                         <a
                             href="#kontakt"
                             onClick={e => handleLinkClick(e, '#kontakt')}
@@ -204,19 +199,19 @@ export const Navbar = () => {
                         initial="initial"
                         animate="animate"
                         exit="exit"
-                        // ZMIANA 1: Dodano 'overflow-y-auto' - to klucz do przewijania
+                        // KONTENER GŁÓWNY: overflow-y-auto pozwala scrollować
                         className="fixed inset-0 w-full h-[100dvh] bg-[#050505] z-40 origin-top flex flex-col overflow-y-auto">
                         
                         <div className="absolute top-[-20%] right-[-20%] w-[80vw] h-[80vw] bg-blue-900/20 blur-[100px] rounded-full pointer-events-none" />
 
-                        {/* ZMIANA 2: Zmieniono 'h-full' na 'min-h-full', zmieniono 'pt-32' na 'pt-24' */}
-                        <div className="flex flex-col min-h-full container mx-auto px-6 pb-10 pt-24 relative z-10 justify-between">
+                        {/* TREŚĆ: min-h-full i pb-32 (DUŻY padding na dole) */}
+                        <div className="flex flex-col min-h-full container mx-auto px-6 pb-32 pt-24 relative z-10">
                             <motion.div
                                 variants={containerVars}
                                 initial="initial"
                                 animate="open"
                                 exit="initial"
-                                className="flex flex-col gap-4 flex-1 justify-center">
+                                className="flex flex-col gap-4"> {/* Usunięte flex-1 i justify-center */}
                                 {NAV_LINKS.map((link, index) => (
                                     <div key={index} className="overflow-hidden">
                                         <motion.div variants={mobileLinkVars}>
@@ -232,36 +227,36 @@ export const Navbar = () => {
                                 ))}
                             </motion.div>
 
+                            {/* FOOTER: mt-auto spycha go na dół, ale nie za ekran */}
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0, transition: { delay: 0.5 } }}
                                 exit={{ opacity: 0, transition: { duration: 0.2 } }}
-                                className="border-t border-white/10 pt-8 mt-8 shrink-0"> {/* shrink-0 zapobiega zgniataniu footera */}
-                                <div className="flex flex-col gap-6">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-slate-400 text-sm uppercase tracking-widest">Social Media</span>
-                                        <div className="flex gap-4">
-                                            {SOCIAL_LINKS.map((item, i) => (
-                                                <a 
-                                                    key={i} 
-                                                    href={item.href} 
-                                                    target="_blank" 
-                                                    rel="noopener noreferrer"
-                                                    className="p-2 bg-white/5 rounded-full hover:bg-blue-600 transition-colors cursor-pointer"
-                                                >
-                                                    <item.icon size={20} className="text-white" />
-                                                </a>
-                                            ))}
-                                        </div>
+                                className="border-t border-white/10 pt-8 mt-auto gap-6 flex flex-col"> {/* Dodano mt-auto */}
+                                
+                                <div className="flex justify-between items-center">
+                                    <span className="text-slate-400 text-sm uppercase tracking-widest">Social Media</span>
+                                    <div className="flex gap-4">
+                                        {SOCIAL_LINKS.map((item, i) => (
+                                            <a 
+                                                key={i} 
+                                                href={item.href} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="p-2 bg-white/5 rounded-full hover:bg-blue-600 transition-colors cursor-pointer"
+                                            >
+                                                <item.icon size={20} className="text-white" />
+                                            </a>
+                                        ))}
                                     </div>
-
-                                    <a href="#kontakt" onClick={e => handleLinkClick(e, '#kontakt')} className="w-full block">
-                                        <button className="w-full py-4 bg-white text-black text-lg font-bold rounded-xl hover:bg-blue-500 hover:text-white transition-all flex items-center justify-center gap-2 group cursor-pointer active:scale-95">
-                                            Darmowa Wycena
-                                            <ArrowRight className="group-hover:translate-x-1 transition-transform" />
-                                        </button>
-                                    </a>
                                 </div>
+
+                                <a href="#kontakt" onClick={e => handleLinkClick(e, '#kontakt')} className="w-full block">
+                                    <button className="w-full py-4 bg-white text-black text-lg font-bold rounded-xl hover:bg-blue-500 hover:text-white transition-all flex items-center justify-center gap-2 group cursor-pointer active:scale-95">
+                                        Darmowa Wycena
+                                        <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+                                    </button>
+                                </a>
                             </motion.div>
                         </div>
                     </motion.div>
