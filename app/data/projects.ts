@@ -43,7 +43,7 @@ export const projects = [
         challenge: "",
         solution: "",
         stats: [],
-        techStack: ["WooCommerce", "React", "Algolia"]
+        techStack: ["Wordpress", "Impreza", "Cloudflare"]
     },
     {
         id: 3,

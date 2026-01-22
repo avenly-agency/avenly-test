@@ -6,6 +6,11 @@ import { useEffect, Suspense, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
+// --- EFEKT PREMIUM ---
+function easeOutExpo(x: number): number {
+  return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
+}
+
 export const SmoothScrolling = ({ children }: { children: React.ReactNode }) => {
   const lenisRef = useRef<any>(null);
 
@@ -16,12 +21,9 @@ export const SmoothScrolling = ({ children }: { children: React.ReactNode }) => 
       options={{
         duration: 1.2,
         smoothWheel: true,
-        // WAŻNE: syncTouch: true czasami pomaga z lagami na hybrydowych laptopach
-        syncTouch: true, 
-        touchMultiplier: 1,
+        syncTouch: true,
+        touchMultiplier: 1, // Ważne: 1 dla mobile
       }}
-      // WAŻNE: autoRaf={true} to domyślne ustawienie, ale upewniamy się, że jest włączone.
-      // Usuwamy ręczne lenis.raf() z useEffecta, bo to powodowało desynchronizację po czasie.
       autoRaf={true}
     >
       <Suspense fallback={null}>
@@ -36,13 +38,14 @@ function AnchorManager({ lenisRef }: { lenisRef: any }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
-  // 1. TYLKO AKTUALIZACJA GSAP (Bez napędzania pętli)
+  // 1. INTEGRACJA GSAP + LENIS
   useEffect(() => {
     const lenis = lenisRef.current?.lenis;
     if (!lenis) return;
 
-    // Mówimy ScrollTriggerowi: "Hej, Lenis się przesunął, przelicz pozycje"
-    // Ale NIE sterujemy czasem klatki.
+    // Rejestracja ScrollTriggera
+    gsap.registerPlugin(ScrollTrigger);
+
     const handleScroll = (e: any) => {
         ScrollTrigger.update();
     };
@@ -54,45 +57,68 @@ function AnchorManager({ lenisRef }: { lenisRef: any }) {
     };
   }, [lenisRef]);
 
-  // 2. LOGIKA KOTWIC (Bez zmian - działała dobrze)
+  // 2. LOGIKA KOTWIC (WERSJA "PANCERNA")
   useEffect(() => {
     const lenis = lenisRef.current?.lenis;
     if (!lenis) return;
 
     const targetSection = searchParams.get('target');
 
+    // SCENARIUSZ A: Mamy cel (kotwicę) w URL
     if (targetSection) {
       const targetId = targetSection.replace('#', '');
-      // Małe opóźnienie, żeby upewnić się, że DOM jest gotowy
-      const timer = setTimeout(() => {
+      
+      const scrollToElement = () => {
           const elem = document.getElementById(targetId);
           if (elem) {
+            // KROK KLUCZOWY: Najpierw przeliczamy układ strony (dla sekcji przypiętych jak Portfolio)
+            ScrollTrigger.refresh(); 
+            
             lenis.scrollTo(elem, {
-              offset: -100,
-              duration: 1.5,
-              lock: false,
-              force: true,
+              offset: -100, // Margines na header
+              duration: 2, // Dajemy mu czas na pokonanie długich sekcji (np. 500vh)
+              easing: easeOutExpo,
+              lock: true, // Blokujemy scrollowanie użytkownika podczas animacji
+              force: true, // Wymuszamy scroll nawet jeśli Lenis myśli że tam jest
+              onComplete: () => {
+                  // Opcjonalnie: Po zakończeniu scrolla odświeżamy jeszcze raz
+                  ScrollTrigger.refresh();
+              }
             });
           }
-      }, 100);
-      return () => clearTimeout(timer);
+      };
+
+      // SEKWENCJA PRÓB (Żeby wygrać z ładowaniem layoutu)
+      
+      // 1. Szybka próba (jeśli strona jest lekka)
+      const t1 = setTimeout(scrollToElement, 100);
+
+      // 2. Główna próba (po załadowaniu cięższych skryptów)
+      const t2 = setTimeout(scrollToElement, 500);
+
+      // 3. "Safety Check" (dla wolniejszych łączy/urządzeń)
+      // To naprawia problem zatrzymania w połowie Portfolio
+      const t3 = setTimeout(scrollToElement, 1200);
+
+      return () => {
+          clearTimeout(t1);
+          clearTimeout(t2);
+          clearTimeout(t3);
+      };
     } 
+    // SCENARIUSZ B: Zwykła zmiana strony (np. kliknięcie w logo)
     else {
-      // Reset scrolla przy zmianie podstrony
-      lenis.scrollTo(0, { immediate: true });
-      window.scrollTo(0, 0);
+        // Resetujemy pozycję, ale dopiero w następnej klatce
+        const tReset = setTimeout(() => {
+            window.scrollTo(0, 0);
+            lenis.scrollTo(0, { immediate: true });
+        }, 10);
+        return () => clearTimeout(tReset);
     }
-    
-    // Refresh ScrollTriggera po zmianie trasy
-    const refreshTimer = setTimeout(() => {
-        ScrollTrigger.refresh();
-    }, 500);
-    
-    return () => clearTimeout(refreshTimer);
 
   }, [lenisRef, searchParams, pathname]);
 
-  // 3. BLOKADA NATYWNEGO POWROTU
+  // 3. BLOKADA NATYWNEGO POWROTU (Żeby przeglądarka sama nie scrollowała)
   useEffect(() => {
     if ('scrollRestoration' in history) {
       history.scrollRestoration = 'manual';

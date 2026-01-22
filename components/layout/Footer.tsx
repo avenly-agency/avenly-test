@@ -2,27 +2,31 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { useLenis } from 'lenis/react';
 import { 
   Github, 
   Twitter, 
   Linkedin, 
   Instagram, 
   Facebook, 
-  FileCheck, // Użyjemy tego jako symbolu Useme (Faktura/Rozliczenie)
+  FileCheck, 
   ArrowUpRight 
 } from 'lucide-react';
 
+// --- KONFIGURACJA LINKÓW ---
+// Ważne: Kotwice zostawiamy z samym '#', strony z '/'
 const footerLinks = {
   main: [
     { name: 'Oferta', href: '#oferta' },
     { name: 'Proces', href: '#proces' },
-    { name: 'Realizacje', href: '#realizacje' },
-    { name: 'Kontakt', href: '#kontakt' },
+    { name: 'Realizacje', href: '/realizacje' }, // To jest osobna podstrona
+    { name: 'Kontakt', href: '#kontakt' },       // To jest sekcja na stronie głównej
   ],
   legal: [
-    { name: 'Polityka Prywatności', href: '#' },
-    { name: 'Regulamin', href: '#' },
-    { name: 'Cookies', href: '#' },
+    { name: 'Polityka Prywatności', href: '/polityka-prywatnosci' },
+    { name: 'Regulamin', href: '/regulamin' },
+    { name: 'Cookies', href: '/cookies' },
   ],
   socials: [
     { 
@@ -47,13 +51,36 @@ const footerLinks = {
       name: 'Useme',
       icon: FileCheck, 
       href: 'https://useme.com', 
-      color: 'hover:bg-[#FFE000] hover:border-[#FFE000] hover:text-black' // Brandowy żółty Useme
+      color: 'hover:bg-[#FFE000] hover:border-[#FFE000] hover:text-black' 
     },
   ]
 };
 
 export const Footer = () => {
   const currentYear = new Date().getFullYear();
+  
+  // --- LOGIKA OBSŁUGI NAWIGACJI (Ta sama co w Navbarze) ---
+  const pathname = usePathname();
+  const router = useRouter();
+  const lenis = useLenis();
+  const isHome = pathname === '/';
+
+  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    // 1. Jeśli to link zewnętrzny (http) lub zwykła podstrona (/blog), nic nie rób (niech działa domyślnie)
+    if (!href.startsWith('#')) return;
+
+    // 2. Jeśli to kotwica (#kontakt), przejmujemy kontrolę
+    e.preventDefault();
+
+    if (isHome) {
+      // Jesteśmy na głównej -> Płynny scroll
+      lenis?.scrollTo(href, { offset: -100, duration: 1.5 });
+    } else {
+      // Jesteśmy na podstronie -> Przekieruj z parametrem target
+      const targetId = href.replace('#', '');
+      router.push(`/?target=${targetId}`);
+    }
+  };
 
   return (
     <footer className="relative bg-[#050505] border-t border-white/10 overflow-hidden pt-20 pb-10">
@@ -73,15 +100,17 @@ export const Footer = () => {
             </p>
           </div>
 
-          {/* KOLUMNA 2: NAVIGACJA */}
+          {/* KOLUMNA 2: NAVIGACJA (Z LOGIKĄ KLIKNIĘCIA) */}
           <div className="md:col-span-3 md:col-start-7">
             <h4 className="text-white font-bold mb-6">Menu</h4>
             <ul className="space-y-4">
               {footerLinks.main.map((link) => (
                 <li key={link.name}>
+                  {/* Używamy zwykłego <a> lub Link z obsługą onClick */}
                   <Link 
                     href={link.href} 
-                    className="text-slate-400 hover:text-blue-400 transition-colors flex items-center gap-2 group w-fit"
+                    onClick={(e) => handleLinkClick(e, link.href)}
+                    className="text-slate-400 hover:text-blue-400 transition-colors flex items-center gap-2 group w-fit cursor-pointer"
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"></span>
                     {link.name}
@@ -131,7 +160,6 @@ export const Footer = () => {
                     aria-label={social.name}
                     target="_blank"
                     rel="noopener noreferrer"
-                    // Używamy dynamicznych klas kolorów zdefiniowanych wyżej w obiekcie
                     className={`w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-slate-400 ${social.color} hover:-translate-y-1 transition-all duration-300 shadow-lg shadow-black/20`}
                 >
                     <social.icon size={18} />
