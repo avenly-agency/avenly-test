@@ -1,7 +1,7 @@
 'use client';
 
 import { ReactLenis } from 'lenis/react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useEffect, Suspense, useRef, useLayoutEffect, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -31,7 +31,6 @@ export const SmoothScrolling = ({ children }: { children: React.ReactNode }) => 
 
 function AnchorManager({ lenisRef }: { lenisRef: any }) {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
 
   // 1. INTEGRACJA GSAP
@@ -50,7 +49,7 @@ function AnchorManager({ lenisRef }: { lenisRef: any }) {
     };
   }, [lenisRef]);
 
-  // 2. LOGIKA KOTWIC (Cross-page navigation fix)
+  // 2. PANCERNA LOGIKA KOTWIC (Polling Strategy)
   useEffect(() => {
     const lenis = lenisRef.current?.lenis;
     if (!lenis || !isMounted) return;
@@ -60,64 +59,49 @@ function AnchorManager({ lenisRef }: { lenisRef: any }) {
     if (targetSection) {
       const targetId = targetSection.replace('#', '');
       
-      // ✅ FIX 1: Wyłączamy domyślne przywracanie scrolla przeglądarki,
-      // żeby nie walczyła z Lenisem zaraz po załadowaniu strony.
+      // WYMUSZENIE MANUALNEGO SCROLLA PRZEGLĄDARKI
+      // To zapobiega "szarpnięciu" na górę przez przeglądarkę
       if ('scrollRestoration' in history) {
         history.scrollRestoration = 'manual';
       }
 
-      const huntTarget = (attempt = 1) => {
-          if (attempt > 10) return; // Zwiększamy lekko limit prób
+      // METODA POLLINGU (Sprawdzamy co 100ms czy element jest gotowy)
+      // To rozwiązuje problem ładowania nowej podstrony
+      let attempts = 0;
+      const maxAttempts = 20; // Próbujemy przez 2 sekundy (20 * 100ms)
 
-          const elem = document.getElementById(targetId);
-          
-          // Jeśli elementu nie ma, próbujemy ponownie za 100ms
-          if (!elem) {
-              setTimeout(() => huntTarget(attempt + 1), 100);
-              return;
-          }
+      const checkForElement = setInterval(() => {
+        attempts++;
+        const elem = document.getElementById(targetId);
 
-          // Odświeżamy układ (ważne przy lazy loading)
+        // Jeśli element istnieje LUB skończyły się próby
+        if (elem) {
+          clearInterval(checkForElement); // Przestajemy szukać
+
+          // 1. Wymuś przeliczenie wymiarów strony (ważne po zmianie URL!)
+          lenis.resize(); 
           ScrollTrigger.refresh();
 
+          // 2. Wykonaj scroll
           lenis.scrollTo(elem, {
-            offset: -80,
+            offset: -80, // Offset na header
             duration: 1.5,
-            lock: true,
-            force: true, // Wymuszamy scroll nawet jak Lenis myśli, że jest na miejscu
+            lock: true, // Zablokuj scrollowanie użytkownika podczas jazdy
+            force: true, // Ignoruj obecną pozycję
             
             onComplete: () => {
-                // Sprawdzamy czy trafiliśmy
-                const rect = elem.getBoundingClientRect();
-                const distance = Math.abs(rect.top - 80);
-
-                if (distance > 20) {
-                    // Jak nie trafiliśmy (np. layout się przesunął), poprawiamy
-                    huntTarget(attempt + 1);
-                } else {
-                    // ✅ FIX 2 (Opcjonalny UX): Czyścimy URL po udanym scrollu.
-                    // Dzięki temu jak użytkownik odświeży stronę (F5), 
-                    // zostanie w tym miejscu, a nie skoczy znowu do animacji.
-                    const newUrl = window.location.pathname;
-                    window.history.replaceState({}, '', newUrl);
-                    
-                    // Przywracamy domyślne zachowanie scrolla dla dalszej nawigacji
-                    if ('scrollRestoration' in history) {
-                        history.scrollRestoration = 'auto';
-                    }
-                }
+                // Po dojechaniu - czyścimy URL dla czystości
+                const newUrl = window.location.pathname;
+                window.history.replaceState({}, '', newUrl);
             }
           });
-      };
+        } else if (attempts >= maxAttempts) {
+           // Jeśli po 2 sekundach nie ma elementu, poddajemy się
+           clearInterval(checkForElement);
+        }
+      }, 100); // Sprawdzaj co 100ms
 
-      // Startujemy z minimalnym opóźnieniem, aby React zdążył wyrenderować drzewo DOM
-      // Zmniejszyłem z 500ms na 100ms, aby reakcja była szybsza
-      const initialDelay = setTimeout(() => {
-          ScrollTrigger.refresh();
-          huntTarget(1);
-      }, 100);
-
-      return () => clearTimeout(initialDelay);
+      return () => clearInterval(checkForElement);
     } 
   }, [lenisRef, searchParams, isMounted]);
 
