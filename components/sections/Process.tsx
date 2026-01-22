@@ -64,7 +64,7 @@ export const Process = () => {
               <header className="text-center mb-20 md:mb-32">
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-6 backdrop-blur-md">
                       <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-                      <span className="text-slate-400 text-xs font-bold tracking-widest uppercase">Roadmapa</span>
+                      <span className="text-slate-400 text-xs font-bold tracking-widest uppercase">Proces</span>
                   </div>
                   <h2 className="text-4xl md:text-6xl font-bold text-white tracking-tight">
                       Jak to <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">Działa?</span>
