@@ -3,7 +3,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, ArrowUpRight, Layers } from 'lucide-react';
 import { projects } from '@/app/data/projects'; 
-// 👇 IMPORTUJEMY NOWY ELEMENT
 import { StatsSpotlight } from '@/components/projects/StatsSpotlight'; 
 
 // --- FUNKCJA POMOCNICZA ---
@@ -15,7 +14,6 @@ const ensureHttp = (url: string) => {
   return `https://${url}`;
 };
 
-// ... (funkcje generateStaticParams i generateMetadata BEZ ZMIAN) ...
 export function generateStaticParams() {
   return projects
     .filter((p) => p.hasCaseStudy)
@@ -31,7 +29,6 @@ export async function generateMetadata({ params }: Props) {
   return { title: `${project.title} | Portfolio Avenly`, description: project.description };
 }
 
-// --- KOMPONENT GŁÓWNY ---
 export default async function ProjectPage({ params }: Props) {
   const { slug } = await params;
   const project = projects.find((p) => p.slug === slug);
@@ -45,12 +42,13 @@ export default async function ProjectPage({ params }: Props) {
   return (
     <main className="min-h-screen bg-[#050505] text-white selection:bg-blue-500/30 relative overflow-hidden">
         
-        {/* ... (TŁO i NAV BACK bez zmian) ... */}
+        {/* TŁO */}
         <div className="absolute top-0 left-0 w-full h-[800px] pointer-events-none z-0">
             <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[90%] h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/15 via-[#050505]/10 to-transparent blur-[100px]" />
             <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-500/20 to-transparent" />
         </div>
 
+        {/* NAV */}
         <div className="container mx-auto px-6 pt-32 mb-12 relative z-10">
             <Link 
                 href="/realizacje" 
@@ -61,7 +59,7 @@ export default async function ProjectPage({ params }: Props) {
             </Link>
         </div>
 
-        {/* --- HERO SEKCYJNE --- */}
+        {/* HERO */}
         <section className="container mx-auto px-6 mb-24 relative z-10">
             <div className="grid lg:grid-cols-2 gap-16 items-end">
                 <div>
@@ -91,23 +89,55 @@ export default async function ProjectPage({ params }: Props) {
                     )}
                 </div>
                 
-                {/* 👇 TUTAJ WSTAWIAMY EFEKT SPOTLIGHT ZAMIAST STARYCH BOKSÓW 👇 */}
+                {/* STATYSTYKI SPOTLIGHT */}
                 <div>
                     <StatsSpotlight stats={project.stats || []} />
                 </div>
-
             </div>
         </section>
 
-        {/* ... (Reszta strony: Główne zdjęcie, Challenge, Tech, Galeria itd. - BEZ ZMIAN) ... */}
-        
-        <div className="w-full h-[50vh] md:h-[80vh] relative overflow-hidden mb-24 bg-[#111] z-10 border-y border-white/5">
-            {project.mainImage ? (
-                <Image src={project.mainImage} alt={project.title} fill className="object-cover" priority />
-            ) : (
-                <div className="w-full h-full bg-gradient-to-br from-slate-900 to-blue-900/20" />
-            )}
-        </div>
+        {/* --- NOWA SEKCJA: MAKIETA PRZEGLĄDARKI (Zamiast dużego zdjęcia) --- */}
+        <section className="container mx-auto px-6 mb-32 relative z-10">
+            <div className="relative group">
+                {/* Dekoracyjny Glow pod makietą */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-3xl blur-2xl opacity-50 group-hover:opacity-70 transition-opacity duration-700" />
+                
+                {/* Kontener "Przeglądarki" */}
+                <div className="relative rounded-2xl border border-white/10 bg-[#0a0a0a] overflow-hidden shadow-2xl">
+                    {/* Pasek adresu (Header przeglądarki) */}
+                    <div className="h-12 border-b border-white/5 bg-white/[0.02] flex items-center px-4 gap-2">
+                        <div className="flex gap-2">
+                            <div className="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/30" />
+                            <div className="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/30" />
+                            <div className="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/30" />
+                        </div>
+                        {/* Fake Address Bar */}
+                        <div className="ml-4 px-4 py-1 rounded-full bg-white/5 border border-white/5 text-[10px] text-slate-500 font-mono hidden md:block">
+                            avenly.pl/projekty/{project.slug}
+                        </div>
+                    </div>
+
+                    {/* Zdjęcie projektu w środku */}
+                    <div className="relative aspect-video w-full bg-[#111]">
+                        {project.mainImage ? (
+                            <Image 
+                                src={project.mainImage} 
+                                alt={project.title} 
+                                fill 
+                                className="object-cover"
+                                priority
+                            />
+                        ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-slate-900 to-blue-900/20 flex items-center justify-center text-slate-600">
+                                Brak zdjęcia
+                            </div>
+                        )}
+                        {/* Cień wewnętrzny dla realizmu */}
+                        <div className="absolute inset-0 shadow-[inset_0_0_100px_rgba(0,0,0,0.5)] pointer-events-none" />
+                    </div>
+                </div>
+            </div>
+        </section>
 
         <div className="container mx-auto px-6 relative z-10">
             <div className="grid lg:grid-cols-2 gap-20 mb-32 border-b border-white/10 pb-20">
