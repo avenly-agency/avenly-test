@@ -18,7 +18,7 @@ const NAV_LINKS = [
     { title: 'Kontakt', href: '/kontakt' },
 ]
 
-// --- SOCIAL MEDIA LINKI (TUTAJ WPISZ SWOJE ADRESY) ---
+// --- SOCIAL MEDIA LINKI ---
 const SOCIAL_LINKS = [
     { icon: Facebook, href: 'https://www.facebook.com/profile.php?id=61581862509345' },
     { icon: Instagram, href: 'https://www.instagram.com/avenly.pl/' },
@@ -111,6 +111,7 @@ export const Navbar = () => {
     }, [])
 
     // --- BLOKADA SCROLLA ---
+    // ZMIANA: Blokujemy scroll body, ale pozwalamy na scroll wewnątrz menu
     useEffect(() => {
         if (isMobileMenuOpen) {
             document.body.style.overflow = 'hidden'
@@ -203,11 +204,13 @@ export const Navbar = () => {
                         initial="initial"
                         animate="animate"
                         exit="exit"
-                        className="fixed inset-0 w-full h-[100dvh] bg-[#050505] z-40 origin-top flex flex-col justify-between">
+                        // ZMIANA 1: Dodano 'overflow-y-auto' - to klucz do przewijania
+                        className="fixed inset-0 w-full h-[100dvh] bg-[#050505] z-40 origin-top flex flex-col overflow-y-auto">
                         
                         <div className="absolute top-[-20%] right-[-20%] w-[80vw] h-[80vw] bg-blue-900/20 blur-[100px] rounded-full pointer-events-none" />
 
-                        <div className="flex flex-col h-full container mx-auto px-6 pb-10 pt-32 relative z-10">
+                        {/* ZMIANA 2: Zmieniono 'h-full' na 'min-h-full', zmieniono 'pt-32' na 'pt-24' */}
+                        <div className="flex flex-col min-h-full container mx-auto px-6 pb-10 pt-24 relative z-10 justify-between">
                             <motion.div
                                 variants={containerVars}
                                 initial="initial"
@@ -233,12 +236,11 @@ export const Navbar = () => {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0, transition: { delay: 0.5 } }}
                                 exit={{ opacity: 0, transition: { duration: 0.2 } }}
-                                className="border-t border-white/10 pt-8 mt-8">
+                                className="border-t border-white/10 pt-8 mt-8 shrink-0"> {/* shrink-0 zapobiega zgniataniu footera */}
                                 <div className="flex flex-col gap-6">
                                     <div className="flex justify-between items-center">
                                         <span className="text-slate-400 text-sm uppercase tracking-widest">Social Media</span>
                                         <div className="flex gap-4">
-                                            {/* ZMIANA: Mapujemy teraz obiekty z linkami */}
                                             {SOCIAL_LINKS.map((item, i) => (
                                                 <a 
                                                     key={i} 
