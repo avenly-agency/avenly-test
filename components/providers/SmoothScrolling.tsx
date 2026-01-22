@@ -2,14 +2,9 @@
 
 import { ReactLenis } from 'lenis/react';
 import { useSearchParams, usePathname } from 'next/navigation';
-import { useEffect, Suspense, useRef } from 'react';
+import { useEffect, Suspense, useRef, useLayoutEffect, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-// --- EFEKT PREMIUM ---
-function easeOutExpo(x: number): number {
-  return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
-}
 
 export const SmoothScrolling = ({ children }: { children: React.ReactNode }) => {
   const lenisRef = useRef<any>(null);
@@ -22,7 +17,7 @@ export const SmoothScrolling = ({ children }: { children: React.ReactNode }) => 
         duration: 1.2,
         smoothWheel: true,
         syncTouch: true,
-        touchMultiplier: 1, // Ważne: 1 dla mobile
+        touchMultiplier: 1,
       }}
       autoRaf={true}
     >
@@ -36,94 +31,84 @@ export const SmoothScrolling = ({ children }: { children: React.ReactNode }) => 
 
 function AnchorManager({ lenisRef }: { lenisRef: any }) {
   const searchParams = useSearchParams();
-  const pathname = usePathname();
+  const [isMounted, setIsMounted] = useState(false);
 
-  // 1. INTEGRACJA GSAP + LENIS
-  useEffect(() => {
+  // 1. INICJALIZACJA GSAP + LENIS
+  useLayoutEffect(() => {
     const lenis = lenisRef.current?.lenis;
-    if (!lenis) return;
+    if (!lenis || typeof window === 'undefined') return;
 
-    // Rejestracja ScrollTriggera
     gsap.registerPlugin(ScrollTrigger);
 
-    const handleScroll = (e: any) => {
-        ScrollTrigger.update();
+    lenis.on('scroll', ScrollTrigger.update);
+    
+    const ticker = (time: number) => {
+      lenis.raf(time * 1000);
     };
+    
+    gsap.ticker.add(ticker);
+    gsap.ticker.lagSmoothing(0);
 
-    lenis.on('scroll', handleScroll);
+    setIsMounted(true);
 
     return () => {
-        lenis.off('scroll', handleScroll);
+      lenis.off('scroll', ScrollTrigger.update);
+      gsap.ticker.remove(ticker);
     };
   }, [lenisRef]);
 
-  // 2. LOGIKA KOTWIC (WERSJA "PANCERNA")
+  // 2. LOGIKA KOTWIC (Hunt & Kill Strategy)
   useEffect(() => {
     const lenis = lenisRef.current?.lenis;
-    if (!lenis) return;
+    if (!lenis || !isMounted) return;
 
     const targetSection = searchParams.get('target');
 
-    // SCENARIUSZ A: Mamy cel (kotwicę) w URL
+    // SCENARIUSZ A: Mamy cel w URL (np. kliknięcie z innej podstrony)
     if (targetSection) {
       const targetId = targetSection.replace('#', '');
       
-      const scrollToElement = () => {
+      const huntTarget = (attempt = 1) => {
+          if (attempt > 5) return;
+
           const elem = document.getElementById(targetId);
-          if (elem) {
-            // KROK KLUCZOWY: Najpierw przeliczamy układ strony (dla sekcji przypiętych jak Portfolio)
-            ScrollTrigger.refresh(); 
-            
-            lenis.scrollTo(elem, {
-              offset: -100, // Margines na header
-              duration: 2, // Dajemy mu czas na pokonanie długich sekcji (np. 500vh)
-              easing: easeOutExpo,
-              lock: true, // Blokujemy scrollowanie użytkownika podczas animacji
-              force: true, // Wymuszamy scroll nawet jeśli Lenis myśli że tam jest
-              onComplete: () => {
-                  // Opcjonalnie: Po zakończeniu scrolla odświeżamy jeszcze raz
-                  ScrollTrigger.refresh();
-              }
-            });
+          if (!elem) {
+              setTimeout(() => huntTarget(attempt), 100);
+              return;
           }
+
+          ScrollTrigger.refresh();
+
+          lenis.scrollTo(elem, {
+            offset: -80,
+            duration: 1.5,
+            lock: true,
+            force: true,
+            
+            onComplete: () => {
+                const rect = elem.getBoundingClientRect();
+                const distance = Math.abs(rect.top - 80);
+
+                if (distance > 20) {
+                    huntTarget(attempt + 1);
+                }
+            }
+          });
       };
 
-      // SEKWENCJA PRÓB (Żeby wygrać z ładowaniem layoutu)
-      
-      // 1. Szybka próba (jeśli strona jest lekka)
-      const t1 = setTimeout(scrollToElement, 100);
+      const initialDelay = setTimeout(() => {
+          ScrollTrigger.refresh();
+          huntTarget(1);
+      }, 500);
 
-      // 2. Główna próba (po załadowaniu cięższych skryptów)
-      const t2 = setTimeout(scrollToElement, 500);
-
-      // 3. "Safety Check" (dla wolniejszych łączy/urządzeń)
-      // To naprawia problem zatrzymania w połowie Portfolio
-      const t3 = setTimeout(scrollToElement, 1200);
-
-      return () => {
-          clearTimeout(t1);
-          clearTimeout(t2);
-          clearTimeout(t3);
-      };
+      return () => clearTimeout(initialDelay);
     } 
-    // SCENARIUSZ B: Zwykła zmiana strony (np. kliknięcie w logo)
-    else {
-        // Resetujemy pozycję, ale dopiero w następnej klatce
-        const tReset = setTimeout(() => {
-            window.scrollTo(0, 0);
-            lenis.scrollTo(0, { immediate: true });
-        }, 10);
-        return () => clearTimeout(tReset);
-    }
+    
+    // SCENARIUSZ B: Brak celu (Zwykłe wejście lub odświeżenie)
+    // USUNIĘTO: Blok 'else' który wymuszał scrollTo(0,0) i scrollRestoration='manual'
+    // Dzięki temu przeglądarka sama przywróci pozycję scrolla po odświeżeniu.
 
-  }, [lenisRef, searchParams, pathname]);
-
-  // 3. BLOKADA NATYWNEGO POWROTU (Żeby przeglądarka sama nie scrollowała)
-  useEffect(() => {
-    if ('scrollRestoration' in history) {
-      history.scrollRestoration = 'manual';
-    }
-  }, []);
+  }, [lenisRef, searchParams, isMounted]);
 
   return null;
 }

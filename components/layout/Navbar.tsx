@@ -7,6 +7,9 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useLenis } from 'lenis/react'
 import { cn } from '@/lib/utils'
+// 1. DODANO IMPORTY GSAP
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 // --- DANE NAWIGACJI ---
 const NAV_LINKS = [
@@ -67,7 +70,14 @@ export const Navbar = () => {
     const lastScrollY = useRef(0)
     const scrollDownAccumulator = useRef(0)
 
-    // --- HARDCORE FIX: NAWIGACJA ---
+    // 2. REJESTRACJA GSAP (Aby Navbar widział ScrollTrigger)
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            gsap.registerPlugin(ScrollTrigger);
+        }
+    }, []);
+
+    // --- FIX: PANCERNE SCROLLOWANIE W MENU ---
     const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
         if (!href.startsWith('#')) {
             setIsMobileMenuOpen(false)
@@ -78,8 +88,43 @@ export const Navbar = () => {
         setIsMobileMenuOpen(false)
 
         if (isHome) {
-            lenis?.scrollTo(href, { offset: -100, duration: 1.5 })
+            // Logika "Hunt & Kill" dla strony głównej
+            const targetId = href.replace('#', '');
+            const elem = document.getElementById(targetId);
+
+            if (elem && lenis) {
+                // A. Wymuś przeliczenie wysokości strony (kluczowe dla Pinned Sections)
+                ScrollTrigger.refresh();
+
+                lenis.scrollTo(elem, {
+                    offset: -100, // Offset na header
+                    duration: 1.5, // Czas trwania
+                    lock: true,   // Zablokuj scrollowanie użytkownika podczas jazdy
+                    force: true,  // Wymuś scroll
+                    
+                    // B. Jeszcze raz odśwież na starcie
+                    onStart: () => ScrollTrigger.refresh(),
+                    
+                    // C. Sprawdź po dojechaniu, czy trafiliśmy (Auto-Korekta)
+                    onComplete: () => {
+                        ScrollTrigger.refresh(); // Ostatnie odświeżenie
+                        const rect = elem.getBoundingClientRect();
+                        
+                        // Jeśli element jest dalej niż 50px od celu (czyli scroll zatrzymał się za wcześnie)
+                        if (Math.abs(rect.top - 100) > 50) {
+                            // console.log("Korekta scrolla z Navbara...");
+                            lenis.scrollTo(elem, {
+                                offset: -100,
+                                duration: 0.5, // Szybka poprawka
+                                immediate: false,
+                                lock: true
+                            });
+                        }
+                    }
+                });
+            }
         } else {
+            // Jesteśmy na innej podstronie -> Przekierowanie z parametrem
             const targetId = href.replace('#', '')
             router.push(`/?target=${targetId}`)
         }
@@ -203,17 +248,14 @@ export const Navbar = () => {
                         initial="initial"
                         animate="animate"
                         exit="exit"
-                        // FIX 1: overflow-y-auto pozwala na scrollowanie menu, jeśli treść jest wyższa niż ekran
                         className="fixed inset-0 w-full h-[100dvh] bg-[#050505] z-40 origin-top overflow-y-auto"
                     >
                         
                         <div className="absolute top-[-20%] right-[-20%] w-[80vw] h-[80vw] bg-blue-900/20 blur-[100px] rounded-full pointer-events-none fixed" />
 
-                        {/* FIX 2: min-h-[100dvh] zamiast h-full, pt-24 (mniej u góry), pb-48 (OGROMNY odstęp u dołu) */}
-                        {/* pb-48 gwarantuje, że przycisk "Darmowa Wycena" będzie zawsze powyżej paska przeglądarki po scrollu */}
                         <div className="flex flex-col min-h-[100dvh] container mx-auto px-6 pb-48 pt-24 relative z-10">
                             
-                            {/* LINKI - zajmują dostępną przestrzeń */}
+                            {/* LINKI */}
                             <motion.div
                                 variants={containerVars}
                                 initial="initial"
@@ -235,7 +277,7 @@ export const Navbar = () => {
                                 ))}
                             </motion.div>
 
-                            {/* SOCIAL MEDIA - przyklejone do dołu kontenera (dzięki flex-1) */}
+                            {/* SOCIAL MEDIA */}
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0, transition: { delay: 0.5 } }}
