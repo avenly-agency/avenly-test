@@ -203,16 +203,17 @@ export const Navbar = () => {
                         initial="initial"
                         animate="animate"
                         exit="exit"
-                        // ZMIANA 1: Dodano 'overflow-y-auto' i usunięto 'justify-between'
-                        // Dzięki temu menu się scrolluje, jeśli jest za wysokie, zamiast ucinać treść
-                        className="fixed inset-0 w-full h-[100dvh] bg-[#050505] z-40 origin-top overflow-y-auto">
+                        // FIX 1: overflow-y-auto pozwala na scrollowanie menu, jeśli treść jest wyższa niż ekran
+                        className="fixed inset-0 w-full h-[100dvh] bg-[#050505] z-40 origin-top overflow-y-auto"
+                    >
                         
                         <div className="absolute top-[-20%] right-[-20%] w-[80vw] h-[80vw] bg-blue-900/20 blur-[100px] rounded-full pointer-events-none fixed" />
 
-                        {/* ZMIANA 2: Dodano 'min-h-[100dvh]' i 'pb-20' */}
-                        <div className="flex flex-col min-h-[100dvh] container mx-auto px-6 pb-20 pt-32 relative z-10">
+                        {/* FIX 2: min-h-[100dvh] zamiast h-full, pt-24 (mniej u góry), pb-48 (OGROMNY odstęp u dołu) */}
+                        {/* pb-48 gwarantuje, że przycisk "Darmowa Wycena" będzie zawsze powyżej paska przeglądarki po scrollu */}
+                        <div className="flex flex-col min-h-[100dvh] container mx-auto px-6 pb-48 pt-24 relative z-10">
                             
-                            {/* LINKI - zajmują całą dostępną przestrzeń */}
+                            {/* LINKI - zajmują dostępną przestrzeń */}
                             <motion.div
                                 variants={containerVars}
                                 initial="initial"
@@ -234,7 +235,7 @@ export const Navbar = () => {
                                 ))}
                             </motion.div>
 
-                            {/* SOCIAL MEDIA - przyklejone do dołu kontenera (dzięki flex-1 wyżej) */}
+                            {/* SOCIAL MEDIA - przyklejone do dołu kontenera (dzięki flex-1) */}
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0, transition: { delay: 0.5 } }}
