@@ -2,7 +2,7 @@
 
 import { ReactLenis } from 'lenis/react';
 import { useSearchParams } from 'next/navigation';
-import { useEffect, Suspense, useRef, useLayoutEffect, useState } from 'react';
+import { useEffect, Suspense, useRef, useLayoutEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -31,9 +31,8 @@ export const SmoothScrolling = ({ children }: { children: React.ReactNode }) => 
 
 function AnchorManager({ lenisRef }: { lenisRef: any }) {
   const searchParams = useSearchParams();
-  const [isMounted, setIsMounted] = useState(false);
 
-  // 1. INTEGRACJA GSAP
+  // 1. Integracja GSAP
   useLayoutEffect(() => {
     const lenis = lenisRef.current?.lenis;
     if (!lenis || typeof window === 'undefined') return;
@@ -42,68 +41,46 @@ function AnchorManager({ lenisRef }: { lenisRef: any }) {
     lenis.on('scroll', ScrollTrigger.update);
     gsap.ticker.lagSmoothing(0);
 
-    setIsMounted(true);
-
     return () => {
       lenis.off('scroll', ScrollTrigger.update);
     };
   }, [lenisRef]);
 
-  // 2. PANCERNA LOGIKA KOTWIC (Polling Strategy)
+  // 2. Obsługa nawigacji między stronami
   useEffect(() => {
-    const lenis = lenisRef.current?.lenis;
-    if (!lenis || !isMounted) return;
-
     const targetSection = searchParams.get('target');
+    const lenis = lenisRef.current?.lenis;
 
-    if (targetSection) {
+    if (targetSection && lenis) {
       const targetId = targetSection.replace('#', '');
       
-      // WYMUSZENIE MANUALNEGO SCROLLA PRZEGLĄDARKI
-      // To zapobiega "szarpnięciu" na górę przez przeglądarkę
-      if ('scrollRestoration' in history) {
-        history.scrollRestoration = 'manual';
-      }
+      // Magiczne opóźnienie - dajemy przeglądarce 100ms na render nowej strony
+      // Dzięki scroll={false} w Linku, strona zostanie w miejscu, a potem Lenis płynnie zjedzie
+      const timer = setTimeout(() => {
+          const elem = document.getElementById(targetId);
+          
+          if (elem) {
+              // Wymuszamy odświeżenie Lenisa i ScrollTriggera po załadowaniu nowej strony
+              lenis.resize();
+              ScrollTrigger.refresh();
 
-      // METODA POLLINGU (Sprawdzamy co 100ms czy element jest gotowy)
-      // To rozwiązuje problem ładowania nowej podstrony
-      let attempts = 0;
-      const maxAttempts = 20; // Próbujemy przez 2 sekundy (20 * 100ms)
+              lenis.scrollTo(elem, {
+                  offset: -80, // Offset na header
+                  duration: 1.5,
+                  lock: true,
+                  force: true,
+                  immediate: false, // Ważne: false oznacza "animuj", true oznacza "teleportuj"
+                  onComplete: () => {
+                      // Opcjonalnie: wyczyść URL
+                      window.history.replaceState({}, '', window.location.pathname);
+                  }
+              });
+          }
+      }, 300); // 300ms to bezpieczny czas dla Next.js na pełne załadowanie DOM
 
-      const checkForElement = setInterval(() => {
-        attempts++;
-        const elem = document.getElementById(targetId);
-
-        // Jeśli element istnieje LUB skończyły się próby
-        if (elem) {
-          clearInterval(checkForElement); // Przestajemy szukać
-
-          // 1. Wymuś przeliczenie wymiarów strony (ważne po zmianie URL!)
-          lenis.resize(); 
-          ScrollTrigger.refresh();
-
-          // 2. Wykonaj scroll
-          lenis.scrollTo(elem, {
-            offset: -80, // Offset na header
-            duration: 1.5,
-            lock: true, // Zablokuj scrollowanie użytkownika podczas jazdy
-            force: true, // Ignoruj obecną pozycję
-            
-            onComplete: () => {
-                // Po dojechaniu - czyścimy URL dla czystości
-                const newUrl = window.location.pathname;
-                window.history.replaceState({}, '', newUrl);
-            }
-          });
-        } else if (attempts >= maxAttempts) {
-           // Jeśli po 2 sekundach nie ma elementu, poddajemy się
-           clearInterval(checkForElement);
-        }
-      }, 100); // Sprawdzaj co 100ms
-
-      return () => clearInterval(checkForElement);
-    } 
-  }, [lenisRef, searchParams, isMounted]);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, lenisRef]); // Uruchom ponownie, gdy zmienią się parametry URL
 
   return null;
 }
