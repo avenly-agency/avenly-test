@@ -198,7 +198,7 @@ export const Portfolio = () => {
                         <div 
                             ref={mobileContainerRef}
                             onScroll={handleMobileScroll}
-                            className="flex items-center overflow-x-auto gap-4 px-6 snap-x snap-mandatory scrollbar-hide pb-8 touch-pan-x overscroll-x-contain"
+                            className="flex items-center overflow-x-auto gap-4 px-6 snap-x snap-mandatory scrollbar-hide pb-8 overscroll-x-contain"
                             data-lenis-prevent // ✅ Blokuje Lenisa w tym kontenerze
                         >
                             {displayedProjects.map((project) => (
@@ -325,9 +325,6 @@ const Card = ({ project, isMobile = false }: { project: any, isMobile?: boolean 
                     </p>
                 </div>
                 
-                {/* NAPRAWA: Usunięto sztywne h-[...] */}
-                {/* Dodano min-h-[4.5rem] tylko po to, by karty były równe przed hoverem, */}
-                {/* ale flexbox poniżej i tak dociągnie opis do góry. */}
                 <h3 className="text-3xl md:text-4xl font-bold text-white leading-tight line-clamp-2 drop-shadow-lg min-h-[2.5rem] md:min-h-[5rem] flex items-end">
                     {project.title}
                 </h3>
