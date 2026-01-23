@@ -4,11 +4,9 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowRight, ArrowUpRight, ChevronDown } from 'lucide-react'
-// 👇 IMPORTUJEMY DANE Z PLIKU
 import { services } from '@/app/data/services'
 
 export const Services = () => {
-    // Używamy zaimportowanej tablicy 'services' zamiast lokalnej 'servicesData'
     const [activeTab, setActiveTab] = useState(services[0].id)
     const [mobileActiveTab, setMobileActiveTab] = useState<string | null>(services[0].id)
 
@@ -109,6 +107,7 @@ export const Services = () => {
                                             >
                                                 <Link 
                                                     href={card.href}
+                                                    scroll={false} // ✅ Fix dla scrolla
                                                     className="group block h-full p-6 rounded-2xl bg-[#080808] border border-white/5 hover:border-blue-500/30 transition-all duration-300 flex flex-col gap-4 cursor-pointer hover:bg-white/[0.02]"
                                                 >
                                                     <div className="flex justify-between items-start">
@@ -133,8 +132,8 @@ export const Services = () => {
                                     {/* LINK DO PODSTRONY SLUG */}
                                     <div className="flex justify-start">
                                         <Link 
-                                            // UŻYWAMY SLUGA Z DANYCH
                                             href={`/uslugi/${activeContent.slug}`}
+                                            scroll={false} // ✅ Fix dla scrolla
                                             className="px-8 py-4 rounded-xl bg-white text-black font-bold hover:bg-blue-50 transition-all flex items-center gap-2 group cursor-pointer shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] hover:scale-105"
                                         >
                                             Więcej o {activeContent.label}
@@ -196,11 +195,16 @@ export const Services = () => {
                                                     {service.description}
                                                 </p>
 
-                                                <div className="flex overflow-x-auto pb-4 -mx-6 px-6 gap-3 snap-x snap-mandatory scrollbar-hide">
+                                                {/* 👇 TUTAJ JEST FIX DLA KARUZELI MOBILNEJ 👇 */}
+                                                <div 
+                                                    className="flex overflow-x-auto pb-4 -mx-6 px-6 gap-3 snap-x snap-mandatory scrollbar-hide touch-pan-x"
+                                                    data-lenis-prevent // ✅ Blokuje Lenisa w tym kontenerze
+                                                >
                                                     {service.cards.map((card, idx) => (
                                                         <Link 
                                                             key={idx}
                                                             href={card.href}
+                                                            scroll={false} // ✅ Fix dla scrolla
                                                             className="
                                                                 snap-center shrink-0 w-[80vw] md:w-[300px] 
                                                                 p-5 rounded-2xl 
@@ -233,6 +237,7 @@ export const Services = () => {
                                                     {/* LINK DO PODSTRONY SLUG */}
                                                     <Link 
                                                         href={`/uslugi/${service.slug}`}
+                                                        scroll={false} // ✅ Fix dla scrolla
                                                         className="snap-center shrink-0 w-[80px] flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform"
                                                     >
                                                         <div className="w-12 h-12 rounded-full bg-white/10 text-white flex items-center justify-center border border-white/10">

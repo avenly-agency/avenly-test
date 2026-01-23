@@ -194,10 +194,12 @@ export const Portfolio = () => {
                             <p className="text-slate-400 text-xs">Przesuń, aby zobaczyć.</p>
                          </div>
 
+                        {/* 👇 FIX DLA MOBILE SCROLLA TUTAJ 👇 */}
                         <div 
                             ref={mobileContainerRef}
                             onScroll={handleMobileScroll}
-                            className="flex items-center overflow-x-auto gap-4 px-6 snap-x snap-mandatory scrollbar-hide pb-8"
+                            className="flex items-center overflow-x-auto gap-4 px-6 snap-x snap-mandatory scrollbar-hide pb-8 touch-pan-x overscroll-x-contain"
+                            data-lenis-prevent // ✅ Blokuje Lenisa w tym kontenerze
                         >
                             {displayedProjects.map((project) => (
                                 <div key={project.id} className="snap-center shrink-0">
