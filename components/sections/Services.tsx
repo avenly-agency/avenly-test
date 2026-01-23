@@ -107,7 +107,7 @@ export const Services = () => {
                                             >
                                                 <Link 
                                                     href={card.href}
-                                                    scroll={false}
+                                                    // USUNIĘTO scroll={false} - chcemy scroll na górę nowej strony
                                                     className="group block h-full p-6 rounded-2xl bg-[#080808] border border-white/5 hover:border-blue-500/30 transition-all duration-300 flex flex-col gap-4 cursor-pointer hover:bg-white/[0.02]"
                                                 >
                                                     <div className="flex justify-between items-start">
@@ -133,7 +133,7 @@ export const Services = () => {
                                     <div className="flex justify-start">
                                         <Link 
                                             href={`/uslugi/${activeContent.slug}`}
-                                            scroll={false}
+                                            // USUNIĘTO scroll={false}
                                             className="px-8 py-4 rounded-xl bg-white text-black font-bold hover:bg-blue-50 transition-all flex items-center gap-2 group cursor-pointer shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] hover:scale-105"
                                         >
                                             Więcej o {activeContent.label}
@@ -195,7 +195,7 @@ export const Services = () => {
                                                     {service.description}
                                                 </p>
 
-                                                {/* 👇 FIX: Usunięto touch-pan-x, zostawiono data-lenis-prevent */}
+                                                {/* Kontener Mobile Cards */}
                                                 <div 
                                                     className="flex overflow-x-auto pb-4 -mx-6 px-6 gap-3 snap-x snap-mandatory scrollbar-hide overscroll-x-contain"
                                                     data-lenis-prevent
@@ -204,7 +204,7 @@ export const Services = () => {
                                                         <Link 
                                                             key={idx}
                                                             href={card.href}
-                                                            scroll={false}
+                                                            // USUNIĘTO scroll={false}
                                                             className="
                                                                 snap-center shrink-0 w-[80vw] md:w-[300px] 
                                                                 p-5 rounded-2xl 
@@ -237,7 +237,7 @@ export const Services = () => {
                                                     {/* LINK DO PODSTRONY SLUG */}
                                                     <Link 
                                                         href={`/uslugi/${service.slug}`}
-                                                        scroll={false}
+                                                        // USUNIĘTO scroll={false}
                                                         className="snap-center shrink-0 w-[80px] flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform"
                                                     >
                                                         <div className="w-12 h-12 rounded-full bg-white/10 text-white flex items-center justify-center border border-white/10">
