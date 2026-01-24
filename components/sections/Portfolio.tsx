@@ -136,7 +136,7 @@ export const Portfolio = () => {
                                 </span>
                                 </h2>
                                 <p className="text-slate-400 text-lg max-w-xs leading-relaxed">
-                                Projekty, które definiują jakość. Od stron WWW po zaawansowane systemy AI.
+                                Projekty, które definiują jakość. Od stron WWW po zaawansowane Chatboty AI.
                                 </p>
                             </div>
                         </FocusCard>

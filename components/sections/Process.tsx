@@ -11,26 +11,26 @@ import { Lightbulb, PenTool, Code2, Rocket } from 'lucide-react';
 const steps = [
   {
     id: 1,
-    title: "Discovery & Strategia",
-    description: "Nie zgadujemy. Analizujemy Twój biznes, konkurencję i ustalamy KPI. Budujemy fundament pod skalowalny wzrost.",
+    title: "Plan i Strategia",
+    description: "Słuchamy i analizujemy. Tworzymy plan działania, dzięki któremu strona stanie się skutecznym narzędziem do zarabiania, jak i budującą wizerunek wizytówką.",
     icon: Lightbulb,
   },
   {
     id: 2,
-    title: "UX/UI Design",
-    description: "Tworzymy makiety high-fidelity. Projektujemy doświadczenia, które konwertują odwiedzających w płacących klientów.",
+    title: "Projekt Graficzny",
+    description: "Nie kupujesz kota w worku. Zobaczysz wizualizację strony przed wdrożeniem. Projektujemy tak, aby klienci od razu wiedzieli, dlaczego warto Ci zaufać.",
     icon: PenTool,
   },
   {
     id: 3,
-    title: "Development & AI",
-    description: "Kodowanie w Next.js. Integracja z headless CMS i wdrożenie automatyzacji AI, która oszczędzi Twój czas.",
+    title: "Budowa i Technologia",
+    description: "My bierzemy na siebie całe zaplecze techniczne i programowanie. Otrzymujesz szybką, bezpieczną stronę, która po prostu działa – bez konieczności znania się na kodzie",
     icon: Code2,
   },
   {
     id: 4,
-    title: "Launch & Skalowanie",
-    description: "Testy wydajności, wdrożenie na produkcję (Vercel) i podpięcie analityki. Twój system jest gotowy na ruch.",
+    title: "Start i Wsparcie",
+    description: "Sprawdzamy każdy detal i uruchamiamy stronę. Podpinamy statystyki, żebyś widział efekty. Twój biznes jest gotowy na przyjęcie nowych klientów.",
     icon: Rocket,
   },
 ];

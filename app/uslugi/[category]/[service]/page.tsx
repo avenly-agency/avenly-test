@@ -4,7 +4,7 @@ import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 // Pamiętaj o ścieżce relatywnej, którą ustaliliśmy wcześniej
 import { services } from '../../../data/services'; 
 
-// 1. GENEROWANIE ŚCIEŻEK (Tu bez zmian, bo to działa w czasie budowania)
+// 1. GENEROWANIE ŚCIEŻEK
 export function generateStaticParams() {
   const params: { category: string; service: string }[] = [];
   services.forEach((cat) => {
@@ -18,9 +18,8 @@ export function generateStaticParams() {
   return params;
 }
 
-// 2. METADANE SEO (Naprawione pod Next.js 15)
+// 2. METADANE SEO
 export async function generateMetadata({ params }: { params: Promise<{ category: string; service: string }> }) {
-  // AWAITOWANIE PARAMSÓW
   const { category: categorySlug, service: serviceSlug } = await params;
 
   const categoryData = services.find((s) => s.slug === categorySlug);
@@ -35,12 +34,10 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
   };
 }
 
-// 3. GŁÓWNY KOMPONENT (Naprawiony pod Next.js 15)
+// 3. GŁÓWNY KOMPONENT
 export default async function SubServicePage({ params }: { params: Promise<{ category: string; service: string }> }) {
-  // AWAITOWANIE PARAMSÓW - TO JEST KLUCZOWA ZMIANA
   const { category: categorySlug, service: serviceSlug } = await params;
 
-  // Dalej używamy już rozpakowanych zmiennych
   const category = services.find((s) => s.slug === categorySlug);
   if (!category) notFound();
 
@@ -49,14 +46,20 @@ export default async function SubServicePage({ params }: { params: Promise<{ cat
 
   const Icon = card.icon;
 
+  // Bezpieczny dostęp do nowych pól (z fallbackiem na stare, gdyby coś poszło nie tak)
+  const fullDescription = card.fullDescription || card.desc;
+  const featuresList = card.features || ['Indywidualne podejście', 'Wsparcie techniczne', 'Skalowalność', 'Nowoczesne technologie'];
+
   return (
     <main className="min-h-screen bg-[#050505] text-white pt-32 pb-20 relative overflow-hidden">
         
+        {/* TŁA DEKORACYJNE */}
         <div className="absolute top-0 right-0 w-[50vw] h-[50vw] bg-blue-900/10 blur-[120px] rounded-full pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-[40vw] h-[40vw] bg-indigo-900/5 blur-[100px] rounded-full pointer-events-none" />
 
         <div className="container mx-auto px-6 relative z-10">
             
+            {/* POWRÓT */}
             <div className="mb-12">
                 <Link 
                     href={`/uslugi/${categorySlug}`} 
@@ -67,6 +70,7 @@ export default async function SubServicePage({ params }: { params: Promise<{ cat
                 </Link>
             </div>
 
+            {/* HEADER USŁUGI */}
             <div className="max-w-4xl mb-16">
                 <div className="inline-flex items-center justify-center p-4 rounded-2xl bg-blue-500/10 text-blue-400 mb-8 border border-blue-500/20 shadow-[0_0_30px_-10px_rgba(59,130,246,0.3)]">
                     <Icon size={40} />
@@ -79,26 +83,31 @@ export default async function SubServicePage({ params }: { params: Promise<{ cat
                 </p>
             </div>
 
+            {/* CONTENT GRID */}
             <div className="grid md:grid-cols-12 gap-12">
+                
+                {/* LEWA KOLUMNA: Opis i Cechy */}
                 <div className="md:col-span-8 space-y-8">
                     <div className="p-8 rounded-3xl bg-white/[0.02] border border-white/5 backdrop-blur-sm">
                         <h2 className="text-2xl font-bold mb-4 text-white">Szczegóły usługi</h2>
-                        <p className="text-slate-400 leading-relaxed mb-6">
-                            Pełny opis usługi <strong>{card.title}</strong>. 
-                            Tutaj znajdzie się szczegółowa specyfikacja, proces działania i korzyści biznesowe.
+                        {/* Wyświetlamy długi opis */}
+                        <p className="text-slate-400 leading-relaxed mb-6 text-lg">
+                            {fullDescription}
                         </p>
                     </div>
 
+                    {/* Wyświetlamy listę cech */}
                     <div className="grid md:grid-cols-2 gap-4">
-                        {['Indywidualne podejście', 'Wsparcie techniczne', 'Skalowalność', 'Nowoczesne technologie'].map((item, i) => (
-                            <div key={i} className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.02] border border-white/5">
-                                <CheckCircle2 className="text-blue-500" size={20} />
+                        {featuresList.map((item, i) => (
+                            <div key={i} className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.02] border border-white/5 hover:border-blue-500/20 transition-colors">
+                                <CheckCircle2 className="text-blue-500 shrink-0" size={20} />
                                 <span className="text-slate-300 font-medium">{item}</span>
                             </div>
                         ))}
                     </div>
                 </div>
 
+                {/* PRAWA KOLUMNA: CTA */}
                 <div className="md:col-span-4">
                     <div className="sticky top-32 p-6 rounded-3xl bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/20">
                         <h3 className="text-xl font-bold text-white mb-2">Zainteresowany?</h3>

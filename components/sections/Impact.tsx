@@ -110,8 +110,7 @@ export const Impact = () => {
                     </span>
                 </h2>
                 <p className="text-slate-400 text-lg leading-relaxed">
-                    Stara szkoła to ładne wizytówki. Nowa szkoła to <strong>systemy, które sprzedają</strong>. 
-                    Łączymy design premium z technologią, która zostawia konkurencję w tyle.
+                    Świat pędzi do przodu – nie zostawaj w tyle. Wdrażamy rozwiązania, które dają Ci przewagę nad konkurencją. <strong>Szybka strona, automatyzacja i design</strong>, którego pozazdroszczą inni.
                 </p>
             </motion.div>
         </div>
@@ -134,9 +133,9 @@ export const Impact = () => {
                     <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center mb-6 text-blue-400 group-hover:scale-110 transition-transform duration-700 ease-out">
                         <TrendingUp size={24} aria-hidden="true" />
                     </div>
-                    <h3 className="text-3xl font-bold text-white mb-4">Skalowalny Wzrost</h3>
+                    <h3 className="text-3xl font-bold text-white mb-4">Inwestycja, nie Koszt</h3>
                     <p className="text-slate-400 max-w-md">
-                        Nasze rozwiązania to nie koszt, to inwestycja. Optymalizujemy ścieżki zakupowe (UX), aby każdy odwiedzający miał powód, by zostać klientem.
+                        Zmieniamy ruch na stronie w realny zysk. Otrzymujesz maszynę do pozyskiwania klientów, która realnie wspiera Twój biznes i buduje Twoją przewagę.
                     </p>
                 </div>
 
@@ -170,12 +169,12 @@ export const Impact = () => {
                 <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center mb-6 text-indigo-400 group-hover:rotate-12 transition-transform duration-700 ease-out">
                     <Bot size={24} aria-hidden="true" />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-2">AI First</h3>
+                <h3 className="text-2xl font-bold text-white mb-2">Wirtualny Asystent</h3>
                 <p className="text-slate-400 text-sm mb-8">
                     Automatyzacja obsługi klienta i procesów. Twój biznes działa, gdy Ty śpisz.
                 </p>
                 <div className="mt-auto flex items-center gap-2 text-indigo-400 text-xs font-bold uppercase tracking-wider">
-                    <span>Chatboty & Automatyzacje</span>
+                    <span>Chatboty AI</span>
                 </div>
             </motion.div>
 
@@ -201,9 +200,9 @@ export const Impact = () => {
                     </span>
                     {/* ------------------------- */}
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">Performance SEO</h3>
+                <h3 className="text-xl font-bold text-white mb-2">Wydajność i SEO</h3>
                 <p className="text-slate-400 text-sm">
-                    Google kocha szybkie strony. Twoi klienci też. Budujemy pod Core Web Vitals.
+                   Google kocha szybkie strony. Twoi klienci też. Dajemy Ci szybkość, która buduje widoczność i przewagę nad konkurencją.
                 </p>
             </motion.div>
 
@@ -226,7 +225,7 @@ export const Impact = () => {
                         <h3 className="text-2xl font-bold text-white">Stabilność & Bezpieczeństwo</h3>
                     </div>
                     <p className="text-slate-400 text-sm">
-                        Hosting nowej generacji, SSL, ochrona Cloudflare. Twoja marka jest bezpieczna i dostępna 24/7 na całym świecie.
+                       Awaria strony to straceni klienci. Dlatego korzystamy wyłącznie z hostingu nowej generacji. Gwarantujemy bezpieczeństwo i stabilność klasy premium, dzięki którym Twoja firma działa non-stop, a Ty śpisz spokojnie.
                     </p>
                  </div>
                  

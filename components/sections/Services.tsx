@@ -37,7 +37,7 @@ export const Services = () => {
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">Usługi</span>
                     </h2>
                     <p className="text-slate-400 text-lg leading-relaxed">
-                        Kompleksowe podejście. Od pierwszej linii kodu, przez design, aż po automatyzację procesów.
+                        Wszystko w jednym miejscu. Od strategii, przez design, aż po wdrożenie. Oszczędzasz czas i otrzymujesz spójny, gotowy produkt.
                     </p>
                 </motion.div>
 
