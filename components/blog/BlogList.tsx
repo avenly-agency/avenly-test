@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react'; // Dodano useRef
+import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -18,18 +18,18 @@ export default function BlogList({ allPosts }: BlogListProps) {
     const [search, setSearch] = useState("");
     const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
-    // --- REFS DO OBSŁUGI DRAG-TO-SCROLL ---
+    // --- REFS DO OBSŁUGI DRAG-TO-SCROLL (Tylko Desktop) ---
     const scrollRef = useRef<HTMLDivElement>(null);
     const isDown = useRef(false);
     const startX = useRef(0);
     const scrollLeft = useRef(0);
-    const isDragging = useRef(false); // Flaga: czy użytkownik faktycznie przesuwa, czy tylko klika
+    const isDragging = useRef(false);
 
-    // --- LOGIKA DRAG-TO-SCROLL ---
+    // --- LOGIKA DRAG-TO-SCROLL (MYSZKA) ---
     const handleMouseDown = (e: React.MouseEvent) => {
         if (!scrollRef.current) return;
         isDown.current = true;
-        isDragging.current = false; // Resetujemy flagę przeciągania
+        isDragging.current = false;
         scrollRef.current.classList.add('active');
         startX.current = e.pageX - scrollRef.current.offsetLeft;
         scrollLeft.current = scrollRef.current.scrollLeft;
@@ -43,7 +43,6 @@ export default function BlogList({ allPosts }: BlogListProps) {
     const handleMouseUp = () => {
         isDown.current = false;
         if (scrollRef.current) scrollRef.current.classList.remove('active');
-        // setTimeout pozwala eventowi onClick sprawdzić flagę zanim ta się zresetuje
         setTimeout(() => { isDragging.current = false; }, 0); 
     };
 
@@ -51,9 +50,8 @@ export default function BlogList({ allPosts }: BlogListProps) {
         if (!isDown.current || !scrollRef.current) return;
         e.preventDefault();
         const x = e.pageX - scrollRef.current.offsetLeft;
-        const walk = (x - startX.current) * 2; // Szybkość przewijania (* 2)
+        const walk = (x - startX.current) * 2;
         
-        // Jeśli przesunęliśmy myszką więcej niż 5px, uznajemy to za drag, a nie kliknięcie
         if (Math.abs(x - startX.current) > 5) {
             isDragging.current = true;
         }
@@ -86,20 +84,31 @@ export default function BlogList({ allPosts }: BlogListProps) {
             {/* --- PASEK NARZĘDZI --- */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 pb-8 border-b border-white/5">
                 
-                {/* Kategorie (Scrollowalne + Drag) */}
+                {/* Kategorie (Scrollowalne + Drag + FIX MOBILE) */}
                 <div 
                     ref={scrollRef}
                     onMouseDown={handleMouseDown}
                     onMouseLeave={handleMouseLeave}
                     onMouseUp={handleMouseUp}
                     onMouseMove={handleMouseMove}
-                    className="flex items-center gap-2 overflow-x-auto pb-2 lg:pb-0 w-full lg:w-auto scrollbar-hide mask-fade-right cursor-grab active:cursor-grabbing select-none"
+                    className="
+                        flex items-center gap-2 overflow-x-auto pb-2 lg:pb-0 w-full lg:w-auto 
+                        cursor-grab active:cursor-grabbing select-none mask-fade-right
+                        
+                        /* FIX 1: Sterowanie dotykiem - pozwala przesuwać w bok bez blokowania scrolla strony */
+                        touch-pan-x 
+                        
+                        /* FIX 2: Ukrywanie scrollbara na wszystkich przeglądarkach */
+                        scrollbar-hide 
+                        [&::-webkit-scrollbar]:hidden 
+                        [-ms-overflow-style:none] 
+                        [scrollbar-width:none]
+                    "
                 >
                     {CATEGORIES.map((cat) => (
                         <button
                             key={cat}
                             onClick={() => {
-                                // Blokujemy zmianę kategorii, jeśli użytkownik przesuwał pasek (Drag)
                                 if (!isDragging.current) {
                                     setFilter(cat);
                                 }
