@@ -127,7 +127,7 @@ export const Portfolio = () => {
                             <div className="shrink-0 w-[450px] h-[550px] flex flex-col justify-center p-12">
                                 <div className="flex items-center gap-4 mb-8">
                                     <span className="w-12 h-[2px] bg-blue-500" aria-hidden="true"></span>
-                                    <span className="text-blue-500 font-mono text-sm tracking-widest uppercase">Portfolio 2024</span>
+                                    <span className="text-blue-500 font-mono text-sm tracking-widest uppercase">Portfolio</span>
                                 </div>
                                 <h2 className="text-7xl font-bold text-white tracking-tighter leading-[0.9] mb-8">
                                 Wybrane <br />

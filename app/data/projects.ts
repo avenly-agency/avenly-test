@@ -20,23 +20,23 @@ export const projects = [
         solution: "Stworzyliśmy wydajną stronę zoptymalizowaną pod SEO. Dzięki błyskawicznemu ładowaniu i strukturze danych, strona zajęła 1. miejsce w lokalnych wynikach wyszukiwania już po jednym miesiącu, a wprowadzenie booksy ułatwiło rezerwacje nowym i starym klientom.",
         stats: [
             { label: "Wzrost rezerwacji", value: "Duży" },
-            { label: "Czas ładowania", value: "1s" },
+            { label: "Czas ładowania", value: "<1s" },
             { label: "Pozycja w wyszukiwarce", value: "Nr 1" }
         ],
         techStack: ["Wordpress", "IMPREZA", "Booksy", "CloudFlare"]
     },
     {
         id: 2,
-        slug: "sklep-auto-parts",
-        title: "E-commerce Auto Parts",
-        category: "Sklepy",
-        year: "2023",
-        client: "AutoMaster",
-        description: "Sklep z zaawansowaną wyszukiwarką części po numerze VIN. Integracja z hurtowniami.",
-        mainImage: "/portfolio/autoparts.jpg",
+        slug: "klub-sportowy",
+        title: "Klub Sportowy",
+        category: "Strona WWW",
+        year: "2025",
+        client: "Radzyński Klub Sportowy",
+        description: "Strona internetowa dla Radzyńskiego Klubu Sportowego.",
+        mainImage: "/portfolio/klubsportowy.webp",
         
         hasCaseStudy: false, // TYLKO LINK ZEWNĘTRZNY
-        externalLink: "https://automaster-demo.pl",
+        externalLink: "https://klubsportowyrks.pl",
         
         // Te pola mogą być puste, bo hasCaseStudy = false
         gallery: [],
