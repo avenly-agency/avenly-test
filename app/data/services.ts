@@ -100,18 +100,16 @@ export const services = [
 		cards: [
 			{
 				title: 'Design stron internetowych',
-				desc: 'Makiety High-Fidelity i prototypowanie interakcji.',
+				desc: 'Otrzymasz projekt, który wygląda jak gotowa strona.',
 				icon: Palette,
 				href: '/uslugi/design/design-stron-internetowych',
 				fullDescription:
 					'Tworzymy kompleksowe projekty interfejsów dla aplikacji webowych i mobilnych. Skupiamy się na użyteczności (UX) i atrakcyjności wizualnej (UI), dostarczając gotowe makiety i systemy, które programiści mogą łatwo wdrożyć.',
 				features: [
 					'Badania potrzeb użytkowników',
-					'Wireframing i makiety Lo-Fi',
-					'Prototypy interaktywne (Figma)',
+					'Wireframing i makiety',
 					'Testy użyteczności',
-					'Dokumentacja dla deweloperów',
-					'Wsparcie podczas wdrożenia',
+                    'Projektowanie responsywne',
 				],
 			},
 		],
@@ -150,8 +148,8 @@ export const services = [
 		longDescription: 'Marketing oparty na danych to nasza specjalność...',
 		cards: [
 			{
-				title: 'Audyt SEO & Wydajności',
-				desc: 'Pozycjonowanie oparte na wydajności i Core Web Vitals.',
+				title: 'Audyt Wydajności & SEO',
+				desc: '',
 				icon: Search,
 				href: '/uslugi/marketing/audyt-seo-wydajnosci',
 				fullDescription:
@@ -159,7 +157,7 @@ export const services = [
 				features: [
 					'Audyt techniczny strony',
 					'Analiza słów kluczowych',
-					'Optymalizacja SEo oraz wydajności',
+					'Optymalizacja SEO oraz wydajności',
 					'Strategia treści',
 					'Raport wdrożeniowy',
 				],

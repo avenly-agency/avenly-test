@@ -1,7 +1,7 @@
 'use client';
 
-import { ReactLenis, useLenis } from 'lenis/react'; // Dodano import useLenis
-import { useSearchParams } from 'next/navigation';
+import { ReactLenis, useLenis } from 'lenis/react';
+import { useSearchParams, usePathname } from 'next/navigation'; // 1. Dodano usePathname
 import { useEffect, Suspense, useLayoutEffect, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -27,18 +27,17 @@ export const SmoothScrolling = ({ children }: { children: React.ReactNode }) => 
 };
 
 function AnchorManager() {
-  const lenis = useLenis(); // ✅ Hook zamiast Refa (Klucz do naprawy pierwszego kliknięcia)
+  const lenis = useLenis();
   const searchParams = useSearchParams();
+  const pathname = usePathname(); // 2. Pobieramy aktualną ścieżkę
   const [isMounted, setIsMounted] = useState(false);
 
   // 1. INTEGRACJA GSAP
   useLayoutEffect(() => {
-    // Czekamy aż lenis będzie dostępny z hooka
     if (!lenis || typeof window === 'undefined') return;
 
     gsap.registerPlugin(ScrollTrigger);
     
-    // Synchronizacja
     lenis.on('scroll', ScrollTrigger.update);
     gsap.ticker.lagSmoothing(0);
 
@@ -47,17 +46,31 @@ function AnchorManager() {
     return () => {
       lenis.off('scroll', ScrollTrigger.update);
     };
-  }, [lenis]); // Uruchom ponownie, gdy lenis będzie gotowy
+  }, [lenis]);
 
-  // 2. LOGIKA KOTWIC (Double-Check Strategy)
+  // 2. NOWOŚĆ: GLOBALNY RESET SCROLLA PRZY ZMIANIE STRONY
+  // To naprawia problem lądowania w połowie strony po kliknięciu linku
+  useEffect(() => {
+    if (lenis) {
+      // Wymuszamy natychmiastowy skok do góry (0,0)
+      // immediate: true jest kluczowe - bez animacji, po prostu teleportacja
+      lenis.scrollTo(0, { immediate: true, force: true, lock: false });
+      window.scrollTo(0, 0);
+      
+      // Resetujemy też ScrollTriggera, żeby nie pamiętał starych pozycji pinów
+      ScrollTrigger.refresh();
+    }
+  }, [pathname, lenis]); // Odpala się przy każdej zmianie URL (np. /uslugi -> /kontakt)
+
+  // 3. LOGIKA KOTWIC (Double-Check Strategy)
   useEffect(() => {
     const targetSection = searchParams.get('target');
 
-    // Uruchamiamy tylko gdy mamy instancję Lenisa i parametr w URL
+    // Ten kod wykona się PO resecie scrolla (dzięki setTimeout poniżej),
+    // więc obliczenia będą poprawne (liczone od góry strony)
     if (targetSection && lenis) {
       const targetId = targetSection.replace('#', '');
       
-      // Wyłączamy domyślny scroll przeglądarki na czas operacji
       if ('scrollRestoration' in history) {
         history.scrollRestoration = 'manual';
       }
@@ -65,36 +78,29 @@ function AnchorManager() {
       const performScroll = (attempt = 1) => {
           const elem = document.getElementById(targetId);
           
-          // Jeśli elementu nie ma, czekamy (max 15 prób po 100ms)
           if (!elem) {
               if (attempt < 15) setTimeout(() => performScroll(attempt + 1), 100);
               return;
           }
 
-          // --- Faza 1: Przygotowanie ---
-          ScrollTrigger.refresh(); // Przeliczamy piny GSAP
-          lenis.resize();          // Przeliczamy wysokość Lenisa
+          ScrollTrigger.refresh();
+          lenis.resize();
 
-          // --- Faza 2: Scroll ---
           lenis.scrollTo(elem, {
-            offset: -80, // Offset na header
+            offset: -80,
             duration: 1.5,
             lock: true,
             force: true,
             immediate: false,
             
-            // --- Faza 3: Weryfikacja (Double Check) ---
             onComplete: () => {
                 const rect = elem.getBoundingClientRect();
                 const distance = rect.top - 80;
 
-                // Sprawdzamy czy trafiliśmy (z tolerancją 5px)
-                // Jeśli GSAP rozwinął piny w trakcie jazdy, możemy być w złym miejscu
                 if (Math.abs(distance) > 5 && attempt < 3) {
                     console.log("Korekta pozycji...", distance);
                     ScrollTrigger.refresh();
                     
-                    // Szybka korekta
                     lenis.scrollTo(elem, {
                         offset: -80,
                         duration: 0.5,
@@ -105,21 +111,21 @@ function AnchorManager() {
                         }
                     });
                 } else {
-                    // Sukces - czyścimy URL
                     window.history.replaceState({}, '', window.location.pathname);
                 }
             }
           });
       };
 
-      // Małe opóźnienie startowe dla stabilności DOM
+      // Zwiększyłem lekko timeout, żeby upewnić się, że reset scrolla (z punktu 2)
+      // zdążył się wykonać zanim zaczniemy szukać elementu
       const timer = setTimeout(() => {
           performScroll(1);
-      }, 200);
+      }, 300); // 300ms powinno być bezpieczne
 
       return () => clearTimeout(timer);
     }
-  }, [lenis, searchParams]); // Zależność od 'lenis' gwarantuje start po załadowaniu
+  }, [lenis, searchParams]); // searchParams jest osobno, żeby działało przy zmianie samego parametru
 
   return null;
 }
