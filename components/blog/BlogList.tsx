@@ -18,40 +18,58 @@ export default function BlogList({ allPosts }: BlogListProps) {
     const [search, setSearch] = useState("");
     const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
-    // --- REFS DO OBSŁUGI DRAG-TO-SCROLL (Tylko Desktop) ---
+    // --- REFS ---
     const scrollRef = useRef<HTMLDivElement>(null);
     const isDown = useRef(false);
     const startX = useRef(0);
     const scrollLeft = useRef(0);
     const isDragging = useRef(false);
 
-    // --- LOGIKA DRAG-TO-SCROLL (MYSZKA) ---
-    const handleMouseDown = (e: React.MouseEvent) => {
+    // --- LOGIKA POINTER EVENTS (Rozróżnia dotyk od myszki) ---
+    
+    const handlePointerDown = (e: React.PointerEvent) => {
+        // WAŻNE: Jeśli to dotyk (telefon), ignorujemy JS i pozwalamy na natywny scroll
+        if (e.pointerType === 'touch') return;
+
         if (!scrollRef.current) return;
         isDown.current = true;
         isDragging.current = false;
         scrollRef.current.classList.add('active');
         startX.current = e.pageX - scrollRef.current.offsetLeft;
         scrollLeft.current = scrollRef.current.scrollLeft;
+        
+        // Zmień kursor na "chwytanie"
+        scrollRef.current.style.cursor = 'grabbing';
     };
 
-    const handleMouseLeave = () => {
+    const handlePointerLeave = () => {
         isDown.current = false;
-        if (scrollRef.current) scrollRef.current.classList.remove('active');
+        if (scrollRef.current) {
+            scrollRef.current.classList.remove('active');
+            scrollRef.current.style.cursor = 'grab';
+        }
     };
 
-    const handleMouseUp = () => {
+    const handlePointerUp = () => {
         isDown.current = false;
-        if (scrollRef.current) scrollRef.current.classList.remove('active');
+        if (scrollRef.current) {
+            scrollRef.current.classList.remove('active');
+            scrollRef.current.style.cursor = 'grab';
+        }
+        // Timeout pozwala obsłużyć kliknięcie zanim flaga drag wygaśnie
         setTimeout(() => { isDragging.current = false; }, 0); 
     };
 
-    const handleMouseMove = (e: React.MouseEvent) => {
-        if (!isDown.current || !scrollRef.current) return;
-        e.preventDefault();
-        const x = e.pageX - scrollRef.current.offsetLeft;
-        const walk = (x - startX.current) * 2;
+    const handlePointerMove = (e: React.PointerEvent) => {
+        // Ignorujemy dotyk w JS (niech CSS robi swoje) oraz jeśli myszka nie jest wciśnięta
+        if (e.pointerType === 'touch' || !isDown.current || !scrollRef.current) return;
         
+        e.preventDefault(); // Blokujemy zaznaczanie tekstu tylko dla myszki
+        
+        const x = e.pageX - scrollRef.current.offsetLeft;
+        const walk = (x - startX.current) * 2; // Prędkość przewijania
+        
+        // Wykrywamy czy to przesunięcie czy kliknięcie
         if (Math.abs(x - startX.current) > 5) {
             isDragging.current = true;
         }
@@ -59,7 +77,7 @@ export default function BlogList({ allPosts }: BlogListProps) {
         scrollRef.current.scrollLeft = scrollLeft.current - walk;
     };
 
-    // --- LOGIKA FILTROWANIA ---
+    // --- LOGIKA FILTROWANIA I SORTOWANIA ---
     const filteredPosts = allPosts.filter(post => {
         const matchesCategory = filter === "Wszystkie" || post.categories.includes(filter);
         const titleMatch = post.title?.toLowerCase().includes(search.toLowerCase()) || false;
@@ -67,7 +85,6 @@ export default function BlogList({ allPosts }: BlogListProps) {
         return matchesCategory && (titleMatch || excerptMatch);
     });
 
-    // --- LOGIKA SORTOWANIA ---
     const sortedPosts = [...filteredPosts].sort((a, b) => {
         const dateA = new Date(a.publishedAt).getTime();
         const dateB = new Date(b.publishedAt).getTime();
@@ -84,36 +101,45 @@ export default function BlogList({ allPosts }: BlogListProps) {
             {/* --- PASEK NARZĘDZI --- */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 pb-8 border-b border-white/5">
                 
-                {/* Kategorie (Scrollowalne + Drag + FIX MOBILE) */}
+                {/* Kategorie (Scrollable) */}
                 <div 
                     ref={scrollRef}
-                    onMouseDown={handleMouseDown}
-                    onMouseLeave={handleMouseLeave}
-                    onMouseUp={handleMouseUp}
-                    onMouseMove={handleMouseMove}
+                    // ZMIANA: Używamy Pointer Events zamiast Mouse Events
+                    onPointerDown={handlePointerDown}
+                    onPointerLeave={handlePointerLeave}
+                    onPointerUp={handlePointerUp}
+                    onPointerMove={handlePointerMove}
                     className="
                         flex items-center gap-2 overflow-x-auto pb-2 lg:pb-0 w-full lg:w-auto 
-                        cursor-grab active:cursor-grabbing select-none mask-fade-right
+                        select-none mask-fade-right
                         
-                        /* FIX 1: Sterowanie dotykiem - pozwala przesuwać w bok bez blokowania scrolla strony */
-                        touch-pan-x 
-                        
-                        /* FIX 2: Ukrywanie scrollbara na wszystkich przeglądarkach */
+                        /* Stylizacja kursora dla desktopu */
+                        cursor-grab active:cursor-grabbing
+
+                        /* FIX MOBILE: Ukrywanie paska + Natywne przewijanie */
                         scrollbar-hide 
                         [&::-webkit-scrollbar]:hidden 
                         [-ms-overflow-style:none] 
                         [scrollbar-width:none]
+                        
+                        /* FIX SCROLL: Pozwala na scroll w bok palcem, nie blokuje góra-dół */
+                        touch-pan-x
                     "
                 >
                     {CATEGORIES.map((cat) => (
                         <button
                             key={cat}
                             onClick={() => {
+                                // Blokada kliknięcia tylko jeśli przesuwaliśmy MYSZKĄ
                                 if (!isDragging.current) {
                                     setFilter(cat);
                                 }
                             }}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap border ${
+                            // Dodajemy onPointerDown z preventDefault, żeby przyciski nie kradły focusu podczas dragu myszką
+                            onPointerDown={(e) => {
+                                if (e.pointerType === 'mouse') e.preventDefault();
+                            }}
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap border shrink-0 ${
                                 filter === cat 
                                 ? 'bg-white text-black border-white' 
                                 : 'bg-white/5 text-slate-400 border-white/5 hover:bg-white/10 hover:text-white'
@@ -126,8 +152,6 @@ export default function BlogList({ allPosts }: BlogListProps) {
 
                 {/* Prawa strona: Sortowanie + Search Bar */}
                 <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-                    
-                    {/* Przycisk Sortowania */}
                     <button
                         onClick={toggleSort}
                         className="flex items-center justify-center gap-2 px-4 py-3 bg-[#080808] border border-white/10 rounded-xl text-sm text-slate-300 hover:text-white hover:border-white/20 transition-all cursor-pointer whitespace-nowrap"
@@ -145,7 +169,6 @@ export default function BlogList({ allPosts }: BlogListProps) {
                         )}
                     </button>
 
-                    {/* Search Bar */}
                     <div className="relative w-full lg:w-72 group">
                         <input 
                             type="text" 
@@ -173,7 +196,6 @@ export default function BlogList({ allPosts }: BlogListProps) {
                                 transition={{ duration: 0.3 }}
                                 className="group flex flex-col h-full bg-[#080808] border border-white/5 rounded-3xl overflow-hidden hover:border-blue-500/30 transition-all duration-500 hover:shadow-[0_0_30px_-10px_rgba(37,99,235,0.15)]"
                             >
-                                {/* IMAGE */}
                                 <Link href={`/blog/${post.slug}`} className="relative h-56 w-full overflow-hidden block bg-slate-900 cursor-pointer">
                                     {post.mainImage ? (
                                         <Image 
@@ -188,7 +210,6 @@ export default function BlogList({ allPosts }: BlogListProps) {
                                         </div>
                                     )}
                                     
-                                    {/* Kategoria Badge */}
                                     {post.categories && post.categories[0] && (
                                         <div className="absolute top-4 left-4">
                                             <span className="px-3 py-1 text-xs font-bold bg-black/60 backdrop-blur-md text-white rounded-lg border border-white/10">
@@ -198,7 +219,6 @@ export default function BlogList({ allPosts }: BlogListProps) {
                                     )}
                                 </Link>
 
-                                {/* CONTENT */}
                                 <div className="flex flex-col flex-1 p-6 md:p-8">
                                     <div className="flex items-center gap-4 text-xs text-slate-500 mb-4 font-medium">
                                         <div className="flex items-center gap-1.5">
