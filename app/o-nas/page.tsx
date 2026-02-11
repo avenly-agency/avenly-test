@@ -7,16 +7,13 @@ import {
 } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface';
+
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
 }
 // np. w app/kontakt/page.tsx
-export const metadata: Metadata = {
-  title: "O nas", // Wynik w przeglądarce: "O nas - Avenly"
-  description: "Dowiedz się więcej o naszej agencji i tym, czym się zajmujemy.",
-};
+
 // --- DANE ---
 const STATS = [
   { value: '100%', label: 'Zaangażowania', desc: 'Ownership projektu', icon: Users },

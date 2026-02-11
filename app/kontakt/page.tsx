@@ -18,7 +18,6 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import type { Metadata } from "next";
 // --- TYPY DANYCH ---
 type FormData = {
 	name: string
@@ -30,10 +29,7 @@ type FormData = {
 	// Honeypot field (ukryte pole dla botów)
 	botcheck: boolean
 }
-export const metadata: Metadata = {
-  title: "Kontakt", 
-  description: "Porozmawiajmy o Twoim Projekcie. Niezależnie od etapu, chętnie doradzimy i zamienimy Twoją wizję w działający produkt.",
-};
+
 export default function ContactPage() {
 	const [isSubmitting, setIsSubmitting] = useState(false)
 	const [isSuccess, setIsSuccess] = useState(false)

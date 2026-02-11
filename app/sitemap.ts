@@ -1,9 +1,11 @@
 import { MetadataRoute } from 'next';
-// 👇 Upewnij się, że ścieżka do Twojego pliku z danymi jest poprawna
 import { services } from './data/services'; 
-import { projects } from './data/projects'; // Opcjonalnie: jeśli chcesz też projekty
+import { projects } from './data/projects'; 
 
-const DOMAIN = 'https://avenly.pl'; // 👇 Zmień na swoją domenę
+// 👇 TO JEST KLUCZOWE - DODAJ TĘ LINIĘ:
+export const dynamic = 'force-static';
+
+const DOMAIN = 'https://avenly.pl'; 
 
 export default function sitemap(): MetadataRoute.Sitemap {
   // 1. Podstawowe strony statyczne
@@ -21,7 +23,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: route === '' ? 1 : 0.8,
   }));
 
-  // 2. Generowanie stron KATEGORII usług (np. /uslugi/design)
+  // 2. Generowanie stron KATEGORII usług
   const categoryRoutes = services.map((category) => ({
     url: `${DOMAIN}/uslugi/${category.slug}`,
     lastModified: new Date(),
@@ -29,15 +31,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.9,
   }));
 
-  // 3. Generowanie stron KONKRETNYCH USŁUG (np. /uslugi/design/ui-ux)
-  // Musimy "spłaszczyć" strukturę: przechodzimy przez kategorie -> karty
+  // 3. Generowanie stron KONKRETNYCH USŁUG
   const serviceRoutes = services.flatMap((category) => 
     category.cards.map((card) => {
-        // Wyciągamy slug usługi z linku (np. z "/uslugi/design/ui-ux" bierzemy końcówkę)
-        // Zakładam, że w data/services card.href to pełny link np. "/uslugi/design/ui-ux"
-        // Jeśli card.href jest relatywny, trzeba to dostosować. 
-        // Tutaj bezpiecznie używamy pełnego URL.
-        
         return {
             url: `${DOMAIN}${card.href}`,
             lastModified: new Date(),
@@ -47,7 +43,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     })
   );
 
-  // 4. (Opcjonalnie) Generowanie stron PROJEKTÓW / REALIZACJI
+  // 4. Generowanie stron PROJEKTÓW
   const projectRoutes = projects.map((project) => ({
     url: `${DOMAIN}/realizacje/${project.slug}`,
     lastModified: new Date(),
