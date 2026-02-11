@@ -2,12 +2,13 @@
 
 import Link from 'next/link';
 import { ArrowRight, Calendar, Clock, Tag } from 'lucide-react';
-// 👇 POPRAWKA 1: Prawidłowy import (blogPosts zamiast posts)
 import { blogPosts } from '@/app/data/posts'; 
 
 export function BlogTeaser() {
-  // Pobieramy 3 najnowsze posty
-  const latestPosts = blogPosts.slice(0, 3);
+  // 👇 ZMIANA: Sortujemy po dacie (od najnowszej) i bierzemy 3 pierwsze
+  const latestPosts = [...blogPosts]
+    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
+    .slice(0, 3);
 
   return (
     <section className="py-24 border-t border-white/10 bg-[#050505] relative overflow-hidden">
@@ -43,12 +44,11 @@ export function BlogTeaser() {
         {/* GRID POSTÓW */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {latestPosts.map((post: any) => {
-            // 👇 POPRAWKA 2: Bezpieczne pobieranie danych (fallbacki)
-            // Dzięki temu zadziała niezależnie czy w bazie masz 'image', 'mainImage', 'date' czy 'publishedAt'
+            // Bezpieczne pobieranie danych
             const imageUrl = post.image || post.mainImage || post.coverImage;
             const date = post.date || post.publishedAt || post.createdAt;
             const category = post.category || (post.categories ? post.categories[0] : 'Blog');
-            const slug = post.slug?.current || post.slug; // Obsługa Sanity CMS i zwykłego stringa
+            const slug = post.slug?.current || post.slug; 
 
             return (
               <Link 
@@ -65,7 +65,6 @@ export function BlogTeaser() {
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         />
                     ) : (
-                        // Fallback gradient
                         <div className="w-full h-full bg-gradient-to-br from-slate-900 to-blue-900/20" />
                     )}
                     

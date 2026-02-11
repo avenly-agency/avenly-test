@@ -1,19 +1,20 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: 'export',
+  
+  // 👇 TO JEST KLUCZ DO SUKCESU:
+  // Zmienia strukturę plików z "strona.html" na "strona/index.html"
+  trailingSlash: true,
+
   images: {
-    // 1. Obsługa zewnętrznych domen (np. Unsplash, którego używasz w Portfolio)
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",
         hostname: "images.unsplash.com",
       },
     ],
-    // 2. 👇 FIX DLA TWOJEGO BŁĘDU W KONSOLI:
-    // Definiujemy dozwolone wartości jakości. 
-    // 60 - to ta, którą wymusiliśmy na mobile.
-    // 75 - to domyślna wartość Next.js (musimy ją dodać, żeby reszta zdjęć działała).
-    qualities: [60, 75],
   },
 };
 

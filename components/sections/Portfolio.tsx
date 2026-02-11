@@ -268,18 +268,53 @@ const RevealCard = ({ children, delay, reduceMotion }: { children: React.ReactNo
 };
 
 // 4. ZMIANA: Synchronizacja Blura
+// 4. ZMIANA: "Płaskowyż" ostrości
 const FocusCard = ({ children, index, total, progress, reduceMotion }: { children: React.ReactNode, index: number, total: number, progress: MotionValue<number>, reduceMotion: boolean | null }) => {
     // Obliczamy "krok" (odległość między środkami kart w skali 0-1)
     const step = 1 / (total - 1); 
     const target = index * step;
     
-    // ZMIANA TUTAJ: Zamiast sztywnego +/- 0.15, używamy 'step'.
-    // To sprawia, że focus "spotyka się" w połowie drogi między kartami.
-    const range = [target - step, target, target + step];
+    // KLUCZOWA ZMIANA:
+    // Definiujemy bufor (np. 25% kroku), w którym karta pozostaje idealnie ostra.
+    // Im większa liczba (np. 0.4), tym dłużej karta jest ostra.
+    const buffer = step * 0.25; 
+
+    // Tworzymy zakres 4-punktowy:
+    // 1. Pełne rozmycie (sąsiad z lewej)
+    // 2. Początek idealnej ostrości (trochę przed środkiem)
+    // 3. Koniec idealnej ostrości (trochę po środku)
+    // 4. Pełne rozmycie (sąsiad z prawej)
+    const range = [
+        target - step, 
+        target - buffer, 
+        target + buffer, 
+        target + step
+    ];
     
-    const opacity = useTransform(progress, range, reduceMotion ? [1, 1, 1] : [0.3, 1, 0.3]);
-    const scale = useTransform(progress, range, reduceMotion ? [1, 1, 1] : [0.9, 1, 0.9]);
-    const filter = useTransform(progress, range, reduceMotion ? ["none", "none", "none"] : ["grayscale(100%) blur(3px)", "grayscale(0%) blur(0px)", "grayscale(100%) blur(3px)"]);
+    const opacity = useTransform(
+        progress, 
+        range, 
+        reduceMotion ? [1, 1, 1, 1] : [0.3, 1, 1, 0.3]
+    );
+    
+    const scale = useTransform(
+        progress, 
+        range, 
+        reduceMotion ? [1, 1, 1, 1] : [0.9, 1, 1, 0.9]
+    );
+    
+    const filter = useTransform(
+        progress, 
+        range, 
+        reduceMotion 
+            ? ["none", "none", "none", "none"] 
+            : [
+                "grayscale(100%) blur(3px)",  // Sąsiad
+                "grayscale(0%) blur(0px)",    // Początek strefy sharp
+                "grayscale(0%) blur(0px)",    // Koniec strefy sharp
+                "grayscale(100%) blur(3px)"   // Sąsiad
+              ]
+    );
 
     return <motion.div style={{ opacity, scale, filter }} className="origin-center">{children}</motion.div>;
 };

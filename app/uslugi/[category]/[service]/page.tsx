@@ -244,27 +244,30 @@ export default async function SubServicePage({ params }: { params: Promise<{ cat
                         </Reveal>
                     </section>
 
-                    {/* UNIKALNA SEKCJA DLA DESIGNU */}
+                  {/* UNIKALNA SEKCJA DLA DESIGNU */}
                     {isDesign && (
                         <section className="max-w-full">
                             <Reveal>
                                 <div className="grid md:grid-cols-3 gap-6">
                                     <div className="p-8 rounded-3xl bg-[#0a0a0a] border border-white/10 hover:border-blue-500/30 transition-colors">
-                                        <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-white mb-6">
+                                        {/* ZMIANA: Niebieskie tło i ikona */}
+                                        <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400 mb-6">
                                             <Palette size={24} />
                                         </div>
                                         <h4 className="text-xl font-bold text-white mb-2">Psychologia Koloru</h4>
                                         <p className="text-slate-400 text-sm">Dobieramy palety barw, które nie tylko ładnie wyglądają, ale budują zaufanie i kierują uwagą użytkownika.</p>
                                     </div>
                                     <div className="p-8 rounded-3xl bg-[#0a0a0a] border border-white/10 hover:border-blue-500/30 transition-colors">
-                                        <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-white mb-6">
+                                        {/* ZMIANA: Niebieskie tło i ikona */}
+                                        <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400 mb-6">
                                             <Layout size={24} />
                                         </div>
                                         <h4 className="text-xl font-bold text-white mb-2">Spójność UI</h4>
                                         <p className="text-slate-400 text-sm">Tworzymy systemy designu, dzięki którym każdy ekran aplikacji wygląda profesjonalnie.</p>
                                     </div>
                                     <div className="p-8 rounded-3xl bg-[#0a0a0a] border border-white/10 hover:border-blue-500/30 transition-colors">
-                                        <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-white mb-6">
+                                        {/* ZMIANA: Niebieskie tło i ikona */}
+                                        <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400 mb-6">
                                             <MousePointerClick size={24} />
                                         </div>
                                         <h4 className="text-xl font-bold text-white mb-2">Konwersja UX</h4>

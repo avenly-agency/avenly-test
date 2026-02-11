@@ -7,6 +7,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { projects } from '@/app/data/projects';
+import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface';
 
 // --- 1. TWOJE ORYGINALNE KATEGORIE Z IKONAMI ---
 const CATEGORIES = [
@@ -15,7 +16,10 @@ const CATEGORIES = [
   { id: 'Sklepy', label: 'Sklepy', icon: ShoppingCart },
   { id: 'AI & Boty', label: 'AI & Boty', icon: Cpu },
 ];
-
+export const metadata: Metadata = {
+  title: "Realizacje", // Wynik w przeglądarce: "Realizacje - Avenly"
+  description: "Zobacz nasze realizacje i dowiedz się, jak pomagamy klientom osiągać sukces online.",
+};
 export default function ProjectsPage() {
   const [activeFilter, setActiveFilter] = useState('Wszystkie');
   const [filteredProjects, setFilteredProjects] = useState(projects);

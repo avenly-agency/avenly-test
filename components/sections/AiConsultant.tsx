@@ -91,7 +91,8 @@ export function AiConsultant() {
 
 
           {/* --- PRAWA STRONA: SYMULACJA UI --- */}
-          <div className="relative mt-8 lg:mt-0">
+          {/* ZMIANA: hidden lg:block - ukrywa na mobile/tablet, pokazuje na desktopie */}
+          <div className="hidden lg:block relative mt-8 lg:mt-0">
              {/* Efekt Glow */}
             <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/20 to-purple-600/20 rounded-[2.5rem] blur-2xl transform rotate-3 scale-95" />
 
@@ -117,7 +118,7 @@ export function AiConsultant() {
                             <p className="text-[10px] md:text-xs text-blue-400">Online • Odpisuje natychmiast</p>
                         </div>
                     </div>
-                    {/* IKONA U GÓRY - USUNIĘTO CURSOR-POINTER I ONCLICK */}
+                    {/* IKONA U GÓRY */}
                     <div className="p-2 rounded-full transition-colors">
                         <MessageSquare size={18} className="text-slate-500" />
                     </div>
@@ -125,11 +126,11 @@ export function AiConsultant() {
 
                 {/* Obszar Wiadomości */}
                 <div className="p-4 md:p-6 h-[350px] md:h-[360px] flex flex-col justify-end gap-3 md:gap-4 overflow-hidden relative">
-                     
-                     {/* Gradient maskujący na górze */}
-                     <div className="absolute top-0 left-0 w-full h-12 bg-gradient-to-b from-[#0a0a0a] via-[#0a0a0a]/80 to-transparent z-10 pointer-events-none" />
+                      
+                      {/* Gradient maskujący na górze */}
+                      <div className="absolute top-0 left-0 w-full h-12 bg-gradient-to-b from-[#0a0a0a] via-[#0a0a0a]/80 to-transparent z-10 pointer-events-none" />
 
-                     {CHAT_SEQUENCE.map((msg, index) => (
+                      {CHAT_SEQUENCE.map((msg, index) => (
                         <motion.div
                             key={msg.id}
                             initial={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -147,22 +148,22 @@ export function AiConsultant() {
                                 {msg.text}
                             </div>
                         </motion.div>
-                     ))}
+                      ))}
 
-                     {/* Animacja "Pisania..." */}
-                     <motion.div
+                      {/* Animacja "Pisania..." */}
+                      <motion.div
                         initial={{ opacity: 0 }}
                         whileInView={{ opacity: 1 }}
                         transition={{ delay: CHAT_SEQUENCE.length * 0.8 + 0.6, duration: 0.5 }}
                         className="flex items-center gap-1 ml-2 mt-1 shrink-0"
-                     >
+                      >
                         <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-slate-600 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
                         <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-slate-600 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
                         <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-slate-600 rounded-full animate-bounce"></span>
-                     </motion.div>
+                      </motion.div>
                 </div>
 
-                {/* Input - USUNIĘTO CURSOR-POINTER I ONCLICK */}
+                {/* Input */}
                 <div className="p-4 border-t border-white/5 bg-[#111] relative z-20">
                     <div className="flex items-center gap-3 bg-[#0a0a0a] border border-white/10 rounded-full px-4 py-3">
                         <span className="text-slate-500 text-xs md:text-sm">Zapytaj o wdrożenie...</span>

@@ -1,36 +1,37 @@
 // 👇 PAMIĘTAJ O TYM INTERFEJSIE NA GÓRZE!
 export interface BlogPost {
-  id: string;
-  slug: string;
-  title: string;
-  excerpt: string;
-  publishedAt: string;
-  readTime: string;
-  author: {
-    name: string;
-    role: string;
-  };
-  mainImage: string;
-  categories: string[];
-  content: string;
+	id: string
+	slug: string
+	title: string
+	excerpt: string
+	publishedAt: string
+	readTime: string
+	author: {
+		name: string
+		role: string
+	}
+	mainImage: string
+	categories: string[]
+	content: string
 }
 
 export const blogPosts: BlogPost[] = [
-  {
-    id: '1',
-    slug: 'konsultant-ai-automatyzacja-obslugi-klienta',
-    title: 'Konsultant AI i Voiceflow: Jak zautomatyzować obsługę klienta i zwiększyć sprzedaż?',
-    excerpt: 'Dowiedz się, jak wdrożenie inteligentnego konsultanta AI opartego na Voiceflow może odciążyć Twój zespół i zapewnić obsługę klienta na poziomie premium 24/7.',
-    publishedAt: '2026-01-05',
-    readTime: '6 min',
-    author: {
-      name: 'Bartek',
-      role: 'CTO & Co-founder Avenly'
-    },
-    // 👇 TUTAJ NOWE, DZIAŁAJĄCE ZDJĘCIE
-    mainImage: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=1000&auto=format&fit=crop', 
-    categories: ['AI & Automatyzacja', 'Biznes'],
-    content: `
+	{
+		id: '1',
+		slug: 'konsultant-ai-automatyzacja-obslugi-klienta',
+		title: 'Konsultant AI i Voiceflow: Jak zautomatyzować obsługę klienta i zwiększyć sprzedaż?',
+		excerpt:
+			'Dowiedz się, jak wdrożenie inteligentnego konsultanta AI opartego na Voiceflow może odciążyć Twój zespół i zapewnić obsługę klienta na poziomie premium 24/7.',
+		publishedAt: '2026-01-05',
+		readTime: '6 min',
+		author: {
+			name: 'Avenly',
+			role: '',
+		},
+		// 👇 TUTAJ NOWE, DZIAŁAJĄCE ZDJĘCIE
+		mainImage: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=1000&auto=format&fit=crop',
+		categories: ['AI & Automatyzacja', 'Biznes'],
+		content: `
       <h2>Czym jest nowoczesny konsultant AI?</h2>
       <p>W 2026 roku standardowe chatboty oparte na prostych drzewach decyzyjnych odchodzą do lamusa. Współczesny <strong>konsultant AI</strong> to zaawansowany system wykorzystujący modele językowe, który potrafi prowadzić naturalny dialog, odpowiadać na skomplikowane pytania i realnie doradzać klientowi.</p>
       
@@ -53,22 +54,23 @@ export const blogPosts: BlogPost[] = [
         Umów się na bezpłatną konsultację z ekspertami Avenly. Pomożemy Ci dobrać narzędzia, które realnie zwiększą Twoje zyski. <br>
         <a href="/kontakt">Zarezerwuj termin konsultacji</a>
       </blockquote>
-    `
-  },
-  {
-    id: '2',
-    slug: 'szybkosc-strony-internetowej-seo-konwersja',
-    title: 'Szybkość strony internetowej a SEO: Dlaczego milisekundy decydują o Twoim zysku?',
-    excerpt: 'Analiza wpływu wydajności strony na pozycjonowanie w Google i współczynnik konwersji. Poznaj zasady Core Web Vitals i zwiększ wydajność swojej witryny.',
-    publishedAt: '2026-01-12',
-    readTime: '5 min',
-    author: {
-      name: 'Michał',
-      role: 'CEO & Co-founder Avenly'
-    },
-    mainImage: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1000&auto=format&fit=crop', 
-    categories: ['Performance', 'Biznes'],
-    content: `
+    `,
+	},
+	{
+		id: '2',
+		slug: 'szybkosc-strony-internetowej-seo-konwersja',
+		title: 'Szybkość strony internetowej a SEO: Dlaczego milisekundy decydują o Twoim zysku?',
+		excerpt:
+			'Analiza wpływu wydajności strony na pozycjonowanie w Google i współczynnik konwersji. Poznaj zasady Core Web Vitals i zwiększ wydajność swojej witryny.',
+		publishedAt: '2026-01-12',
+		readTime: '5 min',
+		author: {
+			name: 'Avenly',
+			role: '',
+		},
+		mainImage: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1000&auto=format&fit=crop',
+		categories: ['Performance', 'Biznes'],
+		content: `
       <h2>Wydajność techniczna jako kluczowy czynnik rankingowy</h2>
       <p>Google oficjalnie potwierdza, że <strong>szybkość ładowania strony</strong> (część wskaźników Core Web Vitals) bezpośrednio wpływa na pozycję w wynikach wyszukiwania. Strona, która ładuje się wolno, jest oceniana jako mniej wartościowa dla użytkownika, co skutkuje spadkiem widoczności.</p>
       
@@ -90,22 +92,23 @@ export const blogPosts: BlogPost[] = [
         Przeprowadzimy dla Ciebie darmowy audyt wydajności i wskażemy wąskie gardła, które blokują Twoją sprzedaż. <br>
         <a href="/audyt">Zamów darmowy audyt szybkości</a>
       </blockquote>
-    `
-  },
-  {
-    id: '3',
-    slug: 'dlaczego-strona-www-koniecznosc-2026',
-    title: 'Dlaczego profesjonalna strona WWW to konieczność dla firmy w 2026 roku?',
-    excerpt: 'Własna strona internetowa to niezależność od algorytmów social media i fundament budowania marki eksperta. Sprawdź, dlaczego warto zainwestować we własny serwis.',
-    publishedAt: '2026-01-20',
-    readTime: '6 min',
-    author: {
-      name: 'Michał',
-      role: 'CEO & Co-founder Avenly'
-    },
-    mainImage: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1000&auto=format&fit=crop', 
-    categories: ['Strategia', 'Biznes'],
-    content: `
+    `,
+	},
+	{
+		id: '3',
+		slug: 'dlaczego-strona-www-koniecznosc-2026',
+		title: 'Dlaczego profesjonalna strona WWW to konieczność dla firmy w 2026 roku?',
+		excerpt:
+			'Własna strona internetowa to niezależność od algorytmów social media i fundament budowania marki eksperta. Sprawdź, dlaczego warto zainwestować we własny serwis.',
+		publishedAt: '2026-01-20',
+		readTime: '6 min',
+		author: {
+			name: 'Avenly',
+			role: '',
+		},
+		mainImage: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1000&auto=format&fit=crop',
+		categories: ['Strategia', 'Biznes'],
+		content: `
       <h2>Strona internetowa vs Social Media</h2>
       <p>Media społecznościowe są doskonałym narzędziem do budowania zasięgu, ale posiadają jedną kluczową wadę: brak kontroli. Zmiana algorytmu lub blokada konta może z dnia na dzień odciąć Twoją firmę od klientów. <strong>Własna strona internetowa</strong> to Twój niezależny grunt w cyfrowym świecie.</p>
       
@@ -123,6 +126,6 @@ export const blogPosts: BlogPost[] = [
         Szukasz partnera, który stworzy dla Ciebie stronę generującą realne zapytania? Porozmawiajmy o Twoim projekcie.<br>
         <a href="/kontakt">Skontaktuj się z zespołem Avenly</a>
       </blockquote>
-    `
-  }
-];
+    `,
+	},
+]

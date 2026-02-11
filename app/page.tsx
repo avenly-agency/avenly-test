@@ -1,3 +1,5 @@
+'use client';
+
 import dynamic from 'next/dynamic';
 import { Hero } from '@/components/sections/Hero'; 
 
@@ -5,7 +7,7 @@ import { Hero } from '@/components/sections/Hero';
 
 const SectionLoader = ({ height = "h-screen" }: { height?: string }) => (
   <div className={`w-full ${height} bg-[#050505] flex items-center justify-center`}>
-      {/* Placeholder - można tu dodać spinner jeśli chcesz */}
+      {/* Placeholder */}
   </div>
 );
 
@@ -29,9 +31,9 @@ const Impact = dynamic(() => import('@/components/sections/Impact').then(mod => 
   loading: () => <SectionLoader height="h-screen" />
 });
 
-// 5. AiConsultant (NOWA SEKCJA - Voiceflow/Chatbot)
+// 5. AiConsultant
 const AiConsultant = dynamic(() => import('@/components/sections/AiConsultant').then(mod => mod.AiConsultant), {
-  loading: () => <div className="h-[800px] bg-[#050505]" /> // Przybliżona wysokość sekcji
+  loading: () => <div className="h-[800px] bg-[#050505]" />
 });
 
 // 6. Services
@@ -39,12 +41,18 @@ const Services = dynamic(() => import('@/components/sections/Services').then(mod
   loading: () => <div className="h-[800px] bg-[#050505]" />
 });
 
-// 7. BlogTeaser
+// ✅ NOWOŚĆ: 7. Testimonials (Opinie)
+// Importujemy dynamicznie, placeholder ok. 600px wysokości
+const Testimonials = dynamic(() => import('@/components/sections/Testimonials').then(mod => mod.Testimonials), {
+  loading: () => <div className="h-[600px] bg-[#050505]" />
+});
+
+// 8. BlogTeaser
 const BlogTeaser = dynamic(() => import('@/components/sections/BlogTeaser').then(mod => mod.BlogTeaser), {
   loading: () => <div className="h-[600px] bg-[#050505]" /> 
 });
 
-// 8. CallToAction
+// 9. CallToAction
 const CallToAction = dynamic(() => import('@/components/sections/CallToAction').then(mod => mod.CallToAction), {
   loading: () => <SectionLoader height="h-[80vh]" />
 });
@@ -73,8 +81,12 @@ export default function Home() {
       <div className="render-optimize">
         <Impact />
       </div>
-
-      {/* AI CONSULTANT (Nowa sekcja promocyjna) */}
+{/* ✅ NOWOŚĆ: OPINIE */}
+      {/* Umieściłem to po ofercie, a przed blogiem/kontaktem - to buduje zaufanie przed finalnym CTA */}
+      <div className="render-optimize" id="opinie">
+        <Testimonials />
+      </div>
+      {/* AI CONSULTANT */}
       <div className="render-optimize">
         <AiConsultant />
       </div>
@@ -83,6 +95,8 @@ export default function Home() {
       <div className="render-optimize" id="oferta">
         <Services />
       </div>
+
+      
 
       {/* BLOG TEASER */}
       <div className="render-optimize">

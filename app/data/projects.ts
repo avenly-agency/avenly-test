@@ -55,15 +55,12 @@ export const projects = [
         description: "Inteligentny asystent wstępnie kwalifikujący klientów. Działa 24/7.",
         mainImage: "/portfolio/law-ai.jpg",
         
-        hasCaseStudy: true,
+        hasCaseStudy: false,
         externalLink: "", 
         
-        challenge: "Prawnicy tracili 3h dziennie na odpowiadanie na proste pytania.",
-        solution: "Wdrożyliśmy bota opartego o OpenAI, który odpowiada na pytania z bazy wiedzy kancelarii i umawia spotkania.",
-        stats: [
-            { label: "Oszczędność czasu", value: "60h/msc" },
-            { label: "Dostępność", value: "24/7" }
-        ],
-        techStack: ["Python", "OpenAI API", "Vector DB", "React"]
+        challenge: "",
+        solution: "",
+        stats: [ ],
+        techStack: []
     }
 ];

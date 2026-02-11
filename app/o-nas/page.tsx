@@ -7,11 +7,16 @@ import {
 } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { Metadata } from 'next/dist/lib/metadata/types/metadata-interface';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
 }
-
+// np. w app/kontakt/page.tsx
+export const metadata: Metadata = {
+  title: "O nas", // Wynik w przeglądarce: "O nas - Avenly"
+  description: "Dowiedz się więcej o naszej agencji i tym, czym się zajmujemy.",
+};
 // --- DANE ---
 const STATS = [
   { value: '100%', label: 'Zaangażowania', desc: 'Ownership projektu', icon: Users },
@@ -23,7 +28,7 @@ const STATS = [
 const CAPABILITIES = [
     {
         title: "Strategia & Audyt",
-        desc: "Nie strzelamy na oślep. Analizujemy konkurencję, definiujemy persony i tworzymy plan, który ma matematyczne szanse na sukces.",
+        desc: "Nie strzelamy na oślep. Analizujemy konkurencję i tworzymy plan dostosowany do Twojej marki.",
         icon: Globe
     },
     {
@@ -32,21 +37,21 @@ const CAPABILITIES = [
         icon: Layout
     },
     {
-        title: "Development (Next.js)",
-        desc: "Sercem naszych projektów jest kod. Czysty, skalowalny i szybki. Używamy stacku technologicznego z Doliny Krzemowej.",
+        title: "Realizacja",
+        desc: "Serce procesu. To tutaj makiety zamieniają się w interaktywną stronę. Dbamy o każdy detali techniczny, aby końcowy efekt był skalowalny i łatwy w obsłudze, niezależnie od wybranej technologii.",
         icon: Code2
     },
     {
         title: "AI & Automatyzacja",
-        desc: "Wdrażamy inteligentne rozwiązania, które oszczędzają Twój czas i obsługują klientów, gdy Ty śpisz.",
+        desc: "Zatrudnij technologię zamiast ludzi. Tworzymy inteligentnych konsultantów AI, którzy natychmiast odpowiadają na pytania klientów na stronie, odciążając Twój zespół w 100%.",
         icon: Sparkles
     }
 ];
 
 const FAQS = [
     {
-        question: "Czy przepisujecie prawa autorskie do kodu?",
-        answer: "Tak. W momencie opłacenia faktury końcowej, 100% praw majątkowych do kodu i designu przechodzi na Ciebie. Nie stosujemy licencji ani ukrytych opłat typu vendor lock-in."
+        question: "Czy jest możliwość otrzymania faktury?",
+        answer: "Tak. Jeśli potrzebujesz faktury, rozliczenie realizujemy za pośrednictwem platformy Useme. Dzięki temu otrzymujesz pełnoprawny dokument księgowy za wykonaną usługę w bezpieczny sposób."
     },
     {
         question: "Jak wygląda wsparcie po wdrożeniu?",
@@ -54,11 +59,7 @@ const FAQS = [
     },
     {
         question: "Jaki jest typowy czas realizacji projektu?",
-        answer: "Dla stron korporacyjnych to zazwyczaj 3-5 tygodni. Dla aplikacji webowych i rozbudowanych sklepów e-commerce: 6-12 tygodni. Pracujemy w sprintaach, więc efekty widzisz na bieżąco."
-    },
-    {
-        question: "Czy pracujecie na gotowych szablonach?",
-        answer: "Nie. Każdy projekt w Avenly to 'custom code'. Projektujemy i kodujemy od zera, aby zapewnić maksymalną wydajność i unikalny charakter marki, którego nie podrobi konkurencja."
+        answer: "Dla stron korporacyjnych to zazwyczaj 2-4 tygodni. Dla rozbudowanych sklepów e-commerce: 4-8 tygodni."
     }
 ];
 
@@ -176,15 +177,21 @@ export default function AboutPage() {
           <div className="container mx-auto px-6">
               
               {/* 1. O NAS (INTRO) */}
-              <section className="max-w-4xl mb-24">
+              <section className="max-w-5xl mb-24">
                   <header className="flex items-center gap-3 mb-6">
                       <div className="h-[1px] w-12 bg-blue-500"></div>
                       <span className="text-blue-500 font-bold uppercase tracking-widest text-sm">O nas</span>
                   </header>
+                  
+                  {/* ZMIANA: Powrót do standardowych rozmiarów, ale "korporacją" trzyma się białego tekstu. 
+                      Kolorowy tekst spada do nowej linii dzięki klasie 'block' */}
                   <h2 className="text-4xl md:text-6xl font-bold text-white leading-[1.1] mb-8 tracking-tight">
-                      Nie jesteśmy kolejną korporacją. <br className="hidden md:block" />
-                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600">Jesteśmy Twoim partnerem.</span>
+                      Nie jesteśmy kolejną korporacją.
+                      <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600">
+                          Jesteśmy Twoim partnerem.
+                      </span>
                   </h2>
+                  
                   <p className="text-lg md:text-xl text-slate-400 leading-relaxed max-w-2xl text-balance">
                       Tworzymy oprogramowanie, które realnie wspiera biznes. Łączymy inżynierską precyzję z designem, który sprzedaje.
                   </p>
@@ -205,11 +212,9 @@ export default function AboutPage() {
                   {STATS.map((stat, index) => (
                       <div 
                         key={index} 
-                        // TŁO KONTENERA = KOLOR BORDERA (bg-white/10 to domyślny border)
-                        // p-[1px] tworzy idealną przestrzeń na border
                         className="stat-card group relative rounded-[2rem] bg-white/10 p-[1px] overflow-hidden transition-all duration-300 hover:bg-white/20"
                       >
-                          {/* GLOW LAYER (Dynamiczny border podążający za myszką) */}
+                          {/* GLOW LAYER */}
                           <div 
                             className="absolute inset-0 opacity-0 group-hover/grid:opacity-100 transition-opacity duration-300"
                             style={{
@@ -217,9 +222,8 @@ export default function AboutPage() {
                             }}
                           />
 
-                          {/* CONTENT LAYER (Czarne tło, zaokrąglone o 1px mniej) */}
+                          {/* CONTENT LAYER */}
                           <div className="relative h-full rounded-[calc(2rem-1px)] bg-[#0c0c0c] p-8 z-10">
-                              {/* Delikatny glow wewnątrz (dla głębi) */}
                               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-[2rem]" />
                               
                               <div className="relative mb-8 inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white/5 border border-white/5 text-blue-500 group-hover:text-white group-hover:bg-blue-600 group-hover:border-blue-500 transition-all duration-300 shadow-[0_0_0_1px_rgba(255,255,255,0.02)] group-hover:shadow-[0_0_30px_rgba(37,99,235,0.4)]">
@@ -257,7 +261,6 @@ export default function AboutPage() {
                               </div>
                               <div className="md:w-1/2 flex items-start gap-6">
                                   <p className="text-slate-300 text-lg leading-relaxed max-w-lg">{cap.desc}</p>
-                                  {/* ZMIANA TUTAJ: dodano mr-4 */}
                                   <div className="hidden md:flex w-10 h-10 rounded-full border border-white/20 items-center justify-center text-white bg-blue-500/10 ml-auto mr-4 shrink-0 transition-all group-hover:bg-blue-500 group-hover:border-blue-500 group-hover:scale-110">
                                       <cap.icon size={18} />
                                   </div>

@@ -55,7 +55,8 @@ export default async function ServiceCategoryPage({ params }: { params: Promise<
         <nav className="flex items-center gap-2 text-sm text-slate-500 mb-12">
             <Link href="/" className="hover:text-white transition-colors">Home</Link>
             <span>/</span>
-            <Link href="/#uslugi" className="hover:text-white transition-colors">Usługi</Link>
+            {/* ZMIANA: Dodano target="_self" aby wymusić poprawne działanie kotwicy */}
+            <Link href="/#uslugi" target="_self" className="hover:text-white transition-colors">Usługi</Link>
             <span>/</span>
             <span className="text-blue-400 font-medium">{service.label}</span>
         </nav>
