@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   },
   description: "Zyskaj stronę, która pracuje na Twój sukces 24/7. W Avenly bierzemy na siebie strategię, teksty i design, byś Ty mógł zająć się rozwojem firmy. Sprawdź nasze efekty!",
   icons: {
-    icon: '/favicon.ico', 
+    icon: '/icon.png', 
   }
 };
 
