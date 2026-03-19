@@ -54,35 +54,57 @@ export default function DedicatedWebsitesPage() {
     const subOpacity = useTransform(smoothMain, [0, 0.25, 0.27, 0.44, 0.46, 1], [0, 0, 1, 1, 0, 0])
     const subY = useTransform(smoothMain, [0.28, 0.40], ['0%', '-35%'])
 
-    // --- KURSOR - ZŁOŻONA ŚCIEŻKA ---
-    const cursorOpacity = useTransform(
+    // --- KLATKI KLUCZOWE KURSORA ---
+    const kfX = [
+        0, 0.14, 0.20, 0.23, 0.25, // Ruch 1 (Oferta desktop)
+        0.35, 0.41, 0.43, 0.45,    // Ruch 2 (Panel Klienta)
+        0.55, 0.59, 0.61, 0.63, 1  // Ruch 3 (Zaloguj)
+    ]
+
+    // --- KURSOR DESKTOP (BEZ ZMIAN) ---
+    const cursorDesktopX = useTransform(smoothMain, kfX, [
+        '110%', '110%', 'calc(100% - 330px)', 'calc(100% - 330px)', '110%',
+        '110%', 'calc(100% - 114px)', 'calc(100% - 114px)', '110%',
+        '110%', 'calc(50% + 5px)', 'calc(50% + 5px)', '110%', '110%'
+    ])
+
+    const cursorDesktopY = useTransform(smoothMain, kfX, [
+        '100%', '100%', '35px', '35px', '100%',
+        '100%', '35px', '35px', '100%',
+        '100%', 'calc(50% + 225px)', 'calc(50% + 225px)', '100%', '100%'
+    ])
+
+    const cursorDesktopOpacity = useTransform(
         smoothMain, 
-        // 1. Wjazd do linku | 2. Wjazd do Panelu | 3. Wjazd do Login
-        [0, 0.14, 0.16, 0.23, 0.24, 0.37, 0.39, 0.43, 0.44, 0.55, 0.57, 0.61, 0.62, 1], 
+        [0, 0.14, 0.16, 0.23, 0.25, 0.35, 0.37, 0.43, 0.45, 0.55, 0.57, 0.61, 0.63, 1], 
         [0, 0,    1,    1,    0,    0,    1,    1,    0,    0,    1,    1,    0,    0]
     )
-    
-    // Zmienione wartości X i Y z procentów na calc/viewport, aby trafiały w Navbar.
-    // 'calc(100% - 180px)' celuje w przyciski po prawej niezależnie od szerokości makiety.
-    const cursorX = useTransform(
-        smoothMain,
-        // Start -> Do "Oferta" -> Chowa się -> Do "Panel" -> Chowa się -> Do "Zaloguj"
-        [0,      0.15,   0.20,              0.23,             0.37,   0.41,               0.43,               0.56,   0.59,  0.61, 1],
-        ['110%', '110%', 'calc(100% - 220px)', 'calc(100% - 220px)', '110%', 'calc(100% - 80px)', 'calc(100% - 80px)', '110%', '50%', '50%', '50%'], 
+
+    // --- KURSOR MOBILE (UKRYTE PIERWSZE KLIKNIĘCIE) ---
+    const cursorMobileX = useTransform(smoothMain, kfX, [
+        '110%', '110%', '110%', '110%', '110%', // Pierwsza faza uśpiona, pozostaje poza ekranem
+        '110%', 'calc(100% - 44px)', 'calc(100% - 44px)', '110%', // Wjazd w kłódkę po prawej stronie (ikona)
+        '110%', 'calc(50% + 5px)', 'calc(50% + 5px)', '110%', '110%' // Wjazd w button logowania
+    ])
+
+    const cursorMobileY = useTransform(smoothMain, kfX, [
+        '100%', '100%', '100%', '100%', '100%', // Pierwsza faza uśpiona
+        '100%', '35px', '35px', '100%', // Kłódka u samej góry
+        '100%', 'calc(50% + 200px)', 'calc(50% + 200px)', '100%', '100%' // Logowanie
+    ])
+
+    const cursorMobileOpacity = useTransform(
+        smoothMain, 
+        [0, 0.14, 0.16, 0.23, 0.25, 0.35, 0.37, 0.43, 0.45, 0.55, 0.57, 0.61, 0.63, 1], 
+        // W pierwszej fazie opacity to cały czas 0
+        [0, 0,    0,    0,    0,    0,    1,    1,    0,    0,    1,    1,    0,    0]
     )
     
-    // Y celuje teraz w 40px od góry, co wypada w połowie Navbaru (przy założeniu h-20 / 80px wysokości).
-    const cursorY = useTransform(
-        smoothMain,
-        [0,      0.15,   0.20,  0.23,  0.37,   0.41,  0.43,  0.56,   0.59,  0.61, 1],
-        ['100%', '100%', '32px', '32px', '100%', '32px', '32px', '100%', 'calc(50% + 120px)', 'calc(50% + 120px)', 'calc(50% + 120px)'], 
-    )
-    
+    // Wspólna skala pomniejszania przy kliknięciu (odpali się nawet w tle, ale nic nie popsuje bo nie widać)
     const cursorScale = useTransform(
         smoothMain,
-        // Klika w Oferte (0.21) | Klika w Panel (0.42) | Klika w Zaloguj (0.60)
         [0, 0.20, 0.21, 0.22, 0.41, 0.42, 0.43, 0.59, 0.60, 0.61, 1],
-        [1, 1,    0.8,  1,    1,    0.8,  1,    1,    0.8,  1,    1], 
+        [1, 1,    0.8,  1,    1,    0.8,  1,    1,    0.8,  1,    1]
     )
 
     // --- FAZA 3: FORMULARZ LOGOWANIA ---
@@ -193,7 +215,7 @@ export default function DedicatedWebsitesPage() {
                             {/* GŁÓWNY KONTENER EKRANU */}
                             <div className="relative flex-1 bg-[#020202] overflow-hidden flex flex-col">
                                 
-                                {/* NIERUCHOMY NAVBAR (Żeby nie scrollował się ze stroną) */}
+                                {/* NIERUCHOMY NAVBAR */}
                                 <div className="absolute top-0 inset-x-0 w-full h-16 md:h-20 border-b border-white/5 flex items-center justify-between px-6 md:px-12 bg-[#020202]/90 backdrop-blur-md z-40 pointer-events-none">
                                     <div className="flex items-center gap-3">
                                         <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center">
@@ -206,11 +228,12 @@ export default function DedicatedWebsitesPage() {
                                         {/* Linki Nawigacyjne */}
                                         <div className="hidden md:flex gap-6 items-center">
                                             <div className="w-16 h-2 bg-purple-400/80 rounded shadow-[0_0_10px_rgba(168,85,247,0.5)]" />
+                                            {/* Drugi link - w niego uderza kursor na desktopie */}
                                             <div className="w-16 h-2 bg-white/20 rounded" />
                                             <div className="w-16 h-2 bg-white/20 rounded" />
                                         </div>
                                         {/* PRZYCISK LOGOWANIA DO PANELU */}
-                                        <div className="flex items-center gap-2 px-4 md:px-5 py-2 md:py-2.5 rounded-xl bg-white/5 border border-white/10 text-purple-400">
+                                        <div className="flex items-center gap-2 px-4 md:px-5 py-2 md:py-2.5 rounded-xl bg-white/5 border border-white/10 text-purple-400 pointer-events-auto">
                                             <Lock size={14} />
                                             <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider hidden sm:block">Panel Klienta</span>
                                         </div>
@@ -233,7 +256,7 @@ export default function DedicatedWebsitesPage() {
                                             <div className="w-3/4 h-4 bg-white/5 rounded-md mt-4 mx-auto md:mx-0" />
                                             <div className="w-2/3 h-4 bg-white/5 rounded-md mx-auto md:mx-0" />
                                             <div className="flex gap-4 mt-6 justify-center md:justify-start">
-                                                <div className="w-36 h-14 bg-purple-500 border border-purple-400 rounded-xl shadow-[0_0_20px_rgba(168,85,247,0.4)]" />
+                                                <div className="w-36 h-14 bg-purple-500 border border-purple-400 rounded-xl shadow-[0_0_20px_rgba(168,85,247,0.4)] relative z-20" />
                                                 <div className="w-36 h-14 bg-white/5 border border-white/10 rounded-xl" />
                                             </div>
                                         </div>
@@ -370,8 +393,8 @@ export default function DedicatedWebsitesPage() {
                                             </div>
                                         </div>
 
-                                        {/* Przycisk Zaloguj - Zmieniony na Flex, aby latwiej wycelowac w środek */}
-                                        <div className="w-full h-12 rounded-xl bg-purple-500 border border-purple-400 flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.3)]">
+                                        {/* Przycisk Zaloguj */}
+                                        <div className="w-full h-12 rounded-xl bg-purple-500 border border-purple-400 flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.3)] relative z-10">
                                             <span className="text-sm font-bold">Zaloguj się</span>
                                         </div>
                                     </div>
@@ -462,10 +485,17 @@ export default function DedicatedWebsitesPage() {
                                     </div>
                                 </motion.div>
 
-                                {/* --- ANIMOWANY KURSOR --- */}
+                                {/* --- ANIMOWANY KURSOR (DESKTOP) --- */}
                                 <motion.div
-                                    style={{ left: cursorX, top: cursorY, scale: cursorScale, opacity: cursorOpacity }}
-                                    className="absolute z-50 drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)] origin-top-left pointer-events-none will-change-transform">
+                                    style={{ left: cursorDesktopX, top: cursorDesktopY, scale: cursorScale, opacity: cursorDesktopOpacity }}
+                                    className="hidden md:block absolute z-50 drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)] origin-top-left pointer-events-none will-change-transform">
+                                    <MousePointer2 size={32} className="text-white fill-purple-500 stroke-[1.5]" />
+                                </motion.div>
+
+                                {/* --- ANIMOWANY KURSOR (MOBILE) --- */}
+                                <motion.div
+                                    style={{ left: cursorMobileX, top: cursorMobileY, scale: cursorScale, opacity: cursorMobileOpacity }}
+                                    className="md:hidden absolute z-50 drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)] origin-top-left pointer-events-none will-change-transform">
                                     <MousePointer2 size={32} className="text-white fill-purple-500 stroke-[1.5]" />
                                 </motion.div>
 
