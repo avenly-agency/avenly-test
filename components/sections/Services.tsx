@@ -105,24 +105,30 @@ export const Services = () => {
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ duration: 0.4, delay: index * 0.1 } as const}
                                             >
-                                                <Link 
+                                                <Link
                                                     href={card.href}
                                                     // USUNIĘTO scroll={false} - chcemy scroll na górę nowej strony
-                                                    className="group block h-full p-6 rounded-2xl bg-[#080808] border border-white/5 hover:border-blue-500/30 transition-all duration-300 flex flex-col gap-4 cursor-pointer hover:bg-white/[0.02]"
+                                                    className={`group block h-full p-8 rounded-3xl bg-[#080808] border border-white/5 transition-all duration-300 flex flex-col cursor-pointer overflow-hidden relative ${card.shadow}`}
                                                 >
-                                                    <div className="flex justify-between items-start">
-                                                        <div className="w-10 h-10 rounded-lg bg-blue-900/10 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
-                                                            <card.icon size={20} />
+                                                    {/* Gradient overlay */}
+                                                    <div
+                                                        className={`absolute inset-0 bg-linear-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none blur-2xl ${card.gradient}`}
+                                                        aria-hidden="true"
+                                                    />
+
+                                                    <div className="relative z-10 flex justify-between items-start mb-6">
+                                                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform ${card.iconColor}`}>
+                                                            <card.icon size={26} />
                                                         </div>
                                                         <div className="p-1.5 rounded-full bg-white/5 border border-white/5 group-hover:bg-white/10 transition-colors">
-                                                            <ArrowUpRight className="w-4 h-4 text-slate-500 group-hover:text-white transition-colors" />
+                                                            <ArrowUpRight className="w-4 h-4 text-slate-500 group-hover:text-white transition-all group-hover:translate-x-1" />
                                                         </div>
                                                     </div>
-                                                    <div>
-                                                        <h4 className="text-lg font-bold text-white mb-1 group-hover:text-blue-200 transition-colors">
+                                                    <div className="relative z-10 flex-1 flex flex-col">
+                                                        <h4 className="text-xl font-bold mb-3 transition-all text-white group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-linear-to-r group-hover:from-white group-hover:to-slate-400">
                                                             {card.title}
                                                         </h4>
-                                                        <p className="text-sm text-slate-500 leading-relaxed">{card.desc}</p>
+                                                        <p className="text-slate-400 leading-relaxed flex-1">{card.desc}</p>
                                                     </div>
                                                 </Link>
                                             </motion.div>
@@ -201,30 +207,38 @@ export const Services = () => {
                                                     data-lenis-prevent
                                                 >
                                                     {service.cards.map((card, idx) => (
-                                                        <Link 
+                                                        <Link
                                                             key={idx}
                                                             href={card.href}
                                                             // USUNIĘTO scroll={false}
-                                                            className="
-                                                                snap-center shrink-0 w-[80vw] md:w-[300px] 
-                                                                p-5 rounded-2xl 
-                                                                bg-[#0a0a0a] 
-                                                                border border-white/10 
-                                                                flex flex-col gap-3 
-                                                                active:scale-[0.98] transition-all duration-200
-                                                            "
+                                                            className={`
+                                                                snap-center shrink-0 w-[80vw] md:w-[300px]
+                                                                p-6 rounded-3xl
+                                                                bg-[#0a0a0a]
+                                                                border border-white/10
+                                                                flex flex-col gap-4
+                                                                active:scale-[0.98] transition-all duration-200 overflow-hidden relative group
+                                                                ${card.shadow}
+                                                            `}
                                                         >
-                                                            <div className="flex justify-between items-start">
-                                                                <div className="w-10 h-10 rounded-lg bg-blue-600/10 flex items-center justify-center text-blue-400">
-                                                                    <card.icon size={20} />
+                                                            {/* Gradient overlay */}
+                                                            <div
+                                                                className={`absolute inset-0 opacity-0 group-active:opacity-100 transition-opacity duration-300 pointer-events-none blur-2xl bg-linear-to-br ${card.gradient}`}
+                                                                aria-hidden="true"
+                                                            />
+
+                                                            <div className="relative z-10 flex justify-between items-start">
+                                                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${card.iconColor}`}>
+                                                                    <card.icon size={22} />
                                                                 </div>
                                                                 <div className="p-1.5 rounded-full bg-white/5 border border-white/5">
-                                                                    <ArrowUpRight className="w-4 h-4 text-slate-500" />
+                                                                    <ArrowUpRight className="w-4 h-4 text-slate-500 group-active:text-white transition-all group-active:translate-x-1" />
                                                                 </div>
                                                             </div>
-                                                            
-                                                            <div>
-                                                                <h4 className="text-lg font-bold text-white mb-1">
+
+
+                                                            <div className="relative z-10">
+                                                                <h4 className="text-lg font-bold mb-1 transition-all text-white group-active:text-transparent group-active:bg-clip-text group-active:bg-linear-to-r group-active:from-white group-active:to-slate-400">
                                                                     {card.title}
                                                                 </h4>
                                                                 <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">

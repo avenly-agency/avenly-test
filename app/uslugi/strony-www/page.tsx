@@ -14,45 +14,55 @@ import { AvenlyAICta } from '@/components/AvenlyAICta';
 
 const webServices = [
   {
+    title: 'Strona One-Page',
+    description: 'Szybki start dla Twojego biznesu. Zdobądź widoczność w sieci dzięki czytelnej wizytówce, która natychmiast odpowiada na pytania klientów i zachęca do kontaktu.',
+    icon: Zap,
+    href: '/uslugi/strony-www/one-page',
+    badge: 'Szybki start',
+    color: 'from-blue-500/20 to-indigo-500/20',
+    iconColor: 'text-blue-400',
+    isActive: true,
+  },
+  {
+    title: 'Profesjonalna Strona Firmowa',
+    description: 'Zarządzaj swoją ofertą bez wiedzy technicznej. Otrzymujesz potężny system (CMS) zoptymalizowany pod wyszukiwarkę Google i otwarty na rozwój Twojego biznesu.',
+    icon: Layout,
+    href: '/uslugi/strony-www/profesjonalna-strona-firmowa',
+    badge: 'CMS & SEO',
+    color: 'from-emerald-500/20 to-teal-500/20',
+    iconColor: 'text-emerald-400',
+    isActive: true,
+  },
+  {
     title: 'Strony Dedykowane',
     description: 'Zostaw konkurencję w tyle dzięki niesamowitej wydajności. Zyskujesz ultra-szybką, bezpieczną witrynę, która ładuje się natychmiast i drastycznie zwiększa konwersję.',
     icon: Zap,
-    href: '/uslugi/strony-www/dedykowane', 
+    href: '/uslugi/strony-www/dedykowane-strony-www',
     badge: 'Premium',
-    color: 'from-blue-500/20 to-indigo-500/20',
-    iconColor: 'text-blue-400',
-    isActive: true, // <--- Aktywna karta
+    color: 'from-purple-500/20 to-fuchsia-500/20',
+    iconColor: 'text-purple-400',
+    isActive: true,
   },
   {
     title: 'Sklepy E-commerce',
     description: 'Zarabiaj na autopilocie 24/7. Otrzymujesz stabilny, gotowy do sprzedaży sklep, w pełni zintegrowany z płatnościami (BLIK, karty) i zautomatyzowany z kurierami.',
     icon: ShoppingCart,
-    href: '#',
-    badge: 'Wkrótce...',
-    color: 'from-white/5 to-white/5',
-    iconColor: 'text-slate-500',
-    isActive: false, // <--- Usługa nieaktywna
+    href: '/uslugi/strony-www/sklepy-internetowe',
+    badge: 'E-commerce',
+    color: 'from-amber-500/20 to-orange-500/20',
+    iconColor: 'text-amber-400',
+    isActive: true,
   },
   {
-    title: 'Wydajna Strona Firmowa',
-    description: 'Zarządzaj swoją ofertą bez wiedzy technicznej. Otrzymujesz potężny system (CMS) zoptymalizowany pod wyszukiwarkę Google i otwarty na rozwój Twojego biznesu.',
-    icon: Layout,
-    href: '#',
-    badge: 'Wkrótce...',
-    color: 'from-white/5 to-white/5',
-    iconColor: 'text-slate-500',
-    isActive: false, // <--- Usługa nieaktywna
-  },
-  {
-    title: 'Strona One-Page',
-    description: 'Szybki start dla Twojego biznesu. Zdobądź widoczność w sieci dzięki czytelnej wizytówce, która natychmiast odpowiada na pytania klientów i zachęca do kontaktu.',
+    title: 'Aplikacje Webowe',
+    description: 'Dedykowane systemy CRM, portale klienta i panele B2B. Oprogramowanie szyte na miarę, skalowalne bez ograniczeń.',
     icon: Globe,
-    href: '/uslugi/strony-www/one-page',
-    badge: 'Szybki start',
-    color: 'from-emerald-500/20 to-teal-500/20',
-    iconColor: 'text-emerald-400',
-    isActive: true, // <--- Aktywna karta (Mamy już tę podstronę!)
-  }
+    href: '/uslugi/strony-www/aplikacje-webowe',
+    badge: 'Custom Dev',
+    color: 'from-sky-500/20 to-cyan-500/20',
+    iconColor: 'text-sky-400',
+    isActive: true,
+  },
 ];
 
 export default function WebCategoryPage() {
@@ -61,7 +71,7 @@ export default function WebCategoryPage() {
       
       {/* TŁO KINOWE */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80vw] h-[500px] bg-blue-900/10 blur-[150px] rounded-full mix-blend-screen" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80vw] h-125 bg-blue-900/10 blur-[150px] rounded-full mix-blend-screen" />
       </div>
 
       <main className="relative z-10 container mx-auto px-6">
@@ -105,7 +115,7 @@ export default function WebCategoryPage() {
                         
                         {/* Gradientowy blask w tle karty po najechaniu (tylko aktywne) */}
                         {service.isActive && (
-                          <div className={`absolute inset-0 bg-gradient-to-br ${service.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl`} />
+                          <div className={`absolute inset-0 bg-linear-to-br ${service.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl`} />
                         )}
                         
                         {/* Badge */}
@@ -120,11 +130,11 @@ export default function WebCategoryPage() {
                         )}
 
                         <div className="relative z-10 flex-1 flex flex-col">
-                          <div className={`w-14 h-14 rounded-2xl bg-white/[0.03] border border-white/5 flex items-center justify-center mb-6 transition-transform duration-500 ${service.iconColor} ${service.isActive ? 'group-hover:scale-110' : ''}`}>
+                          <div className={`w-14 h-14 rounded-2xl bg-white/3 border border-white/5 flex items-center justify-center mb-6 transition-transform duration-500 ${service.iconColor} ${service.isActive ? 'group-hover:scale-110' : ''}`}>
                             <Icon size={28} />
                           </div>
                           
-                          <h3 className={`text-2xl font-bold mb-4 transition-all ${service.isActive ? 'text-white group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-slate-400' : 'text-slate-300'}`}>
+                          <h3 className={`text-2xl font-bold mb-4 transition-all ${service.isActive ? 'text-white group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-linear-to-r group-hover:from-white group-hover:to-slate-400' : 'text-slate-300'}`}>
                             {service.title}
                           </h3>
                           

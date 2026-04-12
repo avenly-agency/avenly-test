@@ -250,8 +250,8 @@ export const Navbar = () => {
                         exit="exit"
                         className="fixed inset-0 w-full h-[100dvh] bg-[#050505] z-40 origin-top overflow-y-auto"
                     >
-                        
-                        <div className="absolute top-[-20%] right-[-20%] w-[80vw] h-[80vw] bg-blue-900/20 blur-[100px] rounded-full pointer-events-none fixed" />
+
+                        <div className="absolute top-[-20%] right-[-20%] w-[80vw] h-[80vw] bg-blue-900/20 blur-[100px] rounded-full pointer-events-none" />
 
                         <div className="flex flex-col min-h-[100dvh] container mx-auto px-6 pb-48 pt-24 relative z-10">
                             
@@ -270,7 +270,7 @@ export const Navbar = () => {
                                                 onClick={e => handleLinkClick(e, link.href)}
                                                 className="text-5xl font-bold text-white tracking-tight hover:text-blue-500 transition-colors block py-2 cursor-pointer">
                                                 {link.title}
-                                                <span className="text-blue-500 text-6xl leading-[0]">.</span>
+                                                <span className="text-blue-500 text-6xl leading-none">.</span>
                                             </a>
                                         </motion.div>
                                     </div>
@@ -288,10 +288,10 @@ export const Navbar = () => {
                                         <span className="text-slate-400 text-sm uppercase tracking-widest">Social Media</span>
                                         <div className="flex gap-4">
                                             {SOCIAL_LINKS.map((item, i) => (
-                                                <a 
-                                                    key={i} 
-                                                    href={item.href} 
-                                                    target="_blank" 
+                                                <a
+                                                    key={i}
+                                                    href={item.href}
+                                                    target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="p-2 bg-white/5 rounded-full hover:bg-blue-600 transition-colors cursor-pointer"
                                                 >
