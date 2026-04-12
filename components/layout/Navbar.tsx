@@ -57,6 +57,34 @@ const mobileLinkVars: Variants = {
     },
 }
 
+// --- FUNKCJA DO DYNAMICZNEGO MOTYWU NAWIGACJI ---
+const getNavbarTheme = (pathname: string | null) => {
+    if (!pathname) return 'bg-slate-950/80 border-slate-800/50';
+
+    // 1. Sklepy internetowe (Amber)
+    if (pathname.includes('/strony-www/sklepy-internetowe')) {
+        return 'bg-[#050505]/80 border-amber-500/30'; 
+    }
+    // 2. Aplikacje webowe (Sky / Teal)
+    if (pathname.includes('/strony-www/aplikacje-webowe')) {
+        return 'bg-[#050505]/80 border-sky-500/30'; 
+    }
+    // 3. Dedykowane strony www (Violet)
+    if (pathname.includes('/strony-www/dedykowane-strony-www')) {
+        return 'bg-[#050505]/80 border-violet-500/30';
+    }
+    // 4. One page (Blue)
+    if (pathname.includes('/strony-www/one-page')) {
+        return 'bg-[#050505]/80 border-blue-500/30';
+    }
+    // 5. Profesjonalna strona firmowa (Emerald)
+    if (pathname.includes('/strony-www/profesjonalna-strona-firmowa')) {
+        return 'bg-[#050505]/80 border-emerald-500/30';
+    }
+
+    // Domyślny motyw
+    return 'bg-slate-950/80 border-slate-800/50';
+}
 export const Navbar = () => {
     const [isScrolled, setIsScrolled] = useState(false)
     const [isVisible, setIsVisible] = useState(true)
@@ -167,10 +195,14 @@ export const Navbar = () => {
         }
     }, [isMobileMenuOpen])
 
+    // Pobieramy klasy specyficzne dla podstrony
+    const navThemeClasses = getNavbarTheme(pathname);
+
+    // FIX ANIMACJI: Używamy transition-all, aby zmiana z py-6 na py-4 animowała się płynnie
     const navbarClasses = cn(
-        'fixed top-0 left-0 w-full z-50 transition-all duration-300 ease-in-out border-b',
+        'fixed top-0 left-0 w-full z-50 transition-all duration-500 ease-in-out border-b',
         isScrolled
-            ? 'bg-slate-950/80 backdrop-blur-xl border-slate-800/50 py-4 shadow-lg'
+            ? `${navThemeClasses} backdrop-blur-xl py-4 shadow-lg`
             : 'bg-transparent border-transparent py-6',
         isVisible && !isMobileMenuOpen ? 'translate-y-0' : !isMobileMenuOpen ? '-translate-y-full' : 'translate-y-0'
     )
