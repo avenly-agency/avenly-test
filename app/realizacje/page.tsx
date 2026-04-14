@@ -21,17 +21,17 @@ const CATEGORIES = [
 
 const CATEGORY_COLORS = {
   www: {
-    badge: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
+    badge: 'text-blue-300 bg-blue-500/25 border-blue-500/40',
     shadow: 'hover:shadow-[0_8px_32px_-6px_rgba(59,130,246,0.22)]',
     gradient: 'from-blue-500/10 to-indigo-500/10',
   },
   ecommerce: {
-    badge: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
+    badge: 'text-amber-300 bg-amber-500/25 border-amber-500/40',
     shadow: 'hover:shadow-[0_8px_32px_-6px_rgba(217,119,6,0.22)]',
     gradient: 'from-amber-500/10 to-orange-500/10',
   },
   ai: {
-    badge: 'text-cyan-400 bg-cyan-400/10 border-cyan-400/20',
+    badge: 'text-cyan-300 bg-cyan-400/25 border-cyan-400/40',
     shadow: 'hover:shadow-[0_8px_32px_-6px_rgba(34,211,238,0.22)]',
     gradient: 'from-cyan-400/10 to-teal-400/10',
   },
@@ -282,7 +282,7 @@ const ProjectCard = ({ project, index }: { project: any; index: number }) => {
           className={cn(
             'text-[10px] font-bold uppercase tracking-[0.12em] px-3 py-1 rounded-full border backdrop-blur-md',
             isExternal
-              ? 'text-blue-400 bg-blue-500/10 border-blue-500/20'
+              ? 'text-blue-300 bg-blue-500/25 border-blue-500/40'
               : colors.badge
           )}
         >
@@ -306,8 +306,8 @@ const ProjectCard = ({ project, index }: { project: any; index: number }) => {
         )}
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 flex flex-col flex-1 p-6">
+      {/* Content — pointer-events-none żeby overlay link dostał kliknięcia */}
+      <div className="relative z-10 flex flex-col flex-1 p-6 pointer-events-none">
 
         {/* Title */}
         <h3 className="text-xl font-bold text-white leading-snug mb-3 transition-all group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-linear-to-r group-hover:from-white group-hover:to-slate-400">
@@ -360,7 +360,7 @@ const ProjectCard = ({ project, index }: { project: any; index: number }) => {
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
               aria-label={`Zobacz stronę live: ${project.title}`}
-              className="relative z-20 p-2 rounded-lg border border-white/5 bg-white/2 text-slate-500 hover:text-white hover:bg-white/10 hover:border-white/10 transition-all"
+              className="relative z-20 pointer-events-auto p-2 rounded-lg border border-white/5 bg-white/2 text-slate-500 hover:text-white hover:bg-white/10 hover:border-white/10 transition-all"
             >
               <ArrowUpRight size={14} />
             </a>
