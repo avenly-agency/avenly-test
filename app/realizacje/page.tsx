@@ -252,10 +252,11 @@ const ProjectCard = ({ project, index }: { project: any; index: number }) => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, transition: { duration: 0.15 } }}
       transition={{ duration: 0.22, delay: index * 0.03 }}
+      whileHover={{ y: -4, transition: { duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] } }}
       className={cn(
         'group relative flex flex-col h-full bg-[#0a0a0a] border border-white/5 rounded-3xl overflow-hidden',
-        'transition-[border-color,box-shadow,transform] duration-500',
-        'hover:-translate-y-0.75 hover:border-white/10',
+        'transition-[border-color,box-shadow] duration-500',
+        'hover:border-white/10',
         colors.shadow
       )}
     >
