@@ -1,10 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import { ArrowRight, Calendar, MessageSquare, Mail, CheckCircle2, ShieldCheck, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { useLenis } from 'lenis/react';
+
+// Three.js — lazy, SSR off (WebGL nie działa na serwerze)
+
 
 export const Hero = () => {
   const [isMounted, setIsMounted] = useState(false);
@@ -88,6 +92,8 @@ export const Hero = () => {
             <div className="hidden lg:block">
                 <div className="absolute top-[-20%] left-[5%] w-[50vw] h-[50vw] bg-blue-600/20 blur-[120px] rounded-full mix-blend-screen animate-blob-left" />
                 <div className="absolute bottom-[-20%] right-[-10%] w-[55vw] h-[55vw] bg-indigo-500/10 blur-[120px] rounded-full mix-blend-screen animate-blob-right" />
+
+                {/* Three.js izometryczny grid 3D */}
             </div>
         )}
       </div>

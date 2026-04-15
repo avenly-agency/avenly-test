@@ -141,7 +141,7 @@ export const services = [
 				title: 'Chatboty AI',
 				desc: 'Obsługa klienta 24/7 bez udziału człowieka.',
 				icon: Bot,
-				href: '/uslugi/ai/chatboty',
+				href: '/uslugi/automatyzacje-ai/chatboty-ai',
 				fullDescription:
 					'Wdrażamy inteligentne asystenty AI oparte o modele GPT, które rozumieją kontekst, odpowiadają na pytania klientów, umawiają spotkania i sprzedają Twoje produkty przez całą dobę, w każdym języku.',
 				features: [

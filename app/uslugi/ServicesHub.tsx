@@ -201,8 +201,8 @@ const SERVICES: Array<{
     description:
       'Asystenci AI obsługujący klientów i zbierający leady 24/7 — w każdym języku, bez udziału człowieka, przez całą dobę.',
     icon: Bot,
-    href: '#',
-    isActive: false,
+    href: '/uslugi/automatyzacje-ai/chatboty-ai',
+    isActive: true,
     keyBenefit: 'GPT-4o · Multi-język · Lead gen',
     iconColor: 'text-cyan-400 bg-cyan-400/[0.12]',
     gradient: 'from-cyan-400/20 to-teal-400/20',
