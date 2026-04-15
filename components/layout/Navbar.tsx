@@ -81,6 +81,10 @@ const getNavbarTheme = (pathname: string | null) => {
     if (pathname.includes('/strony-www/profesjonalna-strona-firmowa')) {
         return 'bg-[#050505]/80 border-emerald-500/30';
     }
+    // 6. Chatboty AI (Teal)
+    if (pathname.includes('/automatyzacje-ai/chatboty-ai')) {
+        return 'bg-[#050505]/80 border-teal-500/30';
+    }
 
     // Domyślny motyw
     return 'bg-slate-950/80 border-slate-800/50';
