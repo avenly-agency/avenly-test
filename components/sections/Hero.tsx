@@ -1,73 +1,77 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { ArrowRight, Calendar, MessageSquare, Mail, CheckCircle2, ShieldCheck, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { useLenis } from 'lenis/react';
 
-// Dane powiadomień
+// STYLE WYCIĄGNIĘTE POZA KOMPONENT
+// Dodane 'backface-visibility: hidden' i 'transform: translateZ(0)' wymuszają renderowanie tła na karcie graficznej (GPU), odciążając procesor
+const BLOB_STYLES = `
+  @keyframes pureBlob1 {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.2; }
+    50% { transform: translate3d(50px, -30px, 0) scale(1.5); opacity: 0.4; }
+  }
+  @keyframes pureBlob2 {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.2; }
+    50% { transform: translate3d(-40px, 40px, 0) scale(1.3); opacity: 0.5; }
+  }
+  @keyframes pureBlob3 {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.15; }
+    50% { transform: translate3d(30px, -20px, 0) scale(1.2); opacity: 0.35; }
+  }
+  .css-anim-blob-1, .css-anim-blob-2, .css-anim-blob-3 {
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+  }
+  .css-anim-blob-1 { animation: pureBlob1 12s infinite ease-in-out; }
+  .css-anim-blob-2 { animation: pureBlob2 15s infinite ease-in-out 2s both; }
+  .css-anim-blob-3 { animation: pureBlob3 12s infinite ease-in-out; }
+`;
+
+// Wyrzuciliśmy zmianę stanu na rzecz stałej konfiguracji - zero przeładowań Reacta (0 TBT)
 const NOTIFICATIONS_DATA = [
   {
-    id: 3, 
-    icon: <MessageSquare size={22} />,
-    iconColor: "text-purple-400",
-    iconBg: "bg-purple-500/10",
-    title: "Asystent AI",
-    time: <span className="flex items-center gap-1 text-xs text-slate-500 bg-slate-800/50 px-1.5 rounded"><Clock size={12} /> 03:42</span>,
-    timePosition: "inline", // Odznaka obok tekstu
-    desc: "Odpowiedział na 3 pytania klienta.",
-    statusIcon: <div className="w-7 h-7 rounded-full bg-emerald-500/20 flex items-center justify-center"><CheckCircle2 size={16} className="text-emerald-500 shrink-0" /></div>
-  },
-  {
-    id: 2, 
-    icon: <Calendar size={22} />,
-    iconColor: "text-emerald-400",
-    iconBg: "bg-emerald-500/10",
-    title: "Wizyta potwierdzona",
-    time: <span className="text-xs text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded ml-2">Jutro 14:00</span>,
-    timePosition: "right", // Odznaka po prawej
-    desc: "Automatyczna rezerwacja online."
-  },
-  {
-    id: 1, 
+    id: 1,
+    delay: 2.65, // Pojawia się najpóźniej, na samej górze (spycha wszystko)
     icon: <Mail size={22} />,
     iconColor: "text-blue-400",
     iconBg: "bg-blue-500/10",
     title: "Nowe zapytanie o ofertę",
     time: <span className="text-xs text-slate-500 ml-2">2 min temu</span>,
-    timePosition: "right", // Odznaka po prawej
-    desc: 'Jan Kowalski: "Proszę o wycenę..."'
+    timePosition: "right",
+    desc: 'Jan Kowalski: "Proszę o wycenę..."',
+    hasBottomGap: true // Zastępuje gapy flexboxa
+  },
+  {
+    id: 2,
+    delay: 1.95, // Pojawia się pośrodku czasu
+    icon: <Calendar size={22} />,
+    iconColor: "text-emerald-400",
+    iconBg: "bg-emerald-500/10",
+    title: "Wizyta potwierdzona",
+    time: <span className="text-xs text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded ml-2">Jutro 14:00</span>,
+    timePosition: "right",
+    desc: "Automatyczna rezerwacja online.",
+    hasBottomGap: true
+  },
+  {
+    id: 3,
+    delay: 1.25, // Pojawia się jako pierwsze (najniżej)
+    icon: <MessageSquare size={22} />,
+    iconColor: "text-purple-400",
+    iconBg: "bg-purple-500/10",
+    title: "Asystent AI",
+    time: <span className="flex items-center gap-1 text-xs text-slate-500 bg-slate-800/50 px-1.5 rounded"><Clock size={12} /> 03:42</span>,
+    timePosition: "inline",
+    desc: "Odpowiedział na 3 pytania klienta.",
+    statusIcon: <div className="w-7 h-7 rounded-full bg-emerald-500/20 flex items-center justify-center"><CheckCircle2 size={16} className="text-emerald-500 shrink-0" /></div>,
+    hasBottomGap: false
   }
 ];
 
 export const Hero = () => {
-  const [isMounted, setIsMounted] = useState(false);
-  const [visibleNotifications, setVisibleNotifications] = useState<typeof NOTIFICATIONS_DATA>([]);
   const lenis = useLenis();
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  // Animacja pojawiania się powiadomień
-  useEffect(() => {
-    if (!isMounted) return;
-
-    // Harmonogram szybkiego pojawiania się (w milisekundach)
-    const schedule = [300, 1000, 1700];
-
-    const timeouts = schedule.map((delay, index) => {
-      return setTimeout(() => {
-        // Dodawanie nowego powiadomienia na początek tablicy (na samą górę)
-        setVisibleNotifications(prev => [NOTIFICATIONS_DATA[index], ...prev]);
-      }, delay);
-    });
-
-    return () => {
-      timeouts.forEach(t => clearTimeout(t));
-    };
-  }, [isMounted]);
 
   const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
     e.preventDefault();
@@ -91,6 +95,9 @@ export const Hero = () => {
   };
 
   return (
+    <>
+    <style dangerouslySetInnerHTML={{ __html: BLOB_STYLES }} />
+    
     <section className="relative w-full min-h-[100dvh] flex items-center justify-center overflow-hidden bg-slate-950 text-white selection:bg-blue-500/30 pt-32 pb-20 lg:py-0">
       
       {/* --- TŁO --- */}
@@ -99,19 +106,11 @@ export const Hero = () => {
 
         <div className="hidden lg:block">
             <div className="absolute top-[-20%] left-[5%] w-[50vw] h-[50vw]">
-                <motion.div
-                    animate={{ x: [0, 50, 0], y: [0, -30, 0], scale: [1, 1.5, 1], opacity: [0.2, 0.4, 0.2] }}
-                    transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-                    className="w-full h-full bg-blue-600/20 blur-[120px] rounded-full mix-blend-screen"
-                />
+                <div className="w-full h-full bg-blue-600/20 blur-[120px] rounded-full mix-blend-screen css-anim-blob-1" />
             </div>
             
             <div className="absolute bottom-[-20%] right-[-10%] w-[55vw] h-[55vw]">
-                <motion.div
-                    animate={{ x: [0, -40, 0], y: [0, 40, 0], scale: [1, 1.3, 1], opacity: [0.2, 0.5, 0.2] }}
-                    transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-                    className="w-full h-full bg-indigo-500/10 blur-[120px] rounded-full mix-blend-screen"
-                />
+                <div className="w-full h-full bg-indigo-500/10 blur-[120px] rounded-full mix-blend-screen css-anim-blob-2" />
             </div>
         </div>
       </div>
@@ -188,12 +187,8 @@ export const Hero = () => {
         {/* PRAWA STRONA (Tylko desktop) */}
         <div className="hidden lg:block flex-1 w-full max-w-[650px] relative isolate">
             
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] pointer-events-none -z-10">
-                <motion.div
-                    animate={{ x: [0, 50, 0], y: [0, -30, 0], scale: [1, 1.5, 1], opacity: [0.1, 0.3, 0.1] }}
-                    transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-                    className="w-full h-full bg-blue-500/30 blur-[80px] rounded-full"
-                />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] pointer-events-none -z-10">
+                <div className="w-full h-full bg-blue-500/30 blur-[80px] rounded-full css-anim-blob-3" />
             </div>
 
             <motion.div
@@ -215,34 +210,37 @@ export const Hero = () => {
                         </div>
                     </div>
 
-                    {/* USUNIĘTO: 'justify-end' i pusty placeholder. Teraz elementy układają się naturalnie od góry */}
-                    <div className="space-y-4 flex-1 relative flex flex-col">
-                        <AnimatePresence>
-                            {visibleNotifications.map((notif) => (
-                                <motion.div
-                                    key={notif.id}
-                                    layout // Powoduje płynne przesuwanie starszych elementów w dół
-                                    initial={{ opacity: 0, y: -20, scale: 0.95 }}
-                                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                                    className="flex items-center gap-5 p-4 rounded-2xl bg-slate-900/40 border border-slate-800/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] w-full"
-                                >
-                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${notif.iconBg} ${notif.iconColor}`}>
-                                        {notif.icon}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className={`flex items-center mb-1 ${notif.timePosition === 'inline' ? 'gap-2' : 'justify-between'}`}>
-                                            <h4 className="text-base font-semibold text-white truncate">{notif.title}</h4>
-                                            {notif.time}
+                    {/* Uwaga: wyrzucony `space-y-4` zapobiega powstawaniu białych znaków, gdy element obok ma wysokość zero */}
+                    <div className="flex-1 relative flex flex-col">
+                        {NOTIFICATIONS_DATA.map((notif) => (
+                            <motion.div
+                                key={notif.id}
+                                /* POCZĄTKOWY STAN: Całkowicie zwinięty element (wysokość 0) z przesunięciem -20px na osi Y */
+                                initial={{ height: 0, opacity: 0, scale: 0.95, y: -20 }}
+                                /* ANIMOWANY STAN: Rozwija się od góry w ułamek sekundy i fizycznie pcha elementy niżej */
+                                animate={{ height: "auto", opacity: 1, scale: 1, y: 0 }}
+                                transition={{ delay: notif.delay, type: "spring", stiffness: 400, damping: 25 }}
+                                className="w-full overflow-hidden"
+                            >
+                                <div className={`${notif.hasBottomGap ? 'pb-4' : ''}`}>
+                                    <div className="flex items-center gap-5 p-4 rounded-2xl bg-slate-900/40 border border-slate-800/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] w-full">
+                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${notif.iconBg} ${notif.iconColor}`}>
+                                            {notif.icon}
                                         </div>
-                                        <p className="text-sm text-slate-400 truncate">{notif.desc}</p>
+                                        <div className="flex-1 min-w-0">
+                                            <div className={`flex items-center mb-1 ${notif.timePosition === 'inline' ? 'gap-2' : 'justify-between'}`}>
+                                                <h4 className="text-base font-semibold text-white truncate">{notif.title}</h4>
+                                                {notif.time}
+                                            </div>
+                                            <p className="text-sm text-slate-400 truncate">{notif.desc}</p>
+                                        </div>
+                                        {notif.statusIcon && (
+                                            notif.statusIcon
+                                        )}
                                     </div>
-                                    {notif.statusIcon && (
-                                        notif.statusIcon
-                                    )}
-                                </motion.div>
-                            ))}
-                        </AnimatePresence>
+                                </div>
+                            </motion.div>
+                        ))}
                     </div>
 
                     <div className="mt-8 pt-6 border-t border-slate-800/50 flex items-center justify-between text-xs text-slate-500 shrink-0">
@@ -258,5 +256,6 @@ export const Hero = () => {
 
       </div>
     </section>
+    </>
   );
 };
