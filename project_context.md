@@ -4,41 +4,65 @@
 
 Strona internetowa agencji marketingowej **Avenly**. Prezentuje ofertę, portfolio, blog i umożliwia kontakt. Zbudowana jako statyczny export Next.js (hosting bez backendu).
 
-## Sekcje strony głównej (kolejność)
+## Stack technologiczny
+
+| Warstwa | Technologie |
+|---------|-------------|
+| Framework | Next.js 16.1.1, React 19.2.3 |
+| Stylowanie | Tailwind CSS v4 |
+| Animacje | Framer Motion 12, GSAP + @gsap/react |
+| Smooth scroll | Lenis 1.3 (przez `SmoothScrolling.tsx`) |
+| 3D / efekty | Three.js + React Three Fiber + Drei |
+| Formularze | React Hook Form + Web3Forms (bez backendu) |
+| Ikony | Lucide React, React Icons |
+| Treść bloga | Raw HTML string (NIE Portable Text) |
+| CMS-ready | next-sanity + @portabletext/react gotowe, ale nie aktywne |
+
+## Sekcje strony głównej (kolejność z page.tsx)
 
 1. **Hero** — animowany banner z efektami blur/blob
 2. **TechStack** — showcase technologii
-3. **Portfolio** — poziomy scroll z 4 projektami
-4. **Process** — accordion z procesem realizacji
+3. **Portfolio** — poziomy scroll (teaser 3 projektów)
+4. **Process** — accordion z procesem realizacji (anchor `#proces`)
 5. **Impact** — statystyki / wyniki
-6. **Testimonials** — opinie klientów
+6. **Testimonials** — opinie klientów (anchor `#opinie`)
 7. **AiConsultant** — CTA dla chatbota AI
-8. **Services** — taby (desktop) / accordion (mobile) z usługami
+8. **Services** — taby (desktop) / accordion (mobile) z usługami (anchor `#oferta`)
 9. **BlogTeaser** — ostatnie artykuły
-10. **CallToAction** — formularz kontaktowy
+10. **CallToAction** — formularz kontaktowy (anchor `#kontakt`)
 
-## Kategorie usług
+Wszystkie sekcje (poza Hero) ładowane przez `next/dynamic` (lazy loading).
 
-| Kategoria | Podstrony |
-|-----------|-----------|
-| Strony WWW | One-page, Profesjonalna strona firmowa, Dedykowane strony WWW, Sklepy internetowe |
-| Design | UI/UX |
-| Marketing | Audyt wydajności SEO |
-| Automatyzacja AI | Chatboty AI |
+## Kategorie usług i routing
+
+| Kategoria | Podstrony (aktywne) | Wkrótce |
+|-----------|---------------------|---------|
+| Strony WWW | One-page, Profesjonalna strona firmowa, Dedykowane strony WWW, Sklepy internetowe, Aplikacje Webowe | — |
+| Design | UI/UX (`/uslugi/design/ui-ux`) | Identyfikacja Wizualna |
+| Automatyzacja AI | Chatboty AI (`/uslugi/automatyzacje-ai/chatboty-ai`) | — |
+| Marketing i Sprzedaż | — | Audyt SEO i Wydajności |
+
+Strona `/uslugi/` to `ServicesHub.tsx` z filtrowaniem po kategoriach (Framer Motion AnimatePresence). Usługi nieaktywne (`isActive: false`) wyświetlają "Wkrótce dostępne".
+
+### Wzorzec podstron usług
+
+Każda podstrona = `page.tsx` (server, metadata) + `XxxClient.tsx` (client, animacje). Szablon wielokrotnego użytku: `components/templates/ServiceTemplate.tsx`.
 
 ## Portfolio
 
-Projekty zdefiniowane w `app/data/projects.ts`. Każdy projekt ma:
-- `slug` — URL
-- `title`, `description`, `category`
-- `mainImage`, `mockupImage`, gallery
-- `techStack[]`
-- `stats` — wyniki (challenge/solution)
-- `liveUrl` — link do realizacji
+Projekty w `app/data/projects.ts`. Aktualnie **3 projekty**:
+
+| slug | Klient | hasCaseStudy |
+|------|--------|--------------|
+| `mcentrumfizjoterapia` | Mcentrum Fizjoterapia | tak (case study + galeria) |
+| `klub-sportowy` | Radzyński Klub Sportowy | nie (tylko external link) |
+| `ai-law-bot` | Kancelaria Prawna | nie |
+
+Każdy projekt: `slug`, `title`, `category`, `year`, `client`, `mainImage`, `mockupImage`, `gallery[]`, `hasCaseStudy`, `externalLink`, `techStack[]`, `stats[]`, `challenge`, `solution`.
 
 ## Blog
 
-Posty w `app/data/posts.ts`. Routing: `/blog/[slug]`. Treść renderowana przez Portable Text (Sanity-compatible format).
+Posty w `app/data/posts.ts`. Routing: `/blog/[slug]`. Aktualnie 3 posty (o AI, szybkości strony, stronie WWW w 2026). **Treść to raw HTML string** (`content: string`), renderowany przez `dangerouslySetInnerHTML` lub podobne — NIE Portable Text.
 
 ## Formularz kontaktowy
 
@@ -48,14 +72,40 @@ Posty w `app/data/posts.ts`. Routing: `/blog/[slug]`. Treść renderowana przez 
 - Pola: imię, email, telefon, temat, wiadomość, zgoda RODO
 - Honeypot: zabezpieczenie przed botami
 
+## Pełna mapa routingu
+
+```
+/                          — strona główna
+/uslugi/                   — ServicesHub (katalog z filtrami)
+/uslugi/strony-www/
+  one-page/
+  profesjonalna-strona-firmowa/
+  dedykowane-strony-www/
+  sklepy-internetowe/
+  aplikacje-webowe/
+/uslugi/design/
+  ui-ux/
+/uslugi/automatyzacje-ai/
+  chatboty-ai/
+/uslugi/marketing/
+  audyt-wydajnosci-seo/
+/realizacje/               — lista projektów
+/realizacje/[slug]/        — case study
+/blog/                     — lista postów
+/blog/[slug]/              — post
+/o-nas/
+/kontakt/
+/polityka-prywatnosci/
+```
+
 ## Nawigacja
 
-- Logo → home
-- Usługi → dropdown z kategoriami
+- Logo → `/`
+- Usługi → `/uslugi/` (lub dropdown z kategoriami)
 - Realizacje → `/realizacje`
 - Blog → `/blog`
 - O nas → `/o-nas`
-- Kontakt → CTA w navbarze + `/kontakt`
+- Kontakt → `/kontakt` + anchor `#kontakt` na stronie głównej
 
 ## Branding
 
@@ -68,7 +118,9 @@ Posty w `app/data/posts.ts`. Routing: `/blog/[slug]`. Treść renderowana przez 
 
 | Co edytować | Plik |
 |-------------|------|
-| Usługi i opisy | `app/data/services.ts` |
+| Usługi i opisy (główna sekcja) | `components/sections/Services.tsx` |
+| Usługi (podstrony, szczegóły) | `app/data/services.ts` |
+| Katalog usług `/uslugi/` | `app/uslugi/ServicesHub.tsx` |
 | Projekty portfolio | `app/data/projects.ts` |
 | Artykuły bloga | `app/data/posts.ts` |
 | Sekcja Hero | `components/sections/Hero.tsx` |
@@ -76,9 +128,12 @@ Posty w `app/data/posts.ts`. Routing: `/blog/[slug]`. Treść renderowana przez 
 | Statystyki | `components/sections/Impact.tsx` |
 | Stopka | `components/layout/Footer.tsx` |
 | Nawigacja | `components/layout/Navbar.tsx` |
+| CTA AI | `components/AvenlyAICta.tsx` |
 
-## Znane ograniczenia
+## Znane ograniczenia / pułapki
 
 - Static export — brak API routes, brak server-side rendering
-- Obrazy muszą być w `public/` lub z zewnętrznych hostów (unsplash skonfigurowany)
-- Lenis + GSAP ScrollTrigger wymagają synchronizacji — nie modyfikuj scroll behavior globalnie
+- Obrazy muszą być w `public/` lub zewnętrznych hostach (unsplash skonfigurowany)
+- Lenis + GSAP ScrollTrigger wymagają synchronizacji — nie modyfikuj scroll behavior globalnie (`SmoothScrolling.tsx` jest providerem)
+- W `app/data/services.ts` href design card wskazuje na `/uslugi/design/design-stron-internetowych` (błąd), ale faktyczna strona jest pod `/uslugi/design/ui-ux` — `ServicesHub.tsx` ma poprawny link
+- Blog: treść to HTML string, nie Portable Text — mimo że pakiet `@portabletext/react` jest zainstalowany

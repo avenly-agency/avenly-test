@@ -5,6 +5,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { SmoothScrolling } from "@/components/providers/SmoothScrolling";
 import { LifecycleManager } from "@/components/utils/LifecycleManager";
+import { Chatbot } from "@/components/chatbot/Chatbot";
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -51,7 +52,9 @@ export default function RootLayout({
             </main>
             
             <Footer />
-            
+
+            <Chatbot />
+
         </SmoothScrolling>
       </body>
     </html>
