@@ -254,3 +254,23 @@ html.lenis, html.lenis body {
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 1rem;
 }
+
+/* Pasek przewijania chatbota */
+.chat-scrollbar::-webkit-scrollbar {
+  width: 3px;
+  height: 3px;
+}
+.chat-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.chat-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.25);
+  border-radius: 9999px;
+}
+.chat-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.5);
+}
+.chat-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(59, 130, 246, 0.25) transparent;
+}

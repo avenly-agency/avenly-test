@@ -47,32 +47,32 @@ const CATEGORY_META: Record<
     border: 'border-l-blue-500',
     badge: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
     icon: 'text-blue-400 bg-blue-500/[0.12]',
-    gradient: 'from-blue-500/20 to-indigo-500/20',
+    gradient: 'from-blue-500/15 to-transparent',
     shadow: 'hover:shadow-[0_8px_32px_-6px_rgba(59,130,246,0.18)]',
   },
   design: {
     tag: 'Design & UI/UX',
-    border: 'border-l-violet-500',
-    badge: 'text-violet-400 bg-violet-500/10 border-violet-500/20',
-    icon: 'text-violet-400 bg-violet-500/[0.12]',
-    gradient: 'from-violet-500/20 to-purple-500/20',
-    shadow: 'hover:shadow-[0_8px_32px_-6px_rgba(139,92,246,0.18)]',
+    border: 'border-l-lime-400',
+    badge: 'text-lime-400 bg-lime-500/10 border-lime-500/20',
+    icon: 'text-lime-400 bg-lime-500/[0.12]',
+    gradient: 'from-lime-500/15 to-transparent',
+    shadow: 'hover:shadow-[0_8px_32px_-6px_rgba(132,204,22,0.18)]',
   },
   ai: {
     tag: 'Automatyzacja AI',
-    border: 'border-l-cyan-400',
-    badge: 'text-cyan-400 bg-cyan-400/10 border-cyan-400/20',
-    icon: 'text-cyan-400 bg-cyan-400/[0.12]',
-    gradient: 'from-cyan-400/20 to-teal-400/20',
-    shadow: 'hover:shadow-[0_8px_32px_-6px_rgba(34,211,238,0.18)]',
+    border: 'border-l-orange-400',
+    badge: 'text-orange-400 bg-orange-500/10 border-orange-500/20',
+    icon: 'text-orange-400 bg-orange-500/[0.12]',
+    gradient: 'from-orange-500/15 to-transparent',
+    shadow: 'hover:shadow-[0_8px_32px_-6px_rgba(249,115,22,0.18)]',
   },
   marketing: {
     tag: 'Marketing & SEO',
-    border: 'border-l-emerald-500',
-    badge: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
-    icon: 'text-emerald-400 bg-emerald-500/[0.12]',
-    gradient: 'from-emerald-500/20 to-teal-500/20',
-    shadow: 'hover:shadow-[0_8px_32px_-6px_rgba(16,185,129,0.18)]',
+    border: 'border-l-teal-500',
+    badge: 'text-teal-400 bg-teal-500/10 border-teal-500/20',
+    icon: 'text-teal-400 bg-teal-500/[0.12]',
+    gradient: 'from-teal-500/15 to-transparent',
+    shadow: 'hover:shadow-[0_8px_32px_-6px_rgba(20,184,166,0.18)]',
   },
 };
 
@@ -110,9 +110,9 @@ const SERVICES: Array<{
     href: '/uslugi/strony-www/one-page',
     isActive: true,
     keyBenefit: 'Konwersja · 3–5 dni · Responsywność',
-    iconColor: 'text-indigo-400 bg-indigo-500/[0.12]',
-    gradient: 'from-indigo-500/20 to-blue-500/20',
-    shadow: 'hover:shadow-[0_8px_32px_-6px_rgba(99,102,241,0.18)]',
+    iconColor: 'text-blue-400 bg-blue-500/[0.12]',
+    gradient: 'from-blue-500/15 to-transparent',
+    shadow: 'hover:shadow-[0_8px_32px_-6px_rgba(59,130,246,0.18)]',
   },
   
   {
@@ -137,9 +137,9 @@ const SERVICES: Array<{
     href: '/uslugi/strony-www/dedykowane-strony-www',
     isActive: true,
     keyBenefit: 'Wydajność · Premium · Konwersja',
-    iconColor: 'text-purple-400 bg-purple-500/[0.12]',
-    gradient: 'from-purple-500/20 to-fuchsia-500/20',
-    shadow: 'hover:shadow-[0_8px_32px_-6px_rgba(168,85,247,0.18)]',
+    iconColor: 'text-rose-400 bg-rose-500/[0.12]',
+    gradient: 'from-rose-500/15 to-transparent',
+    shadow: 'hover:shadow-[0_8px_32px_-6px_rgba(244,63,94,0.18)]',
   },
   {
     category: 'www',
@@ -164,7 +164,7 @@ const SERVICES: Array<{
     isActive: true,
     keyBenefit: 'React · Next.js · Headless CMS',
     iconColor: 'text-sky-400 bg-sky-500/[0.12]',
-    gradient: 'from-sky-500/20 to-cyan-500/20',
+    gradient: 'from-sky-500/15 to-transparent',
     shadow: 'hover:shadow-[0_8px_32px_-6px_rgba(14,165,233,0.18)]',
   },
   // ─── DESIGN ───────────────────────────────────────────────────────────────
@@ -177,9 +177,9 @@ const SERVICES: Array<{
     href: '/uslugi/design/ui-ux',
     isActive: true,
     keyBenefit: 'Figma · Badania UX · Prototypy HiFi',
-    iconColor: 'text-violet-400 bg-violet-500/[0.12]',
-    gradient: 'from-violet-500/20 to-purple-500/20',
-    shadow: 'hover:shadow-[0_8px_32px_-6px_rgba(139,92,246,0.18)]',
+    iconColor: 'text-lime-400 bg-lime-500/[0.12]',
+    gradient: 'from-lime-500/15 to-transparent',
+    shadow: 'hover:shadow-[0_8px_32px_-6px_rgba(132,204,22,0.18)]',
   },
   {
     category: 'design',
@@ -204,9 +204,9 @@ const SERVICES: Array<{
     href: '/uslugi/automatyzacje-ai/chatboty-ai',
     isActive: true,
     keyBenefit: 'GPT-4o · Multi-język · Lead gen',
-    iconColor: 'text-cyan-400 bg-cyan-400/[0.12]',
-    gradient: 'from-cyan-400/20 to-teal-400/20',
-    shadow: 'hover:shadow-[0_8px_32px_-6px_rgba(34,211,238,0.18)]',
+    iconColor: 'text-orange-400 bg-orange-500/[0.12]',
+    gradient: 'from-orange-500/15 to-transparent',
+    shadow: 'hover:shadow-[0_8px_32px_-6px_rgba(249,115,22,0.18)]',
   },
   // ─── MARKETING ─────────────────────────────────────────────────────────────
   {
@@ -218,9 +218,9 @@ const SERVICES: Array<{
     href: '#',
     isActive: false,
     keyBenefit: 'Core Web Vitals · Słowa kluczowe · Raport',
-    iconColor: 'text-emerald-400 bg-emerald-500/[0.12]',
-    gradient: 'from-emerald-500/20 to-teal-500/20',
-    shadow: 'hover:shadow-[0_8px_32px_-6px_rgba(16,185,129,0.18)]',
+    iconColor: 'text-teal-400 bg-teal-500/[0.12]',
+    gradient: 'from-teal-500/15 to-transparent',
+    shadow: 'hover:shadow-[0_8px_32px_-6px_rgba(20,184,166,0.18)]',
   },
 ];
 
@@ -315,7 +315,7 @@ export function ServicesHub() {
               <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-[5.5rem] font-black tracking-tight leading-[1.05]">
                 Narzędzia do{' '}
                 <br className="hidden sm:block" />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-300">
                   cyfrowej dominacji.
                 </span>
               </h1>

@@ -130,6 +130,34 @@ Posty w `app/data/posts.ts`. Routing: `/blog/[slug]`. Aktualnie 3 posty (o AI, s
 | Nawigacja | `components/layout/Navbar.tsx` |
 | CTA AI | `components/AvenlyAICta.tsx` |
 
+## Chatbot AI (`components/chatbot/Chatbot.tsx`)
+
+Floating bubble + okno chatu zintegrowane globalnie w `app/layout.tsx`.
+
+| Co | Jak |
+|---|---|
+| Endpoint | `NEXT_PUBLIC_N8N_CHATBOT_URL` (n8n webhook bezpośrednio, NIE przez `/api/chat`) |
+| Autoryzacja | Header `x-chatbot-secret: NEXT_PUBLIC_CHATBOT_SECRET` |
+| Historia | localStorage: `avenly_chat_current` + `avenly_chat_sessions` (max 15) |
+| Zapis wiadomości | Supabase `chat_messages` (anon INSERT) — sekwencyjny: user → then assistant |
+| Konfiguracja z DB | Pobiera `welcome_message` + `quick_replies` z `chatbot_config` (Supabase, anon) |
+
+### Quick Replies
+- `triggers: ('start' | 'always' | 'keyword')[]` — multi-trigger per button
+- `start` → pod wiadomością powitalną; `always` → nad inputem; `keyword` → po dopasowaniu w odpowiedzi bota
+- Backward compat: stary format `trigger: string` obsługiwany przez `hasTrigger()` helper
+- Zarządzane z CRM (Tab Konfiguracja w `/chatbot`)
+
+### Zmienne środowiskowe (`.env.local`)
+```
+NEXT_PUBLIC_N8N_CHATBOT_URL=https://n8n.avenly.pl/webhook/chatbot
+NEXT_PUBLIC_CHATBOT_SECRET=avenly-chatbot-2026
+NEXT_PUBLIC_SUPABASE_URL=https://kyfsjvgixmcmafvaiyak.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+```
+
+---
+
 ## Znane ograniczenia / pułapki
 
 - Static export — brak API routes, brak server-side rendering
@@ -137,3 +165,5 @@ Posty w `app/data/posts.ts`. Routing: `/blog/[slug]`. Aktualnie 3 posty (o AI, s
 - Lenis + GSAP ScrollTrigger wymagają synchronizacji — nie modyfikuj scroll behavior globalnie (`SmoothScrolling.tsx` jest providerem)
 - W `app/data/services.ts` href design card wskazuje na `/uslugi/design/design-stron-internetowych` (błąd), ale faktyczna strona jest pod `/uslugi/design/ui-ux` — `ServicesHub.tsx` ma poprawny link
 - Blog: treść to HTML string, nie Portable Text — mimo że pakiet `@portabletext/react` jest zainstalowany
+- Chatbot: static export → wszystkie callsy client-side przez `NEXT_PUBLIC_` zmienne; zmiana config wymaga rebuildu i ponownego uploadu `out/` na Hostinger
+- `Chatbot.tsx` `sendMessage` przyjmuje opcjonalny `overrideText?: string` — używany przez quick reply buttons; onClick na przycisku send to `() => sendMessage()`, NIE `sendMessage` (inaczej MouseEvent przekazany jako string)

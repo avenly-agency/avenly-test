@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { 
@@ -19,7 +19,7 @@ const webServices = [
     icon: Zap,
     href: '/uslugi/strony-www/one-page',
     badge: 'Szybki start',
-    color: 'from-blue-500/20 to-indigo-500/20',
+    color: 'from-blue-500/15 to-transparent',
     iconColor: 'text-blue-400',
     isActive: true,
   },
@@ -39,8 +39,8 @@ const webServices = [
     icon: Zap,
     href: '/uslugi/strony-www/dedykowane-strony-www',
     badge: 'Premium',
-    color: 'from-purple-500/20 to-fuchsia-500/20',
-    iconColor: 'text-purple-400',
+    color: 'from-rose-500/15 to-transparent',
+    iconColor: 'text-rose-400',
     isActive: true,
   },
   {
@@ -59,7 +59,7 @@ const webServices = [
     icon: Globe,
     href: '/uslugi/strony-www/aplikacje-webowe',
     badge: 'Custom Dev',
-    color: 'from-sky-500/20 to-cyan-500/20',
+    color: 'from-sky-500/15 to-transparent',
     iconColor: 'text-sky-400',
     isActive: true,
   },

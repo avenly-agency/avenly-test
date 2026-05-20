@@ -121,7 +121,7 @@ export const Services = () => {
                                                             <card.icon size={26} />
                                                         </div>
                                                         <div className="p-1.5 rounded-full bg-white/5 border border-white/5 group-hover:bg-white/10 transition-colors">
-                                                            <ArrowUpRight className="w-4 h-4 text-slate-500 group-hover:text-white transition-all group-hover:translate-x-1" />
+                                                            <ArrowUpRight className="w-4 h-4 text-slate-500 group-hover:text-white transition-colors" />
                                                         </div>
                                                     </div>
                                                     <div className="relative z-10 flex-1 flex flex-col">

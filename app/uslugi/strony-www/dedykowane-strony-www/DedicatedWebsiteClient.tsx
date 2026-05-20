@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useRef } from 'react'
 import Link from 'next/link'
@@ -140,17 +140,17 @@ export function DedicatedWebsiteClient() {
     const scopeCardsY = useTransform(smoothScope, [0, 1], ['40vh', '-75%'])
 
     return (
-        <div className="relative min-h-screen bg-[#050505] text-white selection:bg-purple-500/30 overflow-x-clip">
+        <div className="relative min-h-screen bg-[#050505] text-white selection:bg-rose-500/30 overflow-x-clip">
             {/* TŁO KINOWE */}
             <div className="fixed inset-0 z-0 pointer-events-none">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[100vw] h-[800px] bg-[radial-gradient(ellipse_at_top,rgba(168,85,247,0.1),transparent_70%)]" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[100vw] h-[800px] bg-[radial-gradient(ellipse_at_top,rgba(244,63,94,0.1),transparent_70%)]" />
             </div>
 
             <main className="relative z-10">
                 {/* --- HERO SECTION --- */}
                 <section className="pt-32 pb-10 container mx-auto px-6 text-center">
                     <Reveal delay={0.1}>
-                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/5 border border-purple-500/10 text-purple-400 text-xs font-bold uppercase tracking-widest mb-8">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-rose-500/5 border border-rose-500/10 text-rose-400 text-xs font-bold uppercase tracking-widest mb-8">
                             <TerminalSquare size={14} /> Custom Web Development
                         </div>
                     </Reveal>
@@ -158,7 +158,7 @@ export function DedicatedWebsiteClient() {
                     <Reveal delay={0.2}>
                         <h1 className="text-5xl md:text-7xl lg:text-[5.5rem] font-bold tracking-tight mb-8 leading-[1.05]">
                             Więcej niż <br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-fuchsia-400 to-pink-500">
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 via-rose-400 to-pink-500">
                                 tylko strona.
                             </span>
                         </h1>
@@ -177,7 +177,7 @@ export function DedicatedWebsiteClient() {
                     <div className="sticky top-0 h-screen w-full flex flex-col items-center justify-center overflow-hidden px-4 md:px-10">
                         <motion.div
                             style={{ scale, opacity, rotateX, perspective: '1200px' }}
-                            className="relative w-full max-w-6xl h-[75vh] md:h-[85vh] rounded-[2rem] md:rounded-[3rem] bg-[#0a0a0a] border border-white/10 shadow-[0_0_80px_-20px_rgba(168,85,247,0.2)] flex flex-col overflow-hidden will-change-transform">
+                            className="relative w-full max-w-6xl h-[75vh] md:h-[85vh] rounded-[2rem] md:rounded-[3rem] bg-[#0a0a0a] border border-white/10 shadow-[0_0_80px_-20px_rgba(244,63,94,0.2)] flex flex-col overflow-hidden will-change-transform">
 
                             {/* PASEK PRZEGLĄDARKI */}
                             <div className="relative h-14 bg-[#111] border-b border-white/5 px-4 md:px-6 flex items-center justify-between z-50 shrink-0">
@@ -188,25 +188,25 @@ export function DedicatedWebsiteClient() {
                                 </div>
 
                                 <div className="absolute left-1/2 -translate-x-1/2 h-8 bg-black/50 rounded-full border border-white/5 flex items-center justify-center px-4 overflow-hidden z-50 shadow-inner max-w-[50%] md:max-w-md">
-                                    <span className="text-purple-500/50 mr-1 text-[10px] sm:text-xs font-mono shrink-0 hidden sm:inline">https://</span>
+                                    <span className="text-rose-500/50 mr-1 text-[10px] sm:text-xs font-mono shrink-0 hidden sm:inline">https://</span>
                                     <div className="relative w-32 sm:w-56 h-full flex items-center text-[10px] sm:text-xs font-mono tracking-wider text-slate-500">
                                         <motion.span style={{ opacity: urlHomeOpacity }} className="absolute inset-x-0 truncate text-center sm:text-left">
                                             twoja-marka.pl
                                         </motion.span>
-                                        <motion.span style={{ opacity: urlSubOpacity }} className="absolute inset-x-0 truncate text-center sm:text-left text-fuchsia-300">
+                                        <motion.span style={{ opacity: urlSubOpacity }} className="absolute inset-x-0 truncate text-center sm:text-left text-rose-300">
                                             twoja-marka.pl/oferta
                                         </motion.span>
                                         <motion.span style={{ opacity: urlAuthOpacity }} className="absolute inset-x-0 truncate text-center sm:text-left text-pink-300">
                                             twoja-marka.pl/login
                                         </motion.span>
-                                        <motion.span style={{ opacity: urlDashOpacity }} className="absolute inset-x-0 truncate text-center sm:text-left text-purple-300">
+                                        <motion.span style={{ opacity: urlDashOpacity }} className="absolute inset-x-0 truncate text-center sm:text-left text-rose-300">
                                             twoja-marka.pl/portal
                                         </motion.span>
                                     </div>
                                 </div>
 
                                 <div className="absolute bottom-0 left-0 h-[2px] w-full bg-white/5">
-                                    <motion.div style={{ width: progressBar }} className="h-full bg-gradient-to-r from-purple-500 to-pink-500 will-change-transform" />
+                                    <motion.div style={{ width: progressBar }} className="h-full bg-gradient-to-r from-rose-500 to-pink-500 will-change-transform" />
                                 </div>
                             </div>
 
@@ -216,19 +216,19 @@ export function DedicatedWebsiteClient() {
                                 {/* NIERUCHOMY NAVBAR */}
                                 <div className="absolute top-0 inset-x-0 w-full h-16 md:h-20 border-b border-white/5 flex items-center justify-between px-6 md:px-12 bg-[#020202]/90 backdrop-blur-md z-40 pointer-events-none">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center">
-                                            <div className="w-3 h-3 md:w-4 md:h-4 bg-purple-400 rounded-sm" />
+                                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center">
+                                            <div className="w-3 h-3 md:w-4 md:h-4 bg-rose-400 rounded-sm" />
                                         </div>
                                         <div className="w-24 h-5 bg-white/10 rounded-md hidden sm:block" />
                                     </div>
 
                                     <div className="flex items-center gap-6">
                                         <div className="hidden md:flex gap-6 items-center">
-                                            <div className="w-16 h-2 bg-purple-400/80 rounded shadow-[0_0_10px_rgba(168,85,247,0.5)]" />
+                                            <div className="w-16 h-2 bg-rose-400/80 rounded shadow-[0_0_10px_rgba(244,63,94,0.5)]" />
                                             <div className="w-16 h-2 bg-white/20 rounded" />
                                             <div className="w-16 h-2 bg-white/20 rounded" />
                                         </div>
-                                        <div className="flex items-center gap-2 px-4 md:px-5 py-2 md:py-2.5 rounded-xl bg-white/5 border border-white/10 text-purple-400 pointer-events-auto">
+                                        <div className="flex items-center gap-2 px-4 md:px-5 py-2 md:py-2.5 rounded-xl bg-white/5 border border-white/10 text-rose-400 pointer-events-auto">
                                             <Lock size={14} />
                                             <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider hidden sm:block">Panel Klienta</span>
                                         </div>
@@ -245,22 +245,22 @@ export function DedicatedWebsiteClient() {
                                     {/* Hero Section */}
                                     <div className="w-full max-w-6xl mx-auto px-6 md:px-12 pt-16 md:pt-24 pb-16 flex flex-col md:flex-row gap-12 items-center">
                                         <div className="flex-1 flex flex-col gap-6 text-center md:text-left">
-                                            <div className="w-32 h-6 bg-purple-500/20 rounded-full mb-2 mx-auto md:mx-0" />
+                                            <div className="w-32 h-6 bg-rose-500/20 rounded-full mb-2 mx-auto md:mx-0" />
                                             <div className="w-full h-12 md:h-16 bg-gradient-to-r from-white/10 to-white/5 rounded-2xl" />
                                             <div className="w-5/6 h-12 md:h-16 bg-gradient-to-r from-white/10 to-white/5 rounded-2xl mx-auto md:mx-0" />
                                             <div className="w-3/4 h-4 bg-white/5 rounded-md mt-4 mx-auto md:mx-0" />
                                             <div className="w-2/3 h-4 bg-white/5 rounded-md mx-auto md:mx-0" />
                                             <div className="flex gap-4 mt-6 justify-center md:justify-start">
-                                                <div className="w-36 h-14 bg-purple-500 border border-purple-400 rounded-xl shadow-[0_0_20px_rgba(168,85,247,0.4)] relative z-20" />
+                                                <div className="w-36 h-14 bg-rose-500 border border-rose-400 rounded-xl shadow-[0_0_20px_rgba(244,63,94,0.4)] relative z-20" />
                                                 <div className="w-36 h-14 bg-white/5 border border-white/10 rounded-xl" />
                                             </div>
                                         </div>
 
                                         <div className="flex-1 w-full aspect-square md:aspect-auto md:h-[400px] relative flex items-center justify-center">
-                                            <div className="absolute inset-0 bg-purple-500/10 blur-[80px] rounded-full" />
-                                            <div className="w-64 h-64 rounded-full border border-purple-500/20 absolute animate-[spin_10s_linear_infinite] border-t-purple-500" />
+                                            <div className="absolute inset-0 bg-rose-500/10 blur-[80px] rounded-full" />
+                                            <div className="w-64 h-64 rounded-full border border-rose-500/20 absolute animate-[spin_10s_linear_infinite] border-t-rose-500" />
                                             <div className="w-48 h-48 rounded-[2rem] bg-white/[0.02] border border-white/10 backdrop-blur-xl absolute rotate-12 flex flex-col justify-between p-6 shadow-2xl">
-                                                <div className="w-12 h-12 rounded-full bg-purple-500/20" />
+                                                <div className="w-12 h-12 rounded-full bg-rose-500/20" />
                                                 <div className="w-full h-3 bg-white/10 rounded" />
                                                 <div className="w-2/3 h-3 bg-white/5 rounded" />
                                             </div>
@@ -278,7 +278,7 @@ export function DedicatedWebsiteClient() {
                                                 <div className="w-2/3 h-4 bg-white/5 rounded-md" />
                                             </div>
                                             <div className="aspect-square md:aspect-auto bg-white/[0.02] border border-white/5 rounded-3xl p-8 flex flex-col items-center justify-center gap-4">
-                                                <div className="w-24 h-24 rounded-full bg-purple-500/10 border-[8px] border-white/5 border-t-purple-500" />
+                                                <div className="w-24 h-24 rounded-full bg-rose-500/10 border-[8px] border-white/5 border-t-rose-500" />
                                                 <div className="w-1/2 h-4 bg-white/10 rounded mt-4" />
                                             </div>
                                         </div>
@@ -289,7 +289,7 @@ export function DedicatedWebsiteClient() {
                                         <div className="flex flex-col md:flex-row gap-12 items-center">
                                             <div className="flex-1 w-full flex flex-col gap-4">
                                                 <div className="w-full h-32 bg-white/[0.02] border border-white/5 rounded-2xl flex items-center px-6 gap-6">
-                                                    <div className="w-16 h-16 rounded-full bg-purple-500/20" />
+                                                    <div className="w-16 h-16 rounded-full bg-rose-500/20" />
                                                     <div className="flex-1">
                                                         <div className="w-2/3 h-4 bg-white/10 rounded mb-2" />
                                                         <div className="w-1/2 h-3 bg-white/5 rounded" />
@@ -304,7 +304,7 @@ export function DedicatedWebsiteClient() {
                                                 </div>
                                             </div>
                                             <div className="flex-1 w-full flex flex-col gap-6">
-                                                <div className="w-1/2 h-6 bg-purple-500/20 rounded-full" />
+                                                <div className="w-1/2 h-6 bg-rose-500/20 rounded-full" />
                                                 <div className="w-full h-10 bg-white/10 rounded-xl" />
                                                 <div className="w-5/6 h-10 bg-white/10 rounded-xl" />
                                                 <div className="w-full h-4 bg-white/5 rounded-md mt-4" />
@@ -323,9 +323,9 @@ export function DedicatedWebsiteClient() {
                                     className="absolute inset-x-0 top-0 pt-16 md:pt-20 flex flex-col will-change-transform z-15 pointer-events-none">
 
                                     {/* Subpage Banner */}
-                                    <div className="w-full h-64 md:h-80 bg-gradient-to-br from-fuchsia-900/20 to-transparent border-b border-white/5 flex flex-col items-center justify-center gap-6 relative overflow-hidden">
+                                    <div className="w-full h-64 md:h-80 bg-gradient-to-br from-rose-900/20 to-transparent border-b border-white/5 flex flex-col items-center justify-center gap-6 relative overflow-hidden">
                                         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay" />
-                                        <div className="w-32 h-6 bg-fuchsia-500/20 rounded-full" />
+                                        <div className="w-32 h-6 bg-rose-500/20 rounded-full" />
                                         <div className="w-3/4 max-w-2xl h-12 md:h-16 bg-white/10 rounded-2xl" />
                                         <div className="w-1/2 max-w-md h-4 bg-white/5 rounded-md" />
                                     </div>
@@ -345,11 +345,11 @@ export function DedicatedWebsiteClient() {
                                         </div>
 
                                         <div className="w-full mt-16 p-8 md:p-12 bg-white/[0.02] border border-white/5 rounded-3xl flex flex-col items-center text-center gap-6">
-                                            <div className="w-16 h-16 rounded-full bg-purple-500/20 mb-4" />
+                                            <div className="w-16 h-16 rounded-full bg-rose-500/20 mb-4" />
                                             <div className="w-1/2 h-8 bg-white/10 rounded-xl" />
                                             <div className="w-3/4 h-4 bg-white/5 rounded-md" />
                                             <div className="w-2/3 h-4 bg-white/5 rounded-md" />
-                                            <div className="w-48 h-12 mt-4 bg-fuchsia-500/20 border border-fuchsia-500/30 rounded-xl" />
+                                            <div className="w-48 h-12 mt-4 bg-rose-500/20 border border-rose-500/30 rounded-xl" />
                                         </div>
                                     </div>
                                 </motion.div>
@@ -362,7 +362,7 @@ export function DedicatedWebsiteClient() {
                                     className="absolute inset-0 pt-16 md:pt-20 z-20 flex items-center justify-center bg-[#020202] will-change-opacity pointer-events-none">
 
                                     <div className="w-full max-w-md p-8 md:p-10 rounded-[2rem] bg-[#0a0a0a] border border-white/5 flex flex-col shadow-2xl relative">
-                                        <div className="w-12 h-12 rounded-2xl bg-purple-500/20 flex items-center justify-center text-purple-400 mb-6 mx-auto border border-purple-500/30">
+                                        <div className="w-12 h-12 rounded-2xl bg-rose-500/20 flex items-center justify-center text-rose-400 mb-6 mx-auto border border-rose-500/30">
                                             <KeyRound size={24} />
                                         </div>
                                         <div className="w-48 h-6 bg-white/10 rounded-md mb-2 mx-auto" />
@@ -372,8 +372,8 @@ export function DedicatedWebsiteClient() {
                                         <div className="w-full mb-4">
                                             <div className="w-16 h-3 bg-white/10 rounded mb-2" />
                                             <div className="w-full h-12 bg-white/5 border border-white/10 rounded-xl relative overflow-hidden flex items-center px-4">
-                                                <motion.div style={{ width: emailWidth }} className="h-4 overflow-hidden border-r-2 border-purple-500 flex items-center">
-                                                    <span className="text-sm font-mono text-purple-200 truncate">admin@twoja-marka.pl</span>
+                                                <motion.div style={{ width: emailWidth }} className="h-4 overflow-hidden border-r-2 border-rose-500 flex items-center">
+                                                    <span className="text-sm font-mono text-rose-200 truncate">admin@twoja-marka.pl</span>
                                                 </motion.div>
                                             </div>
                                         </div>
@@ -382,14 +382,14 @@ export function DedicatedWebsiteClient() {
                                         <div className="w-full mb-8">
                                             <div className="w-20 h-3 bg-white/10 rounded mb-2" />
                                             <div className="w-full h-12 bg-white/5 border border-white/10 rounded-xl relative overflow-hidden flex items-center px-4">
-                                                <motion.div style={{ width: passWidth }} className="h-4 overflow-hidden border-r-2 border-purple-500 flex items-center text-purple-200 tracking-widest text-lg">
+                                                <motion.div style={{ width: passWidth }} className="h-4 overflow-hidden border-r-2 border-rose-500 flex items-center text-rose-200 tracking-widest text-lg">
                                                     ••••••••••••
                                                 </motion.div>
                                             </div>
                                         </div>
 
                                         {/* Przycisk Zaloguj */}
-                                        <div className="w-full h-12 rounded-xl bg-purple-500 border border-purple-400 flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.3)] relative z-10">
+                                        <div className="w-full h-12 rounded-xl bg-rose-500 border border-rose-400 flex items-center justify-center shadow-[0_0_20px_rgba(244,63,94,0.3)] relative z-10">
                                             <span className="text-sm font-bold">Zaloguj się</span>
                                         </div>
                                     </div>
@@ -402,9 +402,9 @@ export function DedicatedWebsiteClient() {
                                     style={{ opacity: loaderOpacity }}
                                     className="absolute inset-0 z-30 flex items-center justify-center bg-[#020202] will-change-opacity pointer-events-none">
                                     <div className="flex flex-col items-center gap-6">
-                                        <div className="w-12 h-12 border-4 border-purple-500/10 border-t-purple-500 rounded-full animate-spin shadow-[0_0_30px_rgba(168,85,247,0.3)]" />
+                                        <div className="w-12 h-12 border-4 border-rose-500/10 border-t-rose-500 rounded-full animate-spin shadow-[0_0_30px_rgba(244,63,94,0.3)]" />
                                         <div className="w-32 h-2 bg-white/5 rounded-full overflow-hidden">
-                                            <div className="w-1/2 h-full bg-purple-500 rounded-full animate-pulse" />
+                                            <div className="w-1/2 h-full bg-rose-500 rounded-full animate-pulse" />
                                         </div>
                                     </div>
                                 </motion.div>
@@ -417,10 +417,10 @@ export function DedicatedWebsiteClient() {
                                     className="absolute inset-0 z-10 flex w-full h-full will-change-transform pt-16 md:pt-20 bg-[#020202]">
 
                                     <div className="w-16 md:w-64 h-full border-r border-white/5 bg-[#050505] p-4 flex flex-col gap-6 pt-8 shrink-0">
-                                        <div className="w-8 h-8 md:w-full md:h-12 rounded-lg md:rounded-xl bg-purple-500/20 border border-purple-500/30 mb-4" />
+                                        <div className="w-8 h-8 md:w-full md:h-12 rounded-lg md:rounded-xl bg-rose-500/20 border border-rose-500/30 mb-4" />
                                         {[1, 2, 3, 4, 5].map(i => (
                                             <div key={i} className={`flex items-center gap-4 group cursor-pointer p-2 md:p-3 rounded-lg ${i === 1 ? 'bg-white/5' : ''}`}>
-                                                <div className={`w-4 h-4 md:w-6 md:h-6 rounded bg-white/10 shrink-0 ${i === 1 ? 'bg-purple-500/50' : ''}`} />
+                                                <div className={`w-4 h-4 md:w-6 md:h-6 rounded bg-white/10 shrink-0 ${i === 1 ? 'bg-rose-500/50' : ''}`} />
                                                 <div className="hidden md:block w-full h-3 rounded bg-white/5 group-hover:bg-white/10 transition-colors" />
                                             </div>
                                         ))}
@@ -438,7 +438,7 @@ export function DedicatedWebsiteClient() {
                                                         <div className="text-xl md:text-3xl font-black text-white">
                                                             {i === 1 ? '12,400' : i === 2 ? '89%' : i === 3 ? '$45k' : '24/7'}
                                                         </div>
-                                                        <div className="text-[10px] md:text-xs text-purple-400 font-mono tracking-wider">+12.5%</div>
+                                                        <div className="text-[10px] md:text-xs text-rose-400 font-mono tracking-wider">+12.5%</div>
                                                     </motion.div>
                                                 </div>
                                             ))}
@@ -451,20 +451,20 @@ export function DedicatedWebsiteClient() {
                                                     <div className="absolute inset-x-0 bottom-1/4 h-px bg-white/5" />
                                                     <div className="absolute inset-x-0 bottom-2/4 h-px bg-white/5" />
                                                     <div className="absolute inset-x-0 bottom-3/4 h-px bg-white/5" />
-                                                    <motion.div style={{ height: chartHeight1 }} className="w-full bg-gradient-to-t from-purple-500/40 to-purple-400 rounded-t-lg relative z-10" />
-                                                    <motion.div style={{ height: chartHeight2 }} className="w-full bg-gradient-to-t from-purple-500/40 to-purple-400 rounded-t-lg relative z-10" />
+                                                    <motion.div style={{ height: chartHeight1 }} className="w-full bg-gradient-to-t from-rose-500/40 to-rose-400 rounded-t-lg relative z-10" />
+                                                    <motion.div style={{ height: chartHeight2 }} className="w-full bg-gradient-to-t from-rose-500/40 to-rose-400 rounded-t-lg relative z-10" />
                                                     <motion.div style={{ height: chartHeight3 }} className="w-full bg-gradient-to-t from-pink-500/40 to-pink-400 rounded-t-lg relative z-10 shadow-[0_0_20px_rgba(236,72,153,0.5)]" />
-                                                    <motion.div style={{ height: chartHeight4 }} className="w-full bg-gradient-to-t from-purple-500/40 to-purple-400 rounded-t-lg relative z-10" />
-                                                    <motion.div style={{ height: chartHeight1 }} className="w-full bg-gradient-to-t from-purple-500/40 to-purple-400 rounded-t-lg relative z-10 hidden sm:block" />
+                                                    <motion.div style={{ height: chartHeight4 }} className="w-full bg-gradient-to-t from-rose-500/40 to-rose-400 rounded-t-lg relative z-10" />
+                                                    <motion.div style={{ height: chartHeight1 }} className="w-full bg-gradient-to-t from-rose-500/40 to-rose-400 rounded-t-lg relative z-10 hidden sm:block" />
                                                 </div>
                                             </div>
 
                                             <div className="rounded-3xl bg-white/[0.02] border border-white/5 p-6 flex flex-col gap-4 relative overflow-hidden hidden xl:flex">
-                                                <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 blur-3xl rounded-full" />
+                                                <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/10 blur-3xl rounded-full" />
                                                 <div className="w-1/2 h-6 bg-white/10 rounded-md mb-4" />
                                                 {[1, 2, 3, 4].map(i => (
                                                     <motion.div key={i} style={{ opacity: dataOpacity }} className="flex gap-4 items-start p-3 rounded-xl bg-white/[0.02] border border-white/5">
-                                                        <div className="w-8 h-8 rounded-full bg-purple-500/20 shrink-0 border border-purple-500/30" />
+                                                        <div className="w-8 h-8 rounded-full bg-rose-500/20 shrink-0 border border-rose-500/30" />
                                                         <div className="flex flex-col gap-2 w-full pt-1">
                                                             <div className="w-3/4 h-3 bg-white/20 rounded" />
                                                             <div className="w-1/2 h-2 bg-white/10 rounded" />
@@ -473,7 +473,7 @@ export function DedicatedWebsiteClient() {
                                                 ))}
                                                 <motion.div style={{ opacity: skeletonOpacity }} className="absolute inset-0 bg-[#0a0a0a] p-6 flex flex-col gap-4 z-20">
                                                     <div className="w-1/2 h-6 bg-white/10 rounded-md mb-4" />
-                                                    <div className="w-24 h-24 rounded-full border-4 border-white/5 border-t-purple-500 animate-spin mx-auto mt-10" />
+                                                    <div className="w-24 h-24 rounded-full border-4 border-white/5 border-t-rose-500 animate-spin mx-auto mt-10" />
                                                 </motion.div>
                                             </div>
                                         </div>
@@ -484,14 +484,14 @@ export function DedicatedWebsiteClient() {
                                 <motion.div
                                     style={{ left: cursorDesktopX, top: cursorDesktopY, scale: cursorScale, opacity: cursorDesktopOpacity }}
                                     className="hidden md:block absolute z-50 drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)] origin-top-left pointer-events-none will-change-transform">
-                                    <MousePointer2 size={32} className="text-white fill-purple-500 stroke-[1.5]" />
+                                    <MousePointer2 size={32} className="text-white fill-rose-500 stroke-[1.5]" />
                                 </motion.div>
 
                                 {/* --- ANIMOWANY KURSOR (MOBILE) --- */}
                                 <motion.div
                                     style={{ left: cursorMobileX, top: cursorMobileY, scale: cursorScale, opacity: cursorMobileOpacity }}
                                     className="md:hidden absolute z-50 drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)] origin-top-left pointer-events-none will-change-transform">
-                                    <MousePointer2 size={32} className="text-white fill-purple-500 stroke-[1.5]" />
+                                    <MousePointer2 size={32} className="text-white fill-rose-500 stroke-[1.5]" />
                                 </motion.div>
 
                                 {/* Mgła dla głębi makiety */}
@@ -501,9 +501,9 @@ export function DedicatedWebsiteClient() {
 
                         <motion.div
                             style={{ opacity: useTransform(smoothMain, [0, 0.05, 0.1], [1, 1, 0]) }}
-                            className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-purple-500 z-10 pointer-events-none">
+                            className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-rose-500 z-10 pointer-events-none">
                             <span className="text-[10px] uppercase font-bold tracking-[0.3em]">Scrolluj, aby testować aplikację</span>
-                            <div className="w-px h-12 bg-gradient-to-b from-purple-500 to-transparent" />
+                            <div className="w-px h-12 bg-gradient-to-b from-rose-500 to-transparent" />
                         </motion.div>
                     </div>
                 </section>
@@ -525,13 +525,13 @@ export function DedicatedWebsiteClient() {
                             {/* KARTA 1 */}
                             <div className="md:col-span-12 h-full">
                                 <Reveal delay={0.1}>
-                                    <div className="h-full p-8 md:p-12 rounded-[2.5rem] bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:border-purple-500/30 transition-all duration-500 group relative overflow-hidden flex flex-col md:flex-row items-center gap-8 md:gap-16 hover:-translate-y-2">
-                                        <div className="absolute right-0 top-0 w-1/2 h-full bg-gradient-to-l from-purple-900/10 to-transparent pointer-events-none" />
-                                        <div className="w-16 h-16 rounded-2xl bg-purple-500/10 flex items-center justify-center text-purple-400 shrink-0 relative z-10 border border-purple-500/20 shadow-[0_0_20px_-5px_rgba(168,85,247,0.3)] group-hover:scale-110 transition-transform duration-500">
+                                    <div className="h-full p-8 md:p-12 rounded-[2.5rem] bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:border-rose-500/30 transition-all duration-500 group relative overflow-hidden flex flex-col md:flex-row items-center gap-8 md:gap-16 hover:-translate-y-2">
+                                        <div className="absolute right-0 top-0 w-1/2 h-full bg-gradient-to-l from-rose-900/10 to-transparent pointer-events-none" />
+                                        <div className="w-16 h-16 rounded-2xl bg-rose-500/10 flex items-center justify-center text-rose-400 shrink-0 relative z-10 border border-rose-500/20 shadow-[0_0_20px_-5px_rgba(244,63,94,0.3)] group-hover:scale-110 transition-transform duration-500">
                                             <Cpu size={32} />
                                         </div>
                                         <div className="relative z-10 flex-1 text-center md:text-left">
-                                            <h3 className="text-3xl font-bold mb-4 text-white group-hover:text-purple-400 transition-colors">
+                                            <h3 className="text-3xl font-bold mb-4 text-white group-hover:text-rose-400 transition-colors">
                                                 Architektura Headless
                                             </h3>
                                             <p className="text-slate-400 text-lg leading-relaxed max-w-3xl mx-auto md:mx-0">
@@ -567,12 +567,12 @@ export function DedicatedWebsiteClient() {
                             {/* KARTA 3 */}
                             <div className="md:col-span-6 h-full">
                                 <Reveal delay={0.3}>
-                                    <div className="h-full p-8 md:p-10 rounded-[2.5rem] bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:border-purple-500/30 transition-all duration-500 group flex flex-col justify-between min-h-[320px] hover:-translate-y-2 relative overflow-hidden">
-                                        <div className="w-14 h-14 rounded-2xl bg-purple-500/10 flex items-center justify-center text-purple-400 mb-8 relative z-10 border border-purple-500/20 shadow-[0_0_20px_-5px_rgba(168,85,247,0.3)] group-hover:scale-110 transition-transform duration-500">
+                                    <div className="h-full p-8 md:p-10 rounded-[2.5rem] bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:border-rose-500/30 transition-all duration-500 group flex flex-col justify-between min-h-[320px] hover:-translate-y-2 relative overflow-hidden">
+                                        <div className="w-14 h-14 rounded-2xl bg-rose-500/10 flex items-center justify-center text-rose-400 mb-8 relative z-10 border border-rose-500/20 shadow-[0_0_20px_-5px_rgba(244,63,94,0.3)] group-hover:scale-110 transition-transform duration-500">
                                             <Layers size={28} />
                                         </div>
                                         <div className="relative z-10">
-                                            <h3 className="text-2xl font-bold mb-3 text-white group-hover:text-purple-400 transition-colors">
+                                            <h3 className="text-2xl font-bold mb-3 text-white group-hover:text-rose-400 transition-colors">
                                                 Interfejs w Czasie Rzeczywistym
                                             </h3>
                                             <p className="text-slate-400 leading-relaxed">
@@ -587,12 +587,12 @@ export function DedicatedWebsiteClient() {
                             {/* KARTA 4 */}
                             <div className="md:col-span-12 h-full">
                                 <Reveal delay={0.4}>
-                                    <div className="h-full p-8 md:p-12 rounded-[2.5rem] bg-[#050505] border border-purple-500/20 hover:border-purple-400/50 transition-all duration-500 relative overflow-hidden flex flex-col items-center text-center hover:-translate-y-2 shadow-[0_0_40px_-15px_rgba(168,85,247,0.15)] group">
-                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/5 to-transparent translate-x-[-100%] group-hover:animate-[shimmer_2s_infinite]" />
-                                        <div className="w-16 h-16 rounded-2xl bg-purple-500/10 flex items-center justify-center text-purple-400 mb-6 relative z-10 border border-purple-500/20 shadow-[0_0_20px_-5px_rgba(168,85,247,0.3)] group-hover:scale-110 transition-transform duration-500">
+                                    <div className="h-full p-8 md:p-12 rounded-[2.5rem] bg-[#050505] border border-rose-500/20 hover:border-rose-400/50 transition-all duration-500 relative overflow-hidden flex flex-col items-center text-center hover:-translate-y-2 shadow-[0_0_40px_-15px_rgba(244,63,94,0.15)] group">
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-rose-500/5 to-transparent translate-x-[-100%] group-hover:animate-[shimmer_2s_infinite]" />
+                                        <div className="w-16 h-16 rounded-2xl bg-rose-500/10 flex items-center justify-center text-rose-400 mb-6 relative z-10 border border-rose-500/20 shadow-[0_0_20px_-5px_rgba(244,63,94,0.3)] group-hover:scale-110 transition-transform duration-500">
                                             <ShieldCheck size={32} />
                                         </div>
-                                        <h3 className="text-3xl font-bold mb-4 relative z-10 text-white group-hover:text-purple-400 transition-colors">
+                                        <h3 className="text-3xl font-bold mb-4 relative z-10 text-white group-hover:text-rose-400 transition-colors">
                                             Skalowalność i Bezpieczeństwo
                                         </h3>
                                         <p className="text-slate-400 text-lg max-w-3xl relative z-10 leading-relaxed">
@@ -612,12 +612,12 @@ export function DedicatedWebsiteClient() {
                         <div className="w-full max-w-7xl flex flex-col lg:flex-row items-center lg:items-start gap-12 lg:gap-24 h-full pt-24 md:pt-40">
                             {/* Lewa strona - Nieruchomy nagłówek */}
                             <div className="lg:w-5/12 text-center lg:text-left shrink-0">
-                                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs font-bold uppercase tracking-widest mb-6 mx-auto lg:mx-0">
+                                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-bold uppercase tracking-widest mb-6 mx-auto lg:mx-0">
                                     <CheckCircle2 size={14} /> Zakres Wdrożenia
                                 </div>
                                 <h3 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-[1.1]">
                                     Od konceptu <br className="hidden lg:block" />
-                                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+                                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-pink-400">
                                         po wdrożenie.
                                     </span>
                                 </h3>
@@ -664,17 +664,17 @@ export function DedicatedWebsiteClient() {
                                             whileInView={{ opacity: 1, scale: 1, y: 0 }}
                                             viewport={{ once: true, margin: '-10%' }}
                                             transition={{ duration: 0.6, ease: 'easeOut' }}
-                                            className="p-8 md:p-10 rounded-[2rem] bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:border-purple-500/30 transition-all duration-500 relative overflow-hidden flex flex-col md:flex-row items-start gap-6 group">
-                                            <div className="absolute -bottom-6 right-0 text-[160px] md:text-[200px] font-black text-purple-500/5 group-hover:text-purple-500/10 transition-colors duration-500 pointer-events-none select-none leading-none z-0">
+                                            className="p-8 md:p-10 rounded-[2rem] bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:border-rose-500/30 transition-all duration-500 relative overflow-hidden flex flex-col md:flex-row items-start gap-6 group">
+                                            <div className="absolute -bottom-6 right-0 text-[160px] md:text-[200px] font-black text-rose-500/5 group-hover:text-rose-500/10 transition-colors duration-500 pointer-events-none select-none leading-none z-0">
                                                 0{i + 1}
                                             </div>
 
-                                            <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-400 shrink-0 group-hover:scale-110 group-hover:bg-purple-500/20 transition-all z-10 shadow-[0_0_20px_-5px_rgba(168,85,247,0.3)] border border-purple-500/20">
+                                            <div className="w-12 h-12 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-400 shrink-0 group-hover:scale-110 group-hover:bg-rose-500/20 transition-all z-10 shadow-[0_0_20px_-5px_rgba(244,63,94,0.3)] border border-rose-500/20">
                                                 <CheckCircle2 size={20} />
                                             </div>
 
                                             <div className="relative z-10 flex-1">
-                                                <h4 className="text-xl md:text-2xl font-bold text-white mb-3 group-hover:text-purple-400 transition-colors">
+                                                <h4 className="text-xl md:text-2xl font-bold text-white mb-3 group-hover:text-rose-400 transition-colors">
                                                     {item.title}
                                                 </h4>
                                                 <p className="text-slate-400 leading-relaxed text-base md:text-lg">{item.desc}</p>

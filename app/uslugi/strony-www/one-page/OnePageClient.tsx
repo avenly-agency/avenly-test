@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useRef, useEffect } from 'react';
 import Link from 'next/link';
@@ -94,7 +94,7 @@ export function OnePageClient() {
           <Reveal delay={0.2}>
             <h1 className="text-5xl md:text-7xl lg:text-[5.5rem] font-bold tracking-tight mb-8 leading-[1.05]">
               Skupienie na <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-500">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-300">
                 jednym celu.
               </span>
             </h1>
@@ -127,7 +127,7 @@ export function OnePageClient() {
                   <span className="text-slate-500 font-mono tracking-wider text-[11px] sm:text-xs truncate">twoja-przyszla-strona.pl</span>
                 </div>
                 <div className="absolute bottom-0 left-0 h-[2px] w-full bg-white/5">
-                  <motion.div style={{ width: progressBar }} className="h-full bg-gradient-to-r from-blue-500 to-purple-500" />
+                  <motion.div style={{ width: progressBar }} className="h-full bg-gradient-to-r from-blue-500 to-blue-400" />
                 </div>
               </div>
 
@@ -139,12 +139,12 @@ export function OnePageClient() {
                 >
                   {/* Sekcja 1 */}
                   <div className="w-full flex flex-col items-center text-center mt-10 md:mt-20">
-                    <div className="w-24 h-24 rounded-[2rem] bg-gradient-to-br from-blue-500/20 to-indigo-500/20 flex items-center justify-center border border-blue-500/20 mb-10 shadow-[0_0_30px_-5px_rgba(59,130,246,0.3)]">
+                    <div className="w-24 h-24 rounded-[2rem] bg-gradient-to-br from-blue-500/20 to-blue-400/10 flex items-center justify-center border border-blue-500/20 mb-10 shadow-[0_0_30px_-5px_rgba(59,130,246,0.3)]">
                       <Zap className="text-blue-400" size={32} />
                     </div>
                     <div className="w-full max-w-4xl h-16 md:h-24 bg-gradient-to-r from-white/10 via-white/20 to-white/10 rounded-2xl mb-8" />
                     <div className="w-3/4 max-w-2xl h-6 bg-white/5 rounded-lg mb-12" />
-                    <div className="w-64 h-16 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl shadow-xl shadow-blue-500/20" />
+                    <div className="w-64 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl shadow-xl shadow-blue-500/20" />
                   </div>
                   {/* Sekcja 2 */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
@@ -218,7 +218,7 @@ export function OnePageClient() {
                 </div>
                 <h2 className="text-4xl md:text-6xl font-bold text-white tracking-tight mb-6 leading-[1.1]">
                   Narzędzie do <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-300">
                     zadań specjalnych
                   </span>
                 </h2>
@@ -261,15 +261,15 @@ export function OnePageClient() {
 
               {/* Card 2 — Błyskawiczna weryfikacja + counter */}
               <motion.div custom={0.2} variants={fadeInUp} initial="hidden" whileInView="visible" viewport={vp}
-                className="relative group overflow-hidden rounded-3xl bg-[#080808] border border-white/5 p-8 min-h-[300px] flex flex-col hover:border-indigo-500/30 transition-colors duration-700 ease-out"
+                className="relative group overflow-hidden rounded-3xl bg-[#080808] border border-white/5 p-8 min-h-[300px] flex flex-col hover:border-blue-500/30 transition-colors duration-700 ease-out"
               >
-                <div className="absolute inset-0 bg-gradient-to-bl from-indigo-900/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-out" aria-hidden="true" />
+                <div className="absolute inset-0 bg-gradient-to-bl from-blue-900/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-out" aria-hidden="true" />
                 <div className="flex justify-between items-start mb-6 relative z-10">
-                  <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 group-hover:rotate-12 transition-transform duration-700">
+                  <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:rotate-12 transition-transform duration-700">
                     <FastForward size={24} aria-hidden="true" />
                   </div>
                   <span className="text-4xl font-bold text-white flex items-baseline" aria-label="3-5 dni realizacji">
-                    <Counter value={3} /><span className="text-indigo-400 text-2xl">–5 dni</span>
+                    <Counter value={3} /><span className="text-blue-400 text-2xl">–5 dni</span>
                   </span>
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-2 relative z-10">Błyskawiczna weryfikacja</h3>
@@ -280,10 +280,10 @@ export function OnePageClient() {
 
               {/* Card 3 — Idealne pod Mobile */}
               <motion.div custom={0.3} variants={fadeInUp} initial="hidden" whileInView="visible" viewport={vp}
-                className="relative group overflow-hidden rounded-3xl bg-[#080808] border border-white/5 p-8 min-h-[250px] flex flex-col hover:border-purple-500/30 transition-colors duration-700 ease-out"
+                className="relative group overflow-hidden rounded-3xl bg-[#080808] border border-white/5 p-8 min-h-[250px] flex flex-col hover:border-blue-500/30 transition-colors duration-700 ease-out"
               >
-                <div className="absolute inset-0 bg-gradient-to-t from-purple-900/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-out" aria-hidden="true" />
-                <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center mb-6 text-purple-400 relative z-10">
+                <div className="absolute inset-0 bg-gradient-to-t from-blue-900/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-out" aria-hidden="true" />
+                <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center mb-6 text-blue-400 relative z-10">
                   <Smartphone size={24} aria-hidden="true" />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-2 relative z-10">Idealne pod Mobile</h3>
@@ -335,7 +335,7 @@ export function OnePageClient() {
                 <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-[1.1]">
                   Co dokładnie{' '}
                   <br className="hidden lg:block" />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-300">
                     otrzymujesz?
                   </span>
                 </h2>
@@ -383,7 +383,7 @@ export function OnePageClient() {
           </div>
           <div className="container mx-auto px-6 relative z-10">
             <div className="relative max-w-5xl mx-auto">
-              <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-[2rem] blur opacity-15" aria-hidden="true" />
+              <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-blue-600 rounded-[2rem] blur opacity-15" aria-hidden="true" />
               <div className="relative rounded-[1.5rem] md:rounded-[2rem] bg-[#080808] border border-white/10 p-8 sm:p-12 md:p-16 text-center overflow-hidden">
 
                 <motion.div custom={0} variants={fadeInUp} initial="hidden" whileInView="visible" viewport={vp}
@@ -401,7 +401,7 @@ export function OnePageClient() {
                 >
                   Gotowy na cyfrową{' '}
                   <br className="hidden md:block" />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-300">
                     Dominację?
                   </span>
                 </motion.h2>
@@ -422,7 +422,7 @@ export function OnePageClient() {
                       Darmowa Konsultacja
                       <CalendarCheck className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
                     </span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-400 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out z-0" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-400 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out z-0" />
                   </Link>
                   <Link href="/kontakt"
                     className="w-full sm:w-auto px-8 py-4 bg-transparent border border-white/10 text-white font-bold rounded-xl hover:bg-white/5 transition-all duration-300 flex items-center justify-center gap-2 group"

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useRef, useEffect } from 'react';
 import Link from 'next/link';
@@ -127,7 +127,7 @@ export function CorporateWebsiteClient() {
           <Reveal delay={0.2}>
             <h1 className="text-5xl md:text-7xl lg:text-[5.5rem] font-bold tracking-tight mb-8 leading-[1.05]">
               Rozwiązania bez <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-500">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-300">
                 kompromisów.
               </span>
             </h1>
@@ -169,7 +169,7 @@ export function CorporateWebsiteClient() {
 
                 {/* Progress bar */}
                 <div className="absolute bottom-0 left-0 h-[2px] w-full bg-white/5">
-                  <motion.div style={{ width: progressBar }} className="h-full bg-gradient-to-r from-emerald-500 to-cyan-500 will-change-transform" />
+                  <motion.div style={{ width: progressBar }} className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 will-change-transform" />
                 </div>
               </div>
 
@@ -281,7 +281,7 @@ export function CorporateWebsiteClient() {
                 {/* PAGE 3: OFERTA */}
                 <motion.div style={{ y: offerY, opacity: offerOpacity }} className="absolute top-16 left-0 w-full p-4 md:p-16 flex flex-col gap-12 md:gap-16 will-change-transform pb-32">
                   <div className="w-full max-w-5xl mx-auto mt-8">
-                    <div className="w-full h-40 md:h-64 bg-gradient-to-br from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20 rounded-[2rem] flex flex-col justify-center px-6 md:px-12 mb-8 md:mb-12 relative overflow-hidden">
+                    <div className="w-full h-40 md:h-64 bg-gradient-to-br from-emerald-500/10 to-emerald-400/10 border border-emerald-500/20 rounded-[2rem] flex flex-col justify-center px-6 md:px-12 mb-8 md:mb-12 relative overflow-hidden">
                       <div className="absolute top-0 right-0 w-40 md:w-64 h-40 md:h-64 bg-emerald-400/20 blur-[80px]" />
                       <div className="w-32 md:w-48 h-6 md:h-8 bg-white/10 rounded-lg mb-4" />
                       <div className="w-full max-w-lg h-3 md:h-4 bg-white/5 rounded-md mb-2" />
@@ -353,7 +353,7 @@ export function CorporateWebsiteClient() {
                 </div>
                 <h2 className="text-4xl md:text-6xl font-bold text-white tracking-tight mb-6 leading-[1.1]">
                   Fundament <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-300">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-300">
                     Skalowania
                   </span>
                 </h2>
@@ -396,9 +396,9 @@ export function CorporateWebsiteClient() {
               </motion.div>
 
               {/* Card 2 (span 1) — CMS */}
-              <motion.div custom={0.2} variants={fadeInUp} initial="hidden" whileInView="visible" viewport={vp} className="relative group overflow-hidden rounded-3xl bg-[#080808] border border-white/5 p-8 min-h-[300px] flex flex-col hover:border-cyan-500/30 transition-colors duration-700 ease-out">
-                <div className="absolute inset-0 bg-gradient-to-bl from-cyan-900/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-out" aria-hidden="true" />
-                <div className="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center mb-6 text-cyan-400 group-hover:rotate-12 transition-transform duration-700 ease-out relative z-10">
+              <motion.div custom={0.2} variants={fadeInUp} initial="hidden" whileInView="visible" viewport={vp} className="relative group overflow-hidden rounded-3xl bg-[#080808] border border-white/5 p-8 min-h-[300px] flex flex-col hover:border-emerald-500/30 transition-colors duration-700 ease-out">
+                <div className="absolute inset-0 bg-gradient-to-bl from-emerald-900/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-out" aria-hidden="true" />
+                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-6 text-emerald-400 group-hover:rotate-12 transition-transform duration-700 ease-out relative z-10">
                   <Database size={24} aria-hidden="true" />
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-2 relative z-10">Własny System CMS</h3>
@@ -466,7 +466,7 @@ export function CorporateWebsiteClient() {
                 <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-[1.1]">
                   Co dokładnie{' '}
                   <br className="hidden lg:block" />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-400">
                     otrzymujesz?
                   </span>
                 </h2>
@@ -520,7 +520,7 @@ export function CorporateWebsiteClient() {
           </div>
           <div className="container mx-auto px-6 relative z-10">
             <div className="relative max-w-5xl mx-auto">
-              <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-cyan-600 rounded-[2rem] blur opacity-15" aria-hidden="true" />
+              <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-[2rem] blur opacity-15" aria-hidden="true" />
               <div className="relative rounded-[1.5rem] md:rounded-[2rem] bg-[#080808] border border-white/10 p-8 sm:p-12 md:p-16 text-center overflow-hidden">
 
                 <motion.div custom={0} variants={fadeInUp} initial="hidden" whileInView="visible" viewport={vp}
@@ -538,7 +538,7 @@ export function CorporateWebsiteClient() {
                 >
                   Gotowy na cyfrową{' '}
                   <br className="hidden md:block" />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-300">
                     Dominację?
                   </span>
                 </motion.h2>
@@ -559,7 +559,7 @@ export function CorporateWebsiteClient() {
                       Darmowa Konsultacja
                       <CalendarCheck className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
                     </span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-cyan-400 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out z-0" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-emerald-400 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out z-0" />
                   </Link>
                   <Link href="/kontakt"
                     className="w-full sm:w-auto px-8 py-4 bg-transparent border border-white/10 text-white font-bold rounded-xl hover:bg-white/5 transition-all duration-300 flex items-center justify-center gap-2 group"

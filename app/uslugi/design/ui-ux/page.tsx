@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { 
@@ -23,7 +23,7 @@ export default function UiUxPage() {
       {/* --- TŁO KINOWE --- */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-blue-600/10 blur-[150px] rounded-full mix-blend-screen" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] bg-purple-900/10 blur-[150px] rounded-full" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] bg-lime-900/10 blur-[150px] rounded-full" />
       </div>
 
       <main className="relative z-10 container mx-auto px-6">
@@ -51,7 +51,7 @@ export default function UiUxPage() {
             <Reveal delay={0.2}>
               <h1 className="text-5xl md:text-6xl lg:text-[3.5rem] xl:text-6xl font-bold tracking-tight text-white mb-8 leading-[1.2]">
                 Zyskaj interfejs, który <br className="hidden xl:block" />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 block mt-2 lg:inline lg:mt-0">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-lime-300 block mt-2 lg:inline lg:mt-0">
                   niezawodnie sprzedaje.
                 </span>
               </h1>
@@ -78,7 +78,7 @@ export default function UiUxPage() {
           <Reveal delay={0.3}>
             <div className="relative w-full aspect-square md:aspect-[4/3] lg:aspect-square flex items-center justify-center group/main">
               
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-[3rem] blur-3xl opacity-50 group-hover/main:opacity-70 group-hover/main:scale-105 transition-all duration-700" />
+              <div className="absolute inset-0 bg-gradient-to-br from-lime-500/15 to-transparent rounded-[3rem] blur-3xl opacity-50 group-hover/main:opacity-70 group-hover/main:scale-105 transition-all duration-700" />
               
               <div className="relative w-[80%] h-[80%] rounded-[2.5rem] bg-white/[0.02] border border-white/10 backdrop-blur-xl shadow-2xl p-8 flex flex-col justify-between overflow-hidden group hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(59,130,246,0.3)] transition-all duration-500 cursor-default">
                 

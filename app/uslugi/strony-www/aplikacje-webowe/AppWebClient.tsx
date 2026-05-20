@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useRef } from 'react';
 import Link from 'next/link';
@@ -70,7 +70,7 @@ export function AppWebClient() {
           <Reveal delay={0.2}>
             <h1 className="text-5xl md:text-7xl lg:text-[5.5rem] font-bold tracking-tight mb-8 leading-[1.05]">
               Oprogramowanie <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-cyan-400 to-teal-500">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-sky-300">
                 szyte na miarę.
               </span>
             </h1>
@@ -106,7 +106,7 @@ export function AppWebClient() {
                 <div className="absolute bottom-0 left-0 h-[2px] w-full bg-white/5">
                   <motion.div
                     style={{ width: progressBar }}
-                    className="h-full bg-gradient-to-r from-sky-500 to-cyan-500"
+                    className="h-full bg-gradient-to-r from-sky-500 to-sky-400"
                   />
                 </div>
               </div>
@@ -250,9 +250,9 @@ export function AppWebClient() {
               {/* KARTA 2 */}
               <div className="md:col-span-6">
                 <Reveal delay={0.2}>
-                  <div className="h-full p-8 md:p-10 rounded-[2.5rem] bg-[#0a0a0a] border border-white/5 hover:border-cyan-500/30 transition-all duration-500 group flex flex-col justify-between min-h-[320px] hover:-translate-y-2 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 blur-[50px] rounded-full group-hover:bg-cyan-500/20 transition-all duration-500" />
-                    <div className="w-14 h-14 bg-white/5 rounded-xl flex items-center justify-center text-cyan-400 mb-8 relative z-10 group-hover:bg-cyan-500/20 transition-colors">
+                  <div className="h-full p-8 md:p-10 rounded-[2.5rem] bg-[#0a0a0a] border border-white/5 hover:border-sky-500/30 transition-all duration-500 group flex flex-col justify-between min-h-[320px] hover:-translate-y-2 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/10 blur-[50px] rounded-full group-hover:bg-sky-500/20 transition-all duration-500" />
+                    <div className="w-14 h-14 bg-white/5 rounded-xl flex items-center justify-center text-sky-400 mb-8 relative z-10 group-hover:bg-sky-500/20 transition-colors">
                       <Database size={28} />
                     </div>
                     <div className="relative z-10">
@@ -312,7 +312,7 @@ export function AppWebClient() {
                 </div>
                 <h3 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-[1.1]">
                   Od pomysłu <br className="hidden lg:block" />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-cyan-400">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-sky-300">
                     do wdrożenia.
                   </span>
                 </h3>

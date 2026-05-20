@@ -32,12 +32,33 @@
 
 ---
 
+## Sesja 6 — Zrealizowane (2026-04-30)
+
+### Quick Replies — szybkie odpowiedzi w chacie (`Chatbot.tsx`)
+- `QuickReply` interface z `triggers: ('start' | 'always' | 'keyword')[]` + `keywords?: string[]`
+- Helper `hasTrigger()` — backward compat ze starym formatem `trigger: string`
+- Fetch z Supabase: `chatbot_config?key=in.(quick_replies,welcome_message)`
+- Trigger `start` → przyciski pod wiadomością powitalną (po otwarciu chatu)
+- Trigger `always` → przyciski nad polem input (zawsze)
+- Trigger `keyword` → przyciski po odpowiedzi bota gdy keywords match
+- `startNewChat()` przywraca quick replies z triggerem `start`
+
+### Welcome message z bazy danych
+- Pobiera `welcome_message` z `chatbot_config` przy starcie widgetu
+- Aktualizuje pierwszą wiadomość jeśli brak wiadomości użytkownika (sesja świeża)
+- Fallback na `DEFAULT_WELCOME` stała jeśli DB nie ma wpisu
+
+### Poprawki
+- **Fix kolejności wiadomości**: sekwencyjny zapis (user → then assistant) zamiast `Promise.all` — gwarantuje poprawny `created_at` w historii
+- **Fix onClick send button**: `onClick={() => sendMessage()}` zamiast `onClick={sendMessage}` — zapobiega przekazaniu `MouseEvent` jako `overrideText`
+- `sendMessage` przyjmuje opcjonalny `overrideText?: string` — używany przez quick reply buttons
+
+---
+
 ## Do zrobienia
 
-- [ ] `npm run build` → wgraj `out/` na Hostinger
-- [ ] Po deploymencie: test pełnego flow (chat → historia → wznowienie)
-- [ ] Test zapisu wiadomości do Supabase `chat_messages`
-- [ ] Test zapisywania leadów (podanie danych kontaktowych → CRM)
+- [ ] `npm run build` → wgraj `out/` na Hostinger po każdej zmianie
+- [ ] Test: quick replies z triggerem keyword po odpowiedzi bota
 
 ---
 

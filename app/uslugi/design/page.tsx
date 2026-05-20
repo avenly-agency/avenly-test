@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { 
@@ -18,7 +18,7 @@ const designServices = [
     icon: MonitorSmartphone,
     href: '/uslugi/design/ui-ux', 
     badge: 'Najpopularniejsze',
-    color: 'from-blue-500/20 to-purple-500/20',
+    color: 'from-lime-500/15 to-transparent',
     iconColor: 'text-blue-400',
     isActive: true, // <--- Flaga aktywności
   },

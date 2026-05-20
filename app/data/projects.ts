@@ -47,20 +47,21 @@ export const projects = [
     },
     {
         id: 3,
-        slug: "ai-law-bot",
-        title: "AI Law Chatbot",
+        slug: "wirtualny-asystent-ai",
+        title: "Wirtualny Asystent AI",
         category: "AI & Boty",
-        year: "2024",
-        client: "Kancelaria Prawna",
-        description: "Inteligentny asystent wstępnie kwalifikujący klientów. Działa 24/7.",
-        mainImage: "/portfolio/law-ai.jpg",
-        
+        year: "2025",
+        client: "Avenly",
+        description: "Nasz własny asystent AI — odpowiada na pytania, kwalifikuje leady i pracuje za Ciebie 24/7.",
+        mainImage: "/portfolio/avenly-chatbot.webp",
+
         hasCaseStudy: false,
-        externalLink: "", 
-        
+        externalLink: "",
+        openChat: true,
+
         challenge: "",
         solution: "",
-        stats: [ ],
-        techStack: []
+        stats: [],
+        techStack: ["Claude AI", "Next.js", "TypeScript"]
     }
 ];

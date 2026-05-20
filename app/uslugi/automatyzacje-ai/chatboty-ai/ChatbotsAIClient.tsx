@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useRef } from 'react';
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
@@ -53,7 +53,7 @@ export function ChatbotsAIClient() {
   const scrollIndOp = useTransform(smooth, [0, 0.05, 0.12], [1, 1, 0]);
 
   return (
-    <div className="relative min-h-screen bg-[#050505] text-white selection:bg-cyan-500/30 overflow-x-clip">
+    <div className="relative min-h-screen bg-[#050505] text-white selection:bg-orange-500/30 overflow-x-clip">
 
       {/* TŁO */}
       <div className="fixed inset-0 z-0 pointer-events-none">
@@ -65,7 +65,7 @@ export function ChatbotsAIClient() {
         {/* ── HERO ──────────────────────────────────────────────────────────── */}
         <section className="pt-32 pb-10 container mx-auto px-6 text-center">
           <Reveal delay={0.1}>
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/5 border border-cyan-500/10 text-cyan-400 text-xs font-bold uppercase tracking-widest mb-8">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-500/5 border border-orange-500/10 text-orange-400 text-xs font-bold uppercase tracking-widest mb-8">
               <MessageCircle size={13} /> Wirtualny Asystent
             </div>
           </Reveal>
@@ -73,7 +73,7 @@ export function ChatbotsAIClient() {
           <Reveal delay={0.2}>
             <h1 className="text-5xl md:text-7xl lg:text-[5.5rem] font-bold tracking-tight mb-8 leading-[1.05]">
               Rozmawia z klientem.<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-orange-400 to-emerald-400">
                 Natychmiast.
               </span>
             </h1>
@@ -99,7 +99,7 @@ export function ChatbotsAIClient() {
               <div className="absolute top-0 inset-x-0 h-[2px] bg-white/[0.04] z-50">
                 <motion.div
                   style={{ width: progressBar }}
-                  className="h-full bg-gradient-to-r from-cyan-500 to-teal-400 will-change-transform"
+                  className="h-full bg-gradient-to-r from-orange-500 to-orange-400 will-change-transform"
                 />
               </div>
 
@@ -109,13 +109,13 @@ export function ChatbotsAIClient() {
                 {/* Navbar */}
                 <div className="h-12 md:h-14 border-b border-white/[0.05] flex items-center justify-between px-5 md:px-10 shrink-0">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-teal-500/20 border border-teal-500/30 flex items-center justify-center shrink-0">
-                      <div className="w-3 h-3 bg-teal-400 rounded-sm" />
+                    <div className="w-7 h-7 rounded-lg bg-orange-500/20 border border-orange-500/30 flex items-center justify-center shrink-0">
+                      <div className="w-3 h-3 bg-orange-400 rounded-sm" />
                     </div>
                     <div className="w-20 h-3 bg-white/10 rounded hidden sm:block" />
                   </div>
                   <div className="hidden md:flex gap-5 items-center">
-                    <div className="w-14 h-2.5 bg-teal-400/50 rounded shadow-[0_0_8px_rgba(45,212,191,0.3)]" />
+                    <div className="w-14 h-2.5 bg-orange-400/50 rounded shadow-[0_0_8px_rgba(45,212,191,0.3)]" />
                     <div className="w-14 h-2.5 bg-white/15 rounded" />
                     <div className="w-14 h-2.5 bg-white/15 rounded" />
                     <div className="w-14 h-2.5 bg-white/15 rounded" />
@@ -127,13 +127,13 @@ export function ChatbotsAIClient() {
 
                 {/* Hero content */}
                 <div className="px-5 md:px-10 pt-6 md:pt-10 pb-5 md:pb-8 flex-shrink-0">
-                  <div className="w-28 h-4 md:h-5 bg-teal-500/15 rounded-full mb-4 md:mb-5" />
+                  <div className="w-28 h-4 md:h-5 bg-orange-500/15 rounded-full mb-4 md:mb-5" />
                   <div className="w-full max-w-md h-7 md:h-11 bg-gradient-to-r from-white/10 to-white/[0.07] rounded-xl mb-3" />
                   <div className="w-3/4 max-w-xs h-7 md:h-11 bg-gradient-to-r from-white/8 to-white/[0.05] rounded-xl mb-4 md:mb-6" />
                   <div className="w-64 h-2.5 bg-white/5 rounded mb-2" />
                   <div className="w-48 h-2.5 bg-white/5 rounded mb-5 md:mb-8" />
                   <div className="flex gap-3">
-                    <div className="w-28 md:w-32 h-9 md:h-11 bg-gradient-to-r from-teal-600/30 to-cyan-600/20 border border-teal-500/20 rounded-xl" />
+                    <div className="w-28 md:w-32 h-9 md:h-11 bg-gradient-to-r from-orange-600/30 to-orange-600/20 border border-orange-500/20 rounded-xl" />
                     <div className="w-24 md:w-28 h-9 md:h-11 bg-white/5 border border-white/8 rounded-xl" />
                   </div>
                 </div>
@@ -145,7 +145,7 @@ export function ChatbotsAIClient() {
                       key={i}
                       className="h-20 md:h-28 bg-white/[0.02] border border-white/[0.04] rounded-xl md:rounded-2xl p-3 md:p-4 flex flex-col justify-between"
                     >
-                      <div className={`w-6 h-6 md:w-8 md:h-8 rounded-lg md:rounded-xl ${i === 0 ? 'bg-teal-500/15' : 'bg-white/5'}`} />
+                      <div className={`w-6 h-6 md:w-8 md:h-8 rounded-lg md:rounded-xl ${i === 0 ? 'bg-orange-500/15' : 'bg-white/5'}`} />
                       <div>
                         <div className="w-3/4 h-2 bg-white/10 rounded mb-1.5" />
                         <div className="w-1/2 h-1.5 bg-white/5 rounded" />
@@ -164,11 +164,11 @@ export function ChatbotsAIClient() {
                 className="absolute bottom-5 right-5 md:bottom-7 md:right-7 z-50 origin-bottom-right"
               >
                 <div className="relative w-11 h-11 md:w-13 md:h-13">
-                  <div className="w-11 h-11 md:w-13 md:h-13 rounded-full bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center shadow-[0_0_28px_rgba(34,211,238,0.55)] cursor-pointer">
+                  <div className="w-11 h-11 md:w-13 md:h-13 rounded-full bg-gradient-to-br from-orange-500 to-orange-500 flex items-center justify-center shadow-[0_0_28px_rgba(249,115,22,0.55)] cursor-pointer">
                     <MessageCircle size={18} className="text-white" />
                   </div>
                   {/* Pulse ring */}
-                  <div className="absolute inset-0 rounded-full bg-cyan-500/30 animate-ping" />
+                  <div className="absolute inset-0 rounded-full bg-orange-500/30 animate-ping" />
                   {/* Notification badge */}
                   <motion.div
                     style={{ opacity: badgeOp, scale: badgeSc }}
@@ -182,11 +182,11 @@ export function ChatbotsAIClient() {
                 style={{ opacity: winOp, scale: winSc, y: winY }}
                 className="absolute bottom-5 right-5 md:bottom-7 md:right-7 z-50 w-[252px] md:w-[292px] origin-bottom-right"
               >
-                <div className="w-full rounded-2xl bg-[#0d0d0d] border border-white/[0.1] shadow-[0_24px_64px_-12px_rgba(0,0,0,0.9),0_0_0_1px_rgba(34,211,238,0.06)] overflow-hidden">
+                <div className="w-full rounded-2xl bg-[#0d0d0d] border border-white/[0.1] shadow-[0_24px_64px_-12px_rgba(0,0,0,0.9),0_0_0_1px_rgba(249,115,22,0.06)] overflow-hidden">
 
                   {/* Widget header */}
-                  <div className="h-11 bg-gradient-to-r from-teal-900/30 to-cyan-900/20 border-b border-white/[0.06] flex items-center px-3.5 gap-2.5">
-                    <div className="relative w-6 h-6 rounded-full bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center shadow-[0_0_10px_rgba(34,211,238,0.4)] shrink-0">
+                  <div className="h-11 bg-gradient-to-r from-orange-900/30 to-orange-900/20 border-b border-white/[0.06] flex items-center px-3.5 gap-2.5">
+                    <div className="relative w-6 h-6 rounded-full bg-gradient-to-br from-orange-500 to-orange-500 flex items-center justify-center shadow-[0_0_10px_rgba(249,115,22,0.4)] shrink-0">
                       <Bot size={11} className="text-white" />
                       <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 border border-[#0d0d0d]" />
                     </div>
@@ -205,7 +205,7 @@ export function ChatbotsAIClient() {
 
                     {/* M1 bot */}
                     <motion.div style={{ opacity: m1Op }} className="flex gap-1.5 items-end">
-                      <div className="w-5 h-5 rounded-full bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center shrink-0">
+                      <div className="w-5 h-5 rounded-full bg-gradient-to-br from-orange-500 to-orange-500 flex items-center justify-center shrink-0">
                         <Bot size={9} className="text-white" />
                       </div>
                       <div className="max-w-[82%] bg-white/[0.05] border border-white/[0.07] rounded-xl rounded-bl-sm px-2.5 py-2">
@@ -216,12 +216,12 @@ export function ChatbotsAIClient() {
 
                     {/* Dots 1 */}
                     <motion.div style={{ opacity: dots1Op }} className="flex gap-1.5 items-end">
-                      <div className="w-5 h-5 rounded-full bg-gradient-to-br from-cyan-500/50 to-teal-500/50 flex items-center justify-center shrink-0">
+                      <div className="w-5 h-5 rounded-full bg-gradient-to-br from-orange-500/50 to-orange-500/50 flex items-center justify-center shrink-0">
                         <Bot size={9} className="text-white/60" />
                       </div>
                       <div className="bg-white/[0.04] border border-white/[0.06] rounded-xl rounded-bl-sm px-2.5 py-2 flex gap-1 items-center h-7">
                         {[0, 0.2, 0.4].map((d) => (
-                          <motion.div key={d} className="w-1 h-1 rounded-full bg-cyan-400"
+                          <motion.div key={d} className="w-1 h-1 rounded-full bg-orange-400"
                             animate={{ y: [0, -3, 0], opacity: [0.4, 1, 0.4] }}
                             transition={{ duration: 0.85, delay: d, repeat: Infinity, ease: 'easeInOut' }}
                           />
@@ -231,12 +231,12 @@ export function ChatbotsAIClient() {
 
                     {/* M2 bot */}
                     <motion.div style={{ opacity: m2Op }} className="flex gap-1.5 items-end">
-                      <div className="w-5 h-5 rounded-full bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center shrink-0">
+                      <div className="w-5 h-5 rounded-full bg-gradient-to-br from-orange-500 to-orange-500 flex items-center justify-center shrink-0">
                         <Bot size={9} className="text-white" />
                       </div>
                       <div className="max-w-[82%] bg-white/[0.05] border border-white/[0.07] rounded-xl rounded-bl-sm px-2.5 py-2">
                         <div className="flex gap-1.5 items-center mb-1.5">
-                          <div className="w-2 h-2 rounded-full bg-cyan-500/50 shrink-0" />
+                          <div className="w-2 h-2 rounded-full bg-orange-500/50 shrink-0" />
                           <div className="w-24 h-2 bg-white/[0.18] rounded" />
                         </div>
                         <div className="w-full h-1.5 bg-white/[0.08] rounded" />
@@ -245,7 +245,7 @@ export function ChatbotsAIClient() {
 
                     {/* User M1 */}
                     <motion.div style={{ opacity: u1Op }} className="flex justify-end">
-                      <div className="max-w-[75%] bg-gradient-to-br from-cyan-600/30 to-teal-600/20 border border-cyan-500/15 rounded-xl rounded-br-sm px-2.5 py-2">
+                      <div className="max-w-[75%] bg-gradient-to-br from-orange-600/30 to-orange-600/20 border border-orange-500/15 rounded-xl rounded-br-sm px-2.5 py-2">
                         <div className="w-20 h-2 bg-white/30 rounded mb-1.5" />
                         <div className="w-14 h-1.5 bg-white/15 rounded" />
                       </div>
@@ -253,12 +253,12 @@ export function ChatbotsAIClient() {
 
                     {/* Dots 2 */}
                     <motion.div style={{ opacity: dots2Op }} className="flex gap-1.5 items-end">
-                      <div className="w-5 h-5 rounded-full bg-gradient-to-br from-cyan-500/50 to-teal-500/50 flex items-center justify-center shrink-0">
+                      <div className="w-5 h-5 rounded-full bg-gradient-to-br from-orange-500/50 to-orange-500/50 flex items-center justify-center shrink-0">
                         <Bot size={9} className="text-white/60" />
                       </div>
                       <div className="bg-white/[0.04] border border-white/[0.06] rounded-xl rounded-bl-sm px-2.5 py-2 flex gap-1 items-center h-7">
                         {[0, 0.2, 0.4].map((d) => (
-                          <motion.div key={d} className="w-1 h-1 rounded-full bg-teal-400"
+                          <motion.div key={d} className="w-1 h-1 rounded-full bg-orange-400"
                             animate={{ y: [0, -3, 0], opacity: [0.4, 1, 0.4] }}
                             transition={{ duration: 0.85, delay: d, repeat: Infinity, ease: 'easeInOut' }}
                           />
@@ -268,7 +268,7 @@ export function ChatbotsAIClient() {
 
                     {/* Bot reply */}
                     <motion.div style={{ opacity: botRepOp }} className="flex gap-1.5 items-end">
-                      <div className="w-5 h-5 rounded-full bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center shrink-0">
+                      <div className="w-5 h-5 rounded-full bg-gradient-to-br from-orange-500 to-orange-500 flex items-center justify-center shrink-0">
                         <Bot size={9} className="text-white" />
                       </div>
                       <div className="max-w-[82%] flex flex-col gap-1.5">
@@ -278,7 +278,7 @@ export function ChatbotsAIClient() {
                         </div>
                         <div className="flex gap-1.5 pl-0.5">
                           {['Zadzwoń teraz', 'Napisz'].map((l) => (
-                            <div key={l} className="px-2 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-[8px] text-cyan-300 whitespace-nowrap">{l}</div>
+                            <div key={l} className="px-2 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-[8px] text-orange-300 whitespace-nowrap">{l}</div>
                           ))}
                         </div>
                       </div>
@@ -286,24 +286,24 @@ export function ChatbotsAIClient() {
 
                     {/* Email input */}
                     <motion.div style={{ opacity: emailInOp }} className="flex gap-1.5 items-end">
-                      <div className="w-5 h-5 rounded-full bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center shrink-0">
+                      <div className="w-5 h-5 rounded-full bg-gradient-to-br from-orange-500 to-orange-500 flex items-center justify-center shrink-0">
                         <Bot size={9} className="text-white" />
                       </div>
-                      <div className="flex-1 relative bg-white/[0.04] border border-cyan-500/20 rounded-xl px-2.5 py-2 flex items-center gap-1.5 overflow-hidden">
-                        <div className="w-2 h-2 rounded-sm bg-cyan-500/40 shrink-0" />
+                      <div className="flex-1 relative bg-white/[0.04] border border-orange-500/20 rounded-xl px-2.5 py-2 flex items-center gap-1.5 overflow-hidden">
+                        <div className="w-2 h-2 rounded-sm bg-orange-500/40 shrink-0" />
                         <motion.div
                           style={{ width: emailW }}
-                          className="h-2 bg-cyan-400/50 rounded border-r border-cyan-400 will-change-transform"
+                          className="h-2 bg-orange-400/50 rounded border-r border-orange-400 will-change-transform"
                         />
                       </div>
                     </motion.div>
 
                     {/* Success */}
                     <motion.div style={{ opacity: successOp }} className="flex gap-1.5 items-end">
-                      <div className="w-5 h-5 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(52,211,153,0.4)]">
+                      <div className="w-5 h-5 rounded-full bg-gradient-to-br from-emerald-500 to-orange-500 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(52,211,153,0.4)]">
                         <CheckCircle2 size={9} className="text-white" />
                       </div>
-                      <div className="max-w-[82%] bg-gradient-to-br from-emerald-900/20 to-teal-900/15 border border-emerald-500/20 rounded-xl rounded-bl-sm px-2.5 py-2">
+                      <div className="max-w-[82%] bg-gradient-to-br from-emerald-900/20 to-orange-900/15 border border-emerald-500/20 rounded-xl rounded-bl-sm px-2.5 py-2">
                         <div className="flex items-center gap-1.5 mb-1">
                           <CheckCircle2 size={8} className="text-emerald-400 shrink-0" />
                           <div className="w-24 h-2 bg-emerald-400/40 rounded" />
@@ -320,7 +320,7 @@ export function ChatbotsAIClient() {
                       <div className="w-1 h-1 rounded-full bg-white/15" />
                       <div className="w-16 h-1.5 bg-white/8 rounded" />
                     </div>
-                    <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-cyan-600 to-teal-600 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(34,211,238,0.3)]">
+                    <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-orange-500 to-orange-700 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(249,115,22,0.3)]">
                       <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                         <path d="M9 5L1 1L2.8 5L1 9L9 5Z" fill="white" />
                       </svg>
@@ -335,10 +335,10 @@ export function ChatbotsAIClient() {
             {/* Scroll indicator */}
             <motion.div
               style={{ opacity: scrollIndOp }}
-              className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-teal-500 z-10 pointer-events-none"
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-orange-500 z-10 pointer-events-none"
             >
               <span className="text-[10px] uppercase font-bold tracking-[0.3em]">Scrolluj, aby aktywować asystenta</span>
-              <div className="w-px h-12 bg-gradient-to-b from-teal-500 to-transparent" />
+              <div className="w-px h-12 bg-gradient-to-b from-orange-500 to-transparent" />
             </motion.div>
           </div>
         </section>
@@ -349,7 +349,7 @@ export function ChatbotsAIClient() {
 
             <Reveal>
               <div className="flex items-baseline gap-4 mb-16 md:mb-24">
-                <span className="text-[10px] uppercase tracking-[0.3em] text-teal-500/60 font-mono">02</span>
+                <span className="text-[10px] uppercase tracking-[0.3em] text-orange-500/60 font-mono">02</span>
                 <h2 className="text-3xl md:text-4xl font-bold">Dlaczego warto</h2>
               </div>
             </Reveal>
@@ -374,15 +374,15 @@ export function ChatbotsAIClient() {
               const Icon = f.icon;
               return (
                 <Reveal key={i} delay={i * 0.05}>
-                  <div className="border-t border-white/[0.06] py-14 md:py-20 grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-10 md:gap-20 group hover:border-teal-500/20 transition-colors duration-700 cursor-default">
+                  <div className="border-t border-white/[0.06] py-14 md:py-20 grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-10 md:gap-20 group hover:border-orange-500/20 transition-colors duration-700 cursor-default">
                     <div className="flex flex-col gap-5">
                       <span className="text-[72px] md:text-[96px] font-black text-white/[0.03] leading-none group-hover:text-white/[0.06] transition-colors duration-700 select-none">
                         0{i + 1}
                       </span>
-                      <div className="w-11 h-11 rounded-2xl bg-teal-500/10 border border-teal-500/15 flex items-center justify-center text-teal-400 group-hover:bg-teal-500/20 group-hover:scale-110 transition-all duration-500">
+                      <div className="w-11 h-11 rounded-2xl bg-orange-500/10 border border-orange-500/15 flex items-center justify-center text-orange-400 group-hover:bg-orange-500/20 group-hover:scale-110 transition-all duration-500">
                         <Icon size={22} />
                       </div>
-                      <h3 className="text-xl md:text-2xl font-bold leading-snug group-hover:text-teal-400 transition-colors duration-500 max-w-xs">
+                      <h3 className="text-xl md:text-2xl font-bold leading-snug group-hover:text-orange-400 transition-colors duration-500 max-w-xs">
                         {f.title}
                       </h3>
                     </div>
@@ -405,7 +405,7 @@ export function ChatbotsAIClient() {
 
             <Reveal>
               <div className="flex items-baseline gap-4 mb-14 md:mb-20">
-                <span className="text-[10px] uppercase tracking-[0.3em] text-teal-500/60 font-mono">03</span>
+                <span className="text-[10px] uppercase tracking-[0.3em] text-orange-500/60 font-mono">03</span>
                 <h2 className="text-3xl md:text-4xl font-bold">Od zlecenia do działania</h2>
               </div>
             </Reveal>
@@ -438,8 +438,8 @@ export function ChatbotsAIClient() {
                     key={i}
                     className="bg-[#050505] p-7 md:p-10 hover:bg-[#0a0a0a] transition-colors duration-500 group"
                   >
-                    <span className="text-teal-400 text-[10px] font-mono tracking-[0.2em] mb-5 block">{s.step}</span>
-                    <h4 className="text-lg md:text-xl font-bold text-white mb-3 group-hover:text-teal-400 transition-colors duration-500">
+                    <span className="text-orange-400 text-[10px] font-mono tracking-[0.2em] mb-5 block">{s.step}</span>
+                    <h4 className="text-lg md:text-xl font-bold text-white mb-3 group-hover:text-orange-400 transition-colors duration-500">
                       {s.title}
                     </h4>
                     <p className="text-slate-500 text-sm leading-relaxed">{s.body}</p>

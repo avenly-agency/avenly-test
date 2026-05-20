@@ -241,9 +241,15 @@ export default function ProjectsPage() {
 
 const ProjectCard = ({ project, index }: { project: any; index: number }) => {
   const isExternal = !project.hasCaseStudy;
+  const isOpenChat = !!project.openChat;
   const href = isExternal ? (project.externalLink || '#') : `/realizacje/${project.slug}`;
   const target = isExternal ? '_blank' : '_self';
   const colors = getCategoryStyle(project.category);
+
+  const handleChatOpen = (e: React.MouseEvent) => {
+    e.preventDefault();
+    window.dispatchEvent(new CustomEvent("avenly:open-chat"));
+  };
 
   return (
     <motion.article
@@ -260,13 +266,21 @@ const ProjectCard = ({ project, index }: { project: any; index: number }) => {
         colors.shadow
       )}
     >
-      {/* Całkarta jako link */}
-      <Link
-        href={href}
-        target={target}
-        className="absolute inset-0 z-10"
-        aria-label={`Przejdź do projektu: ${project.title}`}
-      />
+      {/* Całkarta jako link lub przycisk otwierający chat */}
+      {isOpenChat ? (
+        <button
+          onClick={handleChatOpen}
+          className="absolute inset-0 z-10 cursor-pointer focus:outline-none"
+          aria-label="Otwórz asystenta AI Avenly"
+        />
+      ) : (
+        <Link
+          href={href}
+          target={target}
+          className="absolute inset-0 z-10"
+          aria-label={`Przejdź do projektu: ${project.title}`}
+        />
+      )}
 
       {/* Hover gradient overlay */}
       <div
@@ -337,8 +351,8 @@ const ProjectCard = ({ project, index }: { project: any; index: number }) => {
         {/* CTA */}
         <div className="pt-4 border-t border-white/5 flex items-center justify-between">
           <span className="flex items-center gap-2 text-sm font-bold text-white group-hover:text-blue-400 transition-colors">
-            {isExternal ? 'Zobacz online' : 'Case Study'}
-            {isExternal ? (
+            {isOpenChat ? 'Przetestuj online' : isExternal ? 'Zobacz online' : 'Case Study'}
+            {isOpenChat || isExternal ? (
               <ArrowUpRight
                 size={16}
                 className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"

@@ -321,8 +321,14 @@ const FocusCard = ({ children, index, total, progress, reduceMotion }: { childre
 
 const Card = ({ project, isMobile = false }: { project: any, isMobile?: boolean }) => {
   const isExternal = !project.hasCaseStudy;
+  const isOpenChat = !!project.openChat;
   const href = isExternal ? (project.externalLink || '#') : `/realizacje/${project.slug}`;
   const target = isExternal ? "_blank" : "_self";
+
+  const handleChatOpen = (e: React.MouseEvent) => {
+    e.preventDefault();
+    window.dispatchEvent(new CustomEvent("avenly:open-chat"));
+  };
 
   return (
     <div className="group relative h-[450px] w-[320px] md:h-[550px] md:w-[450px] overflow-hidden rounded-3xl bg-[#080808] border border-white/5 shrink-0 transition-all duration-500 hover:border-blue-500/40 hover:shadow-[0_0_40px_-10px_rgba(37,99,235,0.2)]">
@@ -372,22 +378,31 @@ const Card = ({ project, isMobile = false }: { project: any, isMobile?: boolean 
                 </p>
                 
                 <div className="flex items-center gap-3 pointer-events-auto">
-                    <Link href={href} target={target}>
-                        <button className={
-                            `px-6 py-3 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none ${
-                                isExternal 
-                                ? "bg-white/10 text-white hover:bg-white/20 border border-white/10" 
-                                : "bg-white text-black hover:bg-blue-50"
-                            }`
-                        }>
-                            {isExternal ? "Zobacz Online" : "Zobacz Realizację"}
+                    {isOpenChat ? (
+                        <button
+                            onClick={handleChatOpen}
+                            className="px-6 py-3 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none bg-white/10 text-white hover:bg-white/20 border border-white/10"
+                        >
+                            Przetestuj Online
                         </button>
-                    </Link>
-                    
-                    {!isExternal && project.externalLink && (
-                        <a 
-                            href={project.externalLink} 
-                            target="_blank" 
+                    ) : (
+                        <Link href={href} target={target}>
+                            <button className={
+                                `px-6 py-3 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none ${
+                                    isExternal
+                                    ? "bg-white/10 text-white hover:bg-white/20 border border-white/10"
+                                    : "bg-white text-black hover:bg-blue-50"
+                                }`
+                            }>
+                                {isExternal ? "Zobacz Online" : "Zobacz Realizację"}
+                            </button>
+                        </Link>
+                    )}
+
+                    {!isExternal && !isOpenChat && project.externalLink && (
+                        <a
+                            href={project.externalLink}
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="p-3 rounded-lg border border-white/20 bg-white/5 hover:bg-white/10 transition-colors text-white backdrop-blur-sm cursor-pointer block hover:scale-105 active:scale-95"
                             aria-label="Zobacz stronę na żywo"
@@ -400,12 +415,20 @@ const Card = ({ project, isMobile = false }: { project: any, isMobile?: boolean 
         </div>
       </div>
 
-      <Link 
-        href={href}
-        target={target}
-        className="absolute inset-0 z-0 focus:outline-none" 
-        aria-label={`Zobacz projekt ${project.title}`}
-      />
+      {isOpenChat ? (
+        <button
+          onClick={handleChatOpen}
+          className="absolute inset-0 z-0 focus:outline-none cursor-pointer"
+          aria-label="Otwórz asystenta AI Avenly"
+        />
+      ) : (
+        <Link
+          href={href}
+          target={target}
+          className="absolute inset-0 z-0 focus:outline-none"
+          aria-label={`Zobacz projekt ${project.title}`}
+        />
+      )}
       
     </div>
   );

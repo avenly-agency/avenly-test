@@ -4,14 +4,7 @@ import { Bot, Sparkles } from 'lucide-react';
 
 export const AvenlyAICta = () => {
   const openVoiceflow = () => {
-    // Sprawdzamy czy widget Voiceflow jest dostępny w oknie przeglądarki
-    if ((window as any).voiceflow?.chat?.open) {
-      (window as any).voiceflow.chat.open();
-    } else {
-      // Fallback: przewiń do sekcji kontakt, jeśli czat nie działa
-      const contactSection = document.getElementById('kontakt');
-      if(contactSection) contactSection.scrollIntoView({ behavior: 'smooth' });
-    }
+    window.dispatchEvent(new Event("avenly:open-chat"));
   };
 
   return (

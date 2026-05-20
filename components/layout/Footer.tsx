@@ -23,8 +23,6 @@ const footerLinks = {
   ],
   legal: [
     { name: 'Polityka Prywatności', href: '/polityka-prywatnosci' },
-    { name: 'Regulamin', href: '/regulamin' },
-    { name: 'Cookies', href: '/cookies' },
   ],
   socials: [
     { 

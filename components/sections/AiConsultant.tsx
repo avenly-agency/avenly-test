@@ -14,11 +14,7 @@ const CHAT_SEQUENCE = [
 export function AiConsultant() {
   
   const handleOpenChat = () => {
-    if ((window as any).voiceflow) {
-      (window as any).voiceflow.chat.open();
-    } else {
-      console.warn("Widget Voiceflow nie jest jeszcze załadowany.");
-    }
+    window.dispatchEvent(new Event("avenly:open-chat"));
   };
 
   return (
@@ -41,7 +37,7 @@ export function AiConsultant() {
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-mono uppercase tracking-widest mb-6">
               <Bot size={14} />
-              Powered by Voiceflow
+              Powered by Avenly AI
             </div>
 
             <h2 id="ai-consultant-heading" className="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight">
