@@ -142,14 +142,19 @@ export const Impact = () => {
                 <div className="absolute bottom-0 right-0 w-2/3 h-1/2 opacity-30 md:opacity-50 pointer-events-none translate-y-4 translate-x-4" aria-hidden="true">
                      <div className="flex items-end justify-end gap-2 h-full">
                         {[40, 65, 50, 85, 70, 100].map((h, i) => (
-                            <motion.div 
+                            <div
                                 key={i}
-                                initial={{ height: 0 }}
-                                whileInView={{ height: `${h}%` }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.8, delay: shouldReduceMotion ? 0 : 0.2 + (i * 0.1) }}
-                                className="w-8 md:w-12 bg-gradient-to-t from-blue-600/20 to-blue-500/60 rounded-t-lg"
-                            ></motion.div>
+                                className="w-8 md:w-12 origin-bottom"
+                                style={{ height: `${h}%` }}
+                            >
+                                <motion.div
+                                    initial={{ scaleY: 0 }}
+                                    whileInView={{ scaleY: 1 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.8, delay: shouldReduceMotion ? 0 : 0.2 + (i * 0.1) }}
+                                    className="w-full h-full origin-bottom bg-gradient-to-t from-blue-600/20 to-blue-500/60 rounded-t-lg will-change-transform"
+                                />
+                            </div>
                         ))}
                      </div>
                 </div>

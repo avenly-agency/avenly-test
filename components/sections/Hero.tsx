@@ -5,29 +5,7 @@ import { ArrowRight, Calendar, MessageSquare, Mail, CheckCircle2, ShieldCheck, C
 import Link from 'next/link';
 import { useLenis } from 'lenis/react';
 
-// STYLE WYCIĄGNIĘTE POZA KOMPONENT
-// Dodane 'backface-visibility: hidden' i 'transform: translateZ(0)' wymuszają renderowanie tła na karcie graficznej (GPU), odciążając procesor
-const BLOB_STYLES = `
-  @keyframes pureBlob1 {
-    0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.2; }
-    50% { transform: translate3d(50px, -30px, 0) scale(1.5); opacity: 0.4; }
-  }
-  @keyframes pureBlob2 {
-    0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.2; }
-    50% { transform: translate3d(-40px, 40px, 0) scale(1.3); opacity: 0.5; }
-  }
-  @keyframes pureBlob3 {
-    0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.15; }
-    50% { transform: translate3d(30px, -20px, 0) scale(1.2); opacity: 0.35; }
-  }
-  .css-anim-blob-1, .css-anim-blob-2, .css-anim-blob-3 {
-    will-change: transform, opacity;
-    backface-visibility: hidden;
-  }
-  .css-anim-blob-1 { animation: pureBlob1 12s infinite ease-in-out; }
-  .css-anim-blob-2 { animation: pureBlob2 15s infinite ease-in-out 2s both; }
-  .css-anim-blob-3 { animation: pureBlob3 12s infinite ease-in-out; }
-`;
+// Blob keyframes są zdefiniowane w app/globals.css (klasy css-anim-blob-1/2/3) — cacheable cross-page.
 
 // Wyrzuciliśmy zmianę stanu na rzecz stałej konfiguracji - zero przeładowań Reacta (0 TBT)
 const NOTIFICATIONS_DATA = [
@@ -95,9 +73,6 @@ export const Hero = () => {
   };
 
   return (
-    <>
-    <style dangerouslySetInnerHTML={{ __html: BLOB_STYLES }} />
-    
     <section className="relative w-full min-h-[100dvh] flex items-center justify-center overflow-hidden bg-slate-950 text-white selection:bg-blue-500/30 pt-32 pb-20 lg:py-0">
       
       {/* --- TŁO --- */}
@@ -256,6 +231,5 @@ export const Hero = () => {
 
       </div>
     </section>
-    </>
   );
 };

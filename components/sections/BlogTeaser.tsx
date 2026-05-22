@@ -1,14 +1,20 @@
 'use client';
 
+import { useMemo } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Calendar, Clock, Tag } from 'lucide-react';
-import { blogPosts } from '@/app/data/posts'; 
+import { blogPosts } from '@/app/data/posts';
 
 export function BlogTeaser() {
-  // 👇 ZMIANA: Sortujemy po dacie (od najnowszej) i bierzemy 3 pierwsze
-  const latestPosts = [...blogPosts]
-    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
-    .slice(0, 3);
+  // Sortowanie po dacie (od najnowszej) — useMemo zapobiega re-sortowaniu przy re-renderach parent'a
+  const latestPosts = useMemo(
+    () =>
+      [...blogPosts]
+        .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
+        .slice(0, 3),
+    []
+  );
 
   return (
     <section className="py-24 border-t border-white/10 bg-[#050505] relative overflow-hidden">
@@ -59,10 +65,14 @@ export function BlogTeaser() {
                 {/* IMAGE */}
                 <div className="h-48 w-full bg-[#111] relative overflow-hidden group-hover:brightness-110 transition-all">
                     {imageUrl ? (
-                        <img 
-                          src={imageUrl} 
-                          alt={post.title} 
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        <Image
+                          src={imageUrl}
+                          alt={post.title}
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                          className="object-cover transition-transform duration-700 group-hover:scale-105"
+                          loading="lazy"
+                          quality={70}
                         />
                     ) : (
                         <div className="w-full h-full bg-gradient-to-br from-slate-900 to-blue-900/20" />

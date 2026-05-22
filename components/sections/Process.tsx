@@ -73,11 +73,12 @@ export const Process = () => {
   
               <div className="relative w-full max-w-5xl mx-auto">
                   <div className="absolute left-[28px] md:left-1/2 top-0 bottom-0 w-1 md:-translate-x-1/2 bg-white/10 rounded-full overflow-hidden z-10 h-full">
-                      <motion.div 
-                          style={{ 
-                              height: "100%", 
-                              scaleY: shouldReduceMotion ? 1 : scaleY, 
-                              transformOrigin: "top" 
+                      <motion.div
+                          style={{
+                              height: "100%",
+                              scaleY: shouldReduceMotion ? 1 : scaleY,
+                              transformOrigin: "top",
+                              translateZ: 0
                           }}
                           className="w-full bg-gradient-to-b from-blue-500 via-indigo-500 to-blue-400 shadow-[0_0_20px_2px_rgba(59,130,246,0.5)] will-change-transform"
                           aria-hidden="true"

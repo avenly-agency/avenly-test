@@ -63,7 +63,9 @@
       "WebFetch(domain:docs.swmansion.com)",
       "Bash(xargs cat)",
       "WebFetch(domain:www.npmjs.com)",
-      "Bash(curl -s \"https://raw.githubusercontent.com/zoontek/react-native-edge-to-edge/main/README.md\")"
+      "Bash(curl -s \"https://raw.githubusercontent.com/zoontek/react-native-edge-to-edge/main/README.md\")",
+      "Bash(npm uninstall *)",
+      "Bash(npm run *)"
     ]
   }
 }

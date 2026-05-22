@@ -23,8 +23,8 @@ export const TechStack = () => {
       <div className="flex items-center">
          {/* Kontener Marquee */}
          <div className="flex gap-16 animate-scroll whitespace-nowrap pl-16">
-            {/* x4 dla płynności pętli */}
-            {[...metrics, ...metrics, ...metrics, ...metrics].map((item, index) => (
+            {/* x3 dla płynności pętli (translateX(-50%) wymaga minimum 2×; 3× daje bufor na różne szerokości viewportu) */}
+            {[...metrics, ...metrics, ...metrics].map((item, index) => (
               <div 
                 key={index}
                 className="flex items-center gap-4 group cursor-default opacity-60 hover:opacity-100 transition-all duration-300 hover:scale-105"

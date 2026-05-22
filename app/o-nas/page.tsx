@@ -145,18 +145,29 @@ export default function AboutPage() {
          ======================================================= */}
       <div ref={containerRef} className="relative h-screen w-full overflow-hidden">
         <div className="absolute inset-0 w-full h-[100dvh] flex items-center justify-center overflow-hidden">
-            <div ref={bgRef} className="absolute inset-0 w-full h-[120%] bg-[#020202] will-change-transform overflow-hidden brightness-125 md:brightness-100">
+            <div
+                ref={bgRef}
+                className="absolute inset-0 w-full h-[120%] bg-[#020202] will-change-transform overflow-hidden brightness-125 md:brightness-100"
+                style={{ backfaceVisibility: 'hidden', transform: 'translateZ(0)' }}
+            >
                 <div className="absolute inset-0 bg-black" />
-                <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] opacity-70 mix-blend-screen animate-spin-very-slow">
+                <div
+                    className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] opacity-70 mix-blend-screen animate-spin-very-slow"
+                    style={{ willChange: 'transform', backfaceVisibility: 'hidden' }}
+                >
                       <div className="w-full h-full bg-[conic-gradient(from_0deg_at_50%_50%,#000000_0%,#2563eb_25%,#000000_50%,#1d4ed8_75%,#000000_100%)] md:bg-[conic-gradient(from_0deg_at_50%_50%,#000000_0%,#1e3a8a_25%,#000000_50%,#172554_75%,#000000_100%)] blur-[80px]" />
                 </div>
-                <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] opacity-60 mix-blend-hard-light animate-spin-reverse-slow">
+                <div
+                    className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] opacity-60 mix-blend-hard-light animate-spin-reverse-slow"
+                    style={{ willChange: 'transform', backfaceVisibility: 'hidden' }}
+                >
                       <div className="w-full h-full bg-[conic-gradient(from_180deg_at_50%_50%,#000000_0%,#60a5fa_30%,#000000_50%,#3b82f6_70%,#000000_100%)] md:bg-[conic-gradient(from_180deg_at_50%_50%,#000000_0%,#2563eb_30%,#000000_50%,#3b82f6_70%,#000000_100%)] blur-[90px]" />
                 </div>
             </div>
-            <div 
+            <div
                 ref={textRef}
                 className="absolute inset-0 bg-[#050505] z-10 flex items-center justify-center mix-blend-multiply pointer-events-none will-change-transform"
+                style={{ backfaceVisibility: 'hidden', transform: 'translateZ(0)' }}
             >
                 <h1 className="text-[25vw] md:text-[22vw] font-black text-white tracking-tighter leading-none select-none text-center whitespace-nowrap drop-shadow-[0_0_30px_rgba(255,255,255,0.15)]">AVENLY</h1>
             </div>

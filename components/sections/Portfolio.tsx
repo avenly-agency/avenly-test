@@ -86,7 +86,7 @@ export const Portfolio = () => {
                 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
             `}</style>
 
-            <div className="sticky top-0 flex h-screen items-center overflow-hidden w-full bg-[#050505] z-10">
+            <div className="sticky top-0 flex h-screen items-center overflow-hidden w-full bg-[#050505] z-10" style={{ transform: 'translateZ(0)' }}>
                 
                 {isDesktop && (
                     <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden="true">
@@ -316,7 +316,14 @@ const FocusCard = ({ children, index, total, progress, reduceMotion }: { childre
               ]
     );
 
-    return <motion.div style={{ opacity, scale, filter }} className="origin-center">{children}</motion.div>;
+    return (
+        <motion.div
+            style={{ opacity, scale, filter, willChange: reduceMotion ? 'auto' : 'filter, opacity, transform' }}
+            className="origin-center"
+        >
+            {children}
+        </motion.div>
+    );
 };
 
 const Card = ({ project, isMobile = false }: { project: any, isMobile?: boolean }) => {

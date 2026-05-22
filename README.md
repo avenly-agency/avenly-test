@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Avenly Web
 
-## Getting Started
+Strona internetowa agencji **Avenly** — pełni rolę wizytówki, portfolio i głównego narzędzia sprzedaży (cel: rezerwacja konsultacji). Zbudowana jako statyczny export Next.js, hostowana na Hostingerze.
 
-First, run the development server:
+> **Dokumenty kontekstowe:**
+> - [CLAUDE.md](./CLAUDE.md) — zasady projektu i konwencje (dla agentów AI i developerów)
+> - [PRODUCT.md](./PRODUCT.md) — odbiorca, ton marki, anti-references, zasady designu
+> - [project_context.md](./project_context.md) — pełna mapa funkcji, danych i znanych pułapek
+> - [progress.md](./progress.md) — log prac nad chatbotem
+
+## Stack
+
+- Next.js 16.1.1 (App Router, `output: 'export'`, `trailingSlash: true`)
+- React 19.2.3 + TypeScript 5
+- Tailwind CSS v4 (PostCSS, CSS-first config w `app/globals.css`)
+- Framer Motion 12, GSAP 3 + ScrollTrigger, Lenis 1.3 (smooth scrolling)
+- React Hook Form + Web3Forms (formularz bez backendu)
+- Chatbot: n8n webhook + Supabase REST (`chat_messages`, `chatbot_config`)
+
+## Uruchomienie
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev      # http://localhost:3000
+npm run build    # static export → /out (folder do uploadu na Hostinger)
+npm run lint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Zmienne środowiskowe (`.env.local`)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+NEXT_PUBLIC_N8N_CHATBOT_URL=https://n8n.avenly.pl/webhook/chatbot
+NEXT_PUBLIC_CHATBOT_SECRET=avenly-chatbot-2026
+NEXT_PUBLIC_SUPABASE_URL=https://kyfsjvgixmcmafvaiyak.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Wszystkie wartości muszą zaczynać się od `NEXT_PUBLIC_*`, bo strona to static export — brak SSR, brak API routes w produkcji.
 
-## Learn More
+## Struktura kodu (skrót)
 
-To learn more about Next.js, take a look at the following resources:
+```
+app/
+  page.tsx                  # Home (10 sekcji, lazy-loaded poza Hero)
+  layout.tsx                # SmoothScrolling + LifecycleManager + Navbar/Footer/Chatbot
+  data/                     # services, projects, posts (źródła treści)
+  uslugi/                   # ServicesHub + 4 kategorie + podstrony usług
+  realizacje/[slug]/        # case studies (generateStaticParams)
+  blog/[slug]/              # posty (HTML string, NIE Portable Text)
+  kontakt/, o-nas/, polityka-prywatnosci/
+  sitemap.ts, robots.ts     # force-static
+components/
+  sections/                 # sekcje Home
+  layout/                   # Navbar, Footer
+  templates/ServiceTemplate # reusable szkielet podstrony usługi
+  chatbot/Chatbot.tsx       # globalny widget
+  providers/SmoothScrolling # Lenis + GSAP integration
+  utils/LifecycleManager    # pause Lenis w ukrytym tabie
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deploy
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. `npm run build` → wgraj zawartość `out/` na Hostinger (FTP / panel).
+2. Zmiana konfiguracji chatbota (welcome, quick replies) odbywa się w CRM (tabela `chatbot_config` w Supabase) — **nie wymaga rebuildu**.
+3. Zmiana treści (`app/data/*.ts`) wymaga rebuildu i ponownego uploadu.
