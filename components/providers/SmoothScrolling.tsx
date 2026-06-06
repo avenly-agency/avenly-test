@@ -2,18 +2,31 @@
 
 import { ReactLenis, useLenis } from 'lenis/react';
 import { useSearchParams, usePathname } from 'next/navigation'; // 1. Dodano usePathname
-import { useEffect, Suspense, useLayoutEffect, useState } from 'react';
+import { useEffect, Suspense, useLayoutEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 export const SmoothScrolling = ({ children }: { children: React.ReactNode }) => {
+  // syncTouch off na mobile - iOS Safari + Lenis syncTouch + momentum scroll
+  // okazjonalnie traci sync i snapuje scroll do 0 (random "skok na górę").
+  // Na mobile zostawiamy natywny scroll touch, Lenis nadal działa na wheel (desktop).
+  const [isMobile, setIsMobile] = useState(false);
+  useLayoutEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(max-width: 1024px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+
   return (
     <ReactLenis
       root
       options={{
         duration: 1.2,
         smoothWheel: true,
-        syncTouch: true,
+        syncTouch: !isMobile,
         touchMultiplier: 1,
       }}
       autoRaf={true}
@@ -31,6 +44,11 @@ function AnchorManager() {
   const searchParams = useSearchParams();
   const pathname = usePathname(); // 2. Pobieramy aktualną ścieżkę
   const [isMounted, setIsMounted] = useState(false);
+  // Guard na pierwszy mount - pathname useEffect odpalał scroll reset także
+  // przy pierwszym render (mount). Jeśli mount złapał się na środek touch scroll
+  // na mobile, jechał reset do (0,0). Pierwszy render NIE wymaga resetu - browser
+  // zaczyna już na (0,0). Reset tylko przy realnej nawigacji między pathname.
+  const prevPathnameRef = useRef<string | null>(null);
 
   // 1. INTEGRACJA GSAP
   useLayoutEffect(() => {
@@ -48,19 +66,30 @@ function AnchorManager() {
     };
   }, [lenis]);
 
-  // 2. NOWOŚĆ: GLOBALNY RESET SCROLLA PRZY ZMIANIE STRONY
-  // To naprawia problem lądowania w połowie strony po kliknięciu linku
+  // 2. GLOBALNY RESET SCROLLA PRZY ZMIANIE STRONY
+  // Reset scroll do (0,0) bez ScrollTrigger.refresh (refresh w trakcie navigation
+  // racował z unmountującymi się GSAP pinami homepage - Hero scale 50, Portfolio 300vh,
+  // Process timeline - powodując glitche w nawigacji z homepage).
+  // ScrollTrigger sam wykryje nowe targety po remount następnej strony.
+  // GUARD: pierwszy mount NIE resetuje (browser i tak zaczyna na 0). Reset tylko gdy
+  // pathname RZECZYWIŚCIE się zmienił - eliminuje random scroll-to-top przy initial
+  // mount na środku scrolla mobile.
   useEffect(() => {
-    if (lenis) {
-      // Wymuszamy natychmiastowy skok do góry (0,0)
-      // immediate: true jest kluczowe - bez animacji, po prostu teleportacja
+    if (!lenis) return;
+    if (prevPathnameRef.current === null) {
+      prevPathnameRef.current = pathname;
+      return;
+    }
+    if (prevPathnameRef.current === pathname) return;
+    prevPathnameRef.current = pathname;
+    // Odłożymy reset do następnego frame'a - daje Reactowi czas na unmount starych
+    // ScrollTrigger'ów i mount nowych przed Lenis scrollTo (eliminuje race condition)
+    const id = requestAnimationFrame(() => {
       lenis.scrollTo(0, { immediate: true, force: true, lock: false });
       window.scrollTo(0, 0);
-      
-      // Resetujemy też ScrollTriggera, żeby nie pamiętał starych pozycji pinów
-      ScrollTrigger.refresh();
-    }
-  }, [pathname, lenis]); // Odpala się przy każdej zmianie URL (np. /uslugi -> /kontakt)
+    });
+    return () => cancelAnimationFrame(id);
+  }, [pathname, lenis]);
 
   // 3. LOGIKA KOTWIC (Double-Check Strategy)
   useEffect(() => {

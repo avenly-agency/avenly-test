@@ -68,16 +68,15 @@ export const Portfolio = () => {
   };
 
   return (
-    <div 
+    <div
         className="relative w-full bg-[#050505]"
-        style={{ contentVisibility: 'auto', containIntrinsicSize: '1px 900px' }}
     >
         
         <section 
             ref={targetRef} 
             // 2. ZMIANA: Wysokość sekcji (scroll distance). 
             // 300vh jest optymalne dla 4 projektów (nie za szybko, nie za wolno)
-            className="relative h-[100vh] md:h-[300vh]" 
+            className="relative h-dvh md:h-[300vh]"
             aria-label="Portfolio Realizacji"
         >
         
@@ -86,11 +85,39 @@ export const Portfolio = () => {
                 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
             `}</style>
 
-            <div className="sticky top-0 flex h-screen items-center overflow-hidden w-full bg-[#050505] z-10" style={{ transform: 'translateZ(0)' }}>
-                
+            <div className="sticky top-0 flex h-dvh items-center overflow-hidden w-full bg-[#050505] z-10" style={{ transform: 'translateZ(0)' }}>
+
+                {/* Subtle aurora flow shader - najgłębsza warstwa, daje sekcji "życie".
+                    Lekki: mediump + 30fps + DPR 1.0 + IO pause + desktop only. Opacity-40
+                    żeby nie konkurował z grid dots, blobs, floor reflection nad nim. */}
+                {isDesktop && !shouldReduceMotion && (
+                    <div className="absolute inset-0 z-0 pointer-events-none opacity-40" aria-hidden="true">
+                        <PortfolioFlowBackground />
+                    </div>
+                )}
+
+                {/* Grid dot pattern - depth signal w tle (zero JS cost, pure CSS) */}
+                <div
+                    className="absolute inset-0 z-0 pointer-events-none opacity-60"
+                    style={{
+                        backgroundImage: 'radial-gradient(circle, rgba(59,130,246,0.05) 1px, transparent 1px)',
+                        backgroundSize: '40px 40px',
+                    }}
+                    aria-hidden="true"
+                />
+
+                {/* Floor reflection - subtle blue glow przy dolnej krawędzi (sugeruje "podłogę") */}
+                <div
+                    className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[150vw] h-[55vh] z-0 pointer-events-none"
+                    style={{
+                        background: 'radial-gradient(ellipse at bottom, rgba(37,99,235,0.18), rgba(37,99,235,0.06) 40%, transparent 70%)',
+                    }}
+                    aria-hidden="true"
+                />
+
                 {isDesktop && (
                     <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden="true">
-                        <motion.div 
+                        <motion.div
                             animate={shouldReduceMotion ? {} : {
                                 scale: [1, 1.5, 1],
                                 opacity: [0.2, 0.4, 0.2],
@@ -98,9 +125,9 @@ export const Portfolio = () => {
                                 y: [0, -30, 0],
                             }}
                             transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-                            className="absolute top-[-20%] left-[5%] w-[50vw] h-[50vw] bg-blue-600/20 blur-[120px] rounded-full mix-blend-screen will-change-transform" 
+                            className="absolute top-[-20%] left-[5%] w-[50vw] h-[50vw] bg-blue-600/20 blur-[120px] rounded-full mix-blend-screen will-change-transform"
                         ></motion.div>
-                        <motion.div 
+                        <motion.div
                             animate={shouldReduceMotion ? {} : {
                                 scale: [1, 1.3, 1],
                                 opacity: [0.2, 0.5, 0.2],
@@ -136,7 +163,7 @@ export const Portfolio = () => {
                                 </span>
                                 </h2>
                                 <p className="text-slate-400 text-lg max-w-xs leading-relaxed">
-                                Projekty, które definiują jakość. Od stron WWW po zaawansowane Chatboty AI.
+                                Zobacz, co dostają nasi klienci. Od stron WWW po chatboty AI.
                                 </p>
                             </div>
                         </FocusCard>
@@ -153,10 +180,16 @@ export const Portfolio = () => {
                         {/* KARTA CTA - DESKTOP */}
                         <FocusCard index={totalSlides - 1} total={totalSlides} progress={smoothProgress} reduceMotion={shouldReduceMotion}>
                             <RevealCard delay={displayedProjects.length * 0.2} reduceMotion={shouldReduceMotion}>
-                                <div className="relative h-[450px] w-[350px] flex items-center justify-center shrink-0 rounded-3xl border border-white/5 bg-white/[0.02] cursor-default transition-all group backdrop-blur-sm overflow-hidden">
+                                <div className="relative h-[450px] w-[350px] flex items-center justify-center shrink-0 rounded-3xl border border-white/5 bg-white/[0.02] cursor-default transition-all duration-500 group backdrop-blur-sm overflow-hidden shadow-2xl shadow-black/60 hover:-translate-y-2 hover:shadow-[0_20px_60px_-12px_rgba(37,99,235,0.5)]">
+                                    {/* Liquid glass shader - pauzuje się gdy karta poza viewport */}
+                                    {!shouldReduceMotion && (
+                                        <div className="absolute inset-px" aria-hidden="true">
+                                            <LiquidGlassBackground />
+                                        </div>
+                                    )}
                                     <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 to-indigo-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true"></div>
                                     <div className="text-center p-8 relative z-10 flex flex-col items-center">
-                                        <h3 className="text-3xl font-bold text-white mb-2 group-hover:scale-105 transition-transform duration-500">Twój Projekt?</h3>
+                                        <h3 className="text-3xl font-bold text-white mb-2 group-hover:scale-105 transition-transform duration-500">Twój projekt?</h3>
                                         <div className="h-[1px] w-12 bg-blue-500/50 mx-auto my-6 group-hover:w-24 transition-all" aria-hidden="true"></div>
                                         <p className="text-slate-400 text-sm mb-8">Dołącz do liderów rynku i wyskaluj swój biznes.</p>
                                         
@@ -210,17 +243,17 @@ export const Portfolio = () => {
                             {/* KARTA CTA - MOBILE */}
                             <div className="snap-center shrink-0 h-[400px] w-[300px] flex items-center justify-center rounded-3xl border border-white/10 bg-white/[0.02]">
                                 <div className="text-center p-6 flex flex-col items-center w-full">
-                                    <h3 className="text-xl font-bold text-white mb-4">Twój Projekt?</h3>
-                                    
-                                    <Link 
+                                    <h3 className="text-xl font-bold text-white mb-4">Twój projekt?</h3>
+
+                                    <Link
                                         href="/kontakt"
                                         className="w-full px-6 py-3 bg-white text-black text-sm font-bold rounded-lg hover:bg-blue-50 transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none mb-3 flex items-center justify-center"
                                     >
                                         Działajmy
                                     </Link>
 
-                                    <Link 
-                                        href="/realizacje" 
+                                    <Link
+                                        href="/realizacje"
                                         className="w-full px-6 py-3 rounded-lg border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
                                     >
                                         Wszystkie realizacje
@@ -338,7 +371,7 @@ const Card = ({ project, isMobile = false }: { project: any, isMobile?: boolean 
   };
 
   return (
-    <div className="group relative h-[450px] w-[320px] md:h-[550px] md:w-[450px] overflow-hidden rounded-3xl bg-[#080808] border border-white/5 shrink-0 transition-all duration-500 hover:border-blue-500/40 hover:shadow-[0_0_40px_-10px_rgba(37,99,235,0.2)]">
+    <div className="group relative h-[450px] w-[320px] md:h-[550px] md:w-[450px] overflow-hidden rounded-3xl bg-[#080808] border border-white/5 shrink-0 transition-all duration-500 shadow-2xl shadow-black/60 hover:-translate-y-2 hover:border-blue-500/40 hover:shadow-[0_20px_60px_-12px_rgba(37,99,235,0.45)]">
       
       {/* --- OBRAZEK (Bez zmian) --- */}
       <div className="absolute inset-0">
@@ -349,7 +382,7 @@ const Card = ({ project, isMobile = false }: { project: any, isMobile?: boolean 
             sizes={isMobile ? "350px" : "(max-width: 1200px) 50vw, 33vw"}
             className="object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-50"
             loading="lazy" 
-            quality={isMobile ? 60 : 75} 
+            quality={75}
          />
       </div>
 
@@ -401,7 +434,7 @@ const Card = ({ project, isMobile = false }: { project: any, isMobile?: boolean 
                                     : "bg-white text-black hover:bg-blue-50"
                                 }`
                             }>
-                                {isExternal ? "Zobacz Online" : "Zobacz Realizację"}
+                                {isExternal ? "Zobacz online" : "Zobacz realizację"}
                             </button>
                         </Link>
                     )}
@@ -436,7 +469,414 @@ const Card = ({ project, isMobile = false }: { project: any, isMobile?: boolean 
           aria-label={`Zobacz projekt ${project.title}`}
         />
       )}
-      
+
     </div>
+  );
+};
+
+// --- LIQUID GLASS SHADER (karta CTA "Twój projekt?") ---
+// Symulacja wnętrza szkła: faked refraction (UV displacement noise'em),
+// caustics (smug światła przez "tafle"), orbitujący specular highlight (catch światła),
+// rim glow na krawędziach, ciemny rdzeń pod tekst. Inspirowane iOS 26 Liquid Glass.
+
+const LIQUID_GLASS_VS = `
+  attribute vec2 a_position;
+  void main() { gl_Position = vec4(a_position, 0.0, 1.0); }
+`;
+
+const LIQUID_GLASS_FS = `
+precision highp float;
+uniform vec2 u_resolution;
+uniform float u_time;
+
+vec3 mod289(vec3 x){ return x - floor(x*(1.0/289.0))*289.0; }
+vec2 mod289(vec2 x){ return x - floor(x*(1.0/289.0))*289.0; }
+vec3 permute(vec3 x){ return mod289(((x*34.0)+1.0)*x); }
+float snoise(vec2 v){
+  const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
+  vec2 i  = floor(v + dot(v, C.yy));
+  vec2 x0 = v - i + dot(i, C.xx);
+  vec2 i1 = (x0.x > x0.y) ? vec2(1.0,0.0) : vec2(0.0,1.0);
+  vec4 x12 = x0.xyxy + C.xxzz; x12.xy -= i1;
+  i = mod289(i);
+  vec3 p = permute(permute(i.y + vec3(0.0,i1.y,1.0)) + i.x + vec3(0.0,i1.x,1.0));
+  vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+  m = m*m; m = m*m;
+  vec3 x = 2.0*fract(p*C.www) - 1.0;
+  vec3 h = abs(x) - 0.5;
+  vec3 ox = floor(x + 0.5);
+  vec3 a0 = x - ox;
+  m *= 1.79284291400159 - 0.85373472095314*(a0*a0 + h*h);
+  vec3 g;
+  g.x  = a0.x*x0.x + h.x*x0.y;
+  g.yz = a0.yz*x12.xz + h.yz*x12.yw;
+  return 130.0*dot(m, g);
+}
+
+void main(){
+  vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+  vec2 p = uv*2.0 - 1.0;
+  float aspect = u_resolution.x / u_resolution.y;
+  p.x *= aspect;
+
+  float t = u_time * 0.18;
+
+  // 1) FAKED REFRACTION - pole przepływu (UV displacement)
+  // Slow flowing field zniekształca pozycję samplowania głębi - symulacja refrakcji
+  vec2 flow = vec2(
+    snoise(p * 0.9 + vec2(t * 0.4, 0.0)),
+    snoise(p * 0.9 + vec2(0.0, t * 0.5))
+  );
+  vec2 pd = p + flow * 0.18; // displaced sample point
+
+  // 2) BAZOWA GŁĘBIA SZKŁA - radialny gradient z biasem do prawego górnego rogu
+  vec2 coreOffset = vec2(0.35, 0.30); // gdzie jest "jasny środek głębi"
+  float depth = length((pd - coreOffset) * vec2(1.0, 1.15));
+
+  vec3 deep   = vec3(0.008, 0.014, 0.045);  // near-black blue (krawędzie szkła)
+  vec3 royal  = vec3(0.067, 0.169, 0.510);  // #112b82 (środek głębi)
+  vec3 vivid  = vec3(0.184, 0.357, 0.922);  // #2f5beb (jaśniejszy punkt)
+  vec3 sheen  = vec3(0.55,  0.72,  0.98 );  // catch światła (caustic + spec)
+
+  vec3 col = mix(vivid, royal, smoothstep(0.25, 0.85, depth));
+  col = mix(col, deep, smoothstep(0.85, 1.6, depth));
+
+  // 3) SOFT GLOW VARIATION - minimalna modulacja jasności
+  float band1 = snoise(pd * 1.2 + flow * 0.4 + vec2(t * 0.3, 0.0));
+  float band2 = snoise(pd * 1.6 + flow * 0.3 + vec2(0.0, -t * 0.4));
+  float glowVar = smoothstep(-0.4, 1.0, band1) * smoothstep(-0.4, 1.0, band2);
+  col += sheen * glowVar * 0.04;
+
+  // 4) SPECULAR HIGHLIGHT - bardzo subtelny "catch" światła, nie konkuruje z tekstem
+  float ang = t * 0.5;
+  vec2 specPos = vec2(0.55 * cos(ang) + 0.15, 0.40 * sin(ang) + 0.10);
+  float spec = exp(-length(p - specPos) * 3.2);
+  col += vec3(0.92, 0.96, 1.0) * spec * 0.18;
+
+  // 5) RIM LIGHT - niebieska poświata na krawędziach karty (przyciemniona)
+  float rimX = abs(p.x / aspect);
+  float rimY = abs(p.y);
+  float rim = max(smoothstep(0.78, 1.0, rimX), smoothstep(0.78, 1.0, rimY));
+  col += vec3(0.30, 0.55, 0.98) * rim * 0.12;
+
+  // 6) CZYTELNOŚĆ TEKSTU - soft dark area gdzie siedzi h3 + p + buttony
+  // Stronger darkening (0.35 zamiast 0.50) żeby spec passing through nie tłukł kontrastu tekstu slate-400
+  vec2 textCenter = vec2(0.0, -0.05);
+  float textMask = smoothstep(0.85, 0.0, length((p - textCenter) * vec2(1.4, 1.0)));
+  col *= mix(1.0, 0.35, textMask);
+
+  // 7) FINAL VIGNETTE - naturalna ciemność rogów
+  float vig = smoothstep(1.6, 0.4, length(p * vec2(0.9, 1.0)));
+  col *= vig * 0.85 + 0.15;
+
+  gl_FragColor = vec4(col, 1.0);
+}
+`;
+
+const LiquidGlassBackground = () => {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const rafRef = useRef<number>(0);
+  const runningRef = useRef(true);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const gl = canvas.getContext('webgl', { antialias: false, premultipliedAlpha: false });
+    if (!gl) return;
+
+    const compile = (type: number, src: string) => {
+      const s = gl.createShader(type);
+      if (!s) return null;
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+        console.error('LiquidGlass shader compile error:', gl.getShaderInfoLog(s));
+        gl.deleteShader(s);
+        return null;
+      }
+      return s;
+    };
+
+    const vs = compile(gl.VERTEX_SHADER, LIQUID_GLASS_VS);
+    const fs = compile(gl.FRAGMENT_SHADER, LIQUID_GLASS_FS);
+    if (!vs || !fs) return;
+
+    const program = gl.createProgram();
+    if (!program) return;
+    gl.attachShader(program, vs);
+    gl.attachShader(program, fs);
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      console.error('LiquidGlass program link error:', gl.getProgramInfoLog(program));
+      return;
+    }
+    gl.useProgram(program);
+
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]),
+      gl.STATIC_DRAW,
+    );
+    const aPos = gl.getAttribLocation(program, 'a_position');
+    gl.enableVertexAttribArray(aPos);
+    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+    const uTime = gl.getUniformLocation(program, 'u_time');
+    const uRes = gl.getUniformLocation(program, 'u_resolution');
+
+    const resize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = canvas.clientWidth * dpr;
+      const h = canvas.clientHeight * dpr;
+      if (canvas.width !== w || canvas.height !== h) {
+        canvas.width = w;
+        canvas.height = h;
+        gl.viewport(0, 0, w, h);
+      }
+    };
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(canvas);
+
+    const t0 = performance.now();
+    const draw = () => {
+      if (!runningRef.current) return;
+      const t = (performance.now() - t0) / 1000;
+      if (uTime) gl.uniform1f(uTime, t);
+      if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+      rafRef.current = requestAnimationFrame(draw);
+    };
+    draw();
+
+    // Pauza gdy karta poza viewport (Portfolio jest sticky 300vh - często ma ją "za ekranem")
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !runningRef.current) {
+          runningRef.current = true;
+          draw();
+        } else if (!entry.isIntersecting && runningRef.current) {
+          runningRef.current = false;
+          cancelAnimationFrame(rafRef.current);
+        }
+      },
+      { rootMargin: '200px' },
+    );
+    io.observe(canvas);
+
+    return () => {
+      runningRef.current = false;
+      cancelAnimationFrame(rafRef.current);
+      ro.disconnect();
+      io.disconnect();
+      gl.deleteProgram(program);
+      gl.deleteShader(vs);
+      gl.deleteShader(fs);
+      gl.deleteBuffer(buf);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      aria-hidden="true"
+      className="absolute inset-0 w-full h-full block pointer-events-none"
+    />
+  );
+};
+
+// --- PORTFOLIO FLOW BACKGROUND ---
+// Lekki aurora-style shader jako najgłębsza warstwa Portfolio sticky child.
+// 2-layer simplex noise z slow drift, blue/indigo palette, low intensity.
+// Budget: mediump precision + 30fps throttle + DPR 1.0 + IO pause + desktop only.
+// Cel: dać sekcji "życie" subtle pulsem, nie konkurować z LiquidGlass CTA card.
+
+const PORTFOLIO_FLOW_VS = `
+  attribute vec2 a_position;
+  void main() { gl_Position = vec4(a_position, 0.0, 1.0); }
+`;
+
+const PORTFOLIO_FLOW_FS = `
+precision mediump float;
+uniform vec2 u_resolution;
+uniform float u_time;
+
+vec3 mod289(vec3 x){ return x - floor(x*(1.0/289.0))*289.0; }
+vec2 mod289(vec2 x){ return x - floor(x*(1.0/289.0))*289.0; }
+vec3 permute(vec3 x){ return mod289(((x*34.0)+1.0)*x); }
+float snoise(vec2 v){
+  const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
+  vec2 i  = floor(v + dot(v, C.yy));
+  vec2 x0 = v - i + dot(i, C.xx);
+  vec2 i1 = (x0.x > x0.y) ? vec2(1.0,0.0) : vec2(0.0,1.0);
+  vec4 x12 = x0.xyxy + C.xxzz; x12.xy -= i1;
+  i = mod289(i);
+  vec3 p = permute(permute(i.y + vec3(0.0,i1.y,1.0)) + i.x + vec3(0.0,i1.x,1.0));
+  vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+  m = m*m; m = m*m;
+  vec3 x = 2.0*fract(p*C.www) - 1.0;
+  vec3 h = abs(x) - 0.5;
+  vec3 ox = floor(x + 0.5);
+  vec3 a0 = x - ox;
+  m *= 1.79284291400159 - 0.85373472095314*(a0*a0 + h*h);
+  vec3 g;
+  g.x  = a0.x*x0.x + h.x*x0.y;
+  g.yz = a0.yz*x12.xz + h.yz*x12.yw;
+  return 130.0*dot(m, g);
+}
+
+void main(){
+  vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+  vec2 p = uv * 2.0 - 1.0;
+  p.x *= u_resolution.x / u_resolution.y;
+
+  // Bardzo wolny czas - subtle ambient drift
+  float t = u_time * 0.06;
+
+  // 2-warstwowy noise z domain warping (lżejszy niż Hero 3-layer)
+  float n1 = snoise(p * 0.55 + vec2(t * 0.5, t * 0.3));
+  float n2 = snoise(p * 0.85 + vec2(-t * 0.4, t * 0.6) + n1 * 0.4);
+
+  vec3 deep   = vec3(0.020, 0.020, 0.030);  // dark base
+  vec3 royal  = vec3(0.067, 0.169, 0.510);  // #112b82 brand royal
+  vec3 indigo = vec3(0.184, 0.184, 0.667);  // #2f2faa indigo accent
+
+  vec3 col = deep;
+  col = mix(col, royal,  smoothstep(-0.4, 0.7, n1) * 0.55);
+  col = mix(col, indigo, smoothstep( 0.0, 1.0, n2) * 0.35);
+
+  // Soft top-to-bottom fade - bottom slightly brighter dla flow z floor reflection
+  col *= mix(0.75, 1.0, smoothstep(-1.0, 0.5, p.y));
+
+  // Soft vignette
+  float vig = smoothstep(1.5, 0.4, length(p * vec2(0.85, 1.0)));
+  col *= vig * 0.7 + 0.3;
+
+  gl_FragColor = vec4(col, 1.0);
+}
+`;
+
+const PortfolioFlowBackground = () => {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const rafRef = useRef<number>(0);
+  const runningRef = useRef(true);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const gl = canvas.getContext('webgl', { antialias: false, premultipliedAlpha: false });
+    if (!gl) return;
+
+    const compile = (type: number, src: string) => {
+      const s = gl.createShader(type);
+      if (!s) return null;
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+        console.error('PortfolioFlow shader compile error:', gl.getShaderInfoLog(s));
+        gl.deleteShader(s);
+        return null;
+      }
+      return s;
+    };
+
+    const vs = compile(gl.VERTEX_SHADER, PORTFOLIO_FLOW_VS);
+    const fs = compile(gl.FRAGMENT_SHADER, PORTFOLIO_FLOW_FS);
+    if (!vs || !fs) return;
+
+    const program = gl.createProgram();
+    if (!program) return;
+    gl.attachShader(program, vs);
+    gl.attachShader(program, fs);
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      console.error('PortfolioFlow program link error:', gl.getProgramInfoLog(program));
+      return;
+    }
+    gl.useProgram(program);
+
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]),
+      gl.STATIC_DRAW,
+    );
+    const aPos = gl.getAttribLocation(program, 'a_position');
+    gl.enableVertexAttribArray(aPos);
+    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+    const uTime = gl.getUniformLocation(program, 'u_time');
+    const uRes = gl.getUniformLocation(program, 'u_resolution');
+
+    // DPR clamp 1.0 - bardzo diffuse shader, native res nie potrzebny.
+    const resize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.0);
+      const w = canvas.clientWidth * dpr;
+      const h = canvas.clientHeight * dpr;
+      if (canvas.width !== w || canvas.height !== h) {
+        canvas.width = w;
+        canvas.height = h;
+        gl.viewport(0, 0, w, h);
+      }
+    };
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(canvas);
+
+    // 30fps throttle - bardzo wolna animacja (t * 0.06)
+    const FRAME_INTERVAL = 1000 / 30;
+    const t0 = performance.now();
+    let lastDrawTime = 0;
+    const draw = (now?: number) => {
+      if (!runningRef.current) return;
+      const ts = now ?? performance.now();
+      if (ts - lastDrawTime >= FRAME_INTERVAL) {
+        lastDrawTime = ts;
+        const t = (ts - t0) / 1000;
+        if (uTime) gl.uniform1f(uTime, t);
+        if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+      }
+      rafRef.current = requestAnimationFrame(draw);
+    };
+    draw();
+
+    // IO pause - sticky 300vh często ma canvas poza viewport
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        const visible = entry.isIntersecting;
+        requestAnimationFrame(() => {
+          if (visible && !runningRef.current) {
+            runningRef.current = true; draw();
+          } else if (!visible && runningRef.current) {
+            runningRef.current = false; cancelAnimationFrame(rafRef.current);
+          }
+        });
+      },
+      { rootMargin: '200px' },
+    );
+    io.observe(canvas);
+
+    return () => {
+      runningRef.current = false;
+      cancelAnimationFrame(rafRef.current);
+      ro.disconnect();
+      io.disconnect();
+      gl.deleteProgram(program);
+      gl.deleteShader(vs);
+      gl.deleteShader(fs);
+      gl.deleteBuffer(buf);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      aria-hidden="true"
+      className="absolute inset-0 w-full h-full block pointer-events-none"
+    />
   );
 };

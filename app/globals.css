@@ -3,6 +3,15 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Safelist dla dynamic theme classes w Chatbot.tsx + AvenlyAICta.tsx
+   (per-pathname brand color: blue/emerald/rose/amber/sky/teal).
+   Tailwind v4 JIT NIE generuje classes z runtime interpolation `text-${color}-300`,
+   więc dodajemy explicit safelist tutaj - wygeneruje wszystkie kombinacje. */
+@source inline("{text,bg,ring,shadow,border,placeholder}-{blue,emerald,rose,amber,sky,teal}-{200,300,400,500,600}");
+@source inline("{text,bg,ring,shadow,border,placeholder}-{blue,emerald,rose,amber,sky,teal}-{300,400,500}/{10,20,30,40,50,60,70}");
+@source inline("hover:{text,bg}-{blue,emerald,rose,amber,sky,teal}-{200,300,400,500}");
+@source inline("hover:{text,bg}-{blue,emerald,rose,amber,sky,teal}-{300,400,500}/{10,20,30,40}");
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -45,6 +54,18 @@
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
 }
+
+/* ── 2K / 4K - DEDYKOWANE breakpointy (FullHD ≤1920 zostaje normalnie) ──────── */
+@theme {
+  --breakpoint-3xl: 160rem; /* 2560px - 2K / QHD */
+  --breakpoint-4xl: 240rem; /* 3840px - 4K / UHD */
+}
+
+/* Szerszy container TYLKO od 2K wzwyż. FullHD (1920px) NIE jest dotykane - zostaje na
+   domyślnym 2xl=1536px (margines po bokach jak dotychczas). Tylko max-width (bez
+   skalowania fontu/vh), więc scroll-locki GSAP i makiety przeglądarki nietknięte. */
+@media (min-width: 2560px) { .container { max-width: 1920px; } } /* 2K */
+@media (min-width: 3840px) { .container { max-width: 2400px; } } /* 4K */
 
 :root {
   --radius: 0.625rem;
@@ -141,6 +162,28 @@
 .animate-scroll:hover {
   animation-play-state: paused;
 }
+
+/* Marquee rows for additional sections list (one-page makieta) - wykorzystuje
+   istniejący keyframe `scroll`, jeden kierunek normal, drugi reverse. */
+.animate-marquee-left {
+  animation: scroll 50s linear infinite;
+  will-change: transform;
+}
+.animate-marquee-right {
+  animation: scroll 50s linear infinite reverse;
+  will-change: transform;
+}
+.animate-marquee-left:hover,
+.animate-marquee-right:hover {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee-left,
+  .animate-marquee-right {
+    animation: none;
+  }
+}
+
 html.lenis, html.lenis body {
   height: auto;
 }
@@ -152,9 +195,18 @@ html.lenis, html.lenis body {
 }
 @layer utilities {
   /* Klasa pomocnicza dla sekcji poniżej Hero */
+  /* .render-optimize: WCZEŚNIEJ content-visibility: auto + contain-intrinsic-size.
+     USUNIĘTE celowo - content-visibility: auto na rodzeństwie poprzedzającym piny
+     GSAP ScrollTrigger (Hero scale, Portfolio 350vh, Process timeline) łamie
+     pozycjonowanie pinów (GSAP issue #465: piny skaczą / scrollują poza zakres)
+     ORAZ powoduje błędne przywracanie scrolla po F5 (off-screen sekcje liczone jako
+     intrinsic-size zamiast realnej wysokości → suma offsetów powyżej viewportu się
+     nie zgadza → ląduje w złej sekcji). Klasa zostaje jako no-op, bo wrappery trzymają
+     kotwice (#proces, #oferta, #opinie, #kontakt). Perf zapewnia lazy-load
+     (next/dynamic) + IntersectionObserver-pauza shaderów - content-visibility nie był
+     tu potrzebny. */
   .render-optimize {
-    content-visibility: auto;
-    contain-intrinsic-size: 1px 800px; /* Szacowana wysokość sekcji, żeby scroll nie skakał */
+    /* celowo puste - patrz komentarz wyżej */
   }
 }
 /* --- STYLE DLA TREŚCI BLOGA --- */
@@ -296,4 +348,63 @@ html.lenis, html.lenis body {
 .chat-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: rgba(59, 130, 246, 0.25) transparent;
+}
+
+/* ── Ukryty pasek przewijania (cookie consent / kompaktowe panele) ──────────── */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── Globalny pasek przewijania strony (dark + niebieski brand) ──────────────
+   Chat (.chat-scrollbar) i ukryte scrollery filtrów ([&::-webkit-scrollbar]:hidden)
+   mają bardziej specyficzne reguły → zostają nietknięte. */
+/* --sb-thumb / --sb-thumb-hover ustawiane per-pathname przez ScrollbarTheme.tsx
+   (main-color motywu podstrony: usługi sklep=amber, chatboty=orange itd.).
+   @property (typowany <color>) + transition na html → kolor kciuka PŁYNNIE przechodzi
+   przy zmianie podstrony (scrollbar odczytuje animującą się zmienną). Safari 15 bez
+   @property → zmiana natychmiastowa (graceful fallback). */
+@property --sb-thumb {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #2f5beb;
+}
+@property --sb-thumb-hover {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #3b82f6;
+}
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--sb-thumb, #2f5beb) #0a0a0a; /* kciuk / tor (Firefox) */
+  transition: --sb-thumb 0.45s ease, --sb-thumb-hover 0.45s ease;
+}
+::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--sb-thumb, #2f5beb);
+  border-radius: 9999px;
+  border: 2px solid #0a0a0a; /* wcięcie wokół kciuka */
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--sb-thumb-hover, #3b82f6);
+}
+::-webkit-scrollbar-corner {
+  background: #0a0a0a;
+}
+
+/* Płynne wejście treści przy zmianie podstrony (maskuje instant-skok wysokości/scrolla).
+   Opacity-only → bezpieczne dla position:fixed/sticky (piny GSAP). */
+.page-transition {
+  animation: pageFadeIn 0.35s ease both;
+}
+@keyframes pageFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-transition { animation: none; }
 }

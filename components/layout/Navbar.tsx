@@ -57,37 +57,86 @@ const mobileLinkVars: Variants = {
     },
 }
 
-// --- FUNKCJA DO DYNAMICZNEGO MOTYWU NAWIGACJI ---
-const getNavbarTheme = (pathname: string | null) => {
-    if (!pathname) return 'bg-slate-950/80 border-slate-800/50';
+// --- DYNAMICZNY MOTYW NAWIGACJI (per-podstrona) ---
+// Wszystkie klasy verbatim - Tailwind v4 JIT skanuje source, nie obsługuje
+// dynamicznych concatów typu `text-${color}-500`. Spójne z lib/service-theme.ts
+// oraz components/utils/ScrollbarTheme.tsx (jeden brand color na podstronę).
+type NavTheme = {
+    shell: string          // tło + border po scrollu
+    dot: string            // kropka przy AVENLY (fallback SSR / no-JS)
+    dotHex: string         // kropka przy AVENLY (Framer color tween przy zmianie podstrony)
+    underline: string      // podkreślenie linku (hover)
+    glow: string           // halo blur pod linkiem (hover)
+    hamburgerHover: string // hover ikony hamburgera (mobile)
+    mobileDot: string      // kropka przy linkach w menu mobile
+    mobileLinkHover: string// hover tekstu linku (mobile)
+    blob: string           // dekoracyjny blob w tle menu mobile
+    socialHover: string    // hover ikon social (mobile)
+    ctaHover: string       // hover przycisku "Darmowa Wycena" (mobile)
+}
 
-    // 1. Sklepy internetowe (Amber)
-    if (pathname.includes('/strony-www/sklepy-internetowe')) {
-        return 'bg-[#050505]/80 border-amber-500/30'; 
-    }
-    // 2. Aplikacje webowe (Sky / Teal)
-    if (pathname.includes('/strony-www/aplikacje-webowe')) {
-        return 'bg-[#050505]/80 border-sky-500/30'; 
-    }
-    // 3. Dedykowane strony www (Violet)
-    if (pathname.includes('/strony-www/dedykowane-strony-www')) {
-        return 'bg-[#050505]/80 border-violet-500/30';
-    }
-    // 4. One page (Blue)
-    if (pathname.includes('/strony-www/one-page')) {
-        return 'bg-[#050505]/80 border-blue-500/30';
-    }
-    // 5. Profesjonalna strona firmowa (Emerald)
-    if (pathname.includes('/strony-www/profesjonalna-strona-firmowa')) {
-        return 'bg-[#050505]/80 border-emerald-500/30';
-    }
-    // 6. Chatboty AI (Teal)
-    if (pathname.includes('/automatyzacje-ai/chatboty-ai')) {
-        return 'bg-[#050505]/80 border-teal-500/30';
-    }
+const NAV_THEMES: Record<string, NavTheme> = {
+    default: {
+        shell: 'bg-slate-950/80 border-slate-800/50',
+        dot: 'text-blue-500', dotHex: '#3b82f6', underline: 'bg-blue-500', glow: 'bg-blue-400/20',
+        hamburgerHover: 'hover:text-blue-400', mobileDot: 'text-blue-500',
+        mobileLinkHover: 'hover:text-blue-500', blob: 'bg-blue-900/20',
+        socialHover: 'hover:bg-blue-600', ctaHover: 'hover:bg-blue-500',
+    },
+    blue: {
+        shell: 'bg-[#050505]/80 border-blue-500/30',
+        dot: 'text-blue-500', dotHex: '#3b82f6', underline: 'bg-blue-500', glow: 'bg-blue-400/20',
+        hamburgerHover: 'hover:text-blue-400', mobileDot: 'text-blue-500',
+        mobileLinkHover: 'hover:text-blue-500', blob: 'bg-blue-900/20',
+        socialHover: 'hover:bg-blue-600', ctaHover: 'hover:bg-blue-500',
+    },
+    emerald: {
+        shell: 'bg-[#050505]/80 border-emerald-500/30',
+        dot: 'text-emerald-500', dotHex: '#10b981', underline: 'bg-emerald-500', glow: 'bg-emerald-400/20',
+        hamburgerHover: 'hover:text-emerald-400', mobileDot: 'text-emerald-500',
+        mobileLinkHover: 'hover:text-emerald-500', blob: 'bg-emerald-900/20',
+        socialHover: 'hover:bg-emerald-600', ctaHover: 'hover:bg-emerald-500',
+    },
+    rose: {
+        shell: 'bg-[#050505]/80 border-rose-500/30',
+        dot: 'text-rose-500', dotHex: '#f43f5e', underline: 'bg-rose-500', glow: 'bg-rose-400/20',
+        hamburgerHover: 'hover:text-rose-400', mobileDot: 'text-rose-500',
+        mobileLinkHover: 'hover:text-rose-500', blob: 'bg-rose-900/20',
+        socialHover: 'hover:bg-rose-600', ctaHover: 'hover:bg-rose-500',
+    },
+    amber: {
+        shell: 'bg-[#050505]/80 border-amber-500/30',
+        dot: 'text-amber-500', dotHex: '#f59e0b', underline: 'bg-amber-500', glow: 'bg-amber-400/20',
+        hamburgerHover: 'hover:text-amber-400', mobileDot: 'text-amber-500',
+        mobileLinkHover: 'hover:text-amber-500', blob: 'bg-amber-900/20',
+        socialHover: 'hover:bg-amber-600', ctaHover: 'hover:bg-amber-500',
+    },
+    sky: {
+        shell: 'bg-[#050505]/80 border-sky-500/30',
+        dot: 'text-sky-500', dotHex: '#0ea5e9', underline: 'bg-sky-500', glow: 'bg-sky-400/20',
+        hamburgerHover: 'hover:text-sky-400', mobileDot: 'text-sky-500',
+        mobileLinkHover: 'hover:text-sky-500', blob: 'bg-sky-900/20',
+        socialHover: 'hover:bg-sky-600', ctaHover: 'hover:bg-sky-500',
+    },
+    orange: {
+        shell: 'bg-[#050505]/80 border-orange-500/30',
+        dot: 'text-orange-500', dotHex: '#f97316', underline: 'bg-orange-500', glow: 'bg-orange-400/20',
+        hamburgerHover: 'hover:text-orange-400', mobileDot: 'text-orange-500',
+        mobileLinkHover: 'hover:text-orange-500', blob: 'bg-orange-900/20',
+        socialHover: 'hover:bg-orange-600', ctaHover: 'hover:bg-orange-500',
+    },
+}
 
-    // Domyślny motyw
-    return 'bg-slate-950/80 border-slate-800/50';
+// KOLEJNOŚĆ CHECKÓW WAŻNA (sklep matchuje też "sklep-internetowy")
+const getNavbarTheme = (pathname: string | null): NavTheme => {
+    if (!pathname) return NAV_THEMES.default
+    if (pathname.includes('/strony-www/sklep')) return NAV_THEMES.amber
+    if (pathname.includes('/strony-www/system-crm')) return NAV_THEMES.sky
+    if (pathname.includes('/strony-www/strona-szyta-na-miare')) return NAV_THEMES.rose
+    if (pathname.includes('/strony-www/one-page')) return NAV_THEMES.blue
+    if (pathname.includes('/strony-www/strona-firmowa')) return NAV_THEMES.emerald
+    if (pathname.includes('/automatyzacje-ai/chatboty-ai')) return NAV_THEMES.orange
+    return NAV_THEMES.default
 }
 export const Navbar = () => {
     const [isScrolled, setIsScrolled] = useState(false)
@@ -188,25 +237,33 @@ export const Navbar = () => {
     }, [])
 
     // --- BLOKADA SCROLLA ---
+    // Lock html + body overflow + lenis.stop() - bez tego Lenis (syncTouch:true)
+    // łapie touch events i pozwala na horizontal swipe za otwartym menu.
     useEffect(() => {
         if (isMobileMenuOpen) {
             document.body.style.overflow = 'hidden'
+            document.documentElement.style.overflow = 'hidden'
+            lenis?.stop()
         } else {
             document.body.style.overflow = ''
+            document.documentElement.style.overflow = ''
+            lenis?.start()
         }
         return () => {
             document.body.style.overflow = ''
+            document.documentElement.style.overflow = ''
+            lenis?.start()
         }
-    }, [isMobileMenuOpen])
+    }, [isMobileMenuOpen, lenis])
 
-    // Pobieramy klasy specyficzne dla podstrony
-    const navThemeClasses = getNavbarTheme(pathname);
+    // Pobieramy motyw (klasy) specyficzny dla podstrony
+    const navTheme = getNavbarTheme(pathname);
 
     // FIX ANIMACJI: Używamy transition-all, aby zmiana z py-6 na py-4 animowała się płynnie
     const navbarClasses = cn(
         'fixed top-0 left-0 w-full z-50 transition-all duration-500 ease-in-out border-b',
         isScrolled
-            ? `${navThemeClasses} backdrop-blur-xl py-4 shadow-lg`
+            ? `${navTheme.shell} backdrop-blur-xl py-4 shadow-lg`
             : 'bg-transparent border-transparent py-6',
         isVisible && !isMobileMenuOpen ? 'translate-y-0' : !isMobileMenuOpen ? '-translate-y-full' : 'translate-y-0'
     )
@@ -226,7 +283,15 @@ export const Navbar = () => {
                                 lenis?.scrollTo(0, { duration: 1.5, easing: t => (t === 1 ? 1 : 1 - Math.pow(2, -10 * t)) })
                             }
                         }}>
-                        AVENLY<span className="text-blue-500">.</span>
+                        AVENLY
+                        <motion.span
+                            initial={false}
+                            animate={{ color: navTheme.dotHex }}
+                            transition={{ duration: 0.6, ease: 'easeInOut' }}
+                            className={navTheme.dot}
+                        >
+                            .
+                        </motion.span>
                     </Link>
 
                     {/* DESKTOP MENU */}
@@ -238,8 +303,8 @@ export const Navbar = () => {
                                 onClick={e => handleLinkClick(e, item.href)}
                                 className="relative text-sm font-medium text-slate-400 transition-all duration-300 hover:text-white cursor-pointer group whitespace-nowrap">
                                 {item.title}
-                                <span className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-blue-400/20 blur-xl -z-10"></span>
-                                <span className="absolute -bottom-1 left-1/2 w-0 h-[1px] bg-blue-500 group-hover:w-1/2 group-hover:-translate-x-1/2 transition-all duration-300"></span>
+                                <span className={cn('absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl -z-10', navTheme.glow)}></span>
+                                <span className={cn('absolute -bottom-1 left-1/2 w-0 h-[1px] group-hover:w-1/2 group-hover:-translate-x-1/2 transition-all duration-300', navTheme.underline)}></span>
                             </a>
                         ))}
 
@@ -254,7 +319,7 @@ export const Navbar = () => {
 
                     {/* MOBILE HAMBURGER */}
                     <button
-                        className="lg:hidden text-white z-50 relative cursor-pointer hover:text-blue-400 transition-colors p-2 active:scale-90"
+                        className={cn('lg:hidden text-white z-50 relative cursor-pointer transition-colors p-2 active:scale-90', navTheme.hamburgerHover)}
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                         aria-label={isMobileMenuOpen ? 'Zamknij menu' : 'Otwórz menu'}>
                         <div className="relative w-6 h-6 flex flex-col justify-center items-center gap-[5px]">
@@ -287,7 +352,7 @@ export const Navbar = () => {
                         className="fixed inset-0 w-full h-[100dvh] bg-[#050505] z-40 origin-top overflow-y-auto"
                     >
 
-                        <div className="absolute top-[-20%] right-[-20%] w-[80vw] h-[80vw] bg-blue-900/20 blur-[100px] rounded-full pointer-events-none" />
+                        <div className={cn('absolute top-[-20%] right-[-20%] w-[80vw] h-[80vw] blur-[100px] rounded-full pointer-events-none', navTheme.blob)} />
 
                         <div className="flex flex-col min-h-[100dvh] container mx-auto px-6 pb-48 pt-24 relative z-10">
                             
@@ -304,9 +369,9 @@ export const Navbar = () => {
                                             <a
                                                 href={link.href}
                                                 onClick={e => handleLinkClick(e, link.href)}
-                                                className="text-5xl font-bold text-white tracking-tight hover:text-blue-500 transition-colors block py-2 cursor-pointer">
+                                                className={cn('text-5xl font-bold text-white tracking-tight transition-colors block py-2 cursor-pointer', navTheme.mobileLinkHover)}>
                                                 {link.title}
-                                                <span className="text-blue-500 text-6xl leading-none">.</span>
+                                                <span className={cn('text-6xl leading-none', navTheme.mobileDot)}>.</span>
                                             </a>
                                         </motion.div>
                                     </div>
@@ -329,7 +394,7 @@ export const Navbar = () => {
                                                     href={item.href}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="p-2 bg-white/5 rounded-full hover:bg-blue-600 transition-colors cursor-pointer"
+                                                    className={cn('p-2 bg-white/5 rounded-full transition-colors cursor-pointer', navTheme.socialHover)}
                                                 >
                                                     <item.icon size={20} className="text-white" />
                                                 </a>
@@ -338,7 +403,7 @@ export const Navbar = () => {
                                     </div>
 
                                     <a href="#kontakt" onClick={e => handleLinkClick(e, '#kontakt')} className="w-full block">
-                                        <button className="w-full py-4 bg-white text-black text-lg font-bold rounded-xl hover:bg-blue-500 hover:text-white transition-all flex items-center justify-center gap-2 group cursor-pointer active:scale-95">
+                                        <button className={cn('w-full py-4 bg-white text-black text-lg font-bold rounded-xl hover:text-white transition-all flex items-center justify-center gap-2 group cursor-pointer active:scale-95', navTheme.ctaHover)}>
                                             Darmowa Wycena
                                             <ArrowRight className="group-hover:translate-x-1 transition-transform" />
                                         </button>

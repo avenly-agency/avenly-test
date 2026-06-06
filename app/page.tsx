@@ -67,19 +67,19 @@ export default function Home() {
       <div className="render-optimize">
         <TechStack />
       </div>
-      
+
       {/* PORTFOLIO (Teaser na głównej) */}
       <div className="render-optimize">
         <Portfolio />
       </div>
-      
+
+      <div className="render-optimize">
+        <Impact />
+      </div>
+
       {/* PROCES (Kotwica #proces) */}
       <div className="render-optimize" id="proces">
         <Process />
-      </div>
-      
-      <div className="render-optimize">
-        <Impact />
       </div>
 {/* ✅ NOWOŚĆ: OPINIE */}
       {/* Umieściłem to po ofercie, a przed blogiem/kontaktem - to buduje zaufanie przed finalnym CTA */}

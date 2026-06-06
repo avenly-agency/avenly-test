@@ -47,10 +47,6 @@ export const CallToAction = () => {
 
             {/* GŁÓWNA KARTA CTA */}
             <div className="relative rounded-[1.5rem] md:rounded-[2rem] bg-[#080808] border border-white/10 p-6 sm:p-10 md:p-16 text-center overflow-hidden">
-                
-                {/* ODBLASK (Grid pattern) */}
-                <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))] opacity-10 pointer-events-none"></div>
-
                 <div className="relative z-10 flex flex-col items-center">
                     
                     {/* LABEL */}
@@ -93,8 +89,8 @@ export const CallToAction = () => {
                         viewport={viewportConfig}
                         className="text-slate-400 text-base md:text-xl max-w-2xl mb-8 md:mb-12 leading-relaxed"
                     >
-                        Nie marnuj potencjału na przeciętne strony i przestarzałe procesy. 
-                        Zbudujmy system, który pracuje na Twój sukces 24/7.
+                        Nie marnuj potencjału na przeciętne strony i przestarzałe procesy.
+                        Zbudujmy system, który pracuje na Twój sukces.
                     </motion.p>
 
                     {/* BUTTONS GROUP */}
@@ -112,7 +108,7 @@ export const CallToAction = () => {
                             className="group relative w-full sm:w-auto px-6 py-3 md:px-8 md:py-4 bg-white text-black text-base md:text-lg font-bold rounded-xl hover:bg-blue-50 transition-all duration-300 shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] hover:shadow-[0_0_25px_-5px_rgba(59,130,246,0.6)] !cursor-pointer flex items-center justify-center gap-2 md:gap-3 overflow-hidden"
                         >
                             <span className="relative z-10 flex items-center gap-2">
-                                Darmowa Konsultacja
+                                Bezpłatna konsultacja
                                 <CalendarCheck className="w-4 h-4 md:w-5 md:h-5 group-hover:scale-110 transition-transform duration-300" />
                             </span>
                             <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-400 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out z-0"></div>
@@ -137,12 +133,8 @@ export const CallToAction = () => {
                         viewport={viewportConfig}
                         className="mt-8 md:mt-12 pt-6 md:pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center gap-3 md:gap-4 text-xs md:text-sm text-slate-500"
                     >
-                        <div className="flex -space-x-3">
-                             <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-slate-800 border-2 border-[#080808]"></div>
-                             <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-slate-700 border-2 border-[#080808]"></div>
-                             <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-slate-600 border-2 border-[#080808]"></div>
-                        </div>
-                        <p>Dołącz do firm, które wyprzedziły konkurencję.</p>
+                        <span className="text-amber-400 text-base md:text-lg tracking-tight" aria-hidden="true">★★★★★</span>
+                        <p><span className="text-white font-semibold">5,0 na Google</span> · Dołącz do firm, które wyprzedziły konkurencję.</p>
                     </motion.div>
 
                 </div>

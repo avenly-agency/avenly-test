@@ -23,7 +23,7 @@ export const projects = [
             { label: "Czas ładowania", value: "<1s" },
             { label: "Pozycja w wyszukiwarce", value: "Nr 1" }
         ],
-        techStack: ["Wordpress", "IMPREZA", "Booksy", "CloudFlare"]
+        techStack: ["CMS", "Booksy", "CloudFlare"]
     },
     {
         id: 2,
@@ -43,7 +43,7 @@ export const projects = [
         challenge: "",
         solution: "",
         stats: [],
-        techStack: ["Wordpress", "Impreza", "Cloudflare"]
+        techStack: ["CMS", "Cloudflare"]
     },
     {
         id: 3,
@@ -52,7 +52,7 @@ export const projects = [
         category: "AI & Boty",
         year: "2025",
         client: "Avenly",
-        description: "Nasz własny asystent AI — odpowiada na pytania, kwalifikuje leady i pracuje za Ciebie 24/7.",
+        description: "Nasz własny asystent AI - odpowiada na pytania, kwalifikuje leady i pracuje za Ciebie 24/7.",
         mainImage: "/portfolio/avenly-chatbot.webp",
 
         hasCaseStudy: false,

@@ -7,7 +7,7 @@ import { ArrowRight, Calendar, Clock, Tag } from 'lucide-react';
 import { blogPosts } from '@/app/data/posts';
 
 export function BlogTeaser() {
-  // Sortowanie po dacie (od najnowszej) — useMemo zapobiega re-sortowaniu przy re-renderach parent'a
+  // Sortowanie po dacie (od najnowszej) - useMemo zapobiega re-sortowaniu przy re-renderach parent'a
   const latestPosts = useMemo(
     () =>
       [...blogPosts]
@@ -28,12 +28,12 @@ export function BlogTeaser() {
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
           <div className="max-w-2xl">
             <span className="text-blue-500 font-mono text-sm tracking-widest uppercase mb-4 block">
-              // Wiedza i Insight
+              Wiedza i analizy
             </span>
             <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight">
-              Najnowsze ze świata <br />
+              Najnowsze porady ze świata <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600">
-                Technologii i Biznesu
+                technologii i biznesu
               </span>
             </h2>
           </div>
@@ -72,7 +72,7 @@ export function BlogTeaser() {
                           sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                           className="object-cover transition-transform duration-700 group-hover:scale-105"
                           loading="lazy"
-                          quality={70}
+                          quality={75}
                         />
                     ) : (
                         <div className="w-full h-full bg-gradient-to-br from-slate-900 to-blue-900/20" />

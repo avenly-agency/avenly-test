@@ -1,9 +1,12 @@
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { ArrowLeft, ArrowUpRight, Layers } from 'lucide-react';
-import { projects } from '@/app/data/projects'; 
-import { StatsSpotlight } from '@/components/projects/StatsSpotlight'; 
+import { projects } from '@/app/data/projects';
+import { StatsSpotlight } from '@/components/projects/StatsSpotlight';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { caseStudySchema, breadcrumbSchema } from '@/lib/schemas';
 
 // --- FUNKCJA POMOCNICZA ---
 const ensureHttp = (url: string) => {
@@ -22,11 +25,47 @@ export function generateStaticParams() {
 
 type Props = { params: Promise<{ slug: string }>; };
 
-export async function generateMetadata({ params }: Props) {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const project = projects.find((p) => p.slug === slug);
   if (!project) return { title: 'Projekt nie znaleziony' };
-  return { title: `${project.title} | Portfolio Avenly`, description: project.description };
+
+  const ogImage = project.mockupImage || project.mainImage;
+
+  return {
+    title: `${project.title} - Case Study`,
+    description: `${project.description} Realizacja dla: ${project.client} (${project.year}). Technologie: ${project.techStack?.join(', ')}.`,
+    alternates: { canonical: `/realizacje/${project.slug}` },
+    keywords: [
+      project.title,
+      project.client,
+      project.category,
+      'case study',
+      'portfolio Avenly',
+      ...(project.techStack || []),
+    ],
+    openGraph: {
+      type: 'article',
+      title: `${project.title} - Case Study Avenly`,
+      description: project.description,
+      url: `/realizacje/${project.slug}`,
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: `Realizacja: ${project.title} dla ${project.client}`,
+        },
+      ],
+      publishedTime: `${project.year}-01-01`,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${project.title} - Avenly`,
+      description: project.description,
+      images: [ogImage],
+    },
+  };
 }
 
 export default async function ProjectPage({ params }: Props) {
@@ -46,7 +85,18 @@ export default async function ProjectPage({ params }: Props) {
 
   return (
     <main className="min-h-screen bg-[#050505] text-white selection:bg-blue-500/30 relative overflow-hidden">
-        
+
+        {/* JSON-LD: CreativeWork (case study) + Breadcrumb - niewidoczne, czytane przez Google */}
+        <JsonLd id="ld-casestudy" data={caseStudySchema(project)} />
+        <JsonLd
+          id="ld-breadcrumb"
+          data={breadcrumbSchema([
+            { name: 'Avenly', url: '/' },
+            { name: 'Realizacje', url: '/realizacje' },
+            { name: project.title, url: `/realizacje/${project.slug}` },
+          ])}
+        />
+
         {/* TŁO */}
         <div className="absolute top-0 left-0 w-full h-[800px] pointer-events-none z-0">
             <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[90%] h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/15 via-[#050505]/10 to-transparent blur-[100px]" />

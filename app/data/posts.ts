@@ -43,7 +43,7 @@ export const blogPosts: BlogPost[] = [
         <li><strong>Działa wielokanałowo:</strong> Może obsługiwać klientów na Twojej stronie WWW, WhatsAppie czy Messengerze.</li>
       </ul>
 
-      <h3>Wdrażanie AI – od czego zacząć?</h3>
+      <h3>Wdrażanie AI - od czego zacząć?</h3>
       <p>Skuteczna automatyzacja wymaga strategii. Pierwszym krokiem jest identyfikacja najczęstszych problemów klientów i przygotowanie bazy wiedzy, na której "uczyć" się będzie Twój asystent. Kolejnym etapem jest projektowanie ścieżek rozmowy (UX design w konwersacji), co gwarantuje, że klient poczuje się zaopiekowany, a nie zbyty przez automat.</p>
 
       <h2>Podsumowanie: Inwestycja, która się zwraca</h2>
@@ -85,12 +85,12 @@ export const blogPosts: BlogPost[] = [
       </ol>
 
       <h2>Szybka strona to profesjonalny wizerunek</h2>
-      <p>W Avenly budujemy serwisy, które osiągają wyniki powyżej 90/100 punktów w testach Google PageSpeed Insights. Wierzymy, że technologia nie może stać na drodze do klienta. Szybka strona to nie luksus – to fundament nowoczesnego marketingu.</p>
+      <p>W Avenly budujemy serwisy, które osiągają wyniki powyżej 90/100 punktów w testach Google PageSpeed Insights. Wierzymy, że technologia nie może stać na drodze do klienta. Szybka strona to nie luksus - to fundament nowoczesnego marketingu.</p>
 
       <blockquote>
         <strong>Twoja strona ładuje się zbyt wolno?</strong><br>
         Przeprowadzimy dla Ciebie darmowy audyt wydajności i wskażemy wąskie gardła, które blokują Twoją sprzedaż. <br>
-        <a href="/audyt">Zamów darmowy audyt szybkości</a>
+        <a href="/kontakt">Zamów darmowy audyt szybkości</a>
       </blockquote>
     `,
 	},
@@ -113,7 +113,7 @@ export const blogPosts: BlogPost[] = [
       <p>Media społecznościowe są doskonałym narzędziem do budowania zasięgu, ale posiadają jedną kluczową wadę: brak kontroli. Zmiana algorytmu lub blokada konta może z dnia na dzień odciąć Twoją firmę od klientów. <strong>Własna strona internetowa</strong> to Twój niezależny grunt w cyfrowym świecie.</p>
       
       <h3>Budowanie zaufania i wizerunku eksperta</h3>
-      <p>Dla branż takich jak medycyna, sport czy doradztwo profesjonalna witryna jest "cyfrową legitymacją". Klienci szukają potwierdzenia kompetencji – przejrzysta sekcja o nas, case studies oraz blog edukacyjny budują autorytet skuteczniej niż jakakolwiek inna forma reklamy.</p>
+      <p>Dla branż takich jak medycyna, sport czy doradztwo profesjonalna witryna jest "cyfrową legitymacją". Klienci szukają potwierdzenia kompetencji - przejrzysta sekcja o nas, case studies oraz blog edukacyjny budują autorytet skuteczniej niż jakakolwiek inna forma reklamy.</p>
 
       <h3>Centralny punkt Twojego marketingu</h3>
       <p>Strona WWW pozwala na zbieranie danych, analitykę zachowań użytkowników i prowadzenie zaawansowanych kampanii remarketingowych. To tutaj lądują osoby z reklam Google Ads czy Facebook Ads, by dokonać zakupu lub umówić się na wizytę.</p>

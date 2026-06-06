@@ -1,33 +1,57 @@
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { ArrowLeft, Calendar, Clock, User } from 'lucide-react';
-import { blogPosts } from '../../data/posts'; 
+import { blogPosts } from '../../data/posts';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { blogPostingSchema, breadcrumbSchema } from '@/lib/schemas';
 
-// --- 1. GENEROWANIE ŚCIEŻEK ---
-// To zostaje bez zmian
 export function generateStaticParams() {
   return blogPosts.map((post) => ({
     slug: post.slug,
   }));
 }
 
-// --- 2. SEO (Poprawione pod Next.js 15) ---
-// Typ params musi być Promise
 type Props = {
   params: Promise<{ slug: string }>;
 };
 
-export async function generateMetadata({ params }: Props) {
-  // Rozpakowujemy paramsy za pomocą await
-  const { slug } = await params; 
-  
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
   const post = blogPosts.find((p) => p.slug === slug);
   if (!post) return { title: 'Artykuł nie znaleziony' };
-  
+
   return {
-    title: `${post.title} | Blog Avenly`,
+    title: post.title,
     description: post.excerpt,
+    alternates: { canonical: `/blog/${post.slug}` },
+    keywords: post.categories,
+    authors: [{ name: post.author.name }],
+    openGraph: {
+      type: 'article',
+      title: post.title,
+      description: post.excerpt,
+      url: `/blog/${post.slug}`,
+      images: [
+        {
+          url: post.mainImage,
+          width: 1200,
+          height: 630,
+          alt: post.title,
+        },
+      ],
+      publishedTime: post.publishedAt,
+      authors: [post.author.name],
+      section: post.categories[0],
+      tags: post.categories,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description: post.excerpt,
+      images: [post.mainImage],
+    },
   };
 }
 
@@ -46,7 +70,18 @@ export default async function BlogPostPage({ params }: Props) {
 
   return (
     <article className="min-h-screen bg-[#050505] selection:bg-blue-500/30 overflow-x-hidden">
-        
+
+        {/* JSON-LD: BlogPosting + Breadcrumb - niewidoczne, czytane przez Google/AI */}
+        <JsonLd id="ld-blogposting" data={blogPostingSchema(post)} />
+        <JsonLd
+          id="ld-breadcrumb"
+          data={breadcrumbSchema([
+            { name: 'Avenly', url: '/' },
+            { name: 'Blog', url: '/blog' },
+            { name: post.title, url: `/blog/${post.slug}` },
+          ])}
+        />
+
         {/* --- TŁO --- */}
         <div className="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
             <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[120px] mix-blend-screen" />

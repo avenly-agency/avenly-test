@@ -31,13 +31,15 @@ export const LifecycleManager = () => {
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    // Obsługa focusu okna (dla drugiego monitora)
-    window.addEventListener('focus', () => handleVisibilityChange());
+
+    // Uwaga: NIE rejestrujemy `focus` listenera. Na mobile (iOS Safari)
+    // `focus` odpalał się nieprzewidywalnie w trakcie momentum scrolla (system overlay,
+    // app switcher, rotacje URL bara), wołając lenis.resize() które resetowało scroll
+    // do cache'owanej pozycji = random "skok na górę strony".
+    // `visibilitychange` jest deterministyczny i wystarcza dla naszego use case (tab hidden/shown).
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleVisibilityChange);
     };
   }, [lenis]);
 

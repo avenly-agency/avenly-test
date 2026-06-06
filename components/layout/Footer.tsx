@@ -4,14 +4,16 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useLenis } from 'lenis/react';
-import { 
-  Github, 
-  Twitter, 
-  Instagram, 
-  Facebook, 
-  FileCheck, 
-  ArrowUpRight 
+import {
+  Github,
+  Twitter,
+  Instagram,
+  Facebook,
+  FileCheck,
+  ArrowUpRight,
+  Cookie
 } from 'lucide-react';
+import { OPEN_SETTINGS_EVENT } from '@/lib/cookie-consent';
 
 // --- KONFIGURACJA LINKÓW ---
 const footerLinks = {
@@ -22,7 +24,7 @@ const footerLinks = {
     { name: 'Kontakt', href: '#kontakt' },
   ],
   legal: [
-    { name: 'Polityka Prywatności', href: '/polityka-prywatnosci' },
+    { name: 'Polityka prywatności', href: '/polityka-prywatnosci' },
   ],
   socials: [
     { 
@@ -86,15 +88,14 @@ export const Footer = () => {
               AVENLY<span className="text-blue-500">.</span>
             </Link>
             <p className="text-slate-400 leading-relaxed max-w-sm">
-              Twój partner w cyfrowym świecie. 
-              Przekuwamy Twoje cele w skuteczne działania w internecie. 
-              Strategia, kreacja i technologia w jednym miejscu.
+              Przekuwamy Twoje cele w skuteczne działania w internecie.
+              Strategia, design i technologia w jednym miejscu.
             </p>
           </div>
 
           {/* KOLUMNA 2: MENU */}
           <div className="col-span-1 md:col-span-3 md:col-start-7">
-            <h4 className="text-white font-bold mb-6">Menu</h4>
+            <h3 className="text-white font-bold mb-6">Menu</h3>
             <ul className="space-y-4">
               {footerLinks.main.map((link) => (
                 <li key={link.name}>
@@ -115,7 +116,7 @@ export const Footer = () => {
 
           {/* KOLUMNA 3: LEGAL */}
           <div className="col-span-1 md:col-span-3">
-            <h4 className="text-white font-bold mb-6">Legal</h4>
+            <h3 className="text-white font-bold mb-6">Informacje prawne</h3>
             <ul className="space-y-4">
               {footerLinks.legal.map((link) => (
                 <li key={link.name}>
@@ -128,6 +129,16 @@ export const Footer = () => {
                   </Link>
                 </li>
               ))}
+              <li>
+                <button
+                  type="button"
+                  onClick={() => window.dispatchEvent(new Event(OPEN_SETTINGS_EVENT))}
+                  className="text-slate-400 hover:text-white transition-colors text-sm flex items-center gap-1.5 group w-fit cursor-pointer"
+                >
+                  Ustawienia cookies
+                  <Cookie size={12} className="opacity-0 -translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all" />
+                </button>
+              </li>
             </ul>
           </div>
         </div>

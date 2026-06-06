@@ -1,10 +1,13 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { MessageCircle, X, Send, History, ArrowLeft, Clock, Trash2 } from "lucide-react";
 import Image from "next/image";
 import logoImg from "@/app/icon.png";
+import { getServiceTheme } from "@/lib/service-theme";
+import { MarkdownMessage } from "./MarkdownMessage";
 
 interface Message {
   role: "user" | "assistant";
@@ -56,19 +59,27 @@ function fmtDate(ts: number) {
   return d.toLocaleDateString("pl-PL", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
-function AssistantAvatar() {
+function AssistantAvatar({ themeColor }: { themeColor: string }) {
   return (
     <Image
       src={logoImg}
       alt="Avenly"
       width={26}
       height={26}
-      className="rounded-full shrink-0 mb-0.5 ring-1 ring-blue-500/30 shadow-sm shadow-blue-500/20"
+      className={`rounded-full shrink-0 mb-0.5 ring-1 ring-${themeColor}-500/30 shadow-sm shadow-${themeColor}-500/20`}
     />
   );
 }
 
 export function Chatbot() {
+  // Per-page main color (blue/emerald/rose/amber/sky/teal) - chatbot wpasowuje się
+  // w brand color aktualnej podstrony. Default blue dla home/o-nas/realizacje/blog itp.
+  const pathname = usePathname();
+  const theme = getServiceTheme(pathname);
+  const t = theme.rgb; // "59, 130, 246" etc. - dla rgba(...) inline styles (primary)
+  const ts = theme.rgbSecondary; // secondary rgb dla gradient (indigo dla blue, teal dla emerald itd.)
+  const grad = `linear-gradient(135deg, ${theme.hex}, ${theme.hexSecondary})`;
+
   const [isOpen,        setIsOpen]        = useState(false);
   const [view,          setView]          = useState<"chat" | "history">("chat");
   const [messages,      setMessages]      = useState<Message[]>([welcome()]);
@@ -112,7 +123,7 @@ export function Chatbot() {
         const configMap: Record<string, string> = {};
         for (const row of data) configMap[row.key] = row.value;
 
-        // Wiadomość powitalna — aktualizuj tylko gdy sesja świeża (brak wiadomości użytkownika)
+        // Wiadomość powitalna - aktualizuj tylko gdy sesja świeża (brak wiadomości użytkownika)
         if (configMap["welcome_message"]) {
           setMessages(prev => {
             const hasUser = prev.some(m => m.role === "user");
@@ -251,7 +262,7 @@ export function Chatbot() {
         const h = { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}`, "Content-Type": "application/json" };
         const save = (role: string, content: string) =>
           fetch(`${SUPA_URL}/rest/v1/chat_messages`, { method: "POST", headers: h, body: JSON.stringify({ session_id: sessionId, role, content }) });
-        // Sekwencyjnie — user musi mieć wcześniejszy created_at niż bot
+        // Sekwencyjnie - user musi mieć wcześniejszy created_at niż bot
         save("user", userMsg.content).then(() => save("assistant", botResponse)).catch(() => {});
       }
     } catch {
@@ -281,20 +292,22 @@ export function Chatbot() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.96 }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            className="fixed bottom-24 right-4 sm:right-6 z-30 w-[calc(100vw-32px)] sm:w-92.5 h-140 flex flex-col rounded-3xl overflow-hidden"
+            className="fixed bottom-24 right-4 sm:right-6 z-30 w-[calc(100vw-32px)] sm:w-92.5 flex flex-col rounded-3xl overflow-hidden"
             style={{
+              height: "min(35rem, calc(100dvh - 7.5rem))",
+              maxHeight: "calc(100dvh - 7.5rem)",
               background: "rgba(4, 8, 24, 0.82)",
               backdropFilter: "blur(40px)",
               WebkitBackdropFilter: "blur(40px)",
-              border: "1px solid rgba(59, 130, 246, 0.18)",
-              boxShadow: "0 8px 64px -8px rgba(0,0,0,0.9), 0 0 0 1px rgba(59,130,246,0.08), 0 0 80px -20px rgba(59,130,246,0.15)",
+              border: `1px solid rgba(${t}, 0.18)`,
+              boxShadow: `0 8px 64px -8px rgba(0,0,0,0.9), 0 0 0 1px rgba(${t}, 0.08), 0 0 80px -20px rgba(${t}, 0.15)`,
             }}
           >
             {/* Subtelny gradient w tle okienka */}
             <div
               className="absolute inset-0 pointer-events-none"
               style={{
-                background: "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(59,130,246,0.07) 0%, transparent 70%)",
+                background: `radial-gradient(ellipse 80% 50% at 50% 0%, rgba(${t}, 0.07) 0%, transparent 70%)`,
               }}
             />
 
@@ -302,16 +315,17 @@ export function Chatbot() {
             <div
               className="relative flex items-center justify-between px-5 py-3.5 shrink-0"
               style={{
-                background: "rgba(59, 130, 246, 0.06)",
-                borderBottom: "1px solid rgba(59, 130, 246, 0.12)",
+                background: `rgba(${t}, 0.06)`,
+                borderBottom: `1px solid rgba(${t}, 0.12)`,
                 backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
               }}
             >
               {view === "history" ? (
                 <>
                   <button
                     onClick={() => setView("chat")}
-                    className="flex items-center gap-2 text-blue-300/70 hover:text-blue-200 transition-colors cursor-pointer"
+                    className={`flex items-center gap-2 text-${theme.color}-300/70 hover:text-${theme.color}-200 transition-colors cursor-pointer`}
                   >
                     <ArrowLeft size={15} />
                     <span className="text-sm font-medium">Historia czatów</span>
@@ -321,14 +335,14 @@ export function Chatbot() {
                       <button
                         onClick={clearHistory}
                         title="Wyczyść historię"
-                        className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-red-500/10 text-blue-400/40 hover:text-red-400 transition-all cursor-pointer"
+                        className={`w-8 h-8 flex items-center justify-center rounded-xl hover:bg-red-500/10 text-${theme.color}-400/40 hover:text-red-400 transition-all cursor-pointer`}
                       >
                         <Trash2 size={14} />
                       </button>
                     )}
                     <button
                       onClick={handleClose}
-                      className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-blue-500/10 text-blue-400/50 hover:text-blue-300 transition-all cursor-pointer"
+                      className={`w-8 h-8 flex items-center justify-center rounded-xl hover:bg-${theme.color}-500/10 text-${theme.color}-400/50 hover:text-${theme.color}-300 transition-all cursor-pointer`}
                     >
                       <X size={15} />
                     </button>
@@ -338,24 +352,24 @@ export function Chatbot() {
                 <>
                   <div className="flex items-center gap-2.5">
                     <span className="text-lg font-bold tracking-tighter text-white leading-none">
-                      AVENLY<span className="text-blue-400">.</span>
+                      AVENLY<span className={`text-${theme.color}-400`}>.</span>
                     </span>
                     <div className="flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      <p className="text-[11px] text-blue-300/50 leading-none">AI · Online</p>
+                      <p className={`text-[11px] text-${theme.color}-300/50 leading-none`}>AI · Online</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => setView("history")}
                       title="Historia czatów"
-                      className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-blue-500/10 text-blue-400/50 hover:text-blue-300 transition-all cursor-pointer"
+                      className={`w-8 h-8 flex items-center justify-center rounded-xl hover:bg-${theme.color}-500/10 text-${theme.color}-400/50 hover:text-${theme.color}-300 transition-all cursor-pointer`}
                     >
                       <History size={15} />
                     </button>
                     <button
                       onClick={handleClose}
-                      className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-blue-500/10 text-blue-400/50 hover:text-blue-300 transition-all cursor-pointer"
+                      className={`w-8 h-8 flex items-center justify-center rounded-xl hover:bg-${theme.color}-500/10 text-${theme.color}-400/50 hover:text-${theme.color}-300 transition-all cursor-pointer`}
                     >
                       <X size={15} />
                     </button>
@@ -380,46 +394,46 @@ export function Chatbot() {
                     onClick={startNewChat}
                     className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left cursor-pointer transition-all"
                     style={{
-                      background: "rgba(59,130,246,0.07)",
-                      border: "1px solid rgba(59,130,246,0.22)",
+                      background: `rgba(${t}, 0.07)`,
+                      border: `1px solid rgba(${t}, 0.22)`,
                     }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(59,130,246,0.13)"; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(59,130,246,0.07)"; }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = `rgba(${t}, 0.13)`; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = `rgba(${t}, 0.07)`; }}
                   >
                     <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-                      style={{ background: "linear-gradient(135deg, #3b82f6, #6366f1)" }}>
+                      style={{ background: grad }}>
                       <MessageCircle size={13} className="text-white" />
                     </div>
-                    <span className="text-sm text-blue-300 font-medium">Nowy czat</span>
+                    <span className={`text-sm text-${theme.color}-300 font-medium`}>Nowy czat</span>
                   </button>
 
                   {sessions.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-40 gap-2">
-                      <Clock className="w-8 h-8 text-blue-500/20" />
-                      <p className="text-xs text-blue-400/30">Brak poprzednich czatów</p>
+                      <Clock className={`w-8 h-8 text-${theme.color}-500/20`} />
+                      <p className={`text-xs text-${theme.color}-400/30`}>Brak poprzednich czatów</p>
                     </div>
                   ) : sessions.map(session => (
                     <button
                       key={session.id}
                       onClick={() => loadSession(session)}
                       className="w-full flex items-start gap-3 px-4 py-3 rounded-xl text-left cursor-pointer transition-all"
-                      style={{ border: "1px solid rgba(59,130,246,0.1)", background: "transparent" }}
+                      style={{ border: `1px solid rgba(${t}, 0.1)`, background: "transparent" }}
                       onMouseEnter={e => {
-                        (e.currentTarget as HTMLElement).style.background = "rgba(59,130,246,0.06)";
-                        (e.currentTarget as HTMLElement).style.borderColor = "rgba(59,130,246,0.25)";
+                        (e.currentTarget as HTMLElement).style.background = `rgba(${t}, 0.06)`;
+                        (e.currentTarget as HTMLElement).style.borderColor = `rgba(${t}, 0.25)`;
                       }}
                       onMouseLeave={e => {
                         (e.currentTarget as HTMLElement).style.background = "transparent";
-                        (e.currentTarget as HTMLElement).style.borderColor = "rgba(59,130,246,0.1)";
+                        (e.currentTarget as HTMLElement).style.borderColor = `rgba(${t}, 0.1)`;
                       }}
                     >
                       <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
-                        style={{ background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.15)" }}>
-                        <MessageCircle size={12} className="text-blue-400" />
+                        style={{ background: `rgba(${t}, 0.1)`, border: `1px solid rgba(${t}, 0.15)` }}>
+                        <MessageCircle size={12} className={`text-${theme.color}-400`} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-slate-300 truncate">{firstUserMsg(session.messages)}</p>
-                        <p className="text-[11px] text-blue-400/40 mt-0.5">
+                        <p className={`text-[11px] text-${theme.color}-400/40 mt-0.5`}>
                           {fmtDate(session.startedAt)} · {session.messages.filter(m => m.role === "user").length} pytań
                         </p>
                       </div>
@@ -441,22 +455,24 @@ export function Chatbot() {
                       {messages.map((msg, i) => (
                         <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, ease: "easeOut" }}>
                           <div className={`flex items-end gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                            {msg.role === "assistant" && <AssistantAvatar />}
+                            {msg.role === "assistant" && <AssistantAvatar themeColor={theme.color} />}
                             <div
                               className="max-w-[82%] px-4 py-2.5 text-sm leading-relaxed"
                               style={msg.role === "user" ? {
-                                background: "linear-gradient(135deg, #3b82f6, #6366f1)",
+                                background: grad,
                                 color: "#fff",
                                 borderRadius: "1.25rem 1.25rem 0.375rem 1.25rem",
-                                boxShadow: "0 4px 20px -4px rgba(59,130,246,0.4)",
+                                boxShadow: `0 4px 20px -4px rgba(${t}, 0.4)`,
                               } : {
-                                background: "rgba(59,130,246,0.09)",
-                                border: "1px solid rgba(59,130,246,0.15)",
+                                background: `rgba(${t}, 0.09)`,
+                                border: `1px solid rgba(${t}, 0.15)`,
                                 color: "#e2e8f0",
                                 borderRadius: "1.25rem 1.25rem 1.25rem 0.375rem",
                               }}
                             >
-                              {msg.content}
+                              {msg.role === "assistant"
+                                ? <MarkdownMessage content={msg.content} />
+                                : msg.content}
                             </div>
                           </div>
 
@@ -471,7 +487,7 @@ export function Chatbot() {
                                   transition={{ duration: 0.2, delay: qi * 0.06 }}
                                   whileTap={{ scale: 0.95 }}
                                   onClick={() => sendMessage(qr.message || qr.label)}
-                                  className="cursor-pointer select-none"
+                                  className={`cursor-pointer select-none text-${theme.color}-300 hover:text-${theme.color}-200`}
                                   style={{
                                     padding: "0.375rem 0.875rem",
                                     borderRadius: "2rem",
@@ -479,26 +495,24 @@ export function Chatbot() {
                                     fontWeight: 600,
                                     lineHeight: 1.4,
                                     letterSpacing: "0.01em",
-                                    background: "linear-gradient(135deg, rgba(59,130,246,0.12), rgba(99,102,241,0.12))",
-                                    border: "1px solid rgba(99,102,241,0.35)",
-                                    color: "#a5b4fc",
+                                    background: `linear-gradient(135deg, rgba(${t}, 0.12), rgba(${t}, 0.12))`,
+                                    border: `1px solid rgba(${ts}, 0.35)`,
                                     backdropFilter: "blur(8px)",
-                                    boxShadow: "0 2px 10px -2px rgba(99,102,241,0.2), inset 0 1px 0 rgba(255,255,255,0.04)",
+                                    WebkitBackdropFilter: "blur(8px)",
+                                    boxShadow: `0 2px 10px -2px rgba(${ts}, 0.2), inset 0 1px 0 rgba(255,255,255,0.04)`,
                                     transition: "all 0.15s ease",
                                   }}
                                   onMouseEnter={e => {
                                     const el = e.currentTarget as HTMLElement;
-                                    el.style.background = "linear-gradient(135deg, rgba(59,130,246,0.25), rgba(99,102,241,0.25))";
-                                    el.style.borderColor = "rgba(99,102,241,0.65)";
-                                    el.style.color = "#c7d2fe";
-                                    el.style.boxShadow = "0 4px 16px -2px rgba(99,102,241,0.35), inset 0 1px 0 rgba(255,255,255,0.06)";
+                                    el.style.background = `linear-gradient(135deg, rgba(${t}, 0.25), rgba(${t}, 0.25))`;
+                                    el.style.borderColor = `rgba(${ts}, 0.65)`;
+                                    el.style.boxShadow = `0 4px 16px -2px rgba(${ts}, 0.35), inset 0 1px 0 rgba(255,255,255,0.06)`;
                                   }}
                                   onMouseLeave={e => {
                                     const el = e.currentTarget as HTMLElement;
-                                    el.style.background = "linear-gradient(135deg, rgba(59,130,246,0.12), rgba(99,102,241,0.12))";
-                                    el.style.borderColor = "rgba(99,102,241,0.35)";
-                                    el.style.color = "#a5b4fc";
-                                    el.style.boxShadow = "0 2px 10px -2px rgba(99,102,241,0.2), inset 0 1px 0 rgba(255,255,255,0.04)";
+                                    el.style.background = `linear-gradient(135deg, rgba(${t}, 0.12), rgba(${t}, 0.12))`;
+                                    el.style.borderColor = `rgba(${ts}, 0.35)`;
+                                    el.style.boxShadow = `0 2px 10px -2px rgba(${ts}, 0.2), inset 0 1px 0 rgba(255,255,255,0.04)`;
                                   }}
                                 >
                                   {qr.label}
@@ -512,17 +526,17 @@ export function Chatbot() {
 
                     {isLoading && (
                       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex items-end gap-2 justify-start">
-                        <AssistantAvatar />
+                        <AssistantAvatar themeColor={theme.color} />
                         <div
                           className="px-4 py-3 flex gap-1.5 items-center"
                           style={{
-                            background: "rgba(59,130,246,0.09)",
-                            border: "1px solid rgba(59,130,246,0.15)",
+                            background: `rgba(${t}, 0.09)`,
+                            border: `1px solid rgba(${t}, 0.15)`,
                             borderRadius: "1.25rem 1.25rem 1.25rem 0.375rem",
                           }}
                         >
                           {[0, 1, 2].map(i => (
-                            <span key={i} className="w-1.5 h-1.5 rounded-full bg-blue-400/60 animate-bounce" style={{ animationDelay: `${i * 0.12}s` }} />
+                            <span key={i} className={`w-1.5 h-1.5 rounded-full bg-${theme.color}-400/60 animate-bounce`} style={{ animationDelay: `${i * 0.12}s` }} />
                           ))}
                         </div>
                       </motion.div>
@@ -534,9 +548,10 @@ export function Chatbot() {
                   <div
                     className="px-4 py-3.5 shrink-0"
                     style={{
-                      background: "rgba(59,130,246,0.05)",
-                      borderTop: "1px solid rgba(59,130,246,0.12)",
+                      background: `rgba(${t}, 0.05)`,
+                      borderTop: `1px solid rgba(${t}, 0.12)`,
                       backdropFilter: "blur(20px)",
+                      WebkitBackdropFilter: "blur(20px)",
                     }}
                   >
                     {/* Przyciski "zawsze widoczne" */}
@@ -547,29 +562,26 @@ export function Chatbot() {
                             key={qr.id}
                             onClick={() => sendMessage(qr.message || qr.label)}
                             disabled={isLoading}
-                            className="cursor-pointer select-none disabled:opacity-40"
+                            className={`cursor-pointer select-none disabled:opacity-40 text-${theme.color}-300/70 hover:text-${theme.color}-300`}
                             style={{
                               padding: "0.3rem 0.75rem",
                               borderRadius: "2rem",
                               fontSize: "0.7rem",
                               fontWeight: 600,
                               letterSpacing: "0.01em",
-                              background: "rgba(59,130,246,0.08)",
-                              border: "1px solid rgba(59,130,246,0.2)",
-                              color: "rgba(147,197,253,0.75)",
+                              background: `rgba(${t}, 0.08)`,
+                              border: `1px solid rgba(${t}, 0.2)`,
                               transition: "all 0.15s ease",
                             }}
                             onMouseEnter={e => {
                               const el = e.currentTarget as HTMLElement;
-                              el.style.background = "rgba(59,130,246,0.18)";
-                              el.style.borderColor = "rgba(59,130,246,0.45)";
-                              el.style.color = "#93c5fd";
+                              el.style.background = `rgba(${t}, 0.18)`;
+                              el.style.borderColor = `rgba(${t}, 0.45)`;
                             }}
                             onMouseLeave={e => {
                               const el = e.currentTarget as HTMLElement;
-                              el.style.background = "rgba(59,130,246,0.08)";
-                              el.style.borderColor = "rgba(59,130,246,0.2)";
-                              el.style.color = "rgba(147,197,253,0.75)";
+                              el.style.background = `rgba(${t}, 0.08)`;
+                              el.style.borderColor = `rgba(${t}, 0.2)`;
                             }}
                           >
                             {qr.label}
@@ -585,18 +597,18 @@ export function Chatbot() {
                         onKeyDown={handleKeyDown}
                         placeholder="Napisz wiadomość..."
                         rows={1}
-                        className="flex-1 text-white text-sm resize-none outline-none leading-relaxed chat-scrollbar transition-all placeholder-blue-400/30"
+                        className={`flex-1 text-white text-sm resize-none outline-none leading-relaxed chat-scrollbar transition-all placeholder-${theme.color}-400/30`}
                         style={{
                           minHeight: "40px",
                           maxHeight: "96px",
                           overflowY: "hidden",
-                          background: "rgba(59,130,246,0.07)",
-                          border: "1px solid rgba(59,130,246,0.18)",
+                          background: `rgba(${t}, 0.07)`,
+                          border: `1px solid rgba(${t}, 0.18)`,
                           borderRadius: "0.75rem",
                           padding: "0.625rem 0.875rem",
                         }}
-                        onFocus={e => { e.currentTarget.style.borderColor = "rgba(59,130,246,0.45)"; e.currentTarget.style.background = "rgba(59,130,246,0.11)"; }}
-                        onBlur={e => { e.currentTarget.style.borderColor = "rgba(59,130,246,0.18)"; e.currentTarget.style.background = "rgba(59,130,246,0.07)"; }}
+                        onFocus={e => { e.currentTarget.style.borderColor = `rgba(${t}, 0.45)`; e.currentTarget.style.background = `rgba(${t}, 0.11)`; }}
+                        onBlur={e => { e.currentTarget.style.borderColor = `rgba(${t}, 0.18)`; e.currentTarget.style.background = `rgba(${t}, 0.07)`; }}
                       />
                       <motion.button
                         whileTap={{ scale: 0.9 }}
@@ -604,14 +616,14 @@ export function Chatbot() {
                         disabled={!input.trim() || isLoading}
                         className="w-10 h-10 flex items-center justify-center rounded-xl cursor-pointer text-white transition-all shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
                         style={{
-                          background: "linear-gradient(135deg, #3b82f6, #6366f1)",
-                          boxShadow: "0 4px 16px -4px rgba(59,130,246,0.5)",
+                          background: grad,
+                          boxShadow: `0 4px 16px -4px rgba(${t}, 0.5)`,
                         }}
                       >
                         <Send size={15} />
                       </motion.button>
                     </div>
-                    <p className="text-[10px] mt-2 text-center select-none" style={{ color: "rgba(96,165,250,0.3)" }}>
+                    <p className={`text-[10px] mt-2 text-center select-none text-${theme.color}-400/30`}>
                       Enter · wyślij &nbsp;·&nbsp; Shift+Enter · nowa linia
                     </p>
                   </div>
@@ -622,18 +634,27 @@ export function Chatbot() {
         )}
       </AnimatePresence>
 
-      {/* Bubble — z-30 żeby nie nachodził na mobilne menu (z-40) */}
+      {/* Bubble - z-30 żeby nie nachodził na mobilne menu (z-40).
+          Intro animation: spring bounce (scale + opacity) gdy Chatbot się mountuje
+          (~500ms po hydration przez DeferredClientWidgets). */}
       <motion.button
         onClick={() => setIsOpen(prev => !prev)}
+        initial={{ opacity: 0, scale: 0, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 260, damping: 18, mass: 0.9 }}
         whileHover={{ scale: 1.06 }}
         whileTap={{ scale: 0.93 }}
+        aria-label={isOpen ? 'Zamknij czat z asystentem AI Avenly' : 'Otwórz czat z asystentem AI Avenly'}
+        aria-expanded={isOpen}
+        aria-haspopup="dialog"
+        type="button"
         className="fixed bottom-6 right-4 sm:right-6 z-30 w-14 h-14 rounded-full cursor-pointer flex items-center justify-center transition-all duration-300"
         style={{
           background: "rgba(4, 8, 24, 0.75)",
           backdropFilter: "blur(24px)",
           WebkitBackdropFilter: "blur(24px)",
-          border: "1px solid rgba(59,130,246,0.35)",
-          boxShadow: "0 4px 32px -4px rgba(59,130,246,0.35), 0 0 0 1px rgba(59,130,246,0.1)",
+          border: `1px solid rgba(${t}, 0.35)`,
+          boxShadow: `0 4px 32px -4px rgba(${t}, 0.35), 0 0 0 1px rgba(${t}, 0.1)`,
         }}
       >
         {hasNewMessage && !isOpen && (
@@ -642,11 +663,11 @@ export function Chatbot() {
         <AnimatePresence mode="wait" initial={false}>
           {isOpen ? (
             <motion.div key="close" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.16 }}>
-              <X size={21} className="text-blue-300" />
+              <X size={21} className={`text-${theme.color}-300`} />
             </motion.div>
           ) : (
             <motion.div key="open" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.16 }}>
-              <MessageCircle size={21} className="text-blue-300" />
+              <MessageCircle size={21} className={`text-${theme.color}-300`} />
             </motion.div>
           )}
         </AnimatePresence>
