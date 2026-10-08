@@ -1,0 +1,268 @@
+/* Podstrona „Chatboty AI” - sekcja 2 PYTANIA (chat 13, praca równoległa, etap 3, runda 2). Style tylko tej sekcji,
+   prefiks ch-q-. Wspólne części (asystent-gwiazda, wypowiedzi, narrator, nagłówek sekcji): chatboty.css.
+   Trzy sceny do wyboru (pytania.tsx):
+     .ch-q-f  „Napływ”         - pole pytań w głębi płynie przez włosową linię odpowiedzi z gwiazdą asystenta,
+     .ch-q-r  „Wyścig”         - formularz kontra asystent: zegar nocy, dwa tory, dwa czasy wielką typografią,
+     .ch-q-c  „Wszyscy naraz”  - jazda kamery wzdłuż rzędu rozmów w perspektywie, na końcu wszystkie naraz.
+   Układ domyślny każdej sceny = zwykły blok ze stanem końcowym (bez JS, ograniczony ruch, niski ekran do 520 px).
+   Przypięcie i ruch wyłącznie pod .sv[data-live] w @media (prefers-reduced-motion: no-preference) and
+   (min-height: 521px) - ten sam próg ma useCalm w pytania.tsx. chatboty.css ładuje się PO tym pliku, więc nadpisania
+   wspólnych klas mają tu wyższą specyficzność (przodek .ch-q), a nie polegają na kolejności.
+   Bez rozmyć, poświat, masek za tekstem i tekstu z gradientem; pomarańcz podstrony tylko w liniach i znakach. */
+
+/* ══════════════════════════════════════════════════════════════════════════════════════════════════════════════
+   1. NAPŁYW (.ch-q-f)
+   Komputer (od 1024 px): nagłówek i narrator przy lewej krawędzi kontenera W KADRZE, między nimi włosowa linia
+   odpowiedzi przez cały ekran (nad nią podpis z jedyną liczbą podstrony), gwiazda asystenta w 46% szerokości,
+   pole pytań po prawej - wychodzi za prawą krawędź ekranu. Telefon / tablet: nagłówek nad kadrem, w kadrze
+   narrator u góry, pole pytań na całą szerokość, gwiazda na lewym końcu linii.
+   Położenie dymka: --d = --d0 - --u * --s (w wysokościach ekranu względem linii; --u pisze JS z przewijania).
+   ══════════════════════════════════════════════════════════════════════════════════════════════════════════════ */
+.ch-q-f-in { display: grid; gap: 32px; }
+.ch-q-f-mark { display: none; }
+.ch-q-f-view { display: grid; gap: 30px; min-width: 0; }
+.ch-q-f-rule { position: relative; min-width: 0; }
+.ch-q-f-sky { position: absolute; inset: 0; pointer-events: none; }
+.ch-q-f-hair, .ch-q-f-imp, .ch-q .ch-q-f-star { display: none; }
+.ch-q-f-list { list-style: none; display: flex; flex-wrap: wrap; gap: 12px 10px; margin: 0; padding: 0; }
+.ch-q-f-b {
+  position: relative; max-width: 100%; padding: .62em 1em .68em; border-radius: 1.1em 1.1em .3em 1.1em;
+  border: 1px solid rgb(var(--sv-ac) / .55); background: rgba(4, 4, 5, .86); color: #f8fafc;
+  font-size: 16px; line-height: 1.35;
+}
+.ch-q-f-b[data-pl="0"] { display: none; } /* plan daleki = powtórzenia, tylko w scenie */
+.ch-q-f-t { display: block; }
+/* znak odpowiedzi: mała gwiazda asystenta na rogu dymka */
+.ch-q .ch-q-f-ok {
+  position: absolute; right: -.45em; top: -.52em; width: 1.2em; height: 1.2em; padding: .27em; border-radius: 50%;
+  border: 1px solid rgb(var(--sv-ac) / .6); background: #050505;
+}
+.ch-q .ch-q-f-ok svg, .ch-q .ch-q-f-note-s svg { animation: none; }
+.ch-q-f-foot { display: grid; gap: 22px; min-width: 0; }
+.ch-q-f-note { display: flex; align-items: center; gap: 9px; margin: 0; font-size: 14.5px; line-height: 1.3; font-variant-numeric: tabular-nums; color: var(--ch-ac-hi); }
+.ch-q .ch-q-f-note-s { width: 12px; height: 12px; }
+
+@media (prefers-reduced-motion: no-preference) and (min-height: 521px) {
+  .sv[data-live] .ch-q-f { --fh: 100vh; }
+  @supports (height: 100svh) { .sv[data-live] .ch-q-f { --fh: 100svh; } }
+  .sv[data-live] .ch-q-f-sky { inset: auto; left: var(--fl); width: var(--fw); top: -30vh; height: 60vh; }
+  .sv[data-live] .ch-q-f-hair { display: block; position: absolute; left: 0; top: 0; width: calc(100% + (100vw - 100%) / 2); height: 1px; background: rgba(255, 255, 255, .2); }
+  .sv[data-live] .ch-q .ch-q-f-star { display: inline-grid; position: absolute; left: var(--sx); top: 0; z-index: 4; width: 30px; height: 30px; margin: -15px 0 0 -15px; }
+  /* odpowiedź biegnie po linii od gwiazdy do pytania (animację uruchamia JS przy przejściu dymka przez linię) */
+  .sv[data-live] .ch-q-f-imp {
+    display: block; position: absolute; left: var(--sx); top: -1px; z-index: 3; width: 0; height: 3px; pointer-events: none;
+    transform-origin: 0 50%; opacity: 0; background: linear-gradient(90deg, rgb(var(--sv-ac) / .12), rgb(var(--sv-ac)));
+  }
+  .sv[data-live] .ch-q-f-list { display: block; position: absolute; left: var(--fl); top: 0; z-index: 2; width: var(--fw); height: 0; }
+  .sv[data-live] .ch-q-f-b {
+    --d: calc(var(--d0) - var(--u, 0) * var(--s));
+    position: absolute; left: calc(var(--x) * 100%); top: 0; max-width: none; white-space: nowrap; opacity: var(--o, 1);
+    transform: translate3d(calc(var(--u, 0) * var(--dx, 0px)), calc(var(--d) * var(--fh) - 50%), 0);
+    transition: border-color .6s ease .16s, color .6s ease .16s;
+  }
+  /* trzy plany: daleki mały i przygaszony, środkowy, bliski duży (część wychodzi za krawędź ekranu) */
+  .sv[data-live] .ch-q-f-b[data-pl="0"] { display: block; --o: .5; --dx: -12px; font-size: 11.5px; background: rgba(4, 4, 5, .66); }
+  .sv[data-live] .ch-q-f-b[data-pl="1"] { z-index: 1; --dx: -30px; font-size: 16.5px; }
+  .sv[data-live] .ch-q-f-b[data-pl="2"] { z-index: 2; --dx: -72px; font-size: clamp(21px, 1.9vw, 30px); background: rgba(4, 4, 5, .94); }
+  /* pod linią: pytanie bez odpowiedzi (szary obrys, bez znaku) */
+  .sv[data-live] .ch-q-f-b:not([data-a]) { border-color: rgba(255, 255, 255, .24); color: #cbd5e1; transition: border-color .4s ease, color .4s ease; }
+  .sv[data-live] .ch-q .ch-q-f-ok { transition: opacity .5s ease .2s, transform .7s var(--sv-ease) .2s; }
+  .sv[data-live] .ch-q .ch-q-f-b:not([data-a]) .ch-q-f-ok { opacity: 0; transform: scale(.4); transition: opacity .3s ease, transform .3s ease; }
+}
+
+/* komputer: nagłówek w kadrze, linia między nagłówkiem a narratorem (położenie z układu - bez pomiaru w JS) */
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) and (min-height: 521px) {
+  .sv[data-live] .ch-q-f { padding-top: 40px; }
+  .sv[data-live] .ch-q-f-pin { height: 320vh; height: calc(100svh + 220vh); }
+  .sv[data-live] .ch-q-f-stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: clip; }
+  .sv[data-live] .ch-q-f-in { grid-template-rows: auto minmax(104px, 1fr) auto; gap: 0; height: 100%; padding-top: 112px; padding-bottom: 44px; }
+  .sv[data-live] .ch-q-f .ch-sec-head { grid-row: 1; max-width: 43%; }
+  .sv.ch[data-live] .ch-q-f .ch-sec-head .sv-h2 { font-size: clamp(30px, min(4.2vw, 7.2vh), 56px); }
+  .sv[data-live] :is(.ch-q-f-view, .ch-q-f-foot) { display: contents; }
+  .sv[data-live] .ch-q-f-rule { grid-row: 2; grid-column: 1; align-self: center; height: 0; --sx: 46%; --fl: calc(46% + 48px); --fw: calc(54% - 48px + (100vw - 100%) / 2); }
+  .sv[data-live] .ch-q-f-note { grid-row: 2; grid-column: 1; align-self: center; justify-self: start; transform: translateY(calc(-50% - 15px)); }
+  .sv[data-live] .ch-q .ch-q-f-narr { grid-row: 3; grid-column: 1; width: min(34rem, 43%); }
+}
+/* niski ekran komputera: bez opisu w kadrze (zostaje nagłówek) */
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) and (min-height: 521px) and (max-height: 699.98px) {
+  .sv.ch[data-live] .ch-q-f .ch-sec-lead { display: none; }
+  .sv[data-live] .ch-q-f-in { padding-top: 100px; padding-bottom: 32px; }
+}
+
+/* telefon / tablet: nagłówek nad kadrem; kadr (100svh) przykleja się sam, drogę daje odstęp za nim */
+@media (max-width: 1023.98px) and (prefers-reduced-motion: no-preference) and (min-height: 521px) {
+  .sv[data-live] .ch-q-f-in { display: block; }
+  .sv[data-live] .ch-q-f-in::after { content: ''; display: block; height: 220vh; }
+  .sv[data-live] .ch-q-f-mark { display: block; height: 0; }
+  .sv[data-live] .ch-q-f-view { display: block; position: sticky; top: 0; height: 100vh; height: 100svh; overflow-x: visible; overflow-y: clip; }
+  .sv[data-live] .ch-q-f-rule { position: absolute; left: 0; right: 0; top: 64%; height: 0; --sx: 13px; --fl: 42px; --fw: calc(100% - 42px + (100vw - 100%) / 2); }
+  /* dymki gasną pod narratorem (krycie z położenia, bez masek) */
+  .sv[data-live] .ch-q-f-b { left: calc(var(--xm) * 100%); opacity: calc(var(--o, 1) * clamp(0, (var(--d) + .27) * 10, 1)); }
+  .sv[data-live] .ch-q-f-b[data-pl="0"] { --dx: -6px; font-size: 10.5px; }
+  .sv[data-live] .ch-q-f-b[data-pl="1"] { --dx: -14px; font-size: 15.5px; }
+  .sv[data-live] .ch-q-f-b[data-pl="2"] { --dx: -36px; font-size: 21px; }
+  .sv[data-live] .ch-q-f-foot { position: absolute; left: 0; right: 0; top: 104px; z-index: 5; gap: 12px; }
+  .sv[data-live] .ch-q-f-note { order: 2; }
+}
+@media (max-width: 1023.98px) and (prefers-reduced-motion: no-preference) and (min-height: 521px) and (max-height: 640px) {
+  .sv[data-live] .ch-q-f-rule { top: 70%; }
+  .sv[data-live] .ch-q-f-b { opacity: calc(var(--o, 1) * clamp(0, (var(--d) + .25) * 12, 1)); }
+}
+@media (min-width: 640px) and (max-width: 1023.98px) and (prefers-reduced-motion: no-preference) and (min-height: 521px) {
+  .sv[data-live] .ch-q-f-b[data-pl="1"] { left: calc((var(--x) * .7 + var(--xm) * .3) * 100%); font-size: 16.5px; }
+  .sv[data-live] .ch-q-f-b[data-pl="0"] { left: calc(var(--x) * 100%); font-size: 11.5px; }
+  .sv[data-live] .ch-q-f-b[data-pl="2"] { left: calc(var(--x) * 90%); font-size: 26px; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════════════════════════════════════
+   2. WYŚCIG (.ch-q-r)
+   Nad torami zegar (godzina pisana z przewijania) i linia nocy; dwa tory: formularz (czeka do rana) i asystent
+   (odpowiada od razu). Zmienne z JS: --cam (najazd kamery na tor asystenta, 0-1-0), --wait (noc, 0-1),
+   --fin (finał: dwa czasy rosną, rozmowy przygasają). Każdy tor pokazuje jedno swoje zdanie naraz.
+   ══════════════════════════════════════════════════════════════════════════════════════════════════════════════ */
+.ch-q-r-in { display: grid; gap: 22px; padding-top: 36px; }
+.ch-q-r-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; min-width: 0; }
+.ch-q-r-clock { display: none; }
+.ch-q-r-lanes { display: grid; gap: 16px; min-width: 0; }
+@media (min-width: 768px) { .ch-q-r-lanes { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; } }
+.ch-q-r-lane {
+  display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 16px; min-width: 0; padding: 22px;
+  border-radius: 22px; background: var(--ch-glass); box-shadow: var(--sv-edge);
+}
+.ch-q-r-lane[data-lane="bot"] { box-shadow: var(--sv-edge), inset 0 1px 0 rgb(var(--sv-ac) / .9); }
+.ch-q-r-name { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 16.5px; font-weight: 600; line-height: 1.3; letter-spacing: -.01em; color: #f8fafc; }
+.ch-q .ch-q-r-name .ch-spark { width: 16px; height: 16px; }
+.ch-q-r-thread { display: grid; gap: 10px; align-content: start; min-width: 0; }
+.ch-q-r-wait { display: none; }
+/* odpowiedź firmy na formularz: zwykły dymek bez gwiazdy (to nie asystent) */
+.ch-q-r-late { display: flex; padding-right: 8%; }
+.ch-q-r-late .ch-bub { border-radius: 5px 18px 18px 18px; border: 1px solid rgba(255, 255, 255, .22); background: rgba(255, 255, 255, .05); color: #f1f5f9; }
+.ch-q-r-end { display: grid; gap: 14px; align-content: end; min-width: 0; }
+.ch-q-r-say { list-style: none; display: grid; gap: 6px; margin: 0; padding: 0; font-size: 15.5px; line-height: 1.5; color: #cbd5e1; }
+.ch-q-r-big { margin: 0; font-weight: 600; line-height: 1; letter-spacing: -.05em; font-variant-numeric: tabular-nums; text-wrap: balance; }
+.ch-q-r-lane[data-lane="form"] .ch-q-r-big { font-size: clamp(26px, min(3.4vw, 6vh), 52px); line-height: 1.04; color: #94a3b8; }
+.ch-q-r-lane[data-lane="bot"] .ch-q-r-big { font-size: clamp(44px, min(6.6vw, 12vh), 108px); color: var(--ch-ac-hi); }
+
+@media (prefers-reduced-motion: no-preference) and (min-height: 521px) {
+  .sv[data-live] .ch-q-r-pin { height: 360vh; height: calc(100svh + 260vh); }
+  .sv[data-live] .ch-q-r-stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: clip; }
+  .sv[data-live] .ch-q-r-in { grid-template-rows: auto minmax(0, 1fr); gap: 18px; height: 100%; padding-top: 100px; padding-bottom: 36px; }
+  .sv[data-live] .ch-q-r-top { flex-wrap: nowrap; }
+  /* zegar + linia nocy (wymiar: kreski na końcach, wypełnienie w kolorze podstrony rośnie do rana) */
+  .sv[data-live] .ch-q-r-clock { display: flex; align-items: center; gap: 22px; flex: 1; min-width: 0; margin: 0; }
+  .sv[data-live] .ch-q-r-time { flex: none; font-size: clamp(40px, min(8vw, 13vh), 124px); font-weight: 600; line-height: .9; letter-spacing: -.05em; font-variant-numeric: tabular-nums; white-space: nowrap; color: #f8fafc; }
+  .sv[data-live] .ch-q-r-track { position: relative; flex: 1; min-width: 12px; height: 1px; background: rgba(255, 255, 255, .18); }
+  .sv[data-live] .ch-q-r-track::before, .sv[data-live] .ch-q-r-track::after { content: ''; position: absolute; top: -6px; width: 1px; height: 13px; background: rgba(255, 255, 255, .4); }
+  .sv[data-live] .ch-q-r-track::before { left: 0; }
+  .sv[data-live] .ch-q-r-track::after { right: 0; }
+  .sv[data-live] .ch-q-r-track i { position: absolute; inset: 0; background: rgb(var(--sv-ac)); transform-origin: 0 50%; transform: scaleX(var(--wait, 1)); }
+  .sv[data-live] .ch-q-r-tag { flex: none; }
+
+  .sv[data-live] .ch-q-r-lanes { min-height: 0; perspective: 1400px; perspective-origin: 50% 40%; }
+  .sv[data-live] .ch-q-r-lane { min-height: 0; padding: 24px 26px; }
+  .sv[data-live] .ch-q-r-thread { overflow: clip; opacity: calc(1 - var(--fin, 0) * .7); }
+  /* linia oczekiwania: wydłuża się, gdy mija noc */
+  .sv[data-live] .ch-q-r-wait { display: block; position: relative; height: clamp(16px, 6vh, 64px); margin-left: 20px; }
+  .sv[data-live] .ch-q-r-wait i { position: absolute; left: 0; top: 0; bottom: 0; width: 1px; background: rgba(255, 255, 255, .34); transform-origin: 50% 0; transform: scaleY(var(--wait, 1)); }
+  .sv[data-live] .ch-q-r-late { transition: opacity .7s ease, transform .9s var(--sv-ease); }
+  .sv[data-live] .ch-q-r-late:not([data-on]) { opacity: 0; transform: translateY(12px); transition: none; }
+  /* jedno zdanie toru naraz */
+  .sv[data-live] .ch-q-r-say { gap: 0; font-size: clamp(15.5px, 1.25vw, 18px); line-height: 1.45; color: #f8fafc; }
+  .sv[data-live] .ch-q-r-say li { grid-area: 1 / 1; opacity: 0; transform: translateY(8px); transition: opacity .45s ease, transform .7s var(--sv-ease); }
+  .sv[data-live] .ch-q-r-say li[data-on="1"] { opacity: 1; transform: none; transition-delay: .12s; }
+  /* wielki czas toru: pojawia się na końcu toru, w finale rośnie */
+  .sv[data-live] .ch-q-r-big { transform-origin: 0 100%; scale: calc(1 + var(--fin, 0) * .2); transition: opacity .8s ease, translate 1s var(--sv-ease); }
+  .sv[data-live] .ch-q-r-big:not([data-on]) { opacity: 0; translate: 0 14px; transition: none; }
+}
+/* komputer / tablet poziomo: tory obok siebie, kamera najeżdża na tor asystenta, formularz odjeżdża w głąb i gaśnie */
+@media (min-width: 768px) and (prefers-reduced-motion: no-preference) and (min-height: 521px) {
+  .sv[data-live] .ch-q-r-lane[data-lane="form"] {
+    transform-origin: 0 50%; opacity: calc(1 - var(--cam, 0) * .5);
+    transform: rotateY(calc(var(--cam, 0) * 14deg)) scale(calc(1 - var(--cam, 0) * .16));
+  }
+  .sv[data-live] .ch-q-r-lane[data-lane="bot"] { z-index: 1; transform-origin: 100% 50%; transform: scale(calc(1 + var(--cam, 0) * .12)); }
+}
+/* telefon: tory jeden pod drugim; kamera przesuwa się na dolny tor (asystent rośnie, formularz maleje i gaśnie);
+   wielki czas zajmuje miejsce zdania dopiero w finale */
+@media (max-width: 767.98px) and (prefers-reduced-motion: no-preference) and (min-height: 521px) {
+  .sv[data-live] .ch-q-r-in { gap: 12px; padding-bottom: 20px; }
+  .sv[data-live] .ch-q-r-clock { gap: 12px; }
+  .sv[data-live] .ch-q-r-time { font-size: clamp(34px, min(10.5vw, 7vh), 48px); }
+  .sv[data-live] .ch-q-r-lanes { grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .sv[data-live] .ch-q-r-lane { gap: 10px; padding: 14px 16px; border-radius: 18px; }
+  .sv[data-live] .ch-q-r-lane[data-lane="form"] { transform-origin: 0 0; opacity: calc(1 - var(--cam, 0) * .5); transform: scale(calc(1 - var(--cam, 0) * .1)); }
+  .sv[data-live] .ch-q-r-lane[data-lane="bot"] { z-index: 1; margin-right: 0; transform-origin: 50% 100%; transform: translate3d(0, calc(var(--cam, 0) * -7%), 0) scale(calc(1 + var(--cam, 0) * .03)); }
+  .sv[data-live] .ch-q-r-name { font-size: 15px; }
+  .sv[data-live] .ch-q-r-thread { gap: 7px; }
+  .sv[data-live] .ch-q-r .ch-bub { padding: 8px 13px 9px; font-size: 14.5px; line-height: 1.42; }
+  .sv[data-live] .ch-q-r-wait { height: clamp(8px, 2.4vh, 22px); }
+  .sv[data-live] .ch-q-r-end { gap: 0; padding-right: 0; }
+  .sv[data-live] .ch-q-r-lane[data-lane="bot"] .ch-q-r-end { padding-right: 64px; } /* prawy dolny róg: bąbel czatu */
+  .sv[data-live] .ch-q-r-say { font-size: 14.5px; transition: opacity .5s ease; }
+  .sv[data-live] .ch-q-r-big { grid-area: 1 / 1; align-self: end; scale: 1; }
+  .sv[data-live] .ch-q-r-say { grid-area: 1 / 1; align-self: end; }
+  .sv[data-live] .ch-q-r-pin:not([data-fin]) .ch-q-r-big { opacity: 0; translate: 0 14px; transition: none; }
+  .sv[data-live] .ch-q-r-pin[data-fin] .ch-q-r-say { opacity: 0; }
+  .sv[data-live] .ch-q-r-lane[data-lane="form"] .ch-q-r-big { font-size: clamp(22px, 6.4vw, 30px); }
+  .sv[data-live] .ch-q-r-lane[data-lane="bot"] .ch-q-r-big { font-size: clamp(38px, 12vw, 56px); }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════════════════════════════════════
+   3. WSZYSCY NARAZ (.ch-q-c)
+   Rząd sześciu rozmów stoi w perspektywie (obrót wokół lewej krawędzi kadru - karty maleją w głąb), kamera jedzie
+   w bok (--dolly w px, pisze JS), za nim rząd pustych rozmów w głębi jedzie o połowę wolniej. Finał (--g 0-1):
+   rząd prostuje się, karty układają się w siatkę przy lewej krawędzi kontenera (--tx / --ty / --sg z pomiaru w JS).
+   ══════════════════════════════════════════════════════════════════════════════════════════════════════════════ */
+.ch-q-c-in { display: grid; gap: 22px; padding-top: 36px; }
+.ch-q-c-top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; min-width: 0; }
+.ch-q-c-note { margin: 0; font-size: clamp(17px, 1.6vw, 22px); font-weight: 600; line-height: 1.3; letter-spacing: -.015em; color: #f8fafc; text-wrap: balance; }
+.ch-q-c-cam, .ch-q-c-rig { min-width: 0; }
+.ch-q-c-back { display: none; } /* drugi rząd w głębi tylko w przypiętej scenie */
+.ch-q-c-row { list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 14px; margin: 0; padding: 0; }
+.ch-q-c-card {
+  display: grid; gap: 10px; align-content: start; min-width: 0; padding: 18px; border-radius: 20px;
+  background: var(--ch-glass); box-shadow: var(--sv-edge), inset 0 1px 0 rgb(var(--sv-ac) / .85);
+}
+
+@media (prefers-reduced-motion: no-preference) and (min-height: 521px) {
+  .sv[data-live] .ch-q-c-pin { height: 320vh; height: calc(100svh + 220vh); }
+  .sv[data-live] .ch-q-c-stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: clip; }
+  .sv[data-live] .ch-q-c-in { grid-template-rows: auto minmax(0, 1fr) auto; gap: 14px; height: 100%; padding-top: 100px; padding-bottom: 40px; }
+  .sv[data-live] .ch-q-c-note { transition: opacity .8s ease, transform 1s var(--sv-ease); }
+  .sv[data-live] .ch-q-c-note:not([data-on]) { opacity: 0; transform: translateY(10px); transition: none; }
+  .sv[data-live] .ch-q-c-cam { position: relative; min-height: 0; perspective: 1500px; perspective-origin: 24% 50%; }
+  .sv[data-live] .ch-q-c-rig {
+    --cw: clamp(320px, 38vw, 600px); --chh: clamp(208px, 17vw, 262px);
+    position: absolute; inset: 0; transform-style: preserve-3d; transform-origin: 0 50%;
+    transform: rotateY(calc((1 - var(--g, 1)) * 20deg));
+  }
+  .sv[data-live] .ch-q-c-row { display: block; position: absolute; inset: 0; transform-style: preserve-3d; }
+  .sv[data-live] .ch-q-c-card {
+    position: absolute; left: 0; top: calc(50% - var(--chh) / 2); width: var(--cw); height: var(--chh); padding: 20px;
+    transform-origin: 0 0; box-shadow: var(--sv-edge); transition: box-shadow .8s ease;
+    transform:
+      translate3d(calc((var(--i) * var(--step, 0px) + var(--dolly, 0px)) * (1 - var(--g, 1)) + var(--tx, 0px) * var(--g, 1)), calc(var(--ty, 0px) * var(--g, 1)), 0)
+      scale(calc(1 + (var(--sg, 1) - 1) * var(--g, 1)));
+  }
+  .sv[data-live] .ch-q-c-card[data-st="2"] { box-shadow: var(--sv-edge), inset 0 1px 0 rgb(var(--sv-ac) / .85); }
+  .sv[data-live] .ch-q-c-card .ch-bub { font-size: clamp(16px, 1.35vw, 20px); }
+  /* drugi rząd w głębi: puste rozmowy (same obrysy), przygaszone, jadą wolniej; w finale gasną */
+  /* (linie rzędu w głębi są po rzucie cieńsze niż 1 px, stąd wyższe krycie obrysów) */
+  .sv[data-live] .ch-q-c-back { display: block; position: absolute; inset: 0; opacity: calc((1 - var(--g, 1)) * .6); transform: translate3d(0, -11%, -560px); }
+  .sv[data-live] .ch-q-c-ghost {
+    position: absolute; left: 0; top: calc(50% - var(--chh) / 2); width: var(--cw); height: var(--chh);
+    border-radius: 20px; border: 1px solid rgba(255, 255, 255, .4);
+    transform: translate3d(calc(var(--i) * var(--step, 0px) + var(--dolly, 0px) * .5 + var(--cw) * .2), 0, 0);
+  }
+  .sv[data-live] .ch-q-c-ghost::before, .sv[data-live] .ch-q-c-ghost::after { content: ''; position: absolute; height: 24%; border: 1px solid rgba(255, 255, 255, .44); }
+  .sv[data-live] .ch-q-c-ghost::before { right: 9%; top: 13%; width: 50%; border-radius: 16px 16px 5px 16px; }
+  .sv[data-live] .ch-q-c-ghost::after { left: 9%; top: 48%; width: 62%; height: 32%; border-radius: 5px 16px 16px 16px; border-color: rgb(var(--sv-ac) / .7); }
+}
+@media (max-width: 767.98px) and (prefers-reduced-motion: no-preference) and (min-height: 521px) {
+  .sv[data-live] .ch-q-c-in { gap: 10px; padding-bottom: 28px; }
+  .sv[data-live] .ch-q-c-note { flex-basis: 100%; font-size: 17px; }
+  .sv[data-live] .ch-q-c-rig { --cw: min(78vw, 330px); --chh: 186px; }
+  .sv[data-live] .ch-q-c-card { padding: 14px; border-radius: 18px; }
+  .sv[data-live] .ch-q-c-back { transform: translate3d(0, -16%, -520px); }
+  .sv[data-live] .ch-q .ch-q-c-narr { max-width: calc(100% - 64px); } /* prawy dolny róg: bąbel czatu */
+}

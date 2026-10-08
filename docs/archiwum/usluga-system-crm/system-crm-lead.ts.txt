@@ -1,0 +1,234 @@
+// Słownik sekcji „Nic już nie ginie” podstrony „System CRM” - RUNDA 4 (właściciel 2026-10-04 po rundzie 3: „to 2.
+// zlecenie zrób inne, trochę bardziej uniwersalne dla każdych CRM”). Zastępuje `system-crm-flow.ts` (droga jednego
+// zlecenia stolarni). Trzy propozycje sceny: app/(pl)/uslugi/strony-www/system-crm/lead*.tsx.
+// Same dane, bez funkcji i JSX. Z głównego słownika sceny biorą tylko: `t.app` (pasek okna przykładowej firmy),
+// `t.team` (imiona osób - `who` = indeks) i `t.film.stepsAria`.
+// TREŚĆ JEST CELOWO BEZ BRANŻY: to, co robi każdy system CRM w każdej firmie - zapytania z kilku kanałów w jednym
+// miejscu, karta klienta z historią, sprawa w etapach o ogólnych nazwach, system sam przypisuje osobę, termin
+// i przypomina o sprawie, która stoi. Żadnych słów w rodzaju szafa, pomiar, montaż. AI tu nie występuje.
+// Zasady (PRODUCT.md): głos korzyści, sentence case, bez myślników em / en, bez liczb wyglądających jak wyniki i bez
+// cen; klienci to zwykłe imiona z inicjałem albo neutralna nazwa firmy z głównego słownika („Biuro Linia”).
+// `{name}` w tekstach = imię osoby z zespołu (zdania ułożone tak, żeby nie zależały od rodzaju).
+// Twarde spacje w PL dokłada koordynator (`typo()` w system-crm.ts).
+
+export type LeadChannel = 'form' | 'mail' | 'phone';
+export type LeadEventKind = 'call' | 'note' | 'offer' | 'remind';
+
+export interface LeadCopy {
+  /** Nagłówek sekcji: zdanie bez kropki (kropkę w kolorze podstrony dokłada komponent). */
+  title: string;
+  lead: string;
+  /** Etapy sprawy - ogólne, takie same w każdej firmie. „Karta klienta” używa trzech pierwszych. */
+  stages: string[];
+  stagesAria: string;
+  /** Kanały, którymi przychodzą zapytania. */
+  channels: Record<LeadChannel, string>;
+  /** Wersja „Kanały” (lead-channels.tsx): trzy źródła, jedna lista. `who` = indeks w `t.team`, `due` = termin,
+      który system ustawia sam, `done` = to, co system zrobił na koniec. Zdań narratora dokładnie trzy. */
+  inbox: {
+    steps: string[];
+    sourcesAria: string;
+    listTitle: string;
+    listAria: string;
+    rows: { ch: LeadChannel; name: string; time: string; text: string; who: number; due: string; done: string }[];
+  };
+  /** Wersja „Lejek” (lead-funnel.tsx): `cases[i]` = sprawy na etapie i (`age` = od kiedy bez ruchu). Sprawa-bohater
+      (`hero`) stoi jako ostatnia na etapie 2 („Oferta”) i rusza na etap 3 - nie ma jej w `cases`. `days` = licznik
+      dni bez ruchu (ostatnia pozycja = stan po ruszeniu), `text` / `idle` = opis i stan na postoju, `textDone` /
+      `idleDone` = po ruszeniu. Etapy 2 i 3 mają w `cases` tyle samo spraw - wtedy sprawa jedzie prosto w bok. */
+  funnel: {
+    steps: string[];
+    title: string;
+    cases: { name: string; age: string }[][];
+    hero: { name: string; who: number; days: string[]; text: string; textDone: string; idle: string; idleDone: string };
+    note: { label: string; time: string; text: string; done: string };
+  };
+  /** Wersja „Karta klienta” (lead-card.tsx): `messages` = trzy wiadomości tej samej osoby (pierwsza zostaje jako wpis,
+      dwie kolejne się w nią wsuwają), `merged` = wpis po sklejeniu, `events` = kolejne wpisy historii (dokładnie
+      cztery, ostatni = przypomnienie), `next` = „następny krok” po kolei (trzy pozycje). */
+  card: {
+    steps: string[];
+    client: string;
+    meta: string;
+    who: number;
+    unknown: { name: string; meta: string; none: string };
+    facts: { stage: string; owner: string; next: string };
+    next: string[];
+    historyTitle: string;
+    historyAria: string;
+    messages: { ch: LeadChannel; text: string; time: string }[];
+    merged: { title: string; text: string };
+    events: { kind: LeadEventKind; title: string; text: string; time: string }[];
+  };
+}
+
+export const leadCopy: { pl: LeadCopy; en: LeadCopy } = {
+  pl: {
+    // tytuł = scenka Oferty („Wpada zapytanie i nic już nie ginie.”)
+    title: 'Nic już nie ginie',
+    lead: 'Każde zapytanie trafia w jedno miejsce i od razu ma swoją osobę oraz termin. O sprawie, która stoi, system przypomni sam.',
+    stages: ['Nowe', 'W kontakcie', 'Oferta', 'W realizacji', 'Zamknięte'],
+    stagesAria: 'Etapy sprawy',
+    channels: { form: 'Formularz na stronie', mail: 'E-mail', phone: 'Telefon' },
+    inbox: {
+      steps: [
+        // pierwsze i ostatnie zdanie = scenka Oferty
+        'Wpada zapytanie z formularza, e-maila albo telefonu i nic już nie ginie.',
+        'Każde od razu dostaje osobę i termin odpowiedzi.',
+        'Klient dostaje potwierdzenie, a Ty masz wolną głowę.',
+      ],
+      sourcesAria: 'Skąd przychodzą zapytania',
+      listTitle: 'Zapytania',
+      listAria: 'Zapytania w systemie',
+      rows: [
+        { ch: 'form', name: 'Marta W.', time: '9:12', text: 'Proszę o ofertę i termin rozmowy.', who: 0, due: 'odpowiedź do 12:00', done: 'Potwierdzenie wysłane' },
+        { ch: 'mail', name: 'Biuro Linia', time: '9:40', text: 'Czy możemy umówić spotkanie w tym tygodniu?', who: 1, due: 'odpowiedź do jutra', done: 'Potwierdzenie wysłane' },
+        { ch: 'phone', name: 'Piotr S.', time: '10:05', text: 'Prosi o oddzwonienie w sprawie wyceny.', who: 0, due: 'oddzwonić do 11:00', done: 'Przypomnienie ustawione' },
+        { ch: 'form', name: 'Julia P.', time: '11:30', text: 'Czy mają Państwo wolne terminy?', who: 2, due: 'odpowiedź do 14:00', done: 'Potwierdzenie wysłane' },
+        { ch: 'mail', name: 'Adam L.', time: '12:15', text: 'Przesyłam szczegóły w załączniku.', who: 1, due: 'odpowiedź do jutra', done: 'Potwierdzenie wysłane' },
+      ],
+    },
+    funnel: {
+      steps: [
+        'Wszystkie sprawy na jednej tablicy. Od razu widzisz, która jest na jakim etapie.',
+        'Jedna sprawa stoi piąty dzień. System sam to zauważa.',
+        'Przypomina o niej właściwej osobie. Ty nie musisz niczego pilnować.',
+        'Sprawa rusza dalej. Nic nie zginęło po drodze.',
+      ],
+      title: 'Sprawy',
+      cases: [
+        [{ name: 'Marta W.', age: 'dziś' }, { name: 'Piotr S.', age: 'dziś' }, { name: 'Julia P.', age: 'wczoraj' }, { name: 'Adam L.', age: 'wczoraj' }],
+        [{ name: 'Jan Nowak', age: 'dziś' }, { name: 'Zofia R.', age: 'wczoraj' }, { name: 'Igor B.', age: '2 dni' }],
+        [{ name: 'Ewa M.', age: 'wczoraj' }, { name: 'Kamil D.', age: '2 dni' }],
+        [{ name: 'Anna K.', age: 'dziś' }, { name: 'Olga T.', age: '3 dni' }],
+        [{ name: 'Paweł Z.', age: 'wczoraj' }, { name: 'Hanna C.', age: 'wczoraj' }, { name: 'Filip G.', age: '2 dni' }, { name: 'Nina J.', age: '3 dni' }],
+      ],
+      hero: {
+        name: 'Biuro Linia',
+        who: 0,
+        days: ['1 dzień', '2 dni', '3 dni', '4 dni', '5 dni', 'dziś'],
+        text: 'Oferta wysłana. Brak odpowiedzi.',
+        textDone: 'Oferta przyjęta. Sprawa w realizacji.',
+        idle: '5 dni bez ruchu',
+        idleDone: 'ruszyła dziś',
+      },
+      note: {
+        label: 'Przypomnienie',
+        time: 'dziś, 9:00',
+        text: '{name}, odezwij się do Biura Linia.',
+        done: '{name} już po rozmowie. Oferta przyjęta.',
+      },
+    },
+    card: {
+      steps: [
+        'Formularz, e-mail, telefon. Ta sama osoba odzywa się trzy razy.',
+        'System rozpoznaje ją i składa wszystko w jedną kartę klienta.',
+        'Każda rozmowa, notatka i oferta zostaje w historii.',
+        'A gdy klient milczy, system sam przypomni, żeby się odezwać.',
+      ],
+      client: 'Marta W.',
+      meta: 'Pierwszy kontakt w poniedziałek',
+      who: 0,
+      unknown: { name: 'Nowy kontakt', meta: 'Jeszcze bez karty', none: 'brak' },
+      facts: { stage: 'Etap', owner: 'Opiekun', next: 'Następny krok' },
+      next: ['Odpowiedzieć dziś', 'Oferta do wtorku', 'Zadzwonić dziś'],
+      historyTitle: 'Historia',
+      historyAria: 'Historia kontaktu z klientem',
+      messages: [
+        { ch: 'form', text: 'Proszę o ofertę.', time: 'pon, 9:12' },
+        { ch: 'mail', text: 'Pisałam też przez formularz.', time: 'pon, 9:40' },
+        { ch: 'phone', text: 'Prosi o oddzwonienie.', time: 'pon, 10:05' },
+      ],
+      merged: { title: 'Pierwszy kontakt', text: 'Trzy wiadomości, jedna osoba' },
+      events: [
+        { kind: 'call', title: 'Rozmowa telefoniczna', text: '{name} oddzwania do klientki', time: 'pon, 11:20' },
+        { kind: 'note', title: 'Notatka', text: 'Prosi o dwa warianty oferty', time: 'pon, 11:32' },
+        { kind: 'offer', title: 'Oferta wysłana', text: 'Oferta.pdf', time: 'wt, 15:05' },
+        { kind: 'remind', title: 'Przypomnienie', text: 'Brak odpowiedzi od 3 dni', time: 'pt, 9:00' },
+      ],
+    },
+  },
+  en: {
+    title: 'Nothing gets lost anymore',
+    lead: 'Every inquiry lands in one place and gets a person and a deadline right away. If a case stalls, the system reminds you by itself.',
+    stages: ['New', 'In contact', 'Offer', 'In progress', 'Closed'],
+    stagesAria: 'Case stages',
+    channels: { form: 'Website form', mail: 'Email', phone: 'Phone' },
+    inbox: {
+      steps: [
+        'An inquiry comes in by form, email or phone and nothing gets lost.',
+        'Each one gets a person and a reply deadline right away.',
+        'Your client gets a confirmation, and your mind is free.',
+      ],
+      sourcesAria: 'Where inquiries come from',
+      listTitle: 'Inquiries',
+      listAria: 'Inquiries in the system',
+      rows: [
+        { ch: 'form', name: 'Martha W.', time: '9:12', text: 'Please send me an offer and a time to talk.', who: 0, due: 'reply by 12:00', done: 'Confirmation sent' },
+        { ch: 'mail', name: 'Linia Office', time: '9:40', text: 'Can we set up a meeting this week?', who: 1, due: 'reply by tomorrow', done: 'Confirmation sent' },
+        { ch: 'phone', name: 'Peter S.', time: '10:05', text: 'Asks for a call back about a quote.', who: 0, due: 'call back by 11:00', done: 'Reminder set' },
+        { ch: 'form', name: 'Julia P.', time: '11:30', text: 'Do you have any free dates?', who: 2, due: 'reply by 14:00', done: 'Confirmation sent' },
+        { ch: 'mail', name: 'Adam L.', time: '12:15', text: 'I am sending the details in the attachment.', who: 1, due: 'reply by tomorrow', done: 'Confirmation sent' },
+      ],
+    },
+    funnel: {
+      steps: [
+        'All your cases on one board. You see at a glance which stage each one is in.',
+        'One case has been stuck for five days. The system notices by itself.',
+        'It reminds the right person. You do not have to watch over anything.',
+        'The case moves on. Nothing got lost along the way.',
+      ],
+      title: 'Cases',
+      cases: [
+        [{ name: 'Martha W.', age: 'today' }, { name: 'Peter S.', age: 'today' }, { name: 'Julia P.', age: 'yesterday' }, { name: 'Adam L.', age: 'yesterday' }],
+        [{ name: 'John Novak', age: 'today' }, { name: 'Sophie R.', age: 'yesterday' }, { name: 'Igor B.', age: '2 days' }],
+        [{ name: 'Eve M.', age: 'yesterday' }, { name: 'Kyle D.', age: '2 days' }],
+        [{ name: 'Anna K.', age: 'today' }, { name: 'Olga T.', age: '3 days' }],
+        [{ name: 'Paul Z.', age: 'yesterday' }, { name: 'Hannah C.', age: 'yesterday' }, { name: 'Philip G.', age: '2 days' }, { name: 'Nina J.', age: '3 days' }],
+      ],
+      hero: {
+        name: 'Linia Office',
+        who: 0,
+        days: ['1 day', '2 days', '3 days', '4 days', '5 days', 'today'],
+        text: 'Offer sent. No reply.',
+        textDone: 'Offer accepted. Case in progress.',
+        idle: '5 days without a move',
+        idleDone: 'moved today',
+      },
+      note: {
+        label: 'Reminder',
+        time: 'today, 9:00',
+        text: '{name}, get in touch with Linia Office.',
+        done: '{name} has made the call. Offer accepted.',
+      },
+    },
+    card: {
+      steps: [
+        'Form, email, phone. The same person reaches out three times.',
+        'The system recognises her and puts everything into one client card.',
+        'Every call, note and offer stays in the history.',
+        'And when the client goes quiet, the system reminds you to follow up.',
+      ],
+      client: 'Martha W.',
+      meta: 'First contact on Monday',
+      who: 0,
+      unknown: { name: 'New contact', meta: 'No card yet', none: 'none' },
+      facts: { stage: 'Stage', owner: 'Owner', next: 'Next step' },
+      next: ['Reply today', 'Offer by Tuesday', 'Call today'],
+      historyTitle: 'History',
+      historyAria: 'History of contact with the client',
+      messages: [
+        { ch: 'form', text: 'Please send me an offer.', time: 'Mon, 9:12' },
+        { ch: 'mail', text: 'I also wrote through the form.', time: 'Mon, 9:40' },
+        { ch: 'phone', text: 'Asks for a call back.', time: 'Mon, 10:05' },
+      ],
+      merged: { title: 'First contact', text: 'Three messages, one person' },
+      events: [
+        { kind: 'call', title: 'Phone call', text: '{name} calls the client back', time: 'Mon, 11:20' },
+        { kind: 'note', title: 'Note', text: 'Asks for two versions of the offer', time: 'Mon, 11:32' },
+        { kind: 'offer', title: 'Offer sent', text: 'Offer.pdf', time: 'Tue, 15:05' },
+        { kind: 'remind', title: 'Reminder', text: 'No reply for 3 days', time: 'Fri, 9:00' },
+      ],
+    },
+  },
+};

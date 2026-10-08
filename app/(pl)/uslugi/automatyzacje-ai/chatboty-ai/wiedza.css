@@ -1,0 +1,319 @@
+/* Podstrona „Chatboty AI” - sekcja WIEDZA (chat 13, praca równoległa, etap 3, runda 2). Style tylko tej sekcji,
+   prefiks ch-k-. Wspólne części (asystent-gwiazda, wypowiedzi, narrator, nagłówek sekcji, pytania do wyboru):
+   chatboty.css. Trzy wersje sceny (wiedza.tsx):
+     .ch-k-a „Konstelacja” - interaktywna mapa źródeł, kamera najeżdża na źródło odpowiedzi (bez przypięcia),
+     .ch-k-b „Dokumenty”   - przypięta: arkusze na stole wlatują do gwiazdy, właściwy wraca z zakreśloną linijką,
+     .ch-k-c „Granica”     - przypięta: okrąg wiedzy, czwarte pytanie zatrzymuje się na granicy i jedzie do człowieka.
+   Bez JS / ograniczony ruch / niski ekran (do 520 px): zwykły blok - lista pytań z odpowiedziami (.ch-k-list)
+   i narrator jako lista; sceny (.ch-k-live, .ch-k-scene, .ch-k-only) są wtedy wyłączone.
+   Dawne style prototypu „Źródła” (ch-s-, sources.tsx z rundy 1) przeszły tutaj pod nazwy ch-k-. */
+
+/* ══ WSPÓLNE trzech wersji ══ */
+.ch-k-label { margin: 0; font-size: 14.5px; line-height: 1.3; color: #94a3b8; }
+.ch-k-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin: 0; font-size: 14.5px; line-height: 1.3; color: #94a3b8; }
+.ch-k-ans { margin: 0; max-width: 30rem; font-size: clamp(20px, 1.9vw, 27px); line-height: 1.36; letter-spacing: -.015em; color: #f8fafc; text-wrap: pretty; }
+.ch-k-src { margin: 0; font-size: 14.5px; line-height: 1.4; color: #e2e8f0; }
+.ch-k-src span { color: var(--ch-ac-hi); }
+.sv[data-live] .ch-k-src { transition: opacity .6s ease .5s, transform .8s var(--sv-ease) .5s; }
+.sv[data-live] .ch-k-src:not([data-on]) { opacity: 0; transform: translateY(6px); transition: none; }
+
+/* zwykła lista: cztery pytania z odpowiedziami i źródłami */
+.ch-k-list { list-style: none; display: grid; margin: 40px 0 0; padding: 0; max-width: 44rem; }
+.ch-k-list li { display: grid; gap: 8px; padding: 20px 0 22px; border-top: 1px solid rgba(255, 255, 255, .13); }
+.ch-k-list li:last-child { border-bottom: 1px solid rgba(255, 255, 255, .13); }
+.ch-k-list-q { margin: 0; font-size: 15.5px; line-height: 1.4; color: #94a3b8; }
+.ch-k-list-a { margin: 0; font-size: 18px; line-height: 1.5; color: #f8fafc; text-wrap: pretty; }
+.ch-k-live, .ch-k-scene, .ch-k-only { display: none; }
+.ch-k-stage-in { padding-top: 36px; }
+
+/* plany gwiazd (głębia): ostre czteroramienne gwiazdy, bez poświat */
+.ch-k-pl { position: absolute; inset: -6% -4%; pointer-events: none; }
+.ch-k-pl-in { position: absolute; inset: 0; }
+.ch-k-star {
+  position: absolute; width: calc(var(--sz, 7px) * var(--s, 1)); aspect-ratio: 1; margin: calc(var(--sz, 7px) * -.5);
+  background: #fff; opacity: .34;
+  clip-path: polygon(50% 0, 57% 43%, 100% 50%, 57% 57%, 50% 100%, 43% 57%, 0 50%, 43% 43%);
+}
+.ch-k-star[data-ac] { background: rgb(var(--sv-ac)); opacity: .62; }
+.ch-k-pl[data-depth="near"] { --sz: 15px; }
+.ch-k-pl[data-depth="near"] .ch-k-star { opacity: .5; }
+
+/* linie i impulsy konstelacji (grubości w jednostkach viewBoxa - ustawia każda wersja) */
+.ch-k-line { fill: none; stroke: rgba(255, 255, 255, .2); transition: stroke .6s ease; }
+.ch-k-pulse { fill: none; stroke: rgb(var(--sv-ac)); stroke-linecap: round; stroke-dasharray: .2 1.2; stroke-dashoffset: .2; opacity: 0; }
+g[data-on] > .ch-k-line { stroke: rgb(var(--sv-ac) / .8); transition-delay: .9s; }
+@keyframes ch-k-pulse { 0% { stroke-dashoffset: .2; opacity: 1; } 88% { opacity: 1; } 100% { stroke-dashoffset: -1; opacity: 0; } }
+.sv[data-live] g[data-on] > .ch-k-pulse { animation: ch-k-pulse 1.25s cubic-bezier(.5, 0, .3, 1) both; }
+
+/* węzły: źródła wiedzy, człowiek, gwiazda asystenta */
+.ch-k-node {
+  position: absolute; display: grid; justify-items: center; gap: 8px; width: max-content; max-width: 9em;
+  transform: translate(-50%, -8px); font-size: 14.5px; line-height: 1.2; text-align: center; text-wrap: balance;
+  color: #94a3b8; transition: color .5s ease;
+}
+.ch-k-node > i {
+  display: grid; place-items: center; width: 15px; height: 15px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .5);
+  background: #050505; transition: border-color .5s ease, background-color .5s ease, box-shadow .5s ease;
+}
+.ch-k-node[data-on] { color: #f8fafc; }
+.ch-k-node[data-on] > i { border-color: rgb(var(--sv-ac)); background: rgb(var(--sv-ac)); box-shadow: 0 0 0 5px rgb(var(--sv-ac) / .22); }
+.ch-k-node--far { opacity: .5; }
+.ch-k-node--far > i { width: 9px; height: 9px; }
+.ch-k-team { transform: translate(-50%, -18px); color: #cbd5e1; }
+.ch-k-team > i { width: 36px; height: 36px; }
+.ch-k-team svg { width: 16px; height: 16px; color: #e2e8f0; transition: color .5s ease; }
+.ch-k-team[data-on] svg { color: #0a0a0a; }
+.ch-k-core {
+  position: absolute; display: grid; justify-items: center; gap: 10px; width: max-content;
+  transform: translate(-50%, calc(var(--cs, 60px) * -.5)); font-size: 14.5px; line-height: 1.2; color: #cbd5e1;
+}
+.ch-k-core .ch-spark { width: var(--cs, 60px); height: var(--cs, 60px); }
+
+/* jedno miejsce rozmowy: wypowiedzi leżą w tej samej komórce, widać bieżącą (ukrycie od razu, odsłona płynnie) */
+.ch-k-turns { display: grid; min-width: 0; }
+.ch-k-turn { grid-area: 1 / 1; display: grid; gap: 16px; align-content: start; min-width: 0; transition: opacity .6s ease; }
+.ch-k-turn:not([data-on]) { opacity: 0; transition: none; }
+:is(.ch-k-turn, .ch-k-a-turn) .ch-msg[data-who="client"] { justify-content: flex-start; padding-left: 0; }
+
+/* ══ 1. KONSTELACJA (.ch-k-a) ══════════════════════════════════════════════════════════════════════════════════
+   Po lewej pytania do wyboru i odpowiedź dużym pismem, po prawej DUŻA mapa wychodząca za prawą krawędź ekranu.
+   Kamera = przesunięcie i skala całej mapy ku źródłu odpowiedzi (--fx / --fy punkt najazdu w % mapy, --dx / --dy
+   przesunięcie, --zm zbliżenie - pisze React przy zmianie kroku; ruch 1,9 s ease-out). Plany gwiazd: dalszy rusza się
+   słabiej niż mapa, bliższy mocniej (głębia), a przy przewijaniu suną w różnym tempie (--par z useFrame). */
+.ch-k-a-in { gap: 36px; margin-top: 40px; }
+.ch-k-a-side { position: relative; z-index: 2; display: grid; gap: 30px; align-content: start; min-width: 0; }
+.ch-k-a-ask { display: grid; gap: 12px; min-width: 0; }
+.ch-k-a-out { display: grid; gap: 16px; align-content: start; min-width: 0; min-height: 18rem; }
+.ch-k-a-turn { display: grid; gap: 16px; min-width: 0; }
+.ch-k-a-map { position: relative; z-index: 1; min-width: 0; width: 100%; aspect-ratio: 1000 / 760; }
+.ch-k-a-cam { position: absolute; inset: 0; } /* mapa wychodzi za prawą krawędź tylko od 1024 px */
+.ch-k-a-cam > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.ch-k-a-orbit { fill: none; stroke: rgba(255, 255, 255, .07); stroke-width: 1.2; }
+.ch-k-a-web { fill: none; stroke: rgba(255, 255, 255, .1); stroke-width: 1.2; }
+.ch-k-a .ch-k-line { stroke-width: 1.6; }
+.ch-k-a .ch-k-pulse { stroke-width: 3.4; }
+.ch-k-a-cam, .ch-k-a-map .ch-k-pl-in {
+  transform-origin: calc(var(--fx, 43) * 1%) calc(var(--fy, 47) * 1%);
+  transition: transform 1.9s var(--sv-ease), transform-origin 1.9s var(--sv-ease);
+}
+.ch-k-a-cam { transform: translate(calc(var(--dx, 0) * var(--pan, 1) * 1%), calc(var(--dy, 0) * var(--pan, 1) * 1%)) scale(calc(1 + var(--zm, 0) * var(--zk, 1))); }
+.ch-k-a-map .ch-k-pl[data-depth="far"] { transform: translate3d(0, calc(var(--par, 0) * -50px), 0); }
+.ch-k-a-map .ch-k-pl[data-depth="near"] { transform: translate3d(0, calc(var(--par, 0) * 150px), 0); }
+.ch-k-a-map .ch-k-pl[data-depth="far"] .ch-k-pl-in { transform: translate(calc(var(--dx, 0) * .3%), calc(var(--dy, 0) * .3%)) scale(calc(1 + var(--zm, 0) * .3)); }
+.ch-k-a-map .ch-k-pl[data-depth="near"] .ch-k-pl-in { transform: translate(calc(var(--dx, 0) * 1.7%), calc(var(--dy, 0) * 1.7%)) scale(calc(1 + var(--zm, 0) * 1.7)); }
+/* pytanie spoza wiedzy: asystent przegląda źródła po kolei, żadne się nie zapala */
+@keyframes ch-k-seek { 50% { border-color: #fff; transform: scale(1.45); } }
+.sv[data-live] .ch-k-a-map[data-seek] .ch-k-node:not(.ch-k-team, .ch-k-node--far) > i { animation: ch-k-seek .52s ease both; animation-delay: calc(var(--i) * 290ms + 150ms); }
+@media (prefers-reduced-motion: no-preference) {
+  .sv[data-live] .ch-k-a .ch-k-list { display: none; }
+  .sv[data-live] .ch-k-live { display: grid; }
+}
+@media (min-width: 1024px) {
+  .ch-k-a-in { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 64px; align-items: start; margin-top: 56px; }
+  .ch-k-a-map { width: clamp(600px, 63vw, 1120px); margin-top: -96px; }
+}
+@media (max-width: 1023.98px) {
+  /* jedna kolumna: pytania -> mapa -> odpowiedź; kamera spokojniejsza (mapa stoi między tekstami) */
+  .ch-k-a-side { display: contents; }
+  .ch-k-a-ask { order: 1; }
+  .ch-k-a-map { order: 2; --pan: .6; --zk: .7; }
+  .ch-k-a-out { order: 3; min-height: 15rem; }
+}
+@media (max-width: 639.98px) {
+  .ch-k-a-in { gap: 30px; margin-top: 32px; }
+  .ch-k-a-map { width: calc(100% + 8px); margin-left: -4px; }
+  .ch-k-a-map .ch-k-node { max-width: 7.2em; gap: 6px; }
+  .ch-k-a-map .ch-k-core { --cs: 44px; }
+  .ch-k-a .ch-k-line { stroke-width: 2.6; }
+  .ch-k-a .ch-k-pulse { stroke-width: 5.2; }
+  .ch-k-a-orbit, .ch-k-a-web { stroke-width: 2.2; }
+  .ch-k-a-out { min-height: 19rem; }
+  .ch-k-ans { font-size: 19px; }
+}
+
+/* ══ PRZYPIĘTE SCENY (.ch-k-b, .ch-k-c): wspólny układ ═════════════════════════════════════════════════════════
+   Wysoki kontener + przyklejony ekran; u góry ekranu ~96 px zapasu na nawigację. Narrator (jedno zdanie naraz) stoi
+   w lewym dolnym rogu, z prawej zostaje miejsce na bąbel czatu. Plany gwiazd suną z postępem sceny (--p). */
+@media (prefers-reduced-motion: no-preference) and (min-height: 521px) {
+  .sv[data-live] .ch-k-list[data-sr] { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .sv[data-live] .ch-k-b-pin { height: 380vh; height: calc(100svh + 280vh); }
+  .sv[data-live] .ch-k-c-pin { height: 340vh; height: calc(100svh + 240vh); }
+  .sv[data-live] .ch-k-stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: clip; }
+  .sv[data-live] .ch-k-stage-in { position: relative; z-index: 2; height: 100%; padding-top: 0; }
+  .sv[data-live] .ch-k-scene { display: block; position: absolute; inset: 0; }
+  .sv[data-live] .ch-k-only { display: block; }
+  .sv[data-live] .ch-k-narr { position: absolute; left: 24px; right: 24px; bottom: 46px; z-index: 3; padding-right: 72px; }
+  .sv[data-live] .ch-k-scene > .ch-k-pl { left: 34%; }
+  .sv[data-live] .ch-k-scene > .ch-k-pl[data-depth="far"] { transform: translate3d(0, calc((.5 - var(--p, 0)) * 7vh), 0); }
+  .sv[data-live] .ch-k-scene > .ch-k-pl[data-depth="near"] { transform: translate3d(0, calc((.5 - var(--p, 0)) * 28vh), 0); }
+}
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) and (min-height: 521px) {
+  .sv[data-live] .ch-k-narr { bottom: 62px; padding-right: 0; }
+}
+@media (max-width: 1023.98px) and (prefers-reduced-motion: no-preference) and (min-height: 521px) {
+  .sv[data-live] .ch-k-scene > .ch-k-pl { left: -4%; }
+  .sv[data-live] .ch-k-scene > .ch-k-pl .ch-k-star { opacity: .24; }
+}
+/* niski ekran (telefon bokiem): bez przypięcia - narrator wraca do zwykłej listy (wspólna reguła chowa zdania) */
+@media (max-height: 520px) {
+  .sv[data-live] .ch-k .ch-narr { gap: 12px; }
+  .sv[data-live] .ch-k .ch-narr-i { grid-area: auto; padding-top: 0; }
+  .sv[data-live] .ch-k .ch-narr-bar { display: none; }
+  .sv[data-live] .ch-k .ch-narr-i :is(.ch-narr-n, .ch-narr-t) { opacity: 1; transform: none; }
+}
+
+/* ══ 2. DOKUMENTY (.ch-k-b) ════════════════════════════════════════════════════════════════════════════════════
+   Stół (.ch-k-b-table) = punkt zaczepienia 0 x 0 z perspektywą; wszystko liczone od niego w jednostkach --u.
+   Gwiazda asystenta stoi w (2u, -15u), człowiek w (2u, --ty). Zmienne ze sceny: --p postęp, --e wjazd, --out arkusz
+   wysuwa się ku kamerze, --mk marker, --flip przegląd arkuszy, --hand linia do człowieka.
+   Lot arkusza do gwiazdy liczy CSS: --q (odcinek postępu dla arkusza --i) -> --fly (miękki) -> --up (uniesienie),
+   --go (lot). Arkusze = czerń z ostrym refleksem u góry, bez rozmyć; gasną w głąb kryciem. */
+.ch-k-b-talk { position: absolute; left: 24px; top: 128px; z-index: 2; display: grid; gap: 22px; width: min(36%, 30rem); }
+.ch-k-b-table {
+  --u: min(1vw, 1.5vh); --ty: 14;
+  position: absolute; left: 68%; top: calc(96px + (100% - 246px) / 2); width: 0; height: 0; perspective: 1300px;
+  transform: translate3d(0, calc((1 - var(--e, 1)) * 14vh), 0);
+}
+.ch-k-b-sky { position: absolute; left: calc(var(--u) * -16); top: calc(var(--u) * -18); width: calc(var(--u) * 32); height: calc(var(--u) * 36); pointer-events: none; }
+.ch-k-paper {
+  position: absolute; display: grid; align-content: start; gap: .5em; padding: 1.15em 1.25em; border-radius: calc(var(--u) * 1.1);
+  background: var(--ch-glass), rgba(5, 5, 5, .9); box-shadow: var(--sv-edge); color: #cbd5e1; line-height: 1.3;
+  backface-visibility: hidden;
+}
+.ch-k-paper > b { margin-bottom: .3em; font-weight: 600; letter-spacing: -.01em; color: #f8fafc; }
+.ch-k-paper > i { height: 1px; margin-top: .5em; background: rgba(255, 255, 255, .14); }
+.ch-k-paper > i:nth-of-type(2) { width: 82%; }
+.ch-k-paper > i:nth-of-type(3) { width: 64%; }
+.ch-k-paper > i:nth-of-type(4) { width: 74%; }
+/* takt 1: wachlarz arkuszy na stole -> po kolei do gwiazdy */
+.ch-k-sheet {
+  left: calc(var(--u) * -7.5); top: calc(var(--u) * -9.75); width: calc(var(--u) * 15); height: calc(var(--u) * 19.5);
+  font-size: calc(var(--u) * .92); z-index: calc(6 - var(--i)); overflow: hidden;
+  --d: calc(var(--i) - 2);
+  --q: clamp(0, (var(--p, 0) - .03 - var(--i) * .048) / .13, 1);
+  --fly: calc(var(--q) * var(--q) * (3 - 2 * var(--q)));
+  --up: min(1, var(--fly) * 2.6);
+  --go: max(0, var(--fly) * 1.6 - .6);
+  opacity: calc((1 - var(--i) * .16 * (1 - var(--up))) * (1 - max(0, var(--go) * 4 - 3)));
+  transform:
+    translate3d(
+      calc(var(--u) * ((var(--d) * 8.2 - 4) * (1 - var(--go)) + 2 * var(--go))),
+      calc(var(--u) * ((8.5 - var(--d) * 2.4) * (1 - var(--go)) - 15 * var(--go) - 4 * var(--up) * (1 - var(--go)))),
+      calc(var(--u) * var(--i) * -3 * (1 - var(--go))))
+    rotateX(calc((1 - var(--up) * .5 - var(--go) * .5) * 60deg))
+    rotateZ(calc((1 - var(--go)) * (var(--d) * 9deg - 10deg)))
+    scale(calc(1 - var(--go) * .92));
+}
+/* takt 2: Cennik wysuwa się z gwiazdy ku kamerze; linijki z odpowiedzią dostają zakreślenie markerem
+   (półprzezroczysty pas pod dolną częścią linijki, przeciągany od lewej - nie podkreślenie) */
+.ch-k-b-hero {
+  --hw: calc(var(--u) * 25);
+  left: calc(var(--hw) * -.5); top: calc(var(--u) * -9); width: var(--hw); min-height: calc(var(--u) * 27);
+  gap: .75em; padding: 1.5em 1.6em; font-size: clamp(15px, calc(var(--u) * 1.25), 19px); color: #f8fafc; z-index: 30;
+  transform-origin: 50% 0; opacity: min(1, var(--out, 0) * 4);
+  transform:
+    translate3d(calc(var(--u) * 2 * (1 - var(--out, 0))), calc(var(--u) * -6 * (1 - var(--out, 0))), 0)
+    rotateX(calc((1 - var(--out, 0)) * 55deg)) scale(calc(.08 + var(--out, 0) * .92));
+}
+.ch-k-mark {
+  --m: clamp(0, var(--mk, 0) * 2 - var(--j, 0), 1);
+  padding: 0 .14em; margin: 0 -.14em;
+  background: linear-gradient(rgb(var(--sv-ac) / .5), rgb(var(--sv-ac) / .5)) no-repeat 0 94% / calc(var(--m) * 100%) 46%;
+}
+/* takt 3: arkusze przewijają się jeden po drugim (kaskada z gwiazdy), żaden nie dostaje markera; potem gasną */
+.ch-k-b-flip {
+  left: calc(var(--u) * -10); top: calc(var(--u) * -7); width: calc(var(--u) * 20); min-height: calc(var(--u) * 24);
+  font-size: clamp(14.5px, calc(var(--u) * 1.1), 17px); z-index: calc(8 + var(--i)); transform-origin: 50% 0;
+  --d: calc(var(--i) - 2);
+  --in: clamp(0, var(--flip, 0) * 3.4 - var(--i) * .6, 1);
+  opacity: calc(min(1, var(--in) * 3) * (1 - var(--hand, 0)));
+  transform:
+    translate3d(
+      calc(var(--u) * (2 * (1 - var(--in)) + var(--d) * 2.2 * var(--in))),
+      calc(var(--u) * (-8 * (1 - var(--in)) + var(--d) * 1.1 * var(--in) - 3 * var(--hand, 0))), 0)
+    rotateX(calc((1 - var(--in)) * 55deg)) rotateZ(calc(var(--in) * var(--d) * 2.5deg)) scale(calc(.08 + var(--in) * .92));
+}
+/* asystent oddaje rozmowę człowiekowi: linia rysuje się z przewijaniem, impuls biegnie raz */
+.ch-k-b-core { left: calc(var(--u) * 2); top: calc(var(--u) * -15); z-index: 40; --cs: clamp(46px, calc(var(--u) * 5.4), 76px); }
+.ch-k-b-link {
+  position: absolute; left: calc(var(--u) * 2); top: calc(var(--u) * -11.4); width: 1px; height: calc(var(--u) * (var(--ty) + 9.6));
+  background: rgb(var(--sv-ac) / .8); transform-origin: 50% 0; transform: scaleY(var(--hand, 0));
+}
+.ch-k-b-drop {
+  position: absolute; left: calc(var(--u) * 2 - 2px); top: calc(var(--u) * -11.4); width: 5px; height: calc(var(--u) * 2.6);
+  border-radius: 3px; background: rgb(var(--sv-ac)); opacity: 0;
+}
+@keyframes ch-k-drop { 0% { transform: translateY(0); opacity: 1; } 86% { opacity: 1; } 100% { transform: translateY(calc(var(--u) * (var(--ty) + 7))); opacity: 0; } }
+.sv[data-live] .ch-k-b-drop[data-on] { animation: ch-k-drop 1.3s cubic-bezier(.5, 0, .3, 1) .2s both; }
+.ch-k-b-team { left: calc(var(--u) * 2); top: calc(var(--u) * var(--ty)); opacity: var(--hand, 0); }
+@media (max-width: 1023.98px) {
+  /* telefon i tablet: rozmowa u góry, stół z gwiazdą pod nią (wyśrodkowany), narrator na dole */
+  .ch-k-b-talk { top: 104px; right: 24px; width: auto; gap: 14px; }
+  .ch-k-b .ch-k-turn { gap: 12px; }
+  .ch-k-b .ch-k-ans { max-width: none; font-size: 16.5px; line-height: 1.4; }
+  .ch-k-b-table { --u: min(1.9vw, 1.05vh); --ty: 11.5; left: 50%; top: calc(100% - 160px - var(--u) * 18); }
+  .ch-k-b-hero { --hw: calc(var(--u) * 34); min-height: calc(var(--u) * 24); padding: 1.2em 1.3em; }
+  .ch-k-b-flip { left: calc(var(--u) * -13); width: calc(var(--u) * 26); min-height: calc(var(--u) * 22); }
+}
+@media (max-width: 639.98px) { .ch-k-b .ch-k-ans { font-size: 15.5px; } }
+
+/* ══ 3. GRANICA (.ch-k-c) ══════════════════════════════════════════════════════════════════════════════════════
+   Kamera (.ch-k-c-cam) = punkt 0 x 0 w środku okręgu; położenia w jednostkach promienia --R. Okrąg jest duży
+   i wychodzi za prawą krawędź ekranu (środek 0,8 R od krawędzi). Zmienne ze sceny: --draw okrąg się rysuje, --nd źródła
+   pojawiają się po kolei, --hit granica się rozjaśnia, --zm kamera najeżdża na miejsce postoju (--sx / --sy),
+   --ride dymek jedzie wzdłuż łuku; dymki: --bx / --by / --bs / --bo. Dwie geometrie (szeroka / wysoka poniżej
+   1024 px) - stałe w wiedza.tsx (GEO_WIDE / GEO_TALL), tu tylko wybór zmiennych. */
+.ch-k-c-cam {
+  --R: min(46vh, 30vw); --sx: var(--sxw); --sy: var(--syw);
+  position: absolute; left: calc(100% - var(--R) * .8); top: 52%; width: 0; height: 0;
+  transform-origin: calc(var(--sx) * var(--R)) calc(var(--sy) * var(--R));
+  transform: scale(calc(1 + var(--zm, 0) * .16));
+}
+.ch-k-c-ring { position: absolute; left: calc(var(--R) * -1.3); top: calc(var(--R) * -1.3); width: calc(var(--R) * 2.6); height: calc(var(--R) * 2.6); }
+.ch-k-c-ring svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.ch-k-c-orbit { fill: none; stroke: rgba(255, 255, 255, .07); stroke-width: .28; }
+.ch-k-c-edge { fill: none; stroke: rgba(255, 255, 255, .28); stroke-width: .3; stroke-dasharray: 1.02 1; stroke-dashoffset: calc(1.02 * (1 - var(--draw, 1))); }
+.ch-k-c-hit { fill: none; stroke: rgb(var(--sv-ac)); stroke-width: .45; opacity: var(--hit, 0); }
+.ch-k-c-arc { fill: none; stroke: rgb(var(--sv-ac)); stroke-width: .8; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: calc(1 - var(--ride, 0)); opacity: min(1, var(--ride, 0) * 20); }
+.ch-k-c-arc[data-geo="tall"] { display: none; }
+.ch-k-c .ch-k-line { stroke: rgba(255, 255, 255, .14); stroke-width: .3; }
+.ch-k-c .ch-k-pulse { stroke-width: .8; }
+.ch-k-c-cam .ch-k-node {
+  left: 0; top: 0; transform: translate(calc(var(--x) * var(--R) - 50%), calc(var(--y) * var(--R) - 8px));
+  opacity: clamp(0, var(--nd, 1) * 5 - var(--i, 0), 1);
+}
+.ch-k-c-cam .ch-k-team {
+  --x: var(--xw); --y: var(--yw);
+  transform: translate(calc(var(--x) * var(--R) - 50%), calc(var(--y) * var(--R) - 18px)); opacity: var(--draw, 1);
+}
+.ch-k-c-cam .ch-k-core { left: 0; top: 0; --cs: clamp(44px, calc(var(--R) * .16), 68px); }
+/* pytania jako dymki klienta: pełne tło (dymek przechodzi nad linią granicy i lądowaniem przykrywa podpis źródła) */
+.ch-k-c-bub {
+  position: absolute; left: 0; top: 0; z-index: 5; margin: 0; width: max-content; max-width: min(17rem, 62vw); padding: 11px 16px 12px;
+  border-radius: 18px 18px 5px 18px; border: 1px solid rgba(255, 255, 255, .3); background: #0a0a0b; color: #f1f5f9;
+  font-size: 15.5px; line-height: 1.4; text-wrap: balance; opacity: var(--bo, 0);
+  transform: translate(calc(var(--bx, 0) * var(--R) - 50%), calc(var(--by, 0) * var(--R) - 50%)) scale(var(--bs, 1));
+}
+/* jedno miejsce odpowiedzi: przy lewej krawędzi (szeroko) albo pod okręgiem (wysoko) */
+.ch-k-c-meta { position: absolute; left: 24px; top: calc(36% - 44px); }
+.ch-k-c-out { position: absolute; left: 24px; top: 36%; width: min(30%, 24rem); }
+@media (max-width: 1023.98px) {
+  .ch-k-c-cam { --R: min(44vw, 22vh); --sx: var(--sxt); --sy: var(--syt); left: 56%; top: calc(150px + var(--R)); }
+  .ch-k-c-cam .ch-k-team { --x: var(--xt); --y: var(--yt); }
+  .ch-k-c-arc[data-geo="wide"] { display: none; }
+  .ch-k-c-arc[data-geo="tall"] { display: inline; }
+  .ch-k-c-cam .ch-k-node { max-width: 7.2em; gap: 6px; }
+  .ch-k-c-bub { font-size: 14.5px; }
+  .ch-k-c-meta { top: 108px; }
+  .ch-k-c-out { top: calc(164px + min(44vw, 22vh) * 2); right: 24px; width: auto; }
+  .ch-k-c .ch-k-turn { gap: 12px; }
+  .ch-k-c .ch-k-ans { max-width: none; font-size: 16.5px; line-height: 1.4; }
+}
+@media (max-width: 639.98px) { .ch-k-c .ch-k-ans { font-size: 15.5px; } }
+/* niższy telefon: mniejszy okrąg i ciaśniejszy rytm, żeby odpowiedź nie weszła na zdanie narratora */
+@media (max-width: 1023.98px) and (max-height: 720px) {
+  .ch-k-c-cam { --R: min(40vw, 18vh); top: calc(134px + var(--R)); }
+  .ch-k-c-out { top: calc(146px + min(40vw, 18vh) * 2); }
+  .ch-k-c .ch-k-ans { font-size: 14.5px; }
+  .ch-k-b .ch-k-ans { font-size: 14.5px; }
+}

@@ -117,7 +117,7 @@ Nie targetują biznesu bezpośrednio, ale budują autorytet w community + dają 
 - [ ] **"Tailwind CSS v4 dla projektu produkcyjnego — moje wnioski"** ⭐⭐⭐ → Development
 - [ ] **"Framer Motion + GSAP w Next.js — kiedy co używać"** ⭐⭐⭐ → Development
 - [ ] **"Lenis + ScrollTrigger — jak zsynchronizować w Next.js"** ⭐⭐ → Development
-- [ ] **"Static export Next.js na Hostinger — kompletny setup z .htaccess"** ⭐⭐ → Tech/Dev
+- [ ] **"Static export Next.js na Cloudflare Pages — migracja z Hostingera, _headers i _redirects zamiast .htaccess"** ⭐⭐ → Tech/Dev (mamy własne doświadczenie z 2026-09-19)
 
 ---
 

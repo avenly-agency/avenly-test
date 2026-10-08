@@ -1,0 +1,121 @@
+/* Podstrona „Chatboty AI” - sekcja 4. GŁOS („Brzmi jak Twoja marka.”) - chat 13, praca równoległa, etap 3, runda 2.
+   Style tylko tej sekcji, prefiks ch-v-. WYBÓR WŁAŚCICIELA 2026-10-04: „w głos wybieram języki” - wersje „Twoja
+   branża” (talia kart) i „Pokrętło” (bęben tonów) USUNIĘTE razem ze stylami, nie przywracać bez prośby.
+     .ch-v-tongues „Języki”       - przypięta scena: pytania w czterech językach, odpowiedzi, skrzynka.
+   Wspólne części (gwiazda asystenta, dymki, narrator, skrzynka, nagłówek sekcji): chatboty.css - ten plik ładuje się
+   PRZED nim, więc każda poprawka wspólnej klasy ma tu wyższą specyficzność (.ch-v …).
+   Stany „przed odsłoną” tylko pod .sv[data-live]; bez JS wszystko widać od razu jako zwykłe bloki. */
+
+/* ruch kamery: miękki start (bez szarpnięcia dużej karty) i długie wyhamowanie */
+.ch-v { --ch-v-cam: cubic-bezier(.32, 0, .12, 1); }
+
+/* dymek sekcji (pismo w em - sceny skalują go razem z polem) */
+.ch-v-bub { margin: 0; min-width: 0; padding: .62em .95em .7em; font-size: 1.0625em; line-height: 1.45; text-wrap: pretty; overflow-wrap: anywhere; }
+.ch-v-bub[data-who="client"] { border-radius: 18px 18px 5px 18px; border: 1px solid rgba(255, 255, 255, .22); background: rgba(255, 255, 255, .05); color: #f1f5f9; }
+.ch-v-bub[data-who="bot"] { border-radius: 5px 18px 18px 18px; border: 1px solid rgb(var(--sv-ac) / .5); background: rgb(var(--sv-ac) / .09); color: #f8fafc; }
+
+/* ══ „JĘZYKI” (.ch-v-tongues) ═══════════════════════════════════════════════════════════════════════════════
+   Bez JS / ograniczony ruch / niski ekran: cztery pary pytanie + odpowiedź, pod nimi skrzynka i lista zdań. */
+/* Mgławica pod tą sceną jest przyciemniona (właściciel 2026-10-04: „nebule daj trochę ciemniejszą, bo kontrast się
+   psuje”): warstwa czerni POD treścią na całą sekcję, z miękkim wejściem i wyjściem (bez równej krawędzi, bez
+   prostokąta za tekstem). Sekcja ma własny kontekst warstw (.ch-sec: z-index 1), więc -1 leży nad tłem strony. */
+.ch-v-tongues::before {
+  content: ''; position: absolute; left: 0; right: 0; top: -14vh; bottom: -14vh; z-index: -1; pointer-events: none;
+  background: linear-gradient(180deg, rgba(5, 5, 5, 0), rgba(5, 5, 5, .58) 24vh, rgba(5, 5, 5, .58) calc(100% - 24vh), rgba(5, 5, 5, 0));
+}
+.ch-v-g-pin { margin-top: 44px; }
+.ch-v-g-scene { display: grid; gap: 30px; }
+.ch-v-g-field { position: relative; display: grid; gap: 24px; font-size: 16px; }
+@media (min-width: 768px) { .ch-v-g-field { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px 44px; } }
+.ch-v-g-web, .ch-v-g-dock, .ch-v .ch-v-g-star { display: none; }
+.ch-v-g-tag { grid-column: 1 / -1; justify-self: start; }
+.ch-v-g-pair { display: grid; gap: .6em; justify-items: start; align-content: start; min-width: 0; }
+.ch-v-g-q { display: grid; gap: .35em; justify-items: start; min-width: 0; }
+.ch-v-g-a { min-width: 0; }
+.ch-v-g-name { font-size: 14.5px; line-height: 1.3; color: #94a3b8; }
+/* dymki tej sceny są nieprzezroczyste (pod nimi biegną tory pytań) */
+.ch-v-g-pair .ch-v-bub[data-who="client"] { background: #0a0a0a; }
+.ch-v-g-pair .ch-v-bub[data-who="bot"] { background: linear-gradient(rgb(var(--sv-ac) / .1), rgb(var(--sv-ac) / .1)), #070707; }
+.ch-v .ch-v-g-inbox { max-width: 34rem; } /* w przypiętej scenie: nad narratorem, poza rogiem z bąblem czatu */
+.ch-v-g-rows { list-style: none; display: grid; margin: 0; padding: 0; }
+.ch-v-g-row { display: grid; grid-template-columns: 6.6em minmax(0, 1fr); gap: 12px; padding: 9px 0; border-top: 1px solid var(--sv-line); font-size: 14.5px; line-height: 1.4; color: #f1f5f9; }
+.ch-v-g-row:first-child { border-top: 0; padding-top: 2px; } /* linię nad pierwszym wierszem daje tytuł karty (.ch-inbox-t) */
+.ch-v-g-row > :first-child { color: #94a3b8; }
+
+/* PRZYPIĘTA SCENA: ekran przyklejony do okna, postęp przewijania pisze położenia (glos.tsx, paint):
+   --x / --y / --s / --o na pytaniach, odpowiedziach, parach, gwieździe i skrzynce, --gone = odjazd kamery.
+   Układ telefonu: gwiazda u góry, cztery pary jedna pod drugą; od 1024 px gwiazda pośrodku, pary w ćwiartkach. */
+@media (prefers-reduced-motion: no-preference) and (min-height: 521px) {
+  .sv[data-live] .ch-v-g-pin { height: 340vh; height: calc(100svh + 240vh); margin-top: 0; }
+  .sv[data-live] .ch-v-g-stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: clip; }
+  .sv[data-live] .ch-v-g-in { position: relative; height: 100%; }
+  .sv[data-live] .ch-v-g-scene { --band: 132px; position: absolute; left: 24px; right: 24px; top: 96px; bottom: 0; display: block; }
+  .sv[data-live] .ch-v-g-field { position: absolute; z-index: 2; left: 0; right: 0; top: 0; bottom: var(--band); grid-template-columns: minmax(0, 1fr); align-content: start; gap: .8em; font-size: calc(var(--fit, 1) * 15px); }
+  .sv[data-live] :is(.ch-v-g-q, .ch-v-g-a, .ch-v-g-pair, .ch-v-g-inbox), .sv[data-live] .ch-v .ch-v-g-star {
+    transform: translate3d(var(--x, 0px), var(--y, 0px), 0) scale(var(--s, 1)); opacity: var(--o, 1); will-change: transform, opacity;
+  }
+  .sv[data-live] .ch-v-g-pin[data-measure] :is(.ch-v-g-q, .ch-v-g-a, .ch-v-g-pair, .ch-v-g-inbox, .ch-v-g-star) { transform: none; }
+  .sv[data-live] .ch-v .ch-v-g-star { display: inline-grid; justify-self: center; width: 34px; height: 34px; }
+  .sv[data-live] .ch-v .ch-v-g-tag { position: absolute; right: 0; top: 5px; opacity: var(--gone, 1); }
+  .sv[data-live] .ch-v-g-pair { justify-items: stretch; gap: .45em; }
+  .sv[data-live] .ch-v-g-q { justify-items: end; margin-left: 1.4em; }
+  .sv[data-live] .ch-v-g-a { justify-self: start; margin-right: 1.4em; }
+  .sv[data-live] .ch-v-g-pair .ch-v-bub { padding: .55em .9em .62em; }
+  .sv[data-live] .ch-v-g-dock { display: inline-block; width: 16px; height: 16px; margin-right: 8px; vertical-align: -2px; }
+  .sv[data-live] .ch-v .ch-v-g-inbox { position: absolute; z-index: 1; left: 0; right: 0; bottom: calc(var(--band) + 14px); max-width: none; }
+  .sv[data-live] .ch-v-g-row { opacity: var(--o, 1); }
+  .sv[data-live] .ch-v .ch-v-g-narr { position: absolute; left: 0; right: 64px; bottom: 28px; }
+}
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) and (min-height: 521px) {
+  .sv[data-live] .ch-v-g-scene { --band: 172px; }
+  .sv[data-live] .ch-v-g-field {
+    grid-template-columns: minmax(0, 1fr) clamp(120px, 15%, 200px) minmax(0, 1fr); grid-template-rows: repeat(2, minmax(0, 1fr));
+    align-content: stretch; align-items: center; gap: 1em 0; padding-top: 12px; font-size: calc(var(--fit, 1) * 16px);
+  }
+  .sv[data-live] .ch-v .ch-v-g-star { grid-column: 2; grid-row: 1 / span 2; place-self: center; width: 56px; height: 56px; }
+  .sv[data-live] .ch-v .ch-v-g-tag { left: 0; right: 0; top: 0; width: max-content; margin-inline: auto; }
+  .sv[data-live] .ch-v-g-pair { justify-items: start; gap: .6em; max-width: 30em; }
+  .sv[data-live] .ch-v-g-pair[data-side="l"] { grid-column: 1; }
+  .sv[data-live] .ch-v-g-pair[data-side="r"] { grid-column: 3; justify-self: end; justify-items: end; }
+  .sv[data-live] .ch-v-g-q { justify-items: start; margin-left: 0; }
+  .sv[data-live] .ch-v-g-pair[data-side="r"] .ch-v-g-q { justify-items: end; }
+  .sv[data-live] .ch-v-g-a { margin: 0 0 0 2em; }
+  .sv[data-live] .ch-v-g-pair[data-side="r"] .ch-v-g-a { justify-self: end; margin: 0 2em 0 0; }
+  .sv[data-live] .ch-v-g-pair .ch-v-bub { padding: .62em .95em .7em; }
+  /* tory pytań: włosowe linie od pytania do gwiazdy (konstelacja), rysują się z nadlatującym pytaniem */
+  .sv[data-live] .ch-v-g-web { display: block; position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; opacity: var(--gone, 1); }
+  .sv[data-live] .ch-v-g-web path { fill: none; stroke: rgba(255, 255, 255, .2); stroke-width: 1; stroke-dasharray: 1; stroke-dashoffset: var(--d, 0); transition: stroke .8s ease; }
+  .sv[data-live] .ch-v-g-web path[data-on] { stroke: rgb(var(--sv-ac) / .55); }
+  .sv[data-live] .ch-v .ch-v-g-inbox { left: auto; right: 0; bottom: 118px; width: min(38rem, 52%); }
+  .sv[data-live] .ch-v .ch-v-g-narr { right: auto; bottom: 40px; width: min(34rem, 46%); }
+}
+/* TELEFON I TABLET (dostosowanie 2026-10-05; liczone dla 390 x 664 px - tyle widać w Safari na iPhonie - i 360 x 600):
+   cztery pary jedna pod drugą nie mieściły się w polu sceny (potrzeba ok. 630 px, pole ma ok. 440) i wchodziły na
+   narratora. Teraz: nazwa języka jako znaczek NA górnej krawędzi dymka pytania (nie zajmuje osobnej linii),
+   ciaśniejsze dymki i odstępy, mniejsza gwiazda, węższy pas na narratora (jego zdania mają tu dwie linie).
+   Resztę dopasowuje --fit z pomiaru (pismo maleje najwyżej o jedną piątą). */
+@media (max-width: 1023.98px) and (prefers-reduced-motion: no-preference) and (min-height: 521px) {
+  .sv[data-live] .ch-v-g-scene { --band: 116px; top: 88px; }
+  .sv[data-live] .ch-v-g-field { gap: .62em; font-size: calc(var(--fit, 1) * 14.5px); }
+  .sv[data-live] .ch-v .ch-v-g-star { width: 26px; height: 26px; }
+  .sv[data-live] .ch-v-g-pair { gap: .4em; }
+  .sv[data-live] .ch-v-g-pair .ch-v-bub { padding: .5em .85em .56em; line-height: 1.38; }
+  .sv[data-live] .ch-v-g-q { position: relative; display: block; }
+  .sv[data-live] .ch-v-g-q .ch-v-bub { margin-left: auto; width: fit-content; max-width: 100%; }
+  .sv[data-live] .ch-v-g-name {
+    position: absolute; right: 22px; top: -8px; z-index: 1; padding: 0 6px; border-radius: 6px; background: #0a0a0a;
+    font-size: 12px; line-height: 1.2; color: #cbd5e1;
+  }
+}
+/* niski ekran (telefon bokiem): bez przypięcia, narrator jako zwykła lista */
+@media (max-height: 520px) {
+  .sv[data-live] .ch-v .ch-narr { gap: 12px; }
+  .sv[data-live] .ch-v .ch-narr-i { grid-area: auto; padding-top: 0; }
+  .sv[data-live] .ch-v .ch-narr-bar { display: none; }
+  .sv[data-live] .ch-v .ch-narr-i :is(.ch-narr-n, .ch-narr-t) { opacity: 1; transform: none; }
+}
+
+/* ══ TELEFON ══ */
+@media (max-width: 639.98px) {
+  .ch-v-g-pin { margin-top: 34px; }
+}

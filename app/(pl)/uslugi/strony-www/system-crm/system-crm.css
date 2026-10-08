@@ -1,0 +1,241 @@
+/* Podstrona „System CRM” (/uslugi/strony-www/system-crm i EN) - chat 11, praca równoległa, etap 3. Style WSPÓLNE
+   podstrony, prefiks cr-. Szkielet (korzeń, tło-mgławica, wejście z czerni, nagłówek, przycisk, zakończenie):
+   app/(pl)/uslugi/_usluga/usluga.css (sv-) - tylko używany, nadpisania wyłącznie pod własną klasą korzenia (.sv.cr).
+   INNA USŁUGA NIŻ STRONY WWW (właściciel 2026-10-04): bohaterem jest narzędzie - przykładowy system - a nie strona
+   klienta w kadrze. Żadna scena nie jest interaktywna (steruje przewijanie); sceny mają WŁASNE pliki CSS
+   z prefiksami: cr1c- (scena główna „Z punktów”), cr7- („Nic już nie ginie” - „Kanały”), cr3- (role, „Klucz”),
+   cr8- (moduły, „W dół”), cr6- (AI, „Tory”). Tu zostaje to, z czego korzystają wszystkie:
+     .cr-narr   narrator (jedno zdanie naraz),
+     .cr-sec-*  zwykłe sekcje z nagłówkiem,
+     .cr-win*   okno przykładowego systemu, .cr-av, .cr-check, .cr-chip, .cr-h3, .cr-side, .cr-d-card, .cr-d-n,
+     .cr-c-*    widoki ról (RoleBody w roles.tsx): właściciel, biuro, pracownik,
+     .cr-p-*    „Bębny”        - przypięta scena: napisy systemu obracają się na kolejną branżę (.cr-reel).
+   Usunięte 2026-10-04 razem z plikami: sceny do klikania z rundy 2, dawne sceny główne, a po wyborach właściciela
+   po rundzie 3 także „Konstelacja” (.cr-k-*) i cała sekcja zakresu (.cr-x-* / .cr-y-*, „zakres usuń”).
+   Przypięcia i stany „przed” tylko pod .sv[data-live] i przy prefers-reduced-motion: no-preference.
+   Język: czerń z kryciem i ostry refleks u góry (--sv-edge), włosowe linie, biel jako stan aktywny. Kolor podstrony
+   („niebo”, --sv-ac) tylko w liniach, punktach i stanach - bez błękitu w tekście i bez zalanych teł. Bez blur, mgiełek
+   i tekstu z gradientem. Przykładowy system jest wyraźnie podpisany („Przykładowy system”).
+   Notatki: docs/podstrony/usluga-system-crm.md. */
+
+.cr {
+  --cr-line: rgba(255, 255, 255, .1);
+  --cr-ink: #03121c;
+  --cr-move: cubic-bezier(.62, 0, .18, 1);
+}
+@keyframes cr-rise { from { opacity: 0; transform: translateY(10px); } }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* narrator: zdania ze szkieletu (Steps), ale na każdej szerokości widać tylko bieżące - jedno zdanie naraz */
+  .sv[data-live] .cr-narr .sv-steps { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .sv[data-live] .cr-narr .sv-step { grid-area: 1 / 1; padding-top: 20px; }
+  .sv[data-live] .cr-narr .sv-step-bar { left: calc(var(--i) * (100% + 8px) / var(--n, 3)); right: auto; width: calc((100% - (var(--n, 3) - 1) * 8px) / var(--n, 3)); }
+  .sv[data-live] .cr-narr .sv-step-body { align-items: center; gap: 14px; color: #f8fafc; opacity: 0; transform: translateY(8px); transition: opacity .45s ease, transform .6s var(--sv-ease); }
+  .sv[data-live] .cr-narr .sv-step[data-on="1"] .sv-step-body { opacity: 1; transform: none; }
+  .sv[data-live] .cr-narr .sv-step-t { font-size: 16.5px; text-wrap: balance; }
+  @media (min-width: 768px) { .sv[data-live] .cr-narr .sv-step-t { font-size: 18.5px; } }
+}
+
+/* ══ SEKCJE (nieprzypięte): nagłówek przy lewej krawędzi kontenera, scena pod nim. ══ */
+.cr-sec { position: relative; z-index: 1; padding-top: 104px; }
+@media (min-width: 1024px) { .cr-sec { padding-top: 152px; } }
+.cr-sec-head { margin-bottom: 30px; }
+.sv.cr .cr-sec-head .sv-h2 { margin-bottom: 14px; max-width: 20ch; }
+.sv.cr .cr-sec-lead { margin: 0; max-width: 38rem; text-wrap: pretty; }
+/* linia dowodów pod przyciskiem („Bezpłatnie · bez zobowiązań · odpowiedź w 24 h”) usunięta z tej podstrony na prośbę
+   właściciela 2026-10-06 - słownik podaje pustą listę, a pusty akapit ze szkieletu nie może zostawiać odstępu */
+.sv.cr .sv-proof { display: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .sv[data-live] .cr-sec-head:not([data-in]) > * { opacity: 0; transform: translateY(18px); }
+  .sv[data-live] .cr-sec-head[data-in] > * { transition: opacity 1s ease, transform 1.1s var(--sv-ease); }
+  .sv[data-live] .cr-sec-head[data-in] > :nth-child(2) { transition-delay: .12s; }
+}
+/* ── Okno przykładowego systemu: czerń z kryciem, ostry refleks u góry, kolor podstrony od dołu. ── */
+.cr-win {
+  position: relative; isolation: isolate; min-width: 0; border-radius: 18px; overflow: hidden;
+  background: linear-gradient(180deg, rgba(0, 0, 0, .58), rgba(0, 0, 0, .74));
+  box-shadow: var(--sv-edge), 0 50px 90px -50px rgba(0, 0, 0, .95);
+}
+.cr-win::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; z-index: -1; height: 46%; pointer-events: none;
+  background: radial-gradient(70% 100% at 50% 100%, rgb(var(--sv-ac) / .1), transparent 72%);
+}
+.cr-win-bar { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 16px; border-bottom: 1px solid var(--cr-line); font-size: 13.5px; line-height: 1.2; color: #94a3b8; }
+.cr-win-mark { flex: none; width: 9px; height: 9px; border-radius: 50%; background: rgb(var(--sv-ac)); }
+.cr-win-name { font-weight: 600; color: #f8fafc; white-space: nowrap; }
+.cr-win-sub { display: none; white-space: nowrap; }
+.cr-win-badge { margin-left: auto; padding: 5px 11px; border-radius: 999px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16); font-size: 12px; color: #cbd5e1; white-space: nowrap; }
+@media (min-width: 480px) { .cr-win-sub { display: inline; } }
+/* najwęższe telefony (320-359 px): nazwa firmy i etykieta „Przykładowy system” mieszczą się w pasku okna; gdyby
+   zabrakło miejsca, skraca się nazwa, a etykieta zostaje w całości */
+.cr-win-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.cr-win-badge { flex: none; }
+@media (max-width: 359.98px) {
+  .cr-win-bar { gap: 8px; padding: 0 12px; }
+  .cr-win-mark { display: none; }
+  .cr-win-badge { padding: 4px 8px; }
+}
+
+.cr-av { flex: none; display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .3); font-size: 11px; font-weight: 600; line-height: 1; color: #f8fafc; }
+
+.cr-check { display: flex; align-items: center; gap: 12px; min-height: 44px; font-size: 14px; line-height: 1.35; color: #e2e8f0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.cr-check input {
+  appearance: none; -webkit-appearance: none; flex: none; display: grid; place-items: center; width: 22px; height: 22px; margin: 0;
+  border-radius: 7px; background: transparent; box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .45); cursor: pointer;
+  transition: background-color .3s ease, box-shadow .3s ease;
+}
+.cr-check input::after { content: ''; width: 10px; height: 6px; border-left: 2px solid var(--cr-ink); border-bottom: 2px solid var(--cr-ink); transform: translateY(-1px) rotate(-45deg) scale(0); transition: transform .3s var(--sv-ease); }
+.cr-check input:checked { background: rgb(var(--sv-ac)); box-shadow: none; }
+.cr-check input:checked::after { transform: translateY(-1px) rotate(-45deg) scale(1); }
+.cr-check input:focus-visible { outline: 2px solid #60a5fa; outline-offset: 2px; }
+.cr-check-t { display: grid; gap: 1px; min-width: 0; }
+.cr-check-t b { font-size: 14.5px; font-weight: 600; color: #f8fafc; transition: color .4s ease; }
+.cr-check-t span { font-size: 13px; color: #94a3b8; }
+.cr-check input:checked + .cr-check-t b { color: #94a3b8; text-decoration: line-through; text-decoration-color: rgba(148, 163, 184, .7); }
+
+.cr-chip { display: inline-flex; align-items: center; gap: 7px; padding: 4px 11px; border-radius: 999px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14); font-size: 12.5px; line-height: 1.3; color: #e2e8f0; white-space: nowrap; transition: box-shadow .6s ease; }
+.cr-chip::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #64748b; transition: background-color .6s ease; }
+.cr-chip[data-fresh] { box-shadow: inset 0 0 0 1px rgb(var(--sv-ac) / .75); color: #f8fafc; }
+.cr-chip[data-fresh]::before { background: rgb(var(--sv-ac)); }
+
+.cr-h3 { margin: 0 0 16px; font-size: 20px; line-height: 1.25; font-weight: 600; letter-spacing: -.02em; color: #f8fafc; }
+
+/* Boczne menu systemu (Role, Twój proces): na komputerze kolumna, na telefonie pasek przewijany palcem, który gaśnie
+   przy prawej krawędzi zamiast ucinać słowo. */
+.cr-side {
+  list-style: none; margin: 0; padding: 10px 12px; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none;
+  border-bottom: 1px solid var(--cr-line);
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 44px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 44px), transparent);
+}
+.cr-side::-webkit-scrollbar { display: none; }
+.cr-side li { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border-radius: 9px; font-size: 13.5px; line-height: 1.3; color: #e2e8f0; white-space: nowrap; transition: color .5s ease, background-color .5s ease; }
+.cr-side li:last-child { margin-right: 36px; }
+.cr-side li[data-cur] { background: rgba(255, 255, 255, .07); color: #f8fafc; font-weight: 600; }
+.cr-side li[data-off] { color: #6b7a90; }
+.cr-side svg { flex: none; width: 13px; height: 13px; }
+@media (min-width: 768px) {
+  .cr-side { display: grid; align-content: start; gap: 2px; padding: 14px 10px; overflow: visible; border-bottom: 0; border-right: 1px solid var(--cr-line); -webkit-mask-image: none; mask-image: none; }
+  .cr-side li:last-child { margin-right: 0; }
+}
+
+.cr-c-body { display: grid; min-height: 380px; align-content: start; }
+@media (min-width: 768px) { .cr-c-body { grid-template-columns: 200px minmax(0, 1fr); align-content: stretch; } }
+.cr-c-view { min-width: 0; padding: 20px 18px 24px; animation: cr-rise .7s var(--sv-ease) both; }
+@media (min-width: 768px) { .cr-c-view { padding: 22px 24px 26px; } }
+.cr-c-sub { margin: 0 0 4px; font-size: 13px; line-height: 1.3; color: #94a3b8; }
+/* wartość, która zmieniła się po odhaczeniu montażu: punkt w kolorze podstrony (bez podkreśleń - czytałyby się jak link) */
+.cr-c-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 20px; border-top: 1px solid var(--cr-line); border-bottom: 1px solid var(--cr-line); }
+.cr-c-stat { padding: 14px 12px 14px 0; }
+.cr-c-stat + .cr-c-stat { padding-left: 14px; border-left: 1px solid var(--cr-line); }
+.cr-c-stat b { display: flex; align-items: flex-start; gap: 7px; font-size: 32px; line-height: 1; font-weight: 600; letter-spacing: -.03em; font-variant-numeric: tabular-nums; color: #f8fafc; }
+.cr-c-stat b[data-fresh]::after{ content: ''; flex: none; width: 7px; height: 7px; border-radius: 50%; background: rgb(var(--sv-ac)); }
+.cr-c-stat span { display: block; margin-top: 7px; font-size: 12.5px; line-height: 1.35; color: #94a3b8; }
+.cr-c-rows { list-style: none; margin: 0; padding: 0; }
+.cr-c-rows li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 14px; align-items: center; padding: 11px 0; border-top: 1px solid rgba(255, 255, 255, .07); }
+.cr-c-rows li:first-child { border-top: 0; }
+.cr-c-row-t { font-size: 14.5px; line-height: 1.35; font-weight: 600; color: #f8fafc; }
+.cr-c-row-s { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 1.4; color: #94a3b8; }
+.cr-c-tasks { list-style: none; margin: 0; padding: 0; }
+.cr-c-tasks li + li { border-top: 1px solid rgba(255, 255, 255, .07); }
+.cr-c-tasks .cr-check { min-height: 60px; }
+/* zadanie do odhaczenia w tej scenie: pole w kolorze podstrony */
+.cr-c-tasks li:first-child input:not(:checked) { box-shadow: inset 0 0 0 2px rgb(var(--sv-ac)); }
+/* etapy zlecenia: telefon - lista z osią po lewej, od 640 px - oś pozioma */
+.cr-c-docs { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.cr-c-docs li { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 9px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14); font-size: 13px; line-height: 1.3; color: #e2e8f0; }
+.cr-c-docs svg { width: 14px; height: 14px; color: #94a3b8; }
+/* widok biura: dzisiejsze terminy pod listą zleceń */
+.cr-c-cal { margin-top: 18px; }
+
+.cr-d-n { flex: none; display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgb(var(--sv-ac) / .7); font-size: 11.5px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; color: #f8fafc; }
+.cr-d-card { padding: 12px 14px 13px; border-radius: 12px; background: #09090b; box-shadow: var(--sv-edge); }
+.cr-d-card > b { display: block; font-size: 14.5px; line-height: 1.3; font-weight: 600; color: #f8fafc; }
+.cr-d-card > span { display: block; margin-top: 3px; font-size: 13px; line-height: 1.4; color: #94a3b8; }
+/* ══ „SZYTY POD TWÓJ PROCES” - wersja „BĘBNY” (reels.tsx) ═════════════════════════════════════════════════════════
+   Każdy napis to bęben z czterema pozycjami. --u1..3 = postęp trzech obrotów (pisze scena), --d = opóźnienie bębna,
+   --rh = wysokość pozycji. Obrót bębna = suma trzech przyciętych postępów (liczy CSS). Bez JS: pierwsza branża. */
+.cr-reel { display: block; min-width: 0; height: var(--rh, 1.4em); overflow: hidden; }
+.cr-reel-in {
+  --kk: calc(clamp(0, (var(--u1, 0) - var(--d, 0)) / .5, 1) + clamp(0, (var(--u2, 0) - var(--d, 0)) / .5, 1) + clamp(0, (var(--u3, 0) - var(--d, 0)) / .5, 1));
+  display: block; transform: translate3d(0, calc(var(--kk) * var(--rh, 1.4em) * -1), 0);
+}
+.cr-reel-in > span { display: block; height: var(--rh, 1.4em); line-height: var(--rh, 1.4em); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cr-p { position: relative; z-index: 1; padding-top: 104px; }
+.cr-p-in { display: grid; gap: 20px; }
+.cr-p-name { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; min-width: 0; }
+.cr-p-big { --rh: 1.14em; flex: 1; font-size: clamp(28px, 7.4vw, 84px); font-weight: 700; letter-spacing: -.045em; color: #f8fafc; }
+.cr-p-count { flex: none; display: flex; gap: 6px; padding-bottom: .9em; }
+.cr-p-count i { width: 18px; height: 2px; background: rgba(255, 255, 255, .2); transition: background-color .5s ease, width .6s var(--sv-ease); }
+.cr-p[data-at="0"] .cr-p-count i[data-i="0"], .cr-p[data-at="1"] .cr-p-count i[data-i="1"],
+.cr-p[data-at="2"] .cr-p-count i[data-i="2"], .cr-p[data-at="3"] .cr-p-count i[data-i="3"] { width: 34px; background: rgb(var(--sv-ac)); }
+.cr-p-win .cr-win-name { display: none; }
+.cr-p .cr-side .cr-reel { flex: 1; }
+.cr-p-board { list-style: none; margin: 0; padding: 16px; display: grid; gap: 14px; min-width: 0; align-content: start; }
+.cr-p-col { display: grid; gap: 10px; align-content: start; min-width: 0; }
+.cr-p-col-h { display: flex; align-items: center; gap: 8px; height: 40px; border-bottom: 2px solid rgb(var(--sv-ac) / .5); font-size: 14.5px; font-weight: 600; color: #f8fafc; }
+.cr-p-col-h .cr-reel { flex: 1; }
+.cr-p .cr-c-body { min-height: 0; }
+.cr-p-ghost { display: none; height: 54px; border-radius: 12px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08); }
+.cr-p-ghost + .cr-p-ghost { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .045); }
+@media (max-width: 767.98px) { .cr-p .cr-side { display: none; } }
+/* najdłuższa nazwa branży („Warsztat samochodowy”) ma się mieścić bez wielokropka: na telefonie znaczniki pod nazwą,
+   na tablecie mniejsze pismo */
+@media (max-width: 639.98px) { .cr-p-name { flex-direction: column; align-items: flex-start; gap: 8px; } .cr-p-big { flex: none; width: 100%; } .cr-p-count { padding-bottom: 0; } }
+@media (min-width: 640px) and (max-width: 1023.98px) { .cr-p-big { font-size: 6.2vw; } }
+/* TELEFON (właściciel 2026-10-05: „dostosuj całą podstronę do urządzeń mobilnych”): etap i jego karta stoją
+   w jednym wierszu. Dawny układ „etap nad kartą” miał na telefonie ok. 763 px wysokości, a przypięty ekran ma tyle,
+   ile widać przy rozwiniętym pasku adresu (100svh na telefonie 390 × 844 to ok. 664 px) - scena była ucinana
+   z góry i z dołu. Cztery wiersze mają razem ok. 440 px. Na 320 px węższa kolumna etapu i mniejsza nazwa branży. */
+@media (max-width: 767.98px) {
+  .cr-p-board { gap: 10px; padding: 14px; }
+  .cr-p-col { grid-template-columns: 104px minmax(0, 1fr); align-items: center; gap: 10px; }
+  .cr-p-col-h { height: auto; border-bottom: 0; font-size: 14px; }
+  .cr-p .cr-d-card { padding: 10px 12px 11px; }
+}
+@media (max-width: 359.98px) { .cr-p-big { font-size: 24px; } .cr-p-col { grid-template-columns: 92px minmax(0, 1fr); } }
+@media (min-width: 1024px) {
+  .cr-p { padding-top: 152px; }
+  .cr-p-board { grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 14px; padding: 20px 22px 26px; }
+  .cr-p-ghost { display: block; }
+  .cr-p-col-h { height: 46px; font-size: 16px; }
+  .cr-p .cr-d-card { padding: 15px 16px 16px; }
+  .cr-p .cr-d-card > b { font-size: 16px; }
+  .cr-p .cr-d-card > span { font-size: 14px; }
+  .cr-p .cr-side li { font-size: 14.5px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sv[data-live] .cr-p { height: 340vh; height: calc(100svh + 240vh); padding-top: 0; }
+  .sv[data-live] .cr-p-stage { position: sticky; top: 0; display: grid; align-items: center; height: 100vh; height: 100svh; overflow: clip; }
+  .sv[data-live] .cr-p-in { padding-top: 84px; padding-bottom: 28px; }
+  @media (max-width: 767.98px) { .sv[data-live] .cr-p-in { gap: 14px; padding-top: 76px; padding-bottom: 20px; } }
+  /* telefon poziomo i bardzo niskie ekrany: scena się nie zmieści - zwykły blok bez przypięcia */
+  @media (max-height: 520px) {
+    .sv[data-live] .cr-p { height: auto; padding-top: 72px; }
+    .sv[data-live] .cr-p-stage { position: static; display: block; height: auto; overflow: visible; }
+    .sv[data-live] .cr-p-in { padding-top: 0; padding-bottom: 0; }
+  }
+}
+
+/* ══ „ROZEJŚCIE” (.cr-bloom / .cr-bloom-out) - JEDYNY sposób pojawiania się i podmiany rzeczy na tej podstronie ══════
+   Reguły są w GENEROWANYM bloom.css (skrypt scripts/crm-bloom.mjs jest jedynym źródłem prawdy - tam lista warstw
+   i tekstury). Decyzje właściciela z 2026-10-05, po kolei:
+     1. „te wszystkie animacje linii, która leci i zmienia wireframe na coś lub coś na coś, coś się pojawia - wywal
+        i zrób animację taką pojawiania płynną, tak jak się nebula rozchodzi”,
+     2. (po jednej okrągłej plamie od punktu) „zrób to z axisem, np. od lewej do prawej, i tak nieregularnie, a nie że
+        jednym kształtem się pojawia”,
+     3. (po jednym poszarpanym czole jadącym w poprzek) „nie chcę, żeby to był jedną linią i statyczny na końcu, tylko
+        taki fluid, nieregularny, że nie cały element, tylko kilka mniejszych”.
+   Element odsłania się KILKOMA MNIEJSZYMI KŁĘBAMI gazu: pojawiają się po kolei od lewej do prawej (nierówno, w dwóch
+   rzędach), każdy rośnie i dryfuje, kłęby zlewają się, a luki domyka duży kłąb rosnący ze środka. Bez linii światła,
+   kurtyn, przycięć prostą krawędzią, jednej plamy i jednego czoła (NIE wracać).
+     --bloom (0-1)   postęp: 0 = nic, 1 = całość. Pisze scena (z przewijania) albo przejście CSS (@property),
+     .cr-bloom       to, co się POJAWIA,
+     .cr-bloom-out   to, co w tym samym prostokącie ZNIKA - dokładne dopełnienie, więc para z tym samym --bloom daje
+                     podmianę „coś na coś” bez sumowania warstw,
+     [data-bloomed]  stan po zakończeniu (--bloom = 1): maska zdjęta z tego, co weszło, a to, co zeszło, schowane -
+                     scena ustawia atrybut, gdy postęp dojdzie do końca, i zdejmuje go przy powrocie.
+   --bloom-x / --bloom-y (punkt startu z pierwszej wersji) nie mają już znaczenia - sceny mogą je zostawić.
+   Bez JS i przy ograniczonym ruchu --bloom = 1: to, co ma być widoczne w stanie końcowym, jest widoczne. Stan „przed”
+   (--bloom: 0) ustawia scena tylko pod .sv[data-live] i przy prefers-reduced-motion: no-preference.
+   Płótno sceny głównej gasi punkty pod oknem dopełnieniem tej samej maski: lista warstw w bloom-layers.ts (też
+   generowana), tekstury odczytane ze zmiennych --cr-bloom-* (`veil` w hero-points-field.ts). */

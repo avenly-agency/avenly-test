@@ -1,0 +1,41 @@
+'use client';
+
+import type { LeadCopy } from '@/lib/i18n/uslugi/system-crm-lead';
+import { LeadCard } from './lead-card';
+import { LeadChannels } from './lead-channels';
+import { LeadFunnel } from './lead-funnel';
+import type { SceneVersion } from './types';
+import './lead.css'; // style sekcji we własnym pliku (praca równoległa), prefiks cr7-
+
+// SEKCJA „NIC JUŻ NIE GINIE” podstrony „System CRM” - RUNDA 4. Właściciel po rundzie 3 (2026-10-04): „to 2. zlecenie
+// zrób inne, trochę bardziej uniwersalne dla każdych CRM”. Poprzednie propozycje (flow*.tsx: droga jednego zlecenia
+// stolarni) czytały się jak „CRM dla stolarza”. Tutaj sekcja pokazuje to, co robi KAŻDY system CRM w każdej firmie,
+// bez słów z jednej branży: zapytania z kilku kanałów w jednym miejscu, karta klienta z historią, sprawa w etapach
+// o ogólnych nazwach, system sam przypisuje osobę i termin, potwierdza klientowi i przypomina o sprawie, która stoi.
+// Sceny NIE są interaktywne - steruje nimi wyłącznie przewijanie. Od 2026-10-05 (decyzja właściciela dla całej
+// podstrony: „te wszystkie animacje linii, która leci (…) wywal i zrób animację taką pojawiania płynną, tak jak się
+// nebula rozchodzi”) wszystko, co się pojawia albo podmienia, robi to ROZEJŚCIEM (.cr-bloom / .cr-bloom-out
+// z system-crm.css) - bez linii światła, kurtyn i przycięć prostą krawędzią. Zostaje prawdziwy ruch przedmiotów,
+// statyczne włosowe linie torów i osi, bębny i narrator.
+// Trzy propozycje = trzy różne sceny (każda renderuje całą sekcję z nagłówkiem h2):
+//   kanaly „Kanały”         WYBRANA przez właściciela 2026-10-05. BEZ przypięcia. Formularz, e-mail i telefon płyną
+//                           trzema torami do jednej listy; okno rośnie wiersz po wierszu - każde zapytanie
+//                           rozchodzi się od swojego toru i samo dostaje osobę, termin i potwierdzenie. Odsłony
+//                           startują przy wejściu elementu na ekran i grają same do końca (na czas, nigdy wstecz) -
+//                           nic nie zostaje odsłonięte w połowie (lead-channels.tsx).
+//                           Pierwsza = domyślna: sąsiednie sekcje (scena główna, „Klucz”, „Bębny”) są przypięte, więc
+//                           ta daje stronie oddech, a jej geometria jest w całości w CSS.
+//   lejek  „Lejek”          przypięta, 280vh. Szeroki plan: tablica z ogólnymi etapami i wszystkimi sprawami firmy;
+//                           jedna stoi piąty dzień - jej punkt spokojnie zmienia stan, od niego rozchodzą się karta
+//                           sprawy i przypomnienie, a potem sprawa rusza na następny etap (lead-funnel.tsx).
+//   karta  „Karta klienta”  przypięta, 300vh. Trzy wiadomości tej samej osoby wsuwają się w jeden wpis, od jego
+//                           strony rozchodzi się karta klienta (a „Nowy kontakt” znika jej dopełnieniem), na osi
+//                           historii dochodzą rozmowa, notatka, oferta i przypomnienie (lead-card.tsx).
+// Teksty: lib/i18n/uslugi/system-crm-lead.ts (komplet tekstów sekcji) + z głównego słownika tylko t.app (pasek okna
+// przykładowej firmy), t.team (imiona) i t.film.stepsAria. Style: lead.css (cr7-). Części wspólne: lead-kit.tsx.
+
+export const leadVersions: SceneVersion<LeadCopy>[] = [
+  { id: 'kanaly', label: 'Kanały', Scene: LeadChannels },
+  { id: 'lejek', label: 'Lejek', Scene: LeadFunnel },
+  { id: 'karta', label: 'Karta klienta', Scene: LeadCard },
+];

@@ -1,0 +1,8 @@
+import { UiUxClient } from '../../../../../(pl)/uslugi/design/ui-ux/UiUxClient';
+import { uiUxDict } from '@/lib/i18n/uslugi/ui-ux';
+
+// Metadata + JSON-LD w sąsiednim layout.tsx. Ta strona to cienki wrapper
+// podający angielski słownik do współdzielonego komponentu klienckiego.
+export default function UiUxPageEn() {
+  return <UiUxClient t={uiUxDict.en} locale="en" />;
+}

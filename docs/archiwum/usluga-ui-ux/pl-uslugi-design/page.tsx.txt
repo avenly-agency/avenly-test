@@ -1,0 +1,40 @@
+import type { Metadata } from 'next';
+import { Catalog } from '../_katalog/Catalog';
+import { buildCatalog } from '../_katalog/model';
+import { i18nAlternates } from '@/lib/i18n/locale';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { breadcrumbSchema } from '@/lib/schemas';
+
+export const metadata: Metadata = {
+  title: 'Design - projekt UI/UX strony i sklepu',
+  description:
+    'Zobacz swoją stronę, zanim powstanie. Układ, kolory i wersję na telefon akceptujesz na starcie, a projekt klikasz jak gotową stronę.',
+  // Blok openGraph strony ZASTĘPUJE blok z root layoutu (Next go nie łączy) - dlatego podany w całości (adres, typ, obrazek).
+  openGraph: {
+    type: 'website',
+    locale: 'pl_PL',
+    siteName: 'Avenly',
+    url: '/uslugi/design/',
+    title: 'Zobacz stronę, zanim powstanie - projekt UI/UX Avenly',
+    description:
+      'Projekt UI/UX do akceptacji przed kodem: klikalny podgląd strony lub sklepu i wersja na telefon.',
+    images: [{ url: '/og-default.png', width: 1200, height: 630, alt: 'Avenly - agencja interaktywna', type: 'image/png' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Zobacz stronę, zanim powstanie - projekt UI/UX Avenly',
+    description: 'Projekt UI/UX do akceptacji przed kodem: klikalny podgląd strony lub sklepu i wersja na telefon.',
+    images: ['/og-default.png'],
+  },
+  alternates: i18nAlternates('/uslugi/design', 'pl'),
+};
+
+export default function DesignCategoryPage() {
+  const m = buildCatalog('pl', 'design');
+  return (
+    <>
+      <JsonLd data={breadcrumbSchema(m.crumbs)} />
+      <Catalog m={m} />
+    </>
+  );
+}

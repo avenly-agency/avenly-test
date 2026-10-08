@@ -1,0 +1,196 @@
+/* PO WYBORZE WŁAŚCICIELA (2026-10-05) w tym pliku zostały tylko style sceny „Kanały” (lead-channels.tsx, lead-kit.tsx);
+   style „Lejka” i „Karty klienta” usunięte przy optymalizacji wydajności - kopia całości w docs/archiwum/usluga-system-crm/.
+   Sekcja „Nic już nie ginie” podstrony „System CRM” - RUNDA 4: nowe, uniwersalne propozycje. Właściciel po
+   rundzie 3: „zrób inne, trochę bardziej uniwersalne dla każdych CRM” - bez słów z jednej branży. Style tylko w tym
+   pliku, prefiks cr7-. Ze wspólnych stylów podstrony (system-crm.css) używane są: okno systemu (.cr-win), inicjał
+   (.cr-av), znacznik (.cr-chip), nagłówek sekcji (.cr-sec, .cr-sec-head, .cr-sec-lead), narrator (.cr-narr), rozejście
+   (.cr-bloom / .cr-bloom-out) i zmienne --cr-line / --cr-move; ze szkieletu (usluga.css): --sv-ac, --sv-edge,
+   --sv-ease, podpisy kroków. Nadpisania cudzych klas wyłącznie pod .sv.cr.
+     .cr7-reel / .cr7-pin / .cr7-stage / .cr7-in / .cr7-fitview / .cr7-obj / .cr7-rise   części wspólne (lead-kit.tsx),
+     .cr7-c-*   „Kanały”         bez przypięcia: trzy tory, lista zapytań rosnąca wiersz po wierszu (lead-channels.tsx),
+     .cr7-b-*   „Lejek”          przypięta: tablica etapów, sprawa, która stoi, przypomnienie, ruch (lead-funnel.tsx),
+     .cr7-a-*   „Karta klienta”  przypięta: trzy wiadomości w jeden wpis, karta klienta, oś historii (lead-card.tsx).
+   Sceny nie są interaktywne - steruje nimi przewijanie.
+   POJAWIANIE = ROZEJŚCIE (decyzja właściciela 2026-10-05: „te wszystkie animacje linii, która leci (…) wywal i zrób
+   animację taką pojawiania płynną, tak jak się nebula rozchodzi”): wszystko, co się pojawia, ma klasę .cr-bloom,
+   a to, co jest podmieniane, .cr-bloom-out (maska z kłębów w generowanym bloom.css). W „Kanałach” odsłony grają
+   NA CZAS: scena stawia data-on przy wejściu elementu na ekran, a --bloom 0 -> 1 dogrywa przejście CSS (nigdy
+   wstecz, nic nie zostaje odsłonięte w połowie). W „Lejku” i „Karcie klienta” (czekają na decyzję właściciela)
+   scena pisze --bloom z przewijania; ich --bloom-x / --bloom-y nic już nie robią (punkt startu z pierwszej wersji).
+   Żadnych linii światła, kurtyn ani przycięć prostą krawędzią. Zostaje prawdziwy ruch przedmiotów (transform),
+   statyczne włosowe linie torów i osi, bębny, spokojne zmiany stanu (kolor, obwódka, przygaszenie).
+   ZASADA STANU KOŃCOWEGO: reguły podstawowe rysują scenę po odegraniu (zmienne mają wartości końcowe jako zapas
+   w var(), --bloom = 1), a przypięcia i stany „przed” są tylko pod .sv[data-live] i przy prefers-reduced-motion:
+   no-preference - bez JS i przy ograniczonym ruchu zwykła sekcja.
+   Język: czerń z kryciem, ostry refleks u góry (--sv-edge), włosowe linie, biel jako stan aktywny; kolor podstrony
+   (--sv-ac) tylko w liniach, punktach i znacznikach stanu. Bez rozmyć, tekstu z gradientem, wersalików i pętli. */
+
+/* ══ WSPÓLNE ══════════════════════════════════════════════════════════════════════════════════════════════════════
+   Bęben: napisy jeden pod drugim w okienku na jedną pozycję. --rp = położenie (0 .. n-1; wiąże je reguła sceny ze
+   zmienną pisaną przez przewijanie), bez niego stoi ostatnia pozycja (--to) = stan końcowy. --rh = wysokość pozycji. */
+.cr7-reel { display: inline-block; vertical-align: top; min-width: 0; max-width: 100%; height: var(--rh, 1.4em); overflow: hidden; }
+.cr7-reel-in { display: block; transform: translate3d(0, calc(var(--rp, var(--to, 0)) * var(--rh, 1.4em) * -1), 0); }
+.cr7-reel-in > span { display: block; height: var(--rh, 1.4em); line-height: var(--rh, 1.4em); white-space: nowrap; }
+
+/* Scena przypięta („Lejek”, „Karta klienta”). Zwykły układ: nagłówek, okno, lista zdań. Na żywo: sekcja wysoka
+   (--len vh), w niej przyklejony ekran z trzema wierszami - nagłówek, pole sceny (reszta wysokości; okno dopasowane
+   skalą --fit <= 1 i wyśrodkowane --fy z pomiaru) i narrator (jedno zdanie naraz, z prawej zapas na bąbel czatu). */
+.cr7-narr { min-width: 0; }
+
+/* ══ „KANAŁY” (lead-channels.tsx) - BEZ PRZYPIĘCIA, wybrana przez właściciela 2026-10-05 ═══════════════════════════
+   Od 1024 px: pas torów (--gw) po lewej, okno systemu po prawej; źródła jako trzy karty na torach. Tor k stoi
+   w x = --off + (k + .5) * --pitch; węzeł i odgałęzienie wiersza liczy CSS z --lane (--nx = położenie toru w polu
+   wiersza), więc nic nie trzeba mierzyć.
+   Telefon i tablet (< 1024 px; dostosowanie do urządzeń mobilnych 2026-10-05) - układ pod pion: trzy karty źródeł
+   w rzędzie u góry, z każdej tor schodzi do górnej krawędzi okna, lista ma całą szerokość (--gw = 0, bez pasa
+   torów obok). Blok „telefon i tablet” niżej.
+   OKNO Z KAWAŁKÓW: nagłówek (pasek firmy + „Zapytania”) to okno z `Win`, a każdy wiersz niesie swój kawałek okna
+   (.cr7-c-pane) - lista rośnie razem z zapytaniami, a pod ostatnim wierszem jest czyste tło (tam stoi narrator).
+   Okno wygląda na domknięte w każdej chwili: zaokrąglony dół ma nagłówek, dopóki nie ma wierszy (brak data-open
+   na układzie), a potem zawsze ostatni uruchomiony wiersz (data-end).
+   ODSŁONY NA CZAS (właściciel 2026-10-05: żadnego elementu widocznego w całości, a odsłoniętego w części): scena
+   stawia data-on przy wejściu elementu na ekran, a rozejście (.cr-bloom, --bloom 0 -> 1) dogrywa przejście CSS -
+   niezależnie od przewijania i nigdy wstecz. Po końcu przejścia scena zdejmuje maskę (data-bloomed).
+   CZASY DO STROJENIA są w bloku „odsłony na czas” niżej; progi wejścia - stałe w lead-channels.tsx. */
+.cr7-c-body { --gw: 0px; --pitch: 0px; --off: 0px; --drop: 26px; --ny: 28px; --pane: rgba(0, 0, 0, .64); --rim: rgba(255, 255, 255, .06); position: relative; }
+.cr7-c-scene { position: relative; margin-inline: -12px; }
+.cr7-c-flow { position: relative; display: grid; grid-template-columns: var(--gw) minmax(0, 1fr); }
+.cr7-c-srcs { grid-column: 1 / -1; grid-row: 1; position: relative; z-index: 2; list-style: none; margin: 0; padding: 0; display: grid; }
+.cr7-c-src { position: relative; display: flex; align-items: center; min-width: 0; color: #e2e8f0; }
+.cr7-c-src-ico { flex: none; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: #050506; box-shadow: inset 0 0 0 1px rgb(var(--sv-ac) / .75); color: #f8fafc; }
+.cr7-c-src-ico svg { width: 13px; height: 13px; }
+/* tory obok okna (od 1024 px): statyczne włosowe linie od źródeł do końca listy */
+.cr7-c-rails { grid-column: 1; grid-row: 1 / span 2; position: relative; pointer-events: none; }
+.cr7-c-rails i { position: absolute; left: calc(var(--off) + (var(--k, 0) + .5) * var(--pitch)); top: 0; bottom: 0; width: 1px; margin-left: -.5px; background: rgb(var(--sv-ac) / .55); }
+/* kolumna okna: nagłówek okna, pod nim lista (pola wierszy wychodzą w pas torów - kolumna niczego nie przycina) */
+.cr7-c-col { grid-column: 2; grid-row: 2; min-width: 0; }
+/* nagłówek okna = `Win` z paskiem firmy i wierszem „Zapytania”: płyta w tonie kawałków przy wierszach, bez cienia
+   i dolnej poświaty. Stan końcowy: dół prosty - pod nim wiszą wiersze */
+.sv.cr .cr7-c-win { border-radius: 18px 18px 0 0; background: var(--pane); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2), inset 1px 0 0 var(--rim), inset -1px 0 0 var(--rim); }
+.sv.cr .cr7-c-win::after { display: none; }
+.cr7-c-h { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 46px; margin: 0; padding: 0 16px; font-size: 14px; line-height: 1.3; color: #94a3b8; }
+.cr7-c-count { --rh: 1.3em; font-weight: 600; font-variant-numeric: tabular-nums; color: #f8fafc; text-align: right; }
+.cr7-c-list { list-style: none; margin: 0; padding: 0; }
+.cr7-c-row { position: relative; }
+/* pole wiersza: od lewej krawędzi pasa torów do prawej krawędzi okna - rozejście (kłęby od lewej do prawej) zaczyna
+   się więc w pasie torów, przy węźle i odgałęzieniu, i idzie w głąb listy */
+.cr7-c-seg { --nx: calc(var(--off) + (var(--lane, 0) + .5) * var(--pitch)); position: relative; margin-left: calc(var(--gw) * -1); padding-left: var(--gw); }
+.cr7-c-branch { position: absolute; left: var(--nx); top: var(--ny); width: calc(var(--gw) - var(--nx) + 14px); height: 1px; margin-top: -.5px; background: rgb(var(--sv-ac)); }
+.cr7-c-node { position: absolute; left: var(--nx); top: var(--ny); z-index: 1; width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 2px rgb(var(--sv-ac)); }
+/* kawałek okna, który niesie wiersz (włosowa linia u góry = podział listy); ostatni domyka okno od dołu */
+.cr7-c-pane { display: grid; grid-template-columns: 28px minmax(0, 1fr); column-gap: 12px; row-gap: 9px; padding: 14px 16px 16px; border-top: 1px solid rgba(255, 255, 255, .07); background: var(--pane); box-shadow: inset 1px 0 0 var(--rim), inset -1px 0 0 var(--rim); }
+.cr7-c-row:last-child .cr7-c-pane { border-radius: 0 0 18px 18px; box-shadow: inset 1px 0 0 var(--rim), inset -1px 0 0 var(--rim), inset 0 -1px 0 rgba(0, 0, 0, .7); }
+.cr7-c-ico { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .24); color: #e2e8f0; }
+.cr7-c-ico svg { width: 14px; height: 14px; }
+.cr7-c-msg { display: grid; gap: 3px; min-width: 0; }
+.cr7-c-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; min-width: 0; margin: 0; }
+.cr7-c-top b { min-width: 0; font-size: 15.5px; line-height: 1.3; font-weight: 600; letter-spacing: -.01em; color: #f8fafc; }
+.cr7-c-top > span { flex: none; font-size: 13px; line-height: 1.3; font-variant-numeric: tabular-nums; color: #94a3b8; white-space: nowrap; }
+.cr7-c-ch { display: none; }
+.cr7-c-text { margin: 0; font-size: 14px; line-height: 1.45; color: #cbd5e1; text-wrap: pretty; }
+.cr7-c-auto { grid-column: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 7px 8px; min-width: 0; margin: 0; }
+.cr7-c-who { display: inline-flex; align-items: center; gap: 7px; padding: 3px 11px 3px 4px; border-radius: 999px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16); font-size: 13.5px; line-height: 1.3; font-weight: 500; color: #f8fafc; white-space: nowrap; }
+.sv.cr .cr7-c-due { font-size: 13px; }
+.cr7-c-done { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; line-height: 1.3; color: #e2e8f0; white-space: nowrap; }
+.cr7-c-done svg { flex: none; width: 15px; height: 15px; color: rgb(var(--sv-ac)); }
+.cr7-c-narr { margin-top: 26px; }
+@media (min-width: 640px) { .cr7-c-scene { margin-inline: 0; } }
+/* ── TELEFON I TABLET (< 1024 px) - układ pod pion: kanały u góry, tory w dół, lista na całą szerokość ───────────────
+   Źródła = trzy karty w rzędzie (znaczek nad nazwą); z każdej tor (włosowa linia o długości --drop) schodzi do
+   górnej krawędzi okna i kończy się węzłem NA tej krawędzi. Pole źródeł obejmuje tory (padding) i zachodzi 5 px
+   na okno - węzeł stoi na krawędzi i mieści się w polu rozejścia źródeł. Pasa torów obok okna nie ma, więc lista
+   dostaje całą szerokość; kanał wiersza pokazuje jego znaczek w tej samej obwódce co na karcie źródła.
+   Rachunek szerokości (kontener 24 px, scena 12 px od krawędzi poniżej 640 px): 320 -> scena 296, 360 -> 336,
+   390 -> 366, 430 -> 406; od 640 px scena = kontener (592 / 720). */
+@media (max-width: 1023.98px) {
+  .cr7-c-srcs { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: -5px; padding-bottom: calc(var(--drop) + 5px); }
+  .cr7-c-src { flex-direction: column; justify-content: center; gap: 7px; padding: 11px 6px 10px; border-radius: 13px; background: #09090b; box-shadow: var(--sv-edge); font-size: 13px; line-height: 1.25; text-align: center; text-wrap: balance; }
+  .cr7-c-src::before { content: ''; position: absolute; left: 50%; top: 100%; width: 1px; height: var(--drop); margin-left: -.5px; background: rgb(var(--sv-ac) / .55); }
+  .cr7-c-src::after { content: ''; position: absolute; left: 50%; top: calc(100% + var(--drop) - 4.5px); width: 9px; height: 9px; margin-left: -4.5px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 2px rgb(var(--sv-ac)); }
+  .cr7-c-src-ico { background: transparent; }
+  .cr7-c-rails, .cr7-c-branch, .cr7-c-node { display: none; }
+  .cr7-c-ico { box-shadow: inset 0 0 0 1px rgb(var(--sv-ac) / .75); color: #f8fafc; }
+}
+/* telefon: osoba, termin i potwierdzenie od lewej krawędzi wiersza (pod znaczkiem) - dwie linie także na 320 px
+   (osoba + termin = ok. 248 px przy 264-272 px miejsca; potwierdzenie w drugiej linii) */
+@media (max-width: 639.98px) {
+  .cr7-c-auto { grid-column: 1 / -1; }
+  /* nagłówek sekcji: opis mniejszym pismem i wyważony w liniach (bez wiszących słów) */
+  .sv.cr .cr7-c .cr-sec-lead { font-size: 16.5px; line-height: 1.6; text-wrap: balance; }
+}
+/* najwęższe telefony (320 px): ciaśniejsze marginesy okna - pasek firmy z etykietą i znaczniki bez ucinania */
+@media (max-width: 359.98px) {
+  .sv.cr .cr7-c-win .cr-win-bar { gap: 8px; padding: 0 12px; }
+  .cr7-c-h { padding: 0 12px; }
+  .cr7-c-pane { column-gap: 10px; padding: 13px 12px 15px; }
+}
+/* tablet (i telefon poziomo): karty źródeł w poziomie (znaczek obok nazwy), dłuższe tory, luźniejsze wiersze */
+@media (min-width: 640px) and (max-width: 1023.98px) {
+  .cr7-c-body { --drop: 32px; }
+  .cr7-c-srcs { gap: 12px; }
+  .cr7-c-src { flex-direction: row; gap: 10px; padding: 15px 12px; font-size: 14.5px; text-align: left; }
+  .sv.cr .cr7-c-win .cr-win-bar { padding: 0 20px; }
+  .cr7-c-h { padding: 0 20px; }
+  .cr7-c-pane { padding: 16px 20px 18px; }
+}
+@media (min-width: 1024px) {
+  .cr7-c-body { --gw: 330px; --pitch: 104px; --off: 0px; --ny: 34px; }
+  /* źródła: trzy karty, każda wyśrodkowana na swoim torze; tory wychodzą spod kart */
+  .cr7-c-srcs { grid-column: 1; grid-template-columns: repeat(3, var(--pitch)); align-self: start; margin: 0; }
+  .cr7-c-src { flex-direction: column; justify-content: flex-start; justify-self: center; gap: 8px; box-sizing: border-box; width: calc(var(--pitch) - 12px); height: auto; min-height: 92px; padding: 12px 6px 11px; border-radius: 13px; background: #09090b; box-shadow: var(--sv-edge); font-size: 13.5px; line-height: 1.25; text-align: center; white-space: normal; text-wrap: balance; }
+  .cr7-c-src-ico { width: 30px; height: 30px; background: transparent; }
+  .cr7-c-src-ico svg { width: 14px; height: 14px; }
+  .cr7-c-rails { grid-row: 1; }
+  .cr7-c-rails i { top: 40px; }
+  .cr7-c-col { grid-row: 1; }
+  .cr7-c-h { min-height: 52px; padding: 0 22px; font-size: 15px; }
+  .cr7-c-pane { grid-template-columns: 32px minmax(0, 1fr); column-gap: 14px; padding: 18px 22px 20px; }
+  .cr7-c-branch { width: calc(var(--gw) - var(--nx) + 20px); }
+  .cr7-c-ico { width: 32px; height: 32px; }
+  .cr7-c-top b { font-size: 17px; }
+  .cr7-c-top > span { font-size: 13.5px; }
+  .cr7-c-ch { display: inline; }
+  .cr7-c-text { font-size: 15px; }
+  .cr7-c-narr { margin-top: 32px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  /* ── ODSŁONY NA CZAS (czasy i opóźnienia do strojenia) ──────────────────────────────────────────────────────────
+     Przed wejściem na ekran --bloom: 0; scena stawia data-on (na źródłach, torach i nagłówku okna - na nich samych,
+     przy wierszu - na <li>) i przejście dogrywa rozejście do końca. --wait = odstęp, gdy kilka wierszy startuje
+     naraz. Cały wiersz z dopiskami jest gotowy po ok. 1,45 s od startu. */
+  .sv[data-live] .cr7-c-flow .cr-bloom { --bloom: 0; }
+  .sv[data-live] .cr7-c-flow .cr-bloom[data-on], .sv[data-live] .cr7-c-flow [data-on] .cr-bloom { --bloom: 1; }
+  /* źródła 0,9 s · tory 1,2 s (po 0,15 s) · nagłówek okna 0,9 s (po 0,1 s) */
+  .sv[data-live] .cr7-c-srcs { transition: --bloom .9s cubic-bezier(.4, 0, .3, 1); }
+  .sv[data-live] .cr7-c-rails { transition: --bloom 1.2s cubic-bezier(.4, 0, .3, 1) .15s; }
+  .sv[data-live] .cr7-c-win { transition: --bloom .9s cubic-bezier(.4, 0, .3, 1) .1s, border-radius .45s ease .1s; }
+  /* wiersz 1 s · osoba 0,6 s po 0,35 s · termin 0,6 s po 0,6 s · potwierdzenie 0,6 s po 0,85 s */
+  .sv[data-live] .cr7-c-seg { transition: --bloom 1s cubic-bezier(.4, 0, .3, 1) var(--wait, 0s); }
+  .sv[data-live] .cr7-c-who { transition: --bloom .6s cubic-bezier(.4, 0, .3, 1) calc(var(--wait, 0s) + .35s); }
+  .sv[data-live] .cr7-c-due { transition: --bloom .6s cubic-bezier(.4, 0, .3, 1) calc(var(--wait, 0s) + .6s); }
+  .sv[data-live] .cr7-c-done { transition: --bloom .6s cubic-bezier(.4, 0, .3, 1) calc(var(--wait, 0s) + .85s); }
+  /* okno domknięte w każdej chwili: bez wierszy zaokrąglony dół ma nagłówek, potem ostatni uruchomiony wiersz;
+     rogi poprzedniego kawałka prostują się, gdy pod nim rozchodzi się następny */
+  .sv[data-live] .cr7-c-flow:not([data-open]) .cr7-c-win { border-radius: 18px; box-shadow: var(--sv-edge); }
+  .sv[data-live] .cr7-c-pane { transition: border-radius .45s ease .1s; }
+  .sv[data-live] .cr7-c-row:not([data-end]) .cr7-c-pane { border-radius: 0; box-shadow: inset 1px 0 0 var(--rim), inset -1px 0 0 var(--rim); }
+  .sv[data-live] .cr7-c-row[data-end] .cr7-c-pane { border-radius: 0 0 18px 18px; box-shadow: inset 1px 0 0 var(--rim), inset -1px 0 0 var(--rim), inset 0 -1px 0 rgba(0, 0, 0, .7); }
+  /* licznik zapytań: bęben, obraca się, gdy rusza kolejny wiersz */
+  .sv[data-live] .cr7-c-count .cr7-reel-in { --rp: var(--cn, var(--to, 0)); transition: transform .5s var(--cr-move); }
+  /* narrator: przyklejony do dołu ekranu w kolumnie okna (pod ostatnim wierszem nie ma jeszcze okna - czyste tło),
+     72 px z prawej zostaje na bąbel czatu; pojawia się, gdy nagłówek okna jest już nad nim, a na końcu sekcji
+     odkleja się i zostaje pod oknem. Jego wysokość i odstęp od dołu scena czyta z pomiaru (pas narratora). */
+  .sv[data-live] .cr7-c-narr { position: sticky; bottom: 28px; z-index: 5; max-width: 46rem; margin-left: var(--gw); padding-right: 72px; opacity: var(--nv, 1); }
+  /* telefon: zdanie na całą szerokość treści, bez numeru w kółku i mniejszym pismem - najwyżej trzy linie także
+     na 320 px (200 px na tekst); niżej przy krawędzi ekranu, żeby pas narratora był jak najkrótszy */
+  @media (max-width: 639.98px) {
+    .sv[data-live] .cr7-c-narr { bottom: 22px; }
+    .sv.cr[data-live] .cr7-c-narr .sv-step { padding-top: 16px; }
+    .sv.cr[data-live] .cr7-c-narr .sv-step-n { display: none; }
+    .sv.cr[data-live] .cr7-c-narr .sv-step-t { font-size: 16px; }
+  }
+  @media (max-width: 359.98px) { .sv.cr[data-live] .cr7-c-narr .sv-step-t { font-size: 15px; } }
+  /* bardzo niski ekran (telefon poziomo): przyklejony narrator zabierałby ok. 1/3 wysokości - stoi w zwykłym
+     układzie pod sceną; scena rozpoznaje to z pomiaru i uruchamia wiersze przy wejściu na ekran */
+  @media (max-height: 480px) and (max-width: 1023.98px) { .sv[data-live] .cr7-c-narr { position: static; opacity: 1; } }
+}

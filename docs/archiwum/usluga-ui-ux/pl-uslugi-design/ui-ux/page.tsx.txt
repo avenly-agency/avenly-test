@@ -1,0 +1,8 @@
+import { UiUxClient } from './UiUxClient';
+import { uiUxDict } from '@/lib/i18n/uslugi/ui-ux';
+
+// Metadata + JSON-LD żyją w sąsiednim layout.tsx (server). Ta strona to cienki
+// wrapper podający polski słownik do komponentu klienckiego (RSC payload = tylko PL).
+export default function UiUxPage() {
+  return <UiUxClient t={uiUxDict.pl} locale="pl" />;
+}

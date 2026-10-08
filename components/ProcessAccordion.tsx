@@ -1,45 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-
-interface ProcessStep {
-  title: string;
-  desc: string;
-}
+import { usePathname } from 'next/navigation';
+import { localeFromPathname } from '@/lib/i18n/locale';
+import { processAccordionDict } from '@/lib/i18n/process-accordion';
 
 export const ProcessAccordion = ({ category }: { category: string }) => {
   const [activeStep, setActiveStep] = useState(0);
 
-  const stepsMap: Record<string, ProcessStep[]> = {
-    // 1. DESIGN (UI/UX)
-    'design': [
-      { title: "Brief & Inspiracje", desc: "Zbieramy Twoje wymagania i ustalamy kierunek artystyczny marki." },
-      { title: "UX & Makiety", desc: "Projektujemy szkice, dbając o intuicyjność i ścieżkę użytkownika." },
-      { title: "UI & Prototyping", desc: "Tworzymy finalny, kolorowy projekt w Figmie." },
-      { title: "Finalizacja", desc: "Przekazujemy końcowy efekt do potwierdzenia." }
-    ],
-    // 2. CHATBOT AI / AUTOMATYZACJA
-    'automatyzacja-ai': [
-      { title: "Analiza & Baza Wiedzy", desc: "Analizujemy Twoją stronę i dokumenty, aby zbudować bazę wiedzy. Definiujemy, czy AI ma sprzedawać, czy wspierać obsługę klienta." },
-      { title: "Prompt Engineering", desc: "Projektujemy 'mózg' asystenta. Ustawiamy Rolę i instrukcje systemowe, aby chatbot brzmiał jak ekspert Twojej marki." },
-      { title: "Integracja Webflow", desc: "Wdrażamy chatbota na Twoją stronę dzięki Voiceflow. Stylizujemy okno czatu, aby idealnie pasowało do Twojego designu." },
-      { title: "Leady & Automatyzacja", desc: "Podpinamy zewnętrzne systemy i aplikacje, dzięki czemu chatbot nie tylko rozmawia, ale automatycznie zapisuje leady i umawia spotkania." }
-    ],
-    // 3. MARKETING I SPRZEDAŻ (ZMIENIONY 4 PUNKT)
-    'marketing': [
-      { title: "Audyt & Dane", desc: "Przeprowadzamy głęboką analizę widoczności (SEO), konkurencji i obecnego ruchu. Znajdujemy techniczne błędy, które blokują Twoje wzrosty." },
-      { title: "Strategia & Content", desc: "Opracowujemy plan naprawczy oraz strategię treści opartą na słowach kluczowych, których realnie szukają Twoi klienci." },
-      { title: "Optymalizacja", desc: "Wdrażamy zmiany w kodzie i treściach. Przyspieszamy stronę, poprawiamy indeksowanie i strukturę linków." },
-      { title: "Skalowanie & Wyniki", desc: "Nie kończymy na wdrożeniu. Stale monitorujemy dane, optymalizujemy konwersję i zwiększamy zasięgi tam, gdzie przynoszą największy zysk." }
-    ],
-    // 4. STRONY WWW (DEFAULT)
-    'default': [
-      { title: "Strategia & UX", desc: "Nie zaczynamy od kodu. Najpierw projektujemy strukturę (Sitemap) i makiety, które prowadzą użytkownika prosto do celu (konwersji)." },
-      { title: "Dev & CMS", desc: "Kodujemy stronę w Next.js lub wdrażamy na Webflow. Jest ultra-szybka, a Ty zarządzasz treścią przez intuicyjny panel." },
-      { title: "SEO & Performance", desc: "Optymalizujemy Core Web Vitals. Twoja strona ładuje się błyskawicznie, jest bezpieczna i gotowa na wysokie pozycje w Google." },
-      { title: "Wdrożenie & Analityka", desc: "Podpinamy domeny, konfigurujemy GA4 do śledzenia ruchu i szkolimy Twój zespół z obsługi strony." }
-    ]
-  };
+  const pathname = usePathname();
+  const locale = localeFromPathname(pathname);
+  const stepsMap = processAccordionDict[locale];
 
   const getSteps = () => {
     // Obsługa aliasów dla AI

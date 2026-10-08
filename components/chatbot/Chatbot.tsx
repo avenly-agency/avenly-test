@@ -1,13 +1,18 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, type CSSProperties } from "react";
 import { usePathname } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
-import { MessageCircle, X, Send, History, ArrowLeft, Clock, Trash2 } from "lucide-react";
+import { AnimatePresence, MotionConfig, motion } from "framer-motion";
+import { MessageCircle, X, Send, History, ArrowLeft, Clock, Trash2, Plus } from "lucide-react";
 import Image from "next/image";
 import logoImg from "@/app/icon.png";
 import { getServiceTheme } from "@/lib/service-theme";
+import { localeFromPathname, type Locale } from "@/lib/i18n/locale";
 import { MarkdownMessage } from "./MarkdownMessage";
+
+// Wygląd okna i bąbla (2026-09-24, nowa odsłona): klasy .cb-* w app/globals.css - ciemne
+// szkło z granatowym charakterem w kolorze podstrony (--cb-accent; niebieski na stronie
+// głównej): poświata u góry, akcent w obwódkach, dymkach i przycisku wysyłania. Logika bez zmian.
 
 interface Message {
   role: "user" | "assistant";
@@ -22,6 +27,10 @@ interface QuickReply {
   triggers?: ("start" | "always" | "keyword")[];
   trigger?: string; // backward compat
   keywords?: string[];
+  // Opcjonalne pola EN (zarządzane z CRM w chatbot_config). Na /en QR bez label_en
+  // jest ukrywany - lepiej brak przycisku niż polski tekst na angielskiej stronie.
+  label_en?: string;
+  message_en?: string;
 }
 
 function hasTrigger(r: QuickReply, t: string): boolean {
@@ -39,50 +48,118 @@ const CURRENT_KEY  = "avenly_chat_current";
 const SESSIONS_KEY = "avenly_chat_sessions";
 const MAX_SESSIONS = 15;
 
+/** ease-out-expo - standard ruchu strony. */
+const EASE = [0.16, 1, 0.3, 1] as const;
+
 function newId() {
   return typeof crypto !== "undefined" && crypto.randomUUID
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
-const DEFAULT_WELCOME = "Cześć! Jestem asystentem AI Avenly. W czym mogę Ci pomóc?";
+/** Polska odmiana: 1 pytanie, 2-4 pytania (poza 12-14), 5+ pytań. */
+function questionsPl(n: number) {
+  if (n === 1) return "1 pytanie";
+  const d = n % 10, h = n % 100;
+  return `${n} ${d >= 2 && d <= 4 && (h < 12 || h > 14) ? "pytania" : "pytań"}`;
+}
 
-function welcome(content = DEFAULT_WELCOME): Message {
+// UI chatbota per locale. Wyjątek od reguły "słowniki przez props" - Chatbot to
+// globalny widget (DeferredClientWidgets), locale bierze z pathname; oba języki
+// w bundlu to kilkaset bajtów.
+const CHAT_UI: Record<Locale, {
+  welcome: string;
+  errorGeneric: string;
+  errorConnection: string;
+  emptySession: string;
+  history: string;
+  newChat: string;
+  noHistory: string;
+  clearHistory: string;
+  placeholder: string;
+  status: string;
+  dialog: string;
+  close: string;
+  send: string;
+  typing: string;
+  questions: (n: number) => string;
+  bubbleOpen: string;
+  bubbleClose: string;
+  dateLocale: string;
+}> = {
+  pl: {
+    welcome: "Cześć! Jestem asystentem AI Avenly. W czym mogę Ci pomóc?",
+    errorGeneric: "Przepraszam, coś poszło nie tak.",
+    errorConnection: "Przepraszam, wystąpił błąd połączenia. Spróbuj ponownie.",
+    emptySession: "Pusta sesja",
+    history: "Historia czatów",
+    newChat: "Nowy czat",
+    noHistory: "Brak poprzednich czatów",
+    clearHistory: "Wyczyść historię",
+    placeholder: "Napisz wiadomość...",
+    status: "Asystent AI",
+    dialog: "Czat z asystentem AI Avenly",
+    close: "Zamknij czat",
+    send: "Wyślij wiadomość",
+    typing: "Asystent pisze",
+    questions: questionsPl,
+    bubbleOpen: "Otwórz czat z asystentem AI Avenly",
+    bubbleClose: "Zamknij czat z asystentem AI Avenly",
+    dateLocale: "pl-PL",
+  },
+  en: {
+    welcome: "Hi! I'm the Avenly AI assistant. How can I help you?",
+    errorGeneric: "Sorry, something went wrong.",
+    errorConnection: "Sorry, there was a connection error. Please try again.",
+    emptySession: "Empty session",
+    history: "Chat history",
+    newChat: "New chat",
+    noHistory: "No previous chats",
+    clearHistory: "Clear history",
+    placeholder: "Type a message...",
+    status: "AI assistant",
+    dialog: "Chat with the Avenly AI assistant",
+    close: "Close chat",
+    send: "Send message",
+    typing: "The assistant is typing",
+    questions: (n) => `${n} ${n === 1 ? "question" : "questions"}`,
+    bubbleOpen: "Open chat with the Avenly AI assistant",
+    bubbleClose: "Close chat with the Avenly AI assistant",
+    dateLocale: "en-US",
+  },
+};
+
+function welcome(content: string): Message {
   return { role: "assistant", content, timestamp: Date.now() };
 }
 
-function fmtDate(ts: number) {
+function fmtDate(ts: number, dateLocale = "pl-PL") {
   const d = new Date(ts);
   const today = new Date();
   if (d.toDateString() === today.toDateString())
-    return d.toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
-  return d.toLocaleDateString("pl-PL", { day: "2-digit", month: "2-digit", year: "numeric" });
+    return d.toLocaleTimeString(dateLocale, { hour: "2-digit", minute: "2-digit" });
+  return d.toLocaleDateString(dateLocale, { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
-function AssistantAvatar({ themeColor }: { themeColor: string }) {
-  return (
-    <Image
-      src={logoImg}
-      alt="Avenly"
-      width={26}
-      height={26}
-      className={`rounded-full shrink-0 mb-0.5 ring-1 ring-${themeColor}-500/30 shadow-sm shadow-${themeColor}-500/20`}
-    />
-  );
+function AssistantAvatar() {
+  return <Image src={logoImg} alt="" width={24} height={24} className="cb-avatar" />;
 }
 
 export function Chatbot() {
-  // Per-page main color (blue/emerald/rose/amber/sky/teal) - chatbot wpasowuje się
-  // w brand color aktualnej podstrony. Default blue dla home/o-nas/realizacje/blog itp.
+  // Kolor podstrony (blue/emerald/rose/amber/sky/orange) - "charakter" okna i bąbla
+  // (przydymiony akcent w szkle, obwódkach, dymkach); na stronie głównej niebieski.
   const pathname = usePathname();
   const theme = getServiceTheme(pathname);
-  const t = theme.rgb; // "59, 130, 246" etc. - dla rgba(...) inline styles (primary)
-  const ts = theme.rgbSecondary; // secondary rgb dla gradient (indigo dla blue, teal dla emerald itd.)
-  const grad = `linear-gradient(135deg, ${theme.hex}, ${theme.hexSecondary})`;
+  const accent = theme.rgb.replace(/,\s*/g, " "); // "59 130 246" - do rgb(var(--cb-accent) / a)
+
+  // Locale z pathname (/en/* = en). Zmiana języka = pełny reload (osobne root
+  // layouty), więc locale jest stałe przez cały lifecycle instancji widgetu.
+  const locale = localeFromPathname(pathname);
+  const ui = CHAT_UI[locale];
 
   const [isOpen,        setIsOpen]        = useState(false);
   const [view,          setView]          = useState<"chat" | "history">("chat");
-  const [messages,      setMessages]      = useState<Message[]>([welcome()]);
+  const [messages,      setMessages]      = useState<Message[]>(() => [welcome(ui.welcome)]);
   const [sessionId,     setSessionId]     = useState(() => newId());
   const [sessions,      setSessions]      = useState<ChatSession[]>([]);
   const [input,         setInput]         = useState("");
@@ -123,8 +200,9 @@ export function Chatbot() {
         const configMap: Record<string, string> = {};
         for (const row of data) configMap[row.key] = row.value;
 
-        // Wiadomość powitalna - aktualizuj tylko gdy sesja świeża (brak wiadomości użytkownika)
-        if (configMap["welcome_message"]) {
+        // Wiadomość powitalna z DB jest po polsku - aktualizuj tylko na PL i tylko
+        // gdy sesja świeża (brak wiadomości użytkownika). Na /en zostaje EN fallback.
+        if (configMap["welcome_message"] && locale === "pl") {
           setMessages(prev => {
             const hasUser = prev.some(m => m.role === "user");
             if (hasUser) return prev;
@@ -132,15 +210,21 @@ export function Chatbot() {
           });
         }
 
-        // Quick replies
+        // Quick replies. Na /en: tylko wpisy z label_en (zmapowane na EN);
+        // reszta ukryta - polski przycisk na angielskiej stronie to gorsze UX niż brak.
         if (configMap["quick_replies"]) {
           const parsed: QuickReply[] = JSON.parse(configMap["quick_replies"]);
-          setAllQuickReplies(parsed);
-          setContextQuickReplies(parsed.filter(r => hasTrigger(r, "start")));
+          const localized = locale === "en"
+            ? parsed
+                .filter(r => r.label_en)
+                .map(r => ({ ...r, label: r.label_en as string, message: r.message_en ?? r.message }))
+            : parsed;
+          setAllQuickReplies(localized);
+          setContextQuickReplies(localized.filter(r => hasTrigger(r, "start")));
         }
       })
       .catch(() => {});
-  }, []);
+  }, [locale]);
 
   useEffect(() => {
     const handler = () => { setIsOpen(true); setView("chat"); };
@@ -171,13 +255,19 @@ export function Chatbot() {
     }
   }, [isOpen, view]);
 
+  // Auto-resize textarea. Pomiar przez height:auto (nie stałą wartość) + floor 44px
+  // (= wysokość przycisku wysyłania) i +2px na border (box-sizing: border-box,
+  // scrollHeight nie zawiera bordera). UWAGA: textarea NIE może mieć transition na
+  // height - scrollHeight mierzyłby starą, wciąż animowaną wysokość i input "topniał"
+  // po znaku zamiast zresetować się po wysłaniu (.cb-input animuje tylko kolory).
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
-    el.style.height = "40px";
-    const newHeight = Math.min(el.scrollHeight, 96);
+    el.style.height = "auto";
+    const contentHeight = el.scrollHeight + 2;
+    const newHeight = Math.max(44, Math.min(contentHeight, 96));
     el.style.height = newHeight + "px";
-    el.style.overflowY = newHeight >= 96 ? "auto" : "hidden";
+    el.style.overflowY = contentHeight > 96 ? "auto" : "hidden";
   }, [input]);
 
   const saveToHistory = useCallback((msgs: Message[], sid: string) => {
@@ -203,12 +293,12 @@ export function Chatbot() {
 
   const startNewChat = useCallback(() => {
     saveToHistory(messages, sessionId);
-    setMessages([welcome()]);
+    setMessages([welcome(ui.welcome)]);
     setSessionId(newId());
     setContextQuickReplies(allQuickReplies.filter(r => hasTrigger(r, "start")));
     sessionStorage.removeItem(CURRENT_KEY);
     setView("chat");
-  }, [messages, sessionId, saveToHistory, allQuickReplies]);
+  }, [messages, sessionId, saveToHistory, allQuickReplies, ui.welcome]);
 
   const clearHistory = useCallback(() => {
     setSessions([]);
@@ -242,10 +332,11 @@ export function Chatbot() {
       const res = await fetch(N8N_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-chatbot-secret": SECRET },
-        body: JSON.stringify({ message: userMsg.content, history: historyForApi, sessionId }),
+        // language: hint dla n8n - workflow przełącza system prompt na EN dla stron /en
+        body: JSON.stringify({ message: userMsg.content, history: historyForApi, sessionId, language: locale }),
       });
       const data = await res.json();
-      const botResponse: string = data.response ?? "Przepraszam, coś poszło nie tak.";
+      const botResponse: string = data.response ?? ui.errorGeneric;
       setMessages(prev => [...prev, { role: "assistant", content: botResponse, timestamp: Date.now() }]);
       if (!isOpen) setHasNewMessage(true);
 
@@ -268,110 +359,75 @@ export function Chatbot() {
     } catch {
       setMessages(prev => [...prev, {
         role: "assistant",
-        content: "Przepraszam, wystąpił błąd połączenia. Spróbuj ponownie.",
+        content: ui.errorConnection,
         timestamp: Date.now(),
       }]);
     } finally {
       setIsLoading(false);
     }
-  }, [input, isLoading, messages, sessionId, isOpen, allQuickReplies]);
+  }, [input, isLoading, messages, sessionId, isOpen, allQuickReplies, locale, ui]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   };
 
   const firstUserMsg = (msgs: Message[]) =>
-    msgs.find(m => m.role === "user")?.content ?? "Pusta sesja";
+    msgs.find(m => m.role === "user")?.content ?? ui.emptySession;
+
+  const alwaysReplies = allQuickReplies.filter(r => hasTrigger(r, "always"));
 
   return (
-    <>
+    <MotionConfig reducedMotion="user">
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.96 }}
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            className="fixed bottom-24 right-4 sm:right-6 z-30 w-[calc(100vw-32px)] sm:w-92.5 flex flex-col rounded-3xl overflow-hidden"
+            role="dialog"
+            aria-label={ui.dialog}
+            initial={{ opacity: 0, y: 14, scale: 0.985 }}
+            animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: 0.42, ease: EASE } }}
+            exit={{ opacity: 0, y: 10, scale: 0.985, transition: { duration: 0.2, ease: [0.4, 0, 1, 1] } }}
+            className="cb fixed bottom-24 right-4 sm:right-6 z-30 w-[calc(100vw-32px)] sm:w-96 flex flex-col overflow-hidden"
             style={{
-              height: "min(35rem, calc(100dvh - 7.5rem))",
+              "--cb-accent": accent,
+              transformOrigin: "bottom right",
+              height: "min(36rem, calc(100dvh - 7.5rem))",
               maxHeight: "calc(100dvh - 7.5rem)",
-              background: "rgba(4, 8, 24, 0.82)",
-              backdropFilter: "blur(40px)",
-              WebkitBackdropFilter: "blur(40px)",
-              border: `1px solid rgba(${t}, 0.18)`,
-              boxShadow: `0 8px 64px -8px rgba(0,0,0,0.9), 0 0 0 1px rgba(${t}, 0.08), 0 0 80px -20px rgba(${t}, 0.15)`,
-            }}
+            } as CSSProperties}
           >
-            {/* Subtelny gradient w tle okienka */}
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background: `radial-gradient(ellipse 80% 50% at 50% 0%, rgba(${t}, 0.07) 0%, transparent 70%)`,
-              }}
-            />
-
-            {/* Header */}
-            <div
-              className="relative flex items-center justify-between px-5 py-3.5 shrink-0"
-              style={{
-                background: `rgba(${t}, 0.06)`,
-                borderBottom: `1px solid rgba(${t}, 0.12)`,
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
-              }}
-            >
+            {/* Nagłówek */}
+            <div className="cb-head">
               {view === "history" ? (
                 <>
-                  <button
-                    onClick={() => setView("chat")}
-                    className={`flex items-center gap-2 text-${theme.color}-300/70 hover:text-${theme.color}-200 transition-colors cursor-pointer`}
-                  >
-                    <ArrowLeft size={15} />
-                    <span className="text-sm font-medium">Historia czatów</span>
+                  <button type="button" className="cb-back" onClick={() => setView("chat")}>
+                    <ArrowLeft size={16} aria-hidden="true" />
+                    <span>{ui.history}</span>
                   </button>
-                  <div className="flex items-center gap-1">
+                  <div className="cb-actions">
                     {sessions.length > 0 && (
-                      <button
-                        onClick={clearHistory}
-                        title="Wyczyść historię"
-                        className={`w-8 h-8 flex items-center justify-center rounded-xl hover:bg-red-500/10 text-${theme.color}-400/40 hover:text-red-400 transition-all cursor-pointer`}
-                      >
-                        <Trash2 size={14} />
+                      <button type="button" className="cb-icon cb-icon-danger" onClick={clearHistory} aria-label={ui.clearHistory} title={ui.clearHistory}>
+                        <Trash2 size={15} aria-hidden="true" />
                       </button>
                     )}
-                    <button
-                      onClick={handleClose}
-                      className={`w-8 h-8 flex items-center justify-center rounded-xl hover:bg-${theme.color}-500/10 text-${theme.color}-400/50 hover:text-${theme.color}-300 transition-all cursor-pointer`}
-                    >
-                      <X size={15} />
+                    <button type="button" className="cb-icon" onClick={handleClose} aria-label={ui.close} title={ui.close}>
+                      <X size={16} aria-hidden="true" />
                     </button>
                   </div>
                 </>
               ) : (
                 <>
-                  <div className="flex items-center gap-2.5">
-                    <span className="text-lg font-bold tracking-tighter text-white leading-none">
-                      AVENLY<span className={`text-${theme.color}-400`}>.</span>
+                  <div className="cb-brand">
+                    <span className="cb-word">AVENLY<span className="cb-word-dot">.</span></span>
+                    <span className="cb-status">
+                      <span className="cb-status-dot" aria-hidden="true" />
+                      {ui.status}
                     </span>
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      <p className={`text-[11px] text-${theme.color}-300/50 leading-none`}>AI · Online</p>
-                    </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => setView("history")}
-                      title="Historia czatów"
-                      className={`w-8 h-8 flex items-center justify-center rounded-xl hover:bg-${theme.color}-500/10 text-${theme.color}-400/50 hover:text-${theme.color}-300 transition-all cursor-pointer`}
-                    >
-                      <History size={15} />
+                  <div className="cb-actions">
+                    <button type="button" className="cb-icon" onClick={() => setView("history")} aria-label={ui.history} title={ui.history}>
+                      <History size={16} aria-hidden="true" />
                     </button>
-                    <button
-                      onClick={handleClose}
-                      className={`w-8 h-8 flex items-center justify-center rounded-xl hover:bg-${theme.color}-500/10 text-${theme.color}-400/50 hover:text-${theme.color}-300 transition-all cursor-pointer`}
-                    >
-                      <X size={15} />
+                    <button type="button" className="cb-icon" onClick={handleClose} aria-label={ui.close} title={ui.close}>
+                      <X size={16} aria-hidden="true" />
                     </button>
                   </div>
                 </>
@@ -379,141 +435,80 @@ export function Chatbot() {
             </div>
 
             {/* Widoki */}
-            <AnimatePresence mode="wait">
+            <AnimatePresence mode="wait" initial={false}>
               {view === "history" ? (
                 <motion.div
                   key="history"
-                  initial={{ opacity: 0, x: 20 }}
+                  initial={{ opacity: 0, x: 10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.2 }}
-                  className="relative flex-1 overflow-y-auto px-4 py-3 space-y-2 chat-scrollbar"
+                  exit={{ opacity: 0, x: 10 }}
+                  transition={{ duration: 0.24, ease: EASE }}
+                  className="cb-history chat-scrollbar"
                   data-lenis-prevent
                 >
-                  <button
-                    onClick={startNewChat}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left cursor-pointer transition-all"
-                    style={{
-                      background: `rgba(${t}, 0.07)`,
-                      border: `1px solid rgba(${t}, 0.22)`,
-                    }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = `rgba(${t}, 0.13)`; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = `rgba(${t}, 0.07)`; }}
-                  >
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-                      style={{ background: grad }}>
-                      <MessageCircle size={13} className="text-white" />
-                    </div>
-                    <span className={`text-sm text-${theme.color}-300 font-medium`}>Nowy czat</span>
+                  <button type="button" className="cb-new" onClick={startNewChat}>
+                    <span className="cb-new-icon" aria-hidden="true"><Plus size={15} /></span>
+                    {ui.newChat}
                   </button>
 
                   {sessions.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-40 gap-2">
-                      <Clock className={`w-8 h-8 text-${theme.color}-500/20`} />
-                      <p className={`text-xs text-${theme.color}-400/30`}>Brak poprzednich czatów</p>
+                    <div className="cb-empty">
+                      <Clock size={26} aria-hidden="true" />
+                      <p>{ui.noHistory}</p>
                     </div>
-                  ) : sessions.map(session => (
-                    <button
-                      key={session.id}
-                      onClick={() => loadSession(session)}
-                      className="w-full flex items-start gap-3 px-4 py-3 rounded-xl text-left cursor-pointer transition-all"
-                      style={{ border: `1px solid rgba(${t}, 0.1)`, background: "transparent" }}
-                      onMouseEnter={e => {
-                        (e.currentTarget as HTMLElement).style.background = `rgba(${t}, 0.06)`;
-                        (e.currentTarget as HTMLElement).style.borderColor = `rgba(${t}, 0.25)`;
-                      }}
-                      onMouseLeave={e => {
-                        (e.currentTarget as HTMLElement).style.background = "transparent";
-                        (e.currentTarget as HTMLElement).style.borderColor = `rgba(${t}, 0.1)`;
-                      }}
-                    >
-                      <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
-                        style={{ background: `rgba(${t}, 0.1)`, border: `1px solid rgba(${t}, 0.15)` }}>
-                        <MessageCircle size={12} className={`text-${theme.color}-400`} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-slate-300 truncate">{firstUserMsg(session.messages)}</p>
-                        <p className={`text-[11px] text-${theme.color}-400/40 mt-0.5`}>
-                          {fmtDate(session.startedAt)} · {session.messages.filter(m => m.role === "user").length} pytań
-                        </p>
-                      </div>
-                    </button>
-                  ))}
+                  ) : (
+                    <ul className="cb-sessions">
+                      {sessions.map(session => (
+                        <li key={session.id}>
+                          <button type="button" className="cb-sess" onClick={() => loadSession(session)}>
+                            <span className="cb-sess-title">{firstUserMsg(session.messages)}</span>
+                            <span className="cb-sess-meta">
+                              {fmtDate(session.startedAt, ui.dateLocale)} · {ui.questions(session.messages.filter(m => m.role === "user").length)}
+                            </span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </motion.div>
               ) : (
                 <motion.div
                   key="chat"
-                  initial={{ opacity: 0, x: -20 }}
+                  initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.2 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.24, ease: EASE }}
                   className="relative flex flex-col flex-1 min-h-0"
                 >
-                  {/* Obszar wiadomości */}
-                  <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 chat-scrollbar" data-lenis-prevent>
+                  {/* Rozmowa */}
+                  <div className="cb-log chat-scrollbar" role="log" aria-live="polite" data-lenis-prevent>
                     <AnimatePresence initial={false}>
                       {messages.map((msg, i) => (
-                        <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, ease: "easeOut" }}>
-                          <div className={`flex items-end gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                            {msg.role === "assistant" && <AssistantAvatar themeColor={theme.color} />}
-                            <div
-                              className="max-w-[82%] px-4 py-2.5 text-sm leading-relaxed"
-                              style={msg.role === "user" ? {
-                                background: grad,
-                                color: "#fff",
-                                borderRadius: "1.25rem 1.25rem 0.375rem 1.25rem",
-                                boxShadow: `0 4px 20px -4px rgba(${t}, 0.4)`,
-                              } : {
-                                background: `rgba(${t}, 0.09)`,
-                                border: `1px solid rgba(${t}, 0.15)`,
-                                color: "#e2e8f0",
-                                borderRadius: "1.25rem 1.25rem 1.25rem 0.375rem",
-                              }}
-                            >
-                              {msg.role === "assistant"
-                                ? <MarkdownMessage content={msg.content} />
-                                : msg.content}
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.28, ease: EASE }}
+                        >
+                          <div className={msg.role === "user" ? "cb-row cb-row-user" : "cb-row"}>
+                            {msg.role === "assistant" && <AssistantAvatar />}
+                            <div className={msg.role === "user" ? "cb-msg cb-msg-user" : "cb-msg cb-msg-bot"}>
+                              {msg.role === "assistant" ? <MarkdownMessage content={msg.content} /> : msg.content}
                             </div>
                           </div>
 
-                          {/* Quick replies po ostatniej wiadomości bota */}
+                          {/* Szybkie odpowiedzi po ostatniej wiadomości asystenta */}
                           {msg.role === "assistant" && i === messages.length - 1 && contextQuickReplies.length > 0 && !isLoading && (
-                            <div className="flex flex-wrap gap-2 mt-2.5 pl-8">
+                            <div className="cb-chips">
                               {contextQuickReplies.map((qr, qi) => (
                                 <motion.button
                                   key={qr.id}
-                                  initial={{ opacity: 0, y: 6, scale: 0.94 }}
-                                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                                  transition={{ duration: 0.2, delay: qi * 0.06 }}
-                                  whileTap={{ scale: 0.95 }}
+                                  type="button"
+                                  className="cb-chip"
+                                  initial={{ opacity: 0, y: 4 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ duration: 0.28, ease: EASE, delay: 0.08 + qi * 0.05 }}
                                   onClick={() => sendMessage(qr.message || qr.label)}
-                                  className={`cursor-pointer select-none text-${theme.color}-300 hover:text-${theme.color}-200`}
-                                  style={{
-                                    padding: "0.375rem 0.875rem",
-                                    borderRadius: "2rem",
-                                    fontSize: "0.72rem",
-                                    fontWeight: 600,
-                                    lineHeight: 1.4,
-                                    letterSpacing: "0.01em",
-                                    background: `linear-gradient(135deg, rgba(${t}, 0.12), rgba(${t}, 0.12))`,
-                                    border: `1px solid rgba(${ts}, 0.35)`,
-                                    backdropFilter: "blur(8px)",
-                                    WebkitBackdropFilter: "blur(8px)",
-                                    boxShadow: `0 2px 10px -2px rgba(${ts}, 0.2), inset 0 1px 0 rgba(255,255,255,0.04)`,
-                                    transition: "all 0.15s ease",
-                                  }}
-                                  onMouseEnter={e => {
-                                    const el = e.currentTarget as HTMLElement;
-                                    el.style.background = `linear-gradient(135deg, rgba(${t}, 0.25), rgba(${t}, 0.25))`;
-                                    el.style.borderColor = `rgba(${ts}, 0.65)`;
-                                    el.style.boxShadow = `0 4px 16px -2px rgba(${ts}, 0.35), inset 0 1px 0 rgba(255,255,255,0.06)`;
-                                  }}
-                                  onMouseLeave={e => {
-                                    const el = e.currentTarget as HTMLElement;
-                                    el.style.background = `linear-gradient(135deg, rgba(${t}, 0.12), rgba(${t}, 0.12))`;
-                                    el.style.borderColor = `rgba(${ts}, 0.35)`;
-                                    el.style.boxShadow = `0 2px 10px -2px rgba(${ts}, 0.2), inset 0 1px 0 rgba(255,255,255,0.04)`;
-                                  }}
                                 >
                                   {qr.label}
                                 </motion.button>
@@ -525,107 +520,59 @@ export function Chatbot() {
                     </AnimatePresence>
 
                     {isLoading && (
-                      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex items-end gap-2 justify-start">
-                        <AssistantAvatar themeColor={theme.color} />
-                        <div
-                          className="px-4 py-3 flex gap-1.5 items-center"
-                          style={{
-                            background: `rgba(${t}, 0.09)`,
-                            border: `1px solid rgba(${t}, 0.15)`,
-                            borderRadius: "1.25rem 1.25rem 1.25rem 0.375rem",
-                          }}
-                        >
-                          {[0, 1, 2].map(i => (
-                            <span key={i} className={`w-1.5 h-1.5 rounded-full bg-${theme.color}-400/60 animate-bounce`} style={{ animationDelay: `${i * 0.12}s` }} />
-                          ))}
+                      <motion.div
+                        className="cb-row"
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.28, ease: EASE }}
+                      >
+                        <AssistantAvatar />
+                        <div className="cb-msg cb-msg-bot cb-typing" role="status" aria-label={ui.typing}>
+                          <span /><span /><span />
                         </div>
                       </motion.div>
                     )}
                     <div ref={messagesEndRef} />
                   </div>
 
-                  {/* Input */}
-                  <div
-                    className="px-4 py-3.5 shrink-0"
-                    style={{
-                      background: `rgba(${t}, 0.05)`,
-                      borderTop: `1px solid rgba(${t}, 0.12)`,
-                      backdropFilter: "blur(20px)",
-                      WebkitBackdropFilter: "blur(20px)",
-                    }}
-                  >
-                    {/* Przyciski "zawsze widoczne" */}
-                    {allQuickReplies.some(r => hasTrigger(r, "always")) && (
-                      <div className="flex flex-wrap gap-1.5 mb-2.5">
-                        {allQuickReplies.filter(r => hasTrigger(r, "always")).map(qr => (
+                  {/* Pole wiadomości */}
+                  <div className="cb-foot">
+                    {alwaysReplies.length > 0 && (
+                      <div className="cb-chips cb-chips-always">
+                        {alwaysReplies.map(qr => (
                           <button
                             key={qr.id}
+                            type="button"
+                            className="cb-chip"
                             onClick={() => sendMessage(qr.message || qr.label)}
                             disabled={isLoading}
-                            className={`cursor-pointer select-none disabled:opacity-40 text-${theme.color}-300/70 hover:text-${theme.color}-300`}
-                            style={{
-                              padding: "0.3rem 0.75rem",
-                              borderRadius: "2rem",
-                              fontSize: "0.7rem",
-                              fontWeight: 600,
-                              letterSpacing: "0.01em",
-                              background: `rgba(${t}, 0.08)`,
-                              border: `1px solid rgba(${t}, 0.2)`,
-                              transition: "all 0.15s ease",
-                            }}
-                            onMouseEnter={e => {
-                              const el = e.currentTarget as HTMLElement;
-                              el.style.background = `rgba(${t}, 0.18)`;
-                              el.style.borderColor = `rgba(${t}, 0.45)`;
-                            }}
-                            onMouseLeave={e => {
-                              const el = e.currentTarget as HTMLElement;
-                              el.style.background = `rgba(${t}, 0.08)`;
-                              el.style.borderColor = `rgba(${t}, 0.2)`;
-                            }}
                           >
                             {qr.label}
                           </button>
                         ))}
                       </div>
                     )}
-                    <div className="flex gap-2 items-end">
+                    <div className="cb-compose">
                       <textarea
                         ref={textareaRef}
                         value={input}
                         onChange={e => setInput(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder="Napisz wiadomość..."
+                        placeholder={ui.placeholder}
+                        aria-label={ui.placeholder}
                         rows={1}
-                        className={`flex-1 text-white text-sm resize-none outline-none leading-relaxed chat-scrollbar transition-all placeholder-${theme.color}-400/30`}
-                        style={{
-                          minHeight: "40px",
-                          maxHeight: "96px",
-                          overflowY: "hidden",
-                          background: `rgba(${t}, 0.07)`,
-                          border: `1px solid rgba(${t}, 0.18)`,
-                          borderRadius: "0.75rem",
-                          padding: "0.625rem 0.875rem",
-                        }}
-                        onFocus={e => { e.currentTarget.style.borderColor = `rgba(${t}, 0.45)`; e.currentTarget.style.background = `rgba(${t}, 0.11)`; }}
-                        onBlur={e => { e.currentTarget.style.borderColor = `rgba(${t}, 0.18)`; e.currentTarget.style.background = `rgba(${t}, 0.07)`; }}
+                        className="cb-input chat-scrollbar"
                       />
-                      <motion.button
-                        whileTap={{ scale: 0.9 }}
+                      <button
+                        type="button"
+                        className="cb-send"
                         onClick={() => sendMessage()}
                         disabled={!input.trim() || isLoading}
-                        className="w-10 h-10 flex items-center justify-center rounded-xl cursor-pointer text-white transition-all shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
-                        style={{
-                          background: grad,
-                          boxShadow: `0 4px 16px -4px rgba(${t}, 0.5)`,
-                        }}
+                        aria-label={ui.send}
                       >
-                        <Send size={15} />
-                      </motion.button>
+                        <Send size={17} aria-hidden="true" />
+                      </button>
                     </div>
-                    <p className={`text-[10px] mt-2 text-center select-none text-${theme.color}-400/30`}>
-                      Enter · wyślij &nbsp;·&nbsp; Shift+Enter · nowa linia
-                    </p>
                   </div>
                 </motion.div>
               )}
@@ -644,34 +591,29 @@ export function Chatbot() {
         transition={{ type: 'spring', stiffness: 260, damping: 18, mass: 0.9 }}
         whileHover={{ scale: 1.06 }}
         whileTap={{ scale: 0.93 }}
-        aria-label={isOpen ? 'Zamknij czat z asystentem AI Avenly' : 'Otwórz czat z asystentem AI Avenly'}
+        aria-label={isOpen ? ui.bubbleClose : ui.bubbleOpen}
         aria-expanded={isOpen}
         aria-haspopup="dialog"
         type="button"
-        className="fixed bottom-6 right-4 sm:right-6 z-30 w-14 h-14 rounded-full cursor-pointer flex items-center justify-center transition-all duration-300"
-        style={{
-          background: "rgba(4, 8, 24, 0.75)",
-          backdropFilter: "blur(24px)",
-          WebkitBackdropFilter: "blur(24px)",
-          border: `1px solid rgba(${t}, 0.35)`,
-          boxShadow: `0 4px 32px -4px rgba(${t}, 0.35), 0 0 0 1px rgba(${t}, 0.1)`,
-        }}
+        // Granatowe szkło z poświatą akcentu (.cb-bubble w globals.css) - ten sam język co okno.
+        className="cb-bubble fixed bottom-6 right-4 sm:right-6 z-30 w-14 h-14 rounded-full cursor-pointer flex items-center justify-center transition-all duration-300"
+        style={{ "--cb-accent": accent } as CSSProperties}
       >
         {hasNewMessage && !isOpen && (
-          <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 border-2 border-[#040818] animate-pulse" />
+          <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 border-2 border-[#0a0a0c] animate-pulse" />
         )}
         <AnimatePresence mode="wait" initial={false}>
           {isOpen ? (
             <motion.div key="close" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.16 }}>
-              <X size={21} className={`text-${theme.color}-300`} />
+              <X size={21} aria-hidden="true" />
             </motion.div>
           ) : (
             <motion.div key="open" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.16 }}>
-              <MessageCircle size={21} className={`text-${theme.color}-300`} />
+              <MessageCircle size={21} aria-hidden="true" />
             </motion.div>
           )}
         </AnimatePresence>
       </motion.button>
-    </>
+    </MotionConfig>
   );
 }

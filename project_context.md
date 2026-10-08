@@ -2,31 +2,43 @@
 
 ## Czym jest ten projekt
 
-Strona internetowa agencji marketingowej **Avenly**. Prezentuje ofertę, portfolio, blog i umożliwia kontakt. Zbudowana jako statyczny export Next.js (hosting bez backendu, za Cloudflare CDN).
+Strona internetowa agencji marketingowej **Avenly**. Prezentuje ofertę, portfolio, blog i umożliwia kontakt. Zbudowana jako statyczny export Next.js (hosting bez backendu na **Cloudflare Pages** od 2026-09-19), dwujęzyczna (PL na roocie, EN pod `/en/`).
 
-## Stan strony (2026-06-01)
+## Stan strony (2026-10-07)
 
 | Metryka | Wartość |
 |---|---|
-| Copywriting | ✅ Sesja 27 — cała strona przepisana „głosem klienta" (value-first, mniej żargonu, mocniejsze CTA) |
-| Cookie consent (RODO) | ✅ Sesja 27 — baner 4-kategoriowy (`lib/cookie-consent.ts` + `components/cookie/CookieConsent.tsx`), granularne ustawienia, montowany w DeferredClientWidgets |
-| Polityka prywatności | ✅ Sesja 27 — pełne 12 sekcji RODO ("Polityka prywatności i cookies"), dark glassmorphism cards, dane z `lib/seo-data` |
-| Navbar theming per podstrona | ✅ Sesja 27 — `getNavbarTheme()` zwraca pełny obiekt `NavTheme` (kropka AVENLY tween koloru + hover underline/glow/hamburger/blob menu/social/CTA per podstrona) |
-| PageSpeed mobile | **85** / 100 (po Sesji 22 shadery na mobile — oczekiwany spadek 5-10pt do weryfikacji) |
-| PageSpeed desktop | **99** / 100 |
-| FCP / LCP / CLS / TBT (mobile) | 2.8s / 4.1s / 0 / 30ms |
-| Accessibility issues | 0 (po wszystkich iteracjach) |
-| SEO setup | 8 typów JSON-LD schema, OG image, favicon set, robots 2026-ready |
+| Hosting | ✅ Cloudflare Pages (2026-09-19, migracja z Hostingera) — `npm run deploy`, `public/_headers` + `public/_redirects`, `.htaccess` usunięty; poczta na Hostingerze |
+| Wersja EN | ✅ Sesja 28 — `/en/` z przetłumaczonymi slugami, hreflang, sitemap z alternates |
+| Hero | ✅ Sesja 29 — scena 12a (planeta WebGL + logotyp z cząstek + niebo z konstelacją usług), render planety = LCP |
+| TechStack (pasek pod hero) | ✅ 2026-09-24 — ikony w granatowym szkle, 8 faktów z oferty |
+| Realizacje (homepage) | ✅ Sesje 30-31 + 2026-09-24 — zastąpiły dawne Portfolio; mgławica WebGL, automat 5 s, jednorazowa odsłona sekcji, osobny układ na dotyku, płynne przejście do „Dlaczego Avenly” |
+| „Dlaczego Avenly” (Impact) | ✅ 2026-09-26 — wybór właściciela: **Stos warstw + Konstelacje**; karty w głębokiej czerni z zakładką (numer + kategoria), teren z warstwic na całej karcie (jasno przy wizualizacji, czysto pod tekstem), konstelacja z historią krok po kroku (napis kroku na dole karty), karty 2 i 4 w lustrze, stos z efektami przewijania na każdej szerokości (także telefon), kształty tła w kolorze karty na ekranie. ✅ 2026-09-27: tło sekcji = **Mapa warstwic**, tekst w karcie = **U góry** (reszta wariantów i przełączniki usunięte). Historia 11 rund: progress.md |
+| Asystent AI (sekcja z pokazem rozmowy) | ❌ 2026-09-27 — **usunięta ze strony głównej** (decyzja właściciela: zbędna, asystent jest w „Dlaczego Avenly”, Realizacjach, Ofercie i w czacie); po Opiniach od razu Oferta |
+| Proces | ✅ 2026-09-27 — wybory właściciela: **Wstęga** w materiale **Szkło** + tło **Głębia** (szklane wstęgi w oddali z paralaksą) - przezroczysta szklana wstęga rozwija się przy przewijaniu i prowadzi zygzakiem przez 4 etapy (także na telefonie: wzdłuż tekstu na przemian po lewej i prawej, między krokami łuk przez cały ekran) do „Bezpłatnej konsultacji”; WebGL (zapas canvas 2D), barwa etapu z akcentów Impactu; sekcja zamknięta |
+| Oferta | ✅ 2026-09-27 — wybory właściciela: układ **Plan** (teczka rysunków technicznych: rysunek usługi rysuje się piórem, potem ożywa scenką w 3 krokach z kamerą najeżdżającą na akcję), indeks **Karty**, zegar karty **Obwódka** (ubywa do zmiany usługi), tło **Bez tła**; telefon: mocniejsze zbliżenia kamery, swipe z obrazem za palcem, linia od pigułki do deski; sekcja zamknięta. ✅ 2026-09-28: nowe copy usług (chwyt + konkret, wzór „To już nie tylko strona, to uczucie.”), bez WordPressa / CMS i bez obietnicy integracji z kurierami (także w `/uslugi`, na podstronie sklepu i w metadanych), UI/UX i audyt jako dodatki, AI w CRM jako opcja, przycisk „Cała oferta” w kolorze usługi z płynnym przejściem (PRODUCT.md „Co obiecujemy w ofercie”) |
+| Blog (sekcja + podstrony) | ✅ 2026-09-29 — sekcja na stronie głównej = Panorama; `/blog` = „Wierna” (wersja z czerwca 2026 w nowym języku strony), wpis = „Okładka + Nagłówek na liniach” |
+| Podstrony etapu 2 | ✅ `/uslugi` + `/uslugi/strony-www` (katalog: góra „Kropka”, karty Kadr, wejście Obrys, tło Mgławica - 2026-10-01), `/kontakt` (Obok siebie + Opływ - 2026-09-29), `/realizacje` + case studies (Plansze + Mgławica + „Strona na żywo” - 2026-10-01); 🔎 `/o-nas` czeka na wybór wejścia i układu |
+| Usługi | 7 usług w 3 kategoriach; „Projekt UI/UX” usunięty jako osobna usługa 2026-10-01 (301 z `/uslugi/design*`); „Strona szyta na miarę” → „Strona interaktywna” 2026-10-06 (adres bez zmian) |
+| Wdrożenie | 2026-10-06, `a6a206db` (Cloudflare Pages); produkcja = bieżące repozytorium; praca niezacommitowana w git |
+| Etykiety sekcji | ✅ 2026-09-26 — wybór właściciela: **Gwiazda** (gwiazdki jak w hero + cienkie linie); wspólny `components/ui/SectionLabel.tsx` we wszystkich sekcjach strony głównej, pozostałe propozycje usunięte |
+| Czat | ✅ 2026-09-24/25 — granatowe okno i bąbel, pełne tło bez `backdrop-filter` |
+| Copywriting | ✅ Sesja 27+ — głos korzyści, jeden CTA „Bezpłatna konsultacja”, zero fabrykowanych metryk (PRODUCT.md) |
+| Cookie consent (RODO) | ✅ Sesja 27 — baner 4-kategoriowy (`lib/cookie-consent.ts` + `components/cookie/CookieConsent.tsx`), montowany w DeferredClientWidgets |
+| Polityka prywatności | ✅ Sesja 27 — pełne 12 sekcji RODO, dane z `lib/seo-data` |
+| Navbar theming per podstrona | ✅ Sesja 27 — `getNavbarTheme()` zwraca obiekt `NavTheme`; Sesja 29/31: linki w osi strony, przełącznik PL/EN, tło bez granatu |
+| PageSpeed | ostatni pomiar PSI (Sesja 22): mobile **85** / desktop **99**; lokalny Lighthouse po nowym hero: desktop 95-97 (LCP 1,0-1,2 s, CLS 0) — do ponownego pomiaru w PSI |
+| Accessibility issues | 0 zgłoszonych (kontrasty AA w hero i Realizacjach poprawione względem makiet) |
+| SEO setup | 9 typów JSON-LD (w tym ItemList realizacji), OG image, favicon set, robots 2026-ready, hreflang |
 | AI search visibility | Google AI Overviews aktywnie cytuje z linkiem |
-| WebGL shaders | **12 lokalizacji** (Sesja 24: dodany PortfolioFlowBackground — subtle aurora pod Portfolio sticky child) |
-| Production navigation | ✅ Naprawione w Sesji 20 (Next.js 16 RSC bug — `scripts/flatten-rsc.mjs` post-build script) |
-| Safari mobile compatibility | ✅ Sesja 21+22 — Chatbot dvh height, filter scroll, sticky piny dvh, **overflow-x-clip** (Sesja 22 cofnięte z hidden bo łamało sticky), backdrop-filter -webkit prefixes, viewportFit cover |
-| Mobile UX bugs | ✅ Sesja 22 — 4 zgłoszone bugi naprawione (menu horizontal scroll, random scroll-to-top, ServicesHub filter UX, service subpages scroll-lock broken) |
-| Service subpages shadery na mobile | ✅ Sesja 22 — 6 plików (5× strony-www + UI/UX), DPR mobile 1.0 / desktop 1.5/1.25, IO pause + 30fps zachowane |
-| Scope cards layout | ✅ Sesja 23 — vertical stack (heading nad cards centered), max-w-2xl, mask 8%-92% (2 widoczne naraz), 5 podstron strony-www zsynchronizowane |
-| Hero perf | ✅ Sesja 24 — Framer Motion intro (zamiast CSS animations które laggowały), `isolate` text container, aurora deferred z requestIdleCallback + motion fade-in 1.2s, SSR baseline gradient (no "pusty ekran"), notification stack state-driven z layout animation (newest na górze, push down) |
-| Portfolio depth | ✅ Sesja 24 — 6 warstw głębi: aurora flow shader → grid dots → floor reflection → blobs → cards z baseline shadow + lift → LiquidGlass CTA |
-| Bento corner fix | ✅ Sesja 24 — shader wrapper `inset-0` → `inset-px` w 7 plikach (eliminuje shader prześwitywanie przez border anti-aliasing) |
+| WebGL shaders | stan 2026-10-07: tabela „WebGL shaders” w CLAUDE.md (strona główna, `/kontakt`, `/blog`, `/uslugi`, `/realizacje`, 6 podstron usług, `/o-nas` w pracy); stare shadery podstron usług nieaktywne (+2 w nieużywanym `Portfolio.tsx`) |
+| Production navigation | ✅ Sesja 20 (Next.js 16 RSC bug — `scripts/flatten-rsc.mjs`) + Sesja 28: `scripts/copy-404.mjs` (custom 404 przy dwóch root layoutach) |
+| Safari mobile compatibility | ✅ Sesja 21+22 — dvh, filter scroll, **overflow-x-clip** (nie hidden - łamało sticky), -webkit prefixes, viewportFit cover |
+| Podstrony usług | ✅ one-page przebudowana i zamknięta 2026-10-02 (film w trzech scenach, szkielet `app/(pl)/uslugi/_usluga/`); 🔧 strona firmowa, Strona interaktywna (dawniej „szyta na miarę”), sklep, system CRM, chatboty AI w pracy (etap 3 pracy równoległej - stan w PRACA-ROWNOLEGLA.md); stare wersje `*Client.tsx` nieimportowane. Historycznie (Sesje 22-27): shadery na mobile, scope cards, makiety wireframe→blueprint, bento corner fix |
+
+## Wersja EN (Sesja 28 — 2026-07-07)
+
+Cała strona (poza blogiem i polityką prywatności) ma wersję angielską pod `/en/` z PRZETŁUMACZONYMI slugami (`/en/about-us`, `/en/contact`, `/en/work`, `/en/services/websites/online-store` itd. — mapa segmentów `PL_TO_EN_SEGMENT` w `lib/i18n/locale.ts`; PL zostaje na roocie bez zmian URL-i). Architektura: route groups `app/(pl)` + `app/(en)/en` z dwoma root layoutami (poprawny `<html lang>`), wspólny `AppShell`, słowniki w `lib/i18n/` podawane przez props z server pages (RSC payload, nie bundle). Toggle PL/EN w Navbarze (desktop przy CTA + menu mobile). hreflang (`pl-PL`/`en`/`x-default`) + canonical per język na każdej przetłumaczonej parze + sitemap z alternates. Chatbot wysyła `language` do n8n (workflow musi przełączać prompt); EN welcome fallback w kodzie, quick replies na EN wymagają `label_en` w `chatbot_config`. Szczegóły i checklist nowej strony: sekcja „i18n" w [CLAUDE.md](./CLAUDE.md).
 
 ## Stack technologiczny
 
@@ -39,29 +51,33 @@ Strona internetowa agencji marketingowej **Avenly**. Prezentuje ofertę, portfol
 | Formularze | React Hook Form + Web3Forms (klient-only, bez backendu) |
 | Ikony | Lucide React, React Icons |
 | Treść bloga | Raw HTML string (`dangerouslySetInnerHTML`) — NIE Portable Text |
-| Hosting | Hostinger (Apache + `.htaccess`) za Cloudflare CDN |
+| Hosting | Cloudflare Pages (od 2026-09-19; `public/_headers` + `public/_redirects`, deploy przez `wrangler`) |
 | Browserslist | Chrome/Edge/FF 100+, Safari 15+, iOS 15+ (bez polyfilli ES6+) |
 
 **Usunięte 2026-05-22** (były zainstalowane, ale nigdzie nieużywane): `three`, `@react-three/fiber`, `@react-three/drei`, `@react-three/postprocessing`, `postprocessing`, `next-sanity`, `@sanity/vision`, `@sanity/image-url`, `@portabletext/react`, `@types/three`. **Zaoszczędzone: 953 paczki z node_modules.**
 
-## Sekcje strony głównej (kolejność z `app/page.tsx`)
+## Sekcje strony głównej (kolejność z `components/home/HomeClient.tsx`)
 
-1. **Hero** — split: nagłówek + makieta "powiadomień firmy" (3 karty z opóźnioną sekwencją spring). **WebGL Aurora shader** (`AuroraBackground` inline, 3-warstwowy domain-warped simplex noise) — **desktop only**, mobile fallback = 2 statyczne radial gradienty CSS (perf-critical, mobile TBT killer fix)
-2. **TechStack** — marquee 7 metryk (CSS `animate-scroll`, 3× duplicate dla loopa)
-3. **Portfolio** — desktop: horizontal scroll 300vh z `FocusCard` (płaskowyż ostrości z GPU caching); mobile: snap-x. **Ostatnia karta CTA na desktop ma `LiquidGlassBackground`** — WebGL shader symulujący wnętrze szkła (UV displacement, orbitujący specular highlight, rim glow). IntersectionObserver pauza gdy poza viewport
-4. **Impact** — bento 4 karty z **WebGL contour shaders** (jedna rodzina wizualna, 4 warianty per kafel: TOPO_FS/ORBS_FS/VOLTAGE_FS/SCAN_FS — simplex noise + warstwice). Wspólny `ShaderCanvas` host (DPR clamp 1.25, **30fps throttle** zamiast 60). Dodatkowo `GlassEdge` per karta (iOS 26 Liquid Glass na bordzie: backdrop-filter blur(8px) saturate(150%) z 4-warstwowym linear gradient mask = ring shape bez hard edges). Animowany licznik (mutacja DOM) + bar chart `scaleY`. **(Sesja 26: przesunięty PRZED Process)**
-5. **Process** — pionowy timeline z `scaleY` na pasku (GPU cached) (#proces)
-6. **Testimonials** — 2 opinie Google (#opinie) + JSON-LD Review/AggregateRating (gwiazdki w SERP)
-7. **AiConsultant** — fake-chat sekwencja + 2 CTA: „Zobacz chatboty AI" (→ `/uslugi/automatyzacje-ai/chatboty-ai/`, Sesja 26) + „Przetestuj Konsultanta" (otwiera chatbota)
-8. **Services** — desktop taby / mobile accordion (#oferta + sekcja ma także id="uslugi")
-9. **BlogTeaser** — top 3 najnowsze (useMemo, next/image lazy)
-10. **CallToAction** — finalny CTA do `/kontakt` (#kontakt)
+1. **Hero** — scena 12a (Sesja 29): planeta WebGL + logotyp AVENLY z cząstek + niebo z konstelacją usług + blok CTA (h1, „Bezpłatna konsultacja”, „Zobacz realizacje”). Szczegóły: CLAUDE.md „Hero strony głównej”
+2. **TechStack** — pasek marquee „Co dostajesz”: 8 faktów z oferty (PageSpeed 98/100, projekt pod telefon, BLIK i karta, asystent AI, rezerwacje online, panel do zarządzania firmą, hosting na Cloudflare, lokalne SEO) z ikonami w granatowym szkle (`.ts-ico`, wybór właściciela 2026-09-24); pętla bez szwu (4 kopie, -50%), pauza po najechaniu; zostaje bezpośrednio pod hero (decyzja właściciela, Sesja 30)
+3. **Realizacje** (Sesja 30, handoff 8b „Kurtyna”; `components/sections/Realizacje.tsx` + `realizacje/{scene,nebula}.ts`, CSS `.rz-*`) — ZASTĄPIŁA dawne Portfolio: tło mgławicy WebGL w barwach aktywnej realizacji (Sesja 31), kadr 1200×675 ze screenshotem (odbicie w podłodze z makiety usunięte - Sesja 31), indeks 4 projektów. Kadry zmieniają się SAME co 5 s (bez scroll-locka - decyzja właściciela), klik w indeks / swipe / strzałki ręcznie, pauza przy kursorze nad indeksem; desktop z myszą = scena 100vh, dotyk/<1024 = jedna kolumna z paskiem 4 miniatur (przebudowa 2026-09-24). **Wejście sekcji (2026-09-24):** shader „maluje” mgławicę i zapala gwiazdy, a na komputerze strona jednorazowo dociąga się do sekcji i blokuje scroll na ~2 s (jedyny wyjątek od zasady bez scroll-locka; na dotyku bez blokady). Dół sekcji przechodzi płynnie w czerń sekcji Impact. Szczegóły: CLAUDE.md „Realizacje strony głównej”. Dawne `Portfolio.tsx` + `lib/i18n/home/portfolio.ts` nieużywane (do usunięcia)
+4. **Impact („Dlaczego Avenly”)** — **Stos warstw** (wybór właściciela 2026-09-26): 4 karty `position: sticky` jedna na drugiej na KAŻDEJ szerokości (kolejna nasuwa się, poprzednia cofa się w głąb bez rozmycia; na telefonie wysoka karta przykleja się, gdy widać jej dół). Karta: głęboka czerń, zakładka z numerem i kategorią (w stosie widać zakładki przykrytych kart), teren z cienkich warstwic w shaderze na całej karcie (`impact/shader.tsx`, 4 kolory; jasno przy wizualizacji, czysto pod tekstem), **konstelacja** z historią krok po kroku (`impact/viz.tsx`, napis kroku na dole karty); od 1024 px tekst obok wizualizacji, karty 2 i 4 w lustrze; 98/100 PageSpeed, link „Chatboty AI”, pod stosem „Sprawdź ofertę”. Tło sekcji (`impact/backdrop.tsx`) = Mapa warstwic w kolorze karty na ekranie; tekst w karcie u góry (wybór 2026-09-27). Bez efektów najechania. Szczegóły: CLAUDE.md „Sekcja Dlaczego Avenly”. **(Sesja 26: przesunięty PRZED Process)**
+5. **Process** (#proces) — **Szklana wstęga + tło Głębia** (wybory właściciela 2026-09-27): przezroczysta szklana wstęga (WebGL na płótnie o wysokości toru, zapas canvas 2D; szkło, skręt i przejście przez krawędź w `process/silk.ts`) rozwija się przy przewijaniu (czoło w 64% okna), przy każdym z 4 etapów (Plan i strategia → Projekt graficzny → Budowa i technologia → Start i wsparcie) biegnie po stronie bez tekstu (komputer: zygzak 73% / 27%; telefon: wzdłuż tekstu na przemian po lewej i prawej, między krokami łuk S przez cały ekran) i schodzi na CTA „Bezpłatna konsultacja”; krok zapala się, gdy dojdzie do niego czoło. Tło Głębia (`process/backdrop.tsx`): dwie przygaszone szklane wstęgi w oddali z paralaksą, w kolorze etapu na ekranie, wygaszane pod tekstem. Style w `components/sections/process/process.css`. Szczegóły: CLAUDE.md „Sekcja Proces”
+6. **Testimonials („Opinie”)** — układ Redakcja (wybór właściciela 2026-09-27): rozkładówka magazynu - nagłówek „Nie wierz nam na słowo. Uwierz klientom.”, 2 opinie Google cytowane dosłownie (pierwsza jako wielki cytat, druga w węższej szpalcie) z zakreślonym wspólnym słowem „polecam”, cytaty „w cudzysłowie” (znaki “ ” rysowane kreską na liniach nad i pod cytatami, co 8 s obiega je plamka światła) (#opinie). Bez oceny „5,0” i gwiazdek (2026-09-28, decyzja właściciela) i bez JSON-LD (Review usunięty 2026-09-30 po błędzie w Search Console „Wiele weryfikacji bez obiektu aggregateRating”). Pliki: `components/sections/Testimonials.tsx` + `testimonials/*` (`editorial.tsx`, `shared.tsx`, `testimonials.css`). Szczegóły: CLAUDE.md „Sekcja Opinie”
+7. **Services („Oferta”)** (#oferta na wrapperze + `id="uslugi"` na sekcji) — układ **Plan** (wybory właściciela 2026-09-27): oferta jako teczka rysunków technicznych. Komputer: karty usług w kategoriach po lewej (zegar automatu 8 s = obwódka wybranej karty, która ubywa), czarna deska po prawej - rysunek usługi rysuje się linia po linii z piórem kreślarskim, potem ożywa krótką scenką w 3 krokach (co usługa robi dla klienta) z kamerą najeżdżającą na akcję i podpisem kroku jak napisy; pod deską nazwa, zdanie korzyści, legenda 1-3 i link. Telefon / tablet: pasek pigułek z linią do deski, mocniejsze zbliżenia kamery, swipe z obrazem za palcem. Tło sekcji = czysta czerń; kolor otwartej usługi płynnie (1,3 s) przechodzi na krawędź deski, linie sekcji i przycisk „Cała oferta”. Copy (2026-09-28): każda usługa zaczyna od własnego chwytu o tym, co klient czuje lub zyskuje (strona na miarę „To już nie tylko strona, to uczucie.”, rysunek z moodboardem marki), potem fakty; bez WordPressa / CMS, bez obietnicy integracji z kurierami, UI/UX i audyt jako dodatki, AI w CRM jako opcja (PRODUCT.md „Co obiecujemy w ofercie”). Pliki: `components/sections/Services.tsx` + `components/sections/services/*` (`plan.tsx`, `nav.tsx`, `drawings.tsx`, `shared.tsx`, `services.css`), teksty `lib/i18n/services.ts` (`ServicesSectionDict`). Szczegóły: CLAUDE.md „Sekcja Oferta”
+8. **BlogTeaser („Blog”, tylko PL)** — układ **Panorama** (wybór właściciela 2026-09-29): 3 najnowsze wpisy jako duże okładki; przewijanie = jazda kamery w bok (scena sticky na pełną szerokość ekranu, zdjęcia z paralaksą, okładki poza kadrem przygasają, licznik „01 / 03” z linią postępu). Nagłówek „Konkretna wiedza. Bez żargonu.” jest w scenie, a wszystko stoi przy krawędziach wrappera (okładka, tytuł wpisu i licznik przy lewej, „Wszystkie wpisy” przy prawej); szerokość okładki mierzona tak, żeby scena mieściła się w oknie. Ograniczony ruch = zwykłe karty. Pliki: `components/sections/BlogTeaser.tsx` + `blog-teaser/*` (`pan.tsx`, `shared.tsx`, `cards.tsx`, `data.ts`, `blog-teaser.css`), teksty `lib/i18n/home/blog-teaser.ts`. Szczegóły: CLAUDE.md „Sekcja Blog”
+9. ~~**CallToAction**~~ — **usunięta 2026-09-27** (decyzja właściciela: sekcja „Gotowy na cyfrową dominację?” zbędna). Strona kończy się Blogiem (PL) / Ofertą (EN) i stopką; przycisk w nawigacji i link „Kontakt” w stopce prowadzą prosto na `/kontakt` (dawniej przewijały do kotwicy `#kontakt`).
+
+**Usunięta 2026-09-27: sekcja „Asystent AI” (`AiConsultant`, pokaz rozmowy z asystentem między Opiniami a Ofertą).** Decyzja właściciela po trzech rundach propozycji: „nie pasuje do reszty, jest trochę zbędna”. Asystenta pokazują już: karta 2 w „Dlaczego Avenly” (historia + link „Chatboty AI”), „Wirtualny Asystent AI” w Realizacjach („Porozmawiaj z asystentem”), konstelacja hero, pasek pod hero, Oferta i prawdziwy czat w rogu każdej strony. Pliki (`components/sections/AiConsultant.tsx`, `components/sections/ai-consultant/`, `lib/i18n/home/ai-consultant.ts`) i pole `aiConsultant` w `lib/i18n/home/index.ts` usunięte. Nie przywracać bez prośby; historia propozycji w `docs/sekcje/asystent-ai.md`.
+
+**Po zamknięciu sekcji (2026-10-01 → 2026-10-06):** Oferta ma 7 pozycji w 3 kategoriach („Projekt UI/UX” usunięty jako osobna usługa), a „Strona szyta na miarę” nazywa się „Strona interaktywna” (Oferta, konstelacja hero - węzeł „Strony interaktywne”, stopka z 6 usługami, etykieta w formularzu). 2026-10-05: optymalizacja hero (planeta w dwóch przebiegach, tempo rysowania z czasu, scena stoi przy < 30% widoczności, przycisk „Zobacz realizacje” bez `backdrop-filter`) i sekcji Realizacje (mgławica nie liczy się przed odsłoną sekcji).
 
 Wszystkie sekcje poza Hero ładowane przez `next/dynamic` (lazy loading). Wrapper `.render-optimize` istnieje (trzyma kotwice `#proces`/`#oferta`/...), ale **`content-visibility` zostało USUNIĘTE (Sesja 26)** — łamało piny GSAP ScrollTrigger ([#465](https://github.com/greensock/GSAP/issues/465)) + powodowało przeskakiwanie scrolla po F5. Perf zapewnia sam lazy-load + IO-pauza shaderów. NIE przywracać.
 
 ## Architektura warstwy globalnej
 
-`app/layout.tsx` opakowuje treść w:
+Dwa root layouty (`app/(pl)/layout.tsx`, `app/(en)/layout.tsx`) renderują wspólny `components/layout/AppShell.tsx` (prop `locale`), który opakowuje treść w:
+- **`<html lang={locale} className="dark bg-[#050505]">`** (tło chroni przed białym mignięciem przy nawigacji)
 - **JSON-LD w `<head>`**: Organization + ProfessionalService + WebSite (zbudowane przez `lib/schemas.ts`)
 - **Preconnect**: `https://kyfsjvgixmcmafvaiyak.supabase.co` (300ms LCP saving)
 - **DNS prefetch**: `n8n.avenly.pl`, `images.unsplash.com` (używane po interakcji)
@@ -73,28 +89,36 @@ Wszystkie sekcje poza Hero ładowane przez `next/dynamic` (lazy loading). Wrappe
   - `AnchorManager` — obsługa `?target=sectionId` z auto-korekcją w `onComplete` (retry x3)
 - **Navbar** (sticky, dynamiczny motyw granicy per pathname)
 - **Footer** (`dynamic` z SSR — osobny chunk, lazy hydration)
-- **DeferredClientWidgets** (`'use client'` wrapper — ładuje teraz LifecycleManager + Chatbot + **CookieConsent**, wszystkie `dynamic` z `ssr: false`):
+- **DeferredClientWidgets** (`'use client'` wrapper — ładuje LifecycleManager + Chatbot + **CookieConsent**, wszystkie `dynamic` z `ssr: false`, montowane po `requestIdleCallback` (timeout 1500 ms) - Sesja 28):
   - **LifecycleManager** — `lenis.stop()` gdy `document.hidden`, restart + resize po powrocie (lazy z `ssr: false`)
-  - **Chatbot** — globalny widget z bubble (lazy z `ssr: false`, pojawia się ~500ms po hydration)
+  - **Chatbot** — globalny widget z bubble (lazy z `ssr: false`, po idle)
   - **CookieConsent** (Sesja 27) — baner RODO (`components/cookie/CookieConsent.tsx`, lazy z `ssr: false`)
 
 ## Kategorie usług i routing
 
 | Kategoria | Slug | Podstrony (aktywne) | Wkrótce |
 |-----------|------|---------------------|---------|
-| Strony WWW | `strony-www` | One-page, Strona firmowa, Strona szyta na miarę, Sklep internetowy, System CRM i automatyzacje AI | — |
-| Design | `design` | UI/UX (`/uslugi/design/ui-ux`) | Identyfikacja Wizualna, Materiały Marketingowe |
+| Strony WWW | `strony-www` | One-page, Strona firmowa, Strona interaktywna (adres `strona-szyta-na-miare`), Sklep internetowy, System CRM i automatyzacje AI | — |
+| ~~Design~~ | ~~`design`~~ | usunięta 2026-10-01 razem z usługą „Projekt UI/UX” (projekt do akceptacji jest częścią każdej budowy); 301 na `/uslugi/strony-www/` | — |
 | Automatyzacja AI | `automatyzacje-ai` | Chatboty AI (`/uslugi/automatyzacje-ai/chatboty-ai`) | — |
 | Marketing i Sprzedaż | `marketing` | — | Audyt SEO i Wydajności |
 
-`/uslugi/` to `ServicesHub.tsx` z filtrowaniem po kategoriach (Framer Motion `AnimatePresence` + `layout`). Usługi `isActive: false` wyświetlają "Wkrótce dostępne" z `opacity-50`.
+`/uslugi/` i `/uslugi/strony-www/` renderuje ten sam katalog `app/(pl)/uslugi/_katalog/Catalog.tsx` (zakres `hub` / `www`): niska góra z jednym zdaniem i kropką marki, filtr kategorii (Wszystkie / Strony WWW / Automatyzacja AI / Marketing i sprzedaż), galeria kart z animowanymi rysunkami Oferty (karta Kadr, wejście Obrys), box „Nie wiesz, co wybrać?”, tło Mgławica. Audyt wyświetla „Wkrótce” bez linku. Szczegóły: CLAUDE.md „Katalog usług”, notatki `docs/podstrony/uslugi.md`.
 
-### Wzorzec podstron usług
+### Wzorzec podstron usług (od 2026-10-02)
 
-Każda podstrona = `page.tsx` (server, eksportuje `metadata` + renderuje `ServicePageSchema`) + `*Client.tsx` (client, animacje).
+Każda podstrona = `page.tsx` (server: `metadata` z `i18nAlternates` + `ServicePageSchema` + komponent z `copy.pl`) + komponent korzenia `'use client'` na szkielecie **`app/(pl)/uslugi/_usluga/`** (`ServiceShell`: kolor podstrony z adresu, tło-mgławica, wejście z czerni; `ServiceHead`, `ServiceEnding`, `usePin` / `useFrame`, `Dock` dla przełączników propozycji) + sceny w osobnych plikach + własny arkusz CSS z prefiksem + słownik `lib/i18n/uslugi/<podstrona>.ts` (typ `…Copy`, PL przez `typo()`). Trasa EN importuje komponent PL i podaje `copy.en`.
 
-Wspólny szablon: `components/templates/ServiceTemplate.tsx` (z `children` na customowe sekcje).
-ALE — większość podstron stron-www NIE używa template'a, ma własne ambitne scroll-locki (np. `OnePageClient` ma makietę przeglądarki + scope cards; `AppWebClient` — makieta 800vh: pulpit→klienci→zadania, Sesja 26). `ChatbotsAIClient` po redesignie (Sesja 26) **NIE ma już scroll-locka** — hero z samogrającym demem „Living Ask" (typewriter Q&A), bento „Możliwości" (shader Dots per-seed + GlassEdge), „Liczby" (Editorial), „Różnica" (scroll-driven hover). Theme **orange**.
+| Podstrona | Korzeń | Prefiks | Stan |
+|---|---|---|---|
+| one-page | `OnePage.tsx` | `one-` | ✅ zamknięta 2026-10-02 (film → stos kart → zakres z pokazem) |
+| strona-firmowa | `StronaFirmowa.tsx` | `sf-` | 🔧 w pracy (film „Piętra”, karty podstron, stos, zakres) |
+| strona-szyta-na-miare (usługa „Strona interaktywna”) | `CustomWebsite.tsx` | `sm-` | 🔧 w pracy (film „Horyzont”, Nić, Technologia, Detal, zakres) |
+| sklep-internetowy | `Shop.tsx` | `sk-` | 🔧 w pracy (scena zakupu z mini sklepem, „Na tle szablonów”, stos, panel nocą, zakres) |
+| system-crm | `SystemCrm.tsx` | `cr-` | 🔧 w pracy (sześć scen bez klikania; inna usługa: narzędzie) |
+| chatboty-ai | `Chatboty.tsx` | `ch-` | 🔧 w pracy (pole pytań, „22:00”, Wiedza, Języki, Plan; inna usługa: rozmowa) |
+
+Stare wersje (`CorporateWebsiteClient.tsx`, `DedicatedWebsiteClient.tsx`, `ShopClient.tsx`, `AppWebClient.tsx`, `ChatbotsAIClient.tsx`) i `components/templates/ServiceTemplate.tsx` leżą na dysku nieimportowane (źródło tekstów do zamknięcia podstron). Opis szkieletu i stanu: CLAUDE.md „Podstrony usług - szkielet i one-page” oraz „Podstrony usług w pracy - fala 2”; notatki `docs/podstrony/usluga-*.md`.
 
 Każda aktywna podstrona usługi dostaje automatycznie:
 - **Service JSON-LD** (rich result dla "wycena strony one page" itp.)
@@ -103,65 +127,71 @@ Każda aktywna podstrona usługi dostaje automatycznie:
 
 ## Portfolio
 
-Projekty w `app/data/projects.ts`. Aktualnie **3 projekty**:
+Projekty w `app/data/projects.ts` (tłumaczenia EN: `EN_PROJECT` w `lib/i18n/projects.ts`). Aktualnie **4 projekty**. Sekcja Realizacje na stronie głównej ma własny słownik `lib/i18n/home/realizacje.ts` (kolejność = tablica `ORDER`: RKS → Kardyś → Wirtualny Asystent AI → Mcentrumfizjoterapia, decyzja właściciela) i kadry z `public/portfolio/stage/`.
 
 | slug | Klient | hasCaseStudy | openChat |
 |------|--------|--------------|----------|
+| `grawerstwo-kardys` | Grawerstwo Józef Kardyś (grawerstwomielec.pl) | tak - pracownia od 1990 r.: przestarzała strona na WordPressie i niedziałający sklep → nowa strona, sklep z płatnościami online (BLIK, karta, przelew) i panel do zarządzania stroną oraz sklepem (Next.js, Supabase, Przelewy24). **Bez personalizacji graweru w sklepie** (poprawka właściciela 2026-09-25). Kategoria "Sklep internetowy" → filtr Sklepy | — |
 | `mcentrumfizjoterapia` | Mcentrum Fizjoterapia | tak (case study + galeria) | — |
-| `klub-sportowy` | Radzyński Klub Sportowy | nie (tylko external link) | — |
+| `klub-sportowy` | Radzyński Klub Sportowy (nazwa wyświetlana „Klub Sportowy RKS”) | tak - strona klubu z terminarzem i zapisami do akademii + aplikacja klubowa (składki, kalendarz treningów, obecności, komunikacja; Next.js, Supabase, Resend, Cloudflare) | — |
 | `wirtualny-asystent-ai` | Avenly | nie | **tak** (kliknięcie otwiera chatbot przez `avenly:open-chat`) |
 
 Pola projektu: `slug`, `title`, `category`, `year`, `client`, `description`, `mainImage`, `mockupImage`, `gallery[]`, `hasCaseStudy`, `externalLink`, `openChat?`, `techStack[]`, `stats[]`, `challenge`, `solution`.
 
 `/realizacje/[slug]` ma `generateStaticParams` filtrujące po `hasCaseStudy: true`, generuje **CreativeWork** + **BreadcrumbList** JSON-LD oraz pełne OG (`mockupImage` jako preview).
-`StatsSpotlight` (komponent stat-grid) ma efekt reflektora podążającego za myszką (CSS custom properties `--mouse-x/y`).
+**Podstrona `/realizacje` (zamknięta 2026-10-01):** nagłówek na cały pierwszy ekran („Dowód, nie obietnice.” + kadry w głębi z żywymi stronami klientów), Plansze 01-04 (przypięte sceny: wielka nazwa → kadr ze stroną klienta przewijaną razem z przewijaniem), „Wszystkie realizacje” (filtr, siatka, karta „Twoja firma może być następna”), case study z makietą „Strona na żywo”, mgławica za całą podstroną. Kod: `app/(pl)/realizacje/RealizacjeClient.tsx` + `_rl/*`; kolejność, nazwy wyświetlane, skróty i akcenty: `WORK_ORDER` / `workByLocale` w `lib/i18n/projects.ts`; obrazy całych stron klientów: `public/realizacje/` (mastery `assets/realizacje/`). `StatsSpotlight` usunięty. Szczegóły: CLAUDE.md „Podstrona Realizacje”.
 
 ## Blog
 
 Posty w `app/data/posts.ts`. Routing: `/blog/[slug]`. Aktualnie **3 posty** (wszystkie datowane styczeń 2026).
 
-**Treść to raw HTML string** (`content: string`), renderowany przez `dangerouslySetInnerHTML` z klasami `prose prose-invert` + custom `blog-content` z `globals.css`. Pakiet `@portabletext/react` był zainstalowany — usunięty 2026-05-22 (nieużywany).
+**Treść to raw HTML string** (`content: string`), renderowany przez `dangerouslySetInnerHTML` w kolumnie `.bl-body` (style w `components/blog/blog.css`). Pakiet `@portabletext/react` był zainstalowany — usunięty 2026-05-22 (nieużywany).
 
-`BlogList` (komponent) obsługuje filtr kategorii (drag-scroll z `PointerEvents`, rozróżnia touch vs mouse), search po tytule/excerpcie, sort newest/oldest.
+**Stan od 2026-09-29** (właściciel odrzucił redesign z 2026-09-28 i wrócił do wersji z czerwca 2026, zmodernizowanej do języka strony): `/blog` = układ „Wierna” - wyśrodkowany nagłówek „Wiedza, która napędza Twój rozwój.” na liniach bloga (`components/blog/BlogBackdrop.tsx`, WebGL), pigułki kategorii liczone z wpisów, sortowanie i wyszukiwarka, najnowszy wpis jako karta pół na pół, reszta w siatce (`components/blog/BlogIndex.tsx`, `cards.tsx`, `data.ts`). `/blog/[slug]` = „Okładka + Nagłówek na liniach”: duże zdjęcie, na nie nachodzi karta z nagłówkiem, treść ~46rem, cytat na końcu jako karta z przyciskiem „Bezpłatna konsultacja”, „Czytaj dalej”. Style `components/blog/blog.css` (prefiks `bl-`). Sekcja Blog na stronie głównej (Panorama) ma własne karty i dane w `components/sections/blog-teaser/`. Szczegóły: CLAUDE.md „Blog”, notatki `docs/podstrony/blog.md`.
 
 `/blog/[slug]` generuje **BlogPosting** + **BreadcrumbList** JSON-LD, używa `post.mainImage` jako OG image, dodaje `article:published_time`, `authors`, `articleSection`.
 
 ## Formularz kontaktowy
 
-- Komponent: `app/kontakt/page.tsx` + `app/kontakt/ContactSection.tsx`
+- Komponent: `app/(pl)/kontakt/page.tsx` + `ContactSection.tsx` + `useContactForm.ts` + `ServiceSelect.tsx` + `Backdrop.tsx` (tło Opływ) + `kontakt.css` (EN: `app/(en)/en/contact/`)
+- **Wygląd (2026-09-29, praca równoległa etap 2):** układ „Obok siebie” (nagłówek „Zacznijmy.” i dane po lewej, formularz po prawej), czarne tło z animacją „Opływ” (WebGL: włosowe linie przepływu opływają formularz, kreski w kolorze marki, kursor rozsuwa linie, pisanie przyspiesza przepływ, wysłanie = pas światła), formularz „Bez karty” wprost na czerni z polami „na linii”. Szczegóły: rozdział „Strona Kontakt” w [CLAUDE.md](./CLAUDE.md), historia rund: `docs/podstrony/kontakt.md`.
 - Integracja: **Web3Forms** (`access_key: 'ca77c076-...'` zaszyte w kodzie)
-- Walidacja: React Hook Form
-- Pola: imię, email, telefon, temat, wiadomość, zgoda RODO
+- Walidacja: React Hook Form (formularz `noValidate` - komunikaty tylko w stylu strony)
+- Pola: imię, email, telefon, usługa (lista `ServiceSelect` - etykiety jak w Ofercie; od 2026-10-01 bez kategorii „Design i UI/UX”, od 2026-10-06 z etykietą „Strona interaktywna”; **wartości wysyłane do Web3Forms bez zmian** - ta opcja nadal wysyła `Strona Szyta na Miarę`), wiadomość, zgoda RODO
 - Honeypot: ukryte pole `botcheck`
-- **Dwa numery telefonu (Sesja 27)**: `lib/seo-data.ts` CONTACT ma `phone` + `phoneDisplay` (`+48 668 124 367`) oraz `phone2: '+48531104402'` + `phone2Display` (`+48 531 104 402`). `ContactSection.tsx` pokazuje oba jako klikalne linki `tel:`.
+- **Dwa numery telefonu (Sesja 27)**: `lib/seo-data.ts` CONTACT ma `phone` + `phoneDisplay` (`+48 668 124 367`) oraz `phone2: '+48531104402'` + `phone2Display` (`+48 531 104 402`). `ContactSection.tsx` pokazuje oba jako klikalne linki `tel:` (na telefonie obok siebie). E-mail, telefony i godziny (`CONTACT.hours`) tylko z `seo-data.ts`.
+- Znany błąd w stopce (zamrożona w etapie 2): na `/kontakt/` przycisk „Bezpłatna konsultacja” nie przewija do formularza (`Footer.tsx` porównuje ścieżkę bez końcowego `/`) - patrz „Niespójności” w CLAUDE.md.
 
 ## Pełna mapa routingu
 
+Pliki stron PL leżą w `app/(pl)/…`, EN w `app/(en)/en/…` (mirror z przetłumaczonymi slugami: `/en/about-us`, `/en/contact`, `/en/work`, `/en/services/websites/...` - mapa w `lib/i18n/locale.ts`). Blog i polityka prywatności tylko PL.
+
 ```
 /                          — strona główna (Home)
-/uslugi/                   — ServicesHub (katalog z filtrami)
-/uslugi/strony-www/        — kategoria + 5 kart
-  one-page/                — Service JSON-LD
-  strona-firmowa/
-  strona-szyta-na-miare/
-  sklep-internetowy/
-  system-crm/
-/uslugi/design/            — kategoria + 1 aktywna karta
-  ui-ux/                   — layout.tsx z ServicePageSchema (page jest 'use client')
+/uslugi/                   — katalog usług (_katalog/Catalog: filtr, galeria kart z rysunkami, tło Mgławica)
+/uslugi/strony-www/        — kategoria (ten sam katalog: 5 kart + box)
+  one-page/                — ✅ film w trzech scenach + Service JSON-LD
+  strona-firmowa/          — 🔧 w pracy
+  strona-szyta-na-miare/   — 🔧 w pracy; usługa „Strona interaktywna” (adres bez zmian)
+  sklep-internetowy/       — 🔧 w pracy
+  system-crm/              — 🔧 w pracy
 /uslugi/automatyzacje-ai/
-  chatboty-ai/
-/uslugi/marketing/                       — ⚠️ return null (pusta strona kategorii)
-/uslugi/marketing/audyt-wydajnosci-seo/  — ⚠️ return null (pusta podstrona)
-/realizacje/               — lista projektów z filtrami
-/realizacje/[slug]/        — case study (tylko gdy hasCaseStudy) + CreativeWork JSON-LD
-/blog/                     — lista postów z filtrami
-/blog/[slug]/              — post + BlogPosting JSON-LD
-/o-nas/                    — GSAP zoom hero + stats + FAQ + FAQPage JSON-LD
+  chatboty-ai/             — 🔧 w pracy
+/uslugi/design/, /uslugi/design/ui-ux/   — USUNIĘTE 2026-10-01 (301 → /uslugi/strony-www/)
+/uslugi/marketing/                       — ⚠️ return null + noindex (placeholder)
+/uslugi/marketing/audyt-wydajnosci-seo/  — ⚠️ return null + noindex (placeholder)
+/realizacje/               — nagłówek z kadrami, Plansze 01-04, „Wszystkie realizacje” z filtrem
+/realizacje/[slug]/        — case study (tylko gdy hasCaseStudy) ze „Stroną na żywo” + CreativeWork JSON-LD
+/blog/                     — lista wpisów („Wierna”: kategorie, sortowanie, wyszukiwarka)
+/blog/[slug]/              — wpis + BlogPosting JSON-LD
+/o-nas/                    — 🔧 w pracy: wejście „przelot” ze znakiem AVENLY + układ do wyboru + FAQ + FAQPage JSON-LD
 /kontakt/
 /polityka-prywatnosci/     — "Polityka prywatności i cookies" (12 sekcji RODO, dark glassmorphism); layout.tsx z metadata (page jest 'use client')
+/nie-znaleziono/           — trasa strony 404 (noindex; skrypt copy-404.mjs kopiuje ją do out/404.html)
+/en/...                    — wersja angielska (patrz wyżej)
 sitemap.xml + robots.txt   — force-static
 manifest.webmanifest       — PWA-ready
-.htaccess                  — Apache config (cache + kompresja + bezpieczeństwo)
+_headers, _redirects       — konfiguracja Cloudflare Pages (cache + bezpieczeństwo + 301)
 ```
 
 ## Nawigacja
@@ -177,7 +207,7 @@ manifest.webmanifest       — PWA-ready
 `Navbar` ma dynamiczny motyw zależny od pathname. **Sesja 27:** `getNavbarTheme(pathname)` zwraca teraz pełny obiekt `NavTheme` (rekord `NAV_THEMES`), NIE tylko string klas granicy. Motyw obejmuje: kropkę przy logo AVENLY (Framer `motion.span` z `animate={{ color: dotHex }}` + `initial={false}` = płynny tween koloru między podstronami), hover underline+glow linków desktop, hover hamburgera, blob menu mobile, hover linków+kropka mobile, hover social, hover CTA. Wszystkie klasy verbatim (Tailwind v4 JIT — zero concat dynamic). Kolory per podstrona:
 - `/strony-www/sklep-internetowy` → amber (`#f59e0b`)
 - `/strony-www/system-crm` → sky (`#0ea5e9`)
-- `/strony-www/strona-szyta-na-miare` → **rose** (`#f43f5e`)
+- `/strony-www/strona-szyta-na-miare` → **rose** (`#f43f5e`) - usługa „Strona interaktywna” (nazwa od 2026-10-06, adres bez zmian)
 - `/strony-www/one-page` → blue (`#3b82f6`)
 - `/strony-www/strona-firmowa` → emerald (`#10b981`)
 - `/automatyzacje-ai/chatboty-ai` → orange (`#f97316`) (Sesja 26, był teal — Navbar + service-theme.ts + Chatbot widget + AvenlyAICta)
@@ -186,7 +216,7 @@ manifest.webmanifest       — PWA-ready
 ## Branding
 
 - **Nazwa:** Avenly (logo: `AVENLY.` z niebieską kropką)
-- **Kolory:** ciemne tło `#050505` / `#080808` / `#0a0a0a`, akcent niebieski `#2f5beb` / blue-400/500/600, white text
+- **Kolory:** ciemne tło `#050505` / `#080808` / `#0a0a0a`, white text; **jeden kolor marki = kropka logo `#3b82f6`** (`--brand` w `globals.css`, `--brand-hi` `#60a5fa` na hover / fokus) - akcenty nagłówków, etykiety sekcji, ozdoby, scrollbar; bez pastelowych błękitów (2026-09-28, szczegóły: CLAUDE.md „Schemat kolorów”)
 - **Ton:** profesjonalny, nowoczesny, technologiczny (patrz [PRODUCT.md](./PRODUCT.md))
 - **Język:** polski (PL)
 - **Założenie:** 2026
@@ -198,27 +228,35 @@ manifest.webmanifest       — PWA-ready
 |-------------|------|
 | Dane firmy (NIP, adres, social, Wizytówka Google) | `lib/seo-data.ts` |
 | Schema.org buildery (Organization, Service, FAQ itp.) | `lib/schemas.ts` |
-| Usługi i opisy (główna sekcja taby/accordion) | `components/sections/Services.tsx` + `app/data/services.ts` |
-| Katalog usług `/uslugi/` (filtry, kafle) | `app/uslugi/ServicesHub.tsx` |
-| Strony kategorii `/uslugi/strony-www/`, `/uslugi/design/` itp. | `app/uslugi/<kategoria>/page.tsx` |
-| Podstrony konkretnych usług | `app/uslugi/<kategoria>/<slug>/page.tsx` + `*Client.tsx` |
-| Projekty portfolio | `app/data/projects.ts` |
-| Artykuły bloga | `app/data/posts.ts` |
-| FAQ na /o-nas (też zasila FAQPage schema) | `app/o-nas/faq-data.ts` |
-| Sekcja Hero | `components/sections/Hero.tsx` |
-| Opinie (też zasila AggregateRating schema) | `components/sections/Testimonials.tsx` |
-| Statystyki / kafle "Dlaczego Avenly" | `components/sections/Impact.tsx` |
-| Stat cards na /o-nas (4× karty z layered fluid shader) | `app/o-nas/page.tsx` → `STATS` array (linia ~190) |
-| Stopka | `components/layout/Footer.tsx` |
+| Teksty stron i sekcji (PL + EN) | `lib/i18n/` (np. `home/hero.ts`, `home/impact.ts`, `home/realizacje.ts`, `uslugi/*.ts`, `o-nas.ts`) |
+| Usługi na stronie głównej (sekcja „Oferta”, układ Plan) | `components/sections/Services.tsx` + `components/sections/services/*`; teksty sekcji (PL + EN, w tym podpisy scenek `story`) = `lib/i18n/services.ts` (`ServicesSectionDict`), kolejność / adresy = `app/data/services.ts`, rysunki, scenki i kamera = `components/sections/services/drawings.tsx` |
+| Katalog usług `/uslugi/` i `/uslugi/strony-www/` (nagłówki, filtr, opisy kafli, box) | `lib/i18n/uslugi/kategorie.ts` (`catalogDict`) + `app/(pl)/uslugi/_katalog/*`; nazwy, legendy i scenki kart = Oferta (`lib/i18n/services.ts`) |
+| Metadane katalogu i kategorii | `app/(pl)/uslugi/page.tsx`, `strony-www/page.tsx` (+ mirror w `app/(en)/en/services/...`) |
+| Podstrony konkretnych usług | `app/(pl)/uslugi/<kategoria>/<slug>/page.tsx` + komponent korzenia i sceny w tym katalogu, teksty `lib/i18n/uslugi/<slug>.ts` (typ `…Copy`), szkielet `app/(pl)/uslugi/_usluga/` (+ mirror w `app/(en)/en/services/...`) |
+| Projekty portfolio i podstrona `/realizacje` | `app/data/projects.ts` + `lib/i18n/projects.ts` (`workByLocale`, `WORK_ORDER`, `RealizacjeDict`, `EN_PROJECT`); kod `app/(pl)/realizacje/_rl/*` |
+| Realizacje na stronie głównej (teksty, kolejność, kadry) | `lib/i18n/home/realizacje.ts` + `components/sections/Realizacje.tsx` |
+| Artykuły bloga | `app/data/posts.ts` (lista i wpis: `components/blog/*`, `app/(pl)/blog/*`) |
+| FAQ na /o-nas (też zasila FAQPage schema) | `app/(pl)/o-nas/faq-data.ts` |
+| Sekcja Hero | `components/sections/Hero.tsx` + `lib/i18n/home/hero.ts` |
+| Opinie (bez JSON-LD od 2026-09-30) | `lib/i18n/home/testimonials.ts` + `components/sections/Testimonials.tsx` / `testimonials/*` |
+| „Dlaczego Avenly” - teksty (tytuły, opisy, kategorie zakładek, historie kroków) | `lib/i18n/home/impact.ts` |
+| „Dlaczego Avenly” - karty stosu / wizualizacje / shader / tło sekcji | `components/sections/impact/stack.tsx` / `viz.tsx` / `shader.tsx` / `backdrop.tsx` (+ nagłówek w `components/sections/Impact.tsx`) |
+| Sekcja „Proces” - teksty / wstęga / tło | `lib/i18n/home/process.ts` (także `short` = słowo etapu) / `components/sections/Process.tsx` + `process/ribbon.tsx`, `process/backdrop.tsx`, `process/silk.ts`, `process/process.css` |
+| Etykiety sekcji strony głównej („Gwiazda”) | `components/ui/SectionLabel.tsx` (style `.sl-*` w `globals.css`) |
+| Przełączniki propozycji (tylko `npm run dev`) | `components/utils/proposals.tsx` |
+| Kafel warstwic (maska) - tło „Mapa warstwic” w „Dlaczego Avenly” | `public/impact/contours.svg` (generator `scripts/impact-contours.mjs`) |
+| O nas (🔧 w pracy: wejście + cztery układy do wyboru) | `app/(pl)/o-nas/ONasClient.tsx`, `intro.tsx`, `parts.tsx`, `variants/*`, teksty `lib/i18n/o-nas.ts` (dawne karty statystyk z shaderem usunięte) |
+| Stopka (Kropka „Nad i”: tytuł, kolumny, pasek prawny) | `components/layout/Footer.tsx` + `components/layout/footer/dot.tsx` / `shared.tsx` + `footer.css`, teksty `lib/i18n/footer.ts` (dane firmy z `lib/seo-data.ts`) |
+| Sekcja „Blog” na stronie głównej (Panorama) | `components/sections/BlogTeaser.tsx` + `blog-teaser/pan.tsx`, `blog-teaser.css`, teksty `lib/i18n/home/blog-teaser.ts` (wpisy z `app/data/posts.ts`) |
 | Nawigacja | `components/layout/Navbar.tsx` |
-| CTA do AI (wielokrotnie używane) | `components/AvenlyAICta.tsx` |
-| Process Accordion (różne mapy per kategoria) | `components/ProcessAccordion.tsx` |
+| ~~CTA do AI~~ | `components/AvenlyAICta.tsx` - martwy kod (używały go stare wersje podstron usług) |
+| ~~Process Accordion~~ | `components/ProcessAccordion.tsx` - martwy kod (jw.) |
 | Cookie consent (kategorie, teksty banera) | `lib/cookie-consent.ts` + `components/cookie/CookieConsent.tsx` |
-| Polityka prywatności (treść 12 sekcji) | `app/polityka-prywatnosci/page.tsx` |
+| Polityka prywatności (treść 12 sekcji) | `app/(pl)/polityka-prywatnosci/page.tsx` |
 
 ## Chatbot AI (`components/chatbot/Chatbot.tsx`)
 
-Floating bubble (z-30, niżej niż mobile menu z-40) + okno czatu. **Lazy-loaded** przez `DeferredClientWidgets` (pojawia się ~500ms po hydration — nie blokuje LCP).
+Floating bubble (z-30, niżej niż mobile menu z-40) + okno czatu. **Lazy-loaded** przez `DeferredClientWidgets` (po `requestIdleCallback` — nie blokuje LCP). Wygląd (2026-09-24/25): klasy `.cb-*` w `globals.css`, granatowe okno i bąbel z obwódką świecącą od góry, akcent w kolorze motywu podstrony, **bez `backdrop-filter`** (pełne tło - właściciel nie chce „matowego efektu”). Do n8n wysyła `language: 'pl' | 'en'`.
 
 | Co | Jak |
 |---|---|
@@ -228,7 +266,7 @@ Floating bubble (z-30, niżej niż mobile menu z-40) + okno czatu. **Lazy-loaded
 | Historia ukończonych | `localStorage: avenly_chat_sessions` (max 15) |
 | Zapis wiadomości do bazy | Supabase `chat_messages` (anon INSERT) — **sekwencyjny**: user → then assistant (gwarantuje kolejność `created_at`) |
 | Konfiguracja z DB | Pobiera `welcome_message` + `quick_replies` z `chatbot_config` (Supabase, anon SELECT) |
-| Otwarcie z innych miejsc | Dispatch `window.dispatchEvent(new Event("avenly:open-chat"))` (używane w: AiConsultant, AvenlyAICta, Portfolio karta AI, lista projektów) |
+| Otwarcie z innych miejsc | Dispatch `window.dispatchEvent(new Event("avenly:open-chat"))` (używane w: Realizacje (panel projektu AI), AvenlyAICta, lista projektów /realizacje, /o-nas, ChatbotsAIClient, ShopClient) |
 | A11y | `aria-label` dynamiczny (Otwórz/Zamknij czat), `aria-expanded`, `aria-haspopup="dialog"` |
 
 ### Quick Replies
@@ -265,14 +303,15 @@ System zgody na cookies zgodny z RODO, gotowy do bramkowania przyszłych skrypt�
 
 ## SEO setup (kompletny — szczegóły w INSTRUKCJA-SEO.md)
 
-### Structured Data (JSON-LD) — 8 typów
-- **Organization** + **ProfessionalService** + **WebSite** — globalnie w `app/layout.tsx`
+### Structured Data (JSON-LD) — 9 typów
+- **Organization** + **ProfessionalService** + **WebSite** — globalnie w `components/layout/AppShell.tsx`
 - **BreadcrumbList** — na wszystkich podstronach (blog, realizacje, usługi)
-- **Service** — na 7 aktywnych podstronach usług
+- **Service** — na 6 aktywnych podstronach usług (PL i EN; UI/UX usunięta 2026-10-01)
 - **BlogPosting** — na każdym poście
-- **CreativeWork** — na case studies (`/realizacje/[slug]`)
+- **CreativeWork** — na case studies (`/realizacje/[slug]`, `caseStudySchema`)
+- **ItemList** (4× CreativeWork, spójne `@id`) — sekcja Realizacje na stronie głównej (`featuredWorkSchema`)
 - **FAQPage** — na `/o-nas`
-- **Review + AggregateRating** — w Testimonials (gwiazdki w SERP)
+- ~~**Review**~~ — usunięty z sekcji Opinie 2026-09-30: Search Console zgłaszał błąd krytyczny „Wiele weryfikacji bez obiektu aggregateRating” (kilka Review przy Organization bez AggregateRating), a AggregateRating nie wraca (ocena nie jest pokazywana na stronie; opinie o firmie na jej własnej stronie i tak nie dają gwiazdek). Nie przywracać.
 
 ### Metadata
 - Globalny OG + Twitter Card z fallback `/og-default.png` (1200×630, AVENLY brand)
@@ -292,26 +331,25 @@ System zgody na cookies zgodny z RODO, gotowy do bramkowania przyszłych skrypt�
 ### Performance hints
 - Preconnect dla Supabase (300ms LCP saving), DNS prefetch dla n8n + Unsplash
 
+### Wersja EN
+- hreflang `pl-PL` / `en` / `x-default` (→ PL) przez `i18nAlternates()` + canonical per język; blog i polityka bez alternates
+- Sitemap: pary PL/EN z `xhtml:link`; stare adresy `/en/<polski-slug>` → 301 w `public/_redirects`
+
 ## WebGL Shaders pipeline
 
-Strona ma **12 lokalizacji z WebGL shaderami** (inline w plikach sekcji/podstron, bez osobnych modułów — wzorzec "inline w sekcji" pasuje do tej skali projektu). Inspiracja patternów: [Paper Design Shaders library](https://github.com/paper-design/shaders) — aplikowane bezpośrednio w GLSL (zero deps).
+**Stan 2026-10-07:** aktualna lista lokalizacji i parametry są w tabeli „WebGL shaders” w CLAUDE.md. Od przebudowy podstron (etapy 2-3 pracy równoległej) doszły: linie bloga, mgławice `/uslugi` i `/realizacje`, mgławica szkieletu podstron usług (wariant `liveGlow`), głębia kart stosu na czterech podstronach stron WWW i pole światła na `/o-nas`; stare shadery podstron usług (Rays, bento, UI/UX, Plasma chatbotów) są nieaktywne. Tabela niżej opisuje stronę główną (aktualne) i zbiorczo podstrony. Shadery to kod inline w plikach sekcji albo vanilla TS sceny (bez bibliotek 3D); inspiracja patternów: [Paper Design Shaders library](https://github.com/paper-design/shaders).
 
 | Lokalizacja | Shader(y) | Typ pattern | Gate | Perf |
 |---|---|---|---|---|
-| **`components/sections/Hero.tsx`** | `AuroraBackground` | Aurora — 3-warstwowy domain-warped simplex noise | `(min-width: 1024px)` only + **requestIdleCallback defer** + **IO pause z rAF defer** + **visibility pause** + **motion.canvas fade-in 1.2s delay 0.6s** | **30fps**, **DPR 1.25**, **precision highp**, **vignette `vig*0.45+0.55`** (mniej dark) |
-| **`components/sections/Portfolio.tsx`** (CTA card) | `LiquidGlassBackground` | Liquid Glass — UV displacement + caustics + orbital specular | `!shouldReduceMotion` + IO pause | 60fps, DPR 2 |
-| **`components/sections/Portfolio.tsx`** (sticky bg) **NEW Sesja 24** | `PortfolioFlowBackground` | Aurora flow — 2-warstwowy simplex noise, blue/indigo palette, slow drift `t*0.06`, opacity-40 | `isDesktop && !shouldReduceMotion` + IO pause z rAF defer | **30fps, DPR 1.0, precision mediump** (najlżejszy shader w projekcie) |
-| **`components/sections/Impact.tsx`** (×4) | `ShaderCanvas` z 4 FS: TOPO/ORBS/VOLTAGE/SCAN | Contour lines (Paper "Mesh Gradient" family) | `!shouldReduceMotion` + IO pause | 30fps, DPR 1.25 |
-| **`app/o-nas/page.tsx`** (Hero AVENLY) | `AuroraBackground` (wariant) | Aurora — 4-warstwowy domain-warped noise, paleta navy/indigo/violet | desktop only | 60fps, DPR 2 |
-| **`app/o-nas/page.tsx`** (Stat Cards ×4) | `HoverShader` (SyncedShaderCanvas pattern) | **Layered Fluid Waves** — 3 stratified bands z mouse-driven surface bulge + cyan halo | desktop only + IO pause | 45fps, DPR 1.25, lerp 0.08 hover smooth |
-| **`app/uslugi/strony-www/one-page/OnePageClient.tsx`** | `RaysBackground` + `ShaderCanvas` ×4 | God Rays + Radial Rings + Warp + Liquid Metal | **all devices** + IO pause (od Sesji 22) | rays 60fps, bento 30fps, **mobile DPR 1.0 / desktop rays 1.5, bento 1.25** |
-| **`strona-firmowa/CorporateWebsiteClient.tsx`** | Rays + bento ×4 + **CTA shader WARP_FS** (Sesja 23) | Emerald "elegant calm" variant | all devices + IO pause | 30fps, mobile DPR 1.0 / desktop 1.5/1.25 |
-| **`sklep-internetowy/ShopClient.tsx`** | Rays + bento ×4 | Amber "energetic commercial" variant | all devices + IO pause | 30fps, mobile DPR 1.0 / desktop 1.5/1.25 |
-| **`strona-szyta-na-miare/DedicatedWebsiteClient.tsx`** | Rays + bento ×4 | Rose "dramatic premium" variant | all devices + IO pause | 30fps, mobile DPR 1.0 / desktop 1.5/1.25 |
-| **`system-crm/AppWebClient.tsx`** | Rays + bento ×4 | Sky "technical precise" variant | all devices + IO pause | 30fps, mobile DPR 1.0 / desktop 1.5/1.25 |
-| **`app/uslugi/design/ui-ux/page.tsx`** | `MeshGradientBackground` (Hero) + **`SyncedShaderCanvas` ×4** (bento) | Iridescent Flow (5-octave warp + IQ palette + lime accent) hero; synced flow bento | all devices + IO pause | hero 60fps, bento 30fps, mobile DPR 1.0 / desktop hero 1.5, bento 1.25 (DPR `let` + `computeDpr()` w resize) |
+| **`components/sections/hero/planet.ts`** (Hero 12a, Sesja 29 — zastąpił `AuroraBackground`) | planeta | Liquid-glass sfera (2× fbm 5 okt. + fresnel + bliki), canvas tylko na pas planety; do tego cząstki logotypu na GPU (`particles-gl.ts`) | **desktop only** (mobile = statyczny render WebP, element LCP) + idle defer + IO/visibility pause + async compile | ~30fps (na zmianę z niebem), DPR 1.25 |
+| **`components/sections/realizacje/nebula.ts`** (tło sekcji Realizacje, Sesja 31, przebudowa 2026-09-24) | `createNebula` | Dwa przebiegi: gaz (domain warp fbm, kolor projektu jako poświata wokół kadru) do tekstury + kompozycja z ostrymi gwiazdami w pełnej rozdzielczości; `u_reveal` = malowanie przy wejściu sekcji | każda szerokość (bez Save-Data i telefonów ≤ 2 GB RAM) + IO pause + visibility + async compile; reduced = 1 klatka | gaz ~15 fps (0,6× CSS), kompozycja ~30 fps (DPR ≤ 1,5, dotyk 1,25) |
+| ~~**`components/sections/Portfolio.tsx`** (CTA card)~~ (martwy kod od Sesji 30) | `LiquidGlassBackground` | Liquid Glass — UV displacement + caustics + orbital specular | `!shouldReduceMotion` + IO pause | 60fps, DPR 2 |
+| ~~**`components/sections/Portfolio.tsx`** (sticky bg)~~ (martwy kod od Sesji 30) | `PortfolioFlowBackground` | Aurora flow — 2-warstwowy simplex noise | `isDesktop && !shouldReduceMotion` + IO pause | 30fps, DPR 1.0 |
+| **`components/sections/impact/shader.tsx`** (×4, karty stosu) | `ShaderCanvas` z 4 FS: TOPO/ORBS/VOLTAGE/SCAN + `VIZ_GLSL` | Cienkie „rytowane” warstwice na całej karcie + wtopiona konstelacja (sceny z `impact/viz.tsx`); rozkład jasności wg układu karty (jasno przy wizualizacji, czysto pod tekstem) | `!shouldReduceMotion` + lazy warm IO + IO pause + pauza pod przykryciem w stosie | 30fps, DPR 2 (także dotyk; Save-Data / ≤ 2 GB RAM: 1,25) |
+| **Podstrony (2026-09-29 → 2026-10-06)** | linie bloga (`components/blog/BlogBackdrop.tsx`), mgławica katalogu (`uslugi/_katalog/sky.tsx` + `nebula.ts`), mgławica Realizacji (`realizacje/_rl/sky.tsx` + `nebula.ts`), mgławica szkieletu podstron usług (`uslugi/_usluga/sky.tsx`, wariant `liveGlow`), głębia kart (`depth.tsx` w one-page, stronie firmowej, sklepie i Stronie interaktywnej), Opływ (`kontakt/Backdrop.tsx`), pole światła O nas (`o-nas/intro.tsx`) | ostre linie i mgławice z gwiazdami; żadne tło nie reaguje na kursor (2026-10-05) | wszystkie urządzenia; zapasy bez WebGL (poświata CSS / czerń / papier kreślarski), pauza poza ekranem i przy ukrytej karcie | parametry: tabela w CLAUDE.md |
+| ~~stare podstrony usług i `/o-nas`~~ | `RaysBackground` + bento ×4 (`*Client.tsx`), `HeroShader` + Dots (chatboty), `MeshGradientBackground` + `SyncedShaderCanvas` (UI/UX), `AuroraBackground` + `HoverShader` (`/o-nas`) | nieaktywne: pliki `*Client.tsx` nieimportowane, UI/UX w `docs/archiwum/usluga-ui-ux/`, `/o-nas` przebudowane | - | - |
 
-### CTA shader na one-page + strona-firmowa (Sesja 23)
+### CTA shader na one-page + strona-firmowa (Sesja 23) — HISTORYCZNE (stare wersje podstron)
 Sekcja CTA "Gotowy na cyfrową Dominację?" w `OnePageClient` (MESH_GRADIENT_FS) i `CorporateWebsiteClient` (WARP_FS) dostała shader w tle z `opacity-60` + lekka radial vignette `rgba(8,8,8,0.25→0.55→0.75)` + GlassEdge. CTA card teraz `rounded-3xl` + `border-white/15` (matching bento style).
 
 ### Wspólny wzorzec (host JS)
@@ -335,18 +373,18 @@ const Background = () => {
 };
 ```
 
-### Impact bento — paleta + strategia per kafel
+### „Dlaczego Avenly” — karty stosu: paleta + rozkład terenu (2026-09-26)
 
-| Kafel | Kolor | Layout | Strategia ochrony tekstu |
+| Karta | Kolor (`--ic`) | Kategoria zakładki | Wizualizacja (historia) |
 |---|---|---|---|
-| **1. Inwestycja** | Blue `#2f5beb` | col-span-2 | Bias upper-right + text dim mask centered at `(-0.9, 0.35)` |
-| **2. Wirtualny Asystent** | Indigo `#8c8cf2` | single | Edge bias (dim center, bright edges) |
-| **3. Wydajność i SEO** | Yellow `#f2bf33` | single | **Linear opacity gradient** `smoothstep(0.0, 1.5, length(p))` (yellow ma najwyższą luminancję) |
-| **4. Stabilność** | Green `#57c773` | col-span-2 | Bias right + text dim left (lustrzane odbicie kafel 1) |
+| **1. Inwestycja, nie koszt** | Blue `59 130 246` | Sprzedaż | Ruch na stronie → Zapytanie → Nowy klient |
+| **2. Wirtualny asystent** (lustro) | Indigo `129 140 248` | Obsługa klienta | Pytania klientów → Asystent AI → Do Ciebie |
+| **3. Wydajność i SEO** | Amber `245 190 60` | Widoczność w Google | Łuk 0-100 wypełnia się do 98 |
+| **4. Stabilność i bezpieczeństwo** (lustro) | Green `87 199 115` | Ciągłość działania | Odwiedzający → Cloudflare (atak zatrzymany) → Twoja strona |
 
-Każdy ma inne `t * (0.04-0.05)` tempo, inne freq noise (1.2/1.4/1.6/1.8), inny period warstwic (2.5/2.8/3.0/3.2) — wizualna różnorodność w ramach jednej rodziny.
+Rozkład jasności terenu (`vTileF`) liczony z UKŁADU karty (położenie tekstu względem wizualizacji, nie proporcje): obok siebie = „kałuża światła” przesunięta ku górnemu rogowi po stronie wizualizacji + słabsza w rogu naprzeciw tekstu, całość do sześcianu (jak dawne a³); jedno pod drugim (telefon) = kałuża przy wizualizacji. Pod tytułem i opisem, pod dodatkiem (98/100, link) i pod napisem kroku osobne miękkie wygaszenia (elipsy z DOM). Każdy kafel ma inne tempo szumu (0,04-0,05), częstotliwość i gęstość warstwic (2,5-3,2) - różnorodność w ramach jednej rodziny.
 
-### /uslugi/strony-www/one-page/ bento — paleta + shader per kafel
+### /uslugi/strony-www/one-page/ bento — paleta + shader per kafel — HISTORYCZNE (podstrona przebudowana 2026-10-02)
 
 Tu cała paleta blue brand (jednolita), ale **inne SHADER FAMILIES** per kafel (Paper Design patterns):
 
@@ -357,11 +395,11 @@ Tu cała paleta blue brand (jednolita), ale **inne SHADER FAMILIES** per kafel (
 | **3. Idealne pod Mobile** (single, Smartphone) | Mobile | **Warp** | Ten sam shader co Card 2 (różny aspect → naturalna wariacja) |
 | **4. Kompaktowa wydajność** (col-span-2, Zap) | Energy | **Liquid Metal** | Domain-warp + `pow 5` specular peaks + chromatic 2-color blend (Paper Design pattern) |
 
-Plus identyczny `GlassEdge` co Impact ale `blur(16px) saturate(170%) brightness(110%)` (mocniej) i mask `transparent 15%` (węższy ring — blur **tylko na samych krawędziach**).
+Plus `GlassEdge` (tier Strong): `blur(16px) saturate(170%) brightness(110%)` i mask `transparent 15%` (węższy ring — blur **tylko na samych krawędziach**).
 
-### SyncedShaderCanvas — single shader rozdystrybuowany na 4 karty (UI/UX)
+### SyncedShaderCanvas — single shader rozdystrybuowany na 4 karty (UI/UX) — HISTORYCZNE (podstrona usunięta 2026-10-01)
 
-Tylko w `app/uslugi/design/ui-ux/page.tsx`. Idea: 4 karty bento = 4 "okna" do jednej wirtualnej powierzchni shadera (gapy między kartami pozostają dark page bg, ale karty pokazują skoordynowane wycinki tego samego płótna).
+Tylko w `app/(pl)/uslugi/design/ui-ux/page.tsx`. Idea: 4 karty bento = 4 "okna" do jednej wirtualnej powierzchni shadera (gapy między kartami pozostają dark page bg, ale karty pokazują skoordynowane wycinki tego samego płótna).
 
 **Mechanizm:**
 - Każda karta zawiera własny `<SyncedShaderCanvas>` z `parentRef={bentoWrapperRef}` (ref na grid container)
@@ -370,11 +408,11 @@ Tylko w `app/uslugi/design/ui-ux/page.tsx`. Idea: 4 karty bento = 4 "okna" do je
 - Layout cache — pozycje canvas vs parent są cache'owane i odświeżane tylko na ResizeObserver + passive scroll listener (nie co frame, eliminuje 240 layout reads/s)
 - Plus CSS `filter: blur(14px)` na canvas wrapper (`-inset-4`) — softens shader przed warstwą GlassEdge
 
-### GlassEdge (iOS 26 Liquid Glass na obwodzie kart) — 3 tiery
+### GlassEdge (iOS 26 Liquid Glass na obwodzie kart) — 3 tiery — HISTORYCZNE (nieużywany na żadnej aktywnej stronie)
 
 | Tier | Blur | Saturate | Brightness | Contrast | Mask transparent | Lokalizacje |
 |---|---|---|---|---|---|---|
-| **Medium** | 16px | 170% | 110% | — | 15% | Impact (homepage) |
+| ~~**Medium**~~ | 16px | 170% | 110% | — | 15% | ~~Impact (homepage)~~ — usunięte 2026-09-25 (właściciel: „bez matowego efektu”) |
 | **Strong** | 16px | 170% | 110% | — | 15% | 5 service subpages (one-page, strona-firmowa, strona-szyta-na-miare, sklep-internetowy, system-crm) |
 | **Dramatic** | **32px** | **200%** | **120%** | **110%** | **28%** (szerszy soft ring) | UI/UX bento (4×) + UI/UX hero mockup (right side) + **/o-nas Stat Cards (4×)** — Sesja 20 |
 
@@ -385,8 +423,11 @@ Tylko w `app/uslugi/design/ui-ux/page.tsx`. Idea: 4 karty bento = 4 "okna" do je
 
 ### Perf budget shaderów
 
-- **Hero shader (LCP-critical):** desktop only. Mobile = 2 statyczne radial gradienty CSS. Bez tego mobile TBT = 6800ms. **Od Sesji 19**: dodatkowo IO pause (gdy poza viewport — zero GPU work na pozostałych sekcjach), tab visibility pause (zero GPU gdy karta nieaktywna), 30fps throttle, DPR clamp 1.5 (było 2.0).
-- **Impact shadery (4×):** 30fps throttle + DPR 1.25 = ~2.5× mniej fragment invocations niż 60fps@DPR2.
+- **2026-10-05 / 06:** tempo rysowania hero, mgławic i scen liczone z czasu (nie z numeru klatki) i zależne od aktywności; planeta hero w dwóch przebiegach; tła podstron bez reakcji na kursor; mgławica szkieletu podstron usług w wariancie `liveGlow` (blask i front odsłony w kompozycji, gaz jako dwie przenikające się klatki kluczowe). Szczegóły: CLAUDE.md, tabela shaderów i „Performance patterns”.
+- **Hero shader (LCP-critical):** desktop only. Mobile = statyczny render planety WebP (element LCP na każdej szerokości) + cząstki na canvasie 2D. Bez tej zasady mobile TBT = 6800ms. IO pause, tab visibility pause, ~30fps, DPR 1.25. **Od Sesji 28**: kompilacja asynchroniczna — bez sync status checks (wymuszały 100–300ms stall w oknie intro), gotowość pollowana przez `KHR_parallel_shader_compile` w rAF. **Sesja 29**: start sceny rozbity na osobne taski ≤ ~50 ms (sampling → siatka → GPU → planeta → raster napisu).
+- **Lazy init below-the-fold (Sesja 28):** Impact ShaderCanvas ×4 (wtedy także Portfolio LiquidGlass + PortfolioFlow, dziś martwy kod) — pełny setup WebGL (getContext + compile) dopiero przy pierwszym zbliżeniu do viewportu ("warm" IO, `rootMargin: '600px 0px'`), nie na mount. Wcześniej 6 kompilacji szło równolegle z intro Hero. DeferredClientWidgets (Chatbot/Cookie/Lifecycle) montowane po `requestIdleCallback` (timeout 1500ms) z tego samego powodu.
+- **Impact shadery (4×):** 30fps throttle; DPR 2 także na dotyku od 2026-09-26 (1,25 na ekranie 3x dawało miękkie warstwice; Save-Data / ≤ 2 GB RAM: 1,25). Wizualizacja kafla liczona w tym samym przebiegu, ale tylko w obszarze sceny (`u_vb`); przykryta karta w stosie stoi (pauza); budżet uniformów ~46 z 64 vec4 WebGL1.
+- **Mgławica Realizacji:** drogi gaz co drugi render w 0,6× CSS + tania kompozycja z gwiazdami; pętla rAF staje, gdy nic się nie rusza.
 - **UI/UX SyncedShaderCanvas (4×):** ten sam pipeline (30fps, DPR 1.25, IO pause), plus **cached layout reads** — zero `getBoundingClientRect()` w draw loopie (refresh tylko na ResizeObserver/scroll).
 - **IntersectionObserver pauza:** **wszystkie** shadery (od Sesji 19 Hero też) — gdy poza viewport, `cancelAnimationFrame`, zero GPU work.
 - **`useReducedMotion`:** respektowany na shaderach Impact + Portfolio CTA + UI/UX bento.
@@ -439,13 +480,14 @@ Pełny style guide: [docs/blog-style-guide.md](./docs/blog-style-guide.md).
 
 ## Performance setup (wdrożone)
 
-### .htaccess (Apache na Hostingerze)
+### Cloudflare Pages (`public/_headers` + `public/_redirects`, od 2026-09-19)
 - **Cache 1 rok immutable** dla `_next/static/*` (hash w nazwie = safe)
-- **Cache 30 dni** dla obrazów
-- **Cache 1h** dla HTML
-- Kompresja Brotli + Gzip dla text/css/js
+- **Cache 30 dni** dla `/portfolio/*` i renderu planety hero (`/hero-planet-*`) - podmiana obrazu = nowa nazwa pliku
+- **HTML bez cache** (`max-age=0, must-revalidate` + ETag) - świeża treść od razu po deployu, bez purge
 - **Nagłówki bezpieczeństwa**: HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
-- **Force HTTPS** redirect
+- `X-Robots-Tag: noindex` na adresach `*.pages.dev` (produkcyjny i preview)
+- 301 ze starych adresów w `_redirects`; HTTPS, Brotli, trailing slash i `/404.html` robi Pages sam
+- `.htaccess` usunięty (na Pages byłby publicznie pobieralnym plikiem) - nie przywracać
 
 ### Code splitting
 - Sekcje Home → `next/dynamic` (Hero sync, reszta lazy)
@@ -453,10 +495,11 @@ Pełny style guide: [docs/blog-style-guide.md](./docs/blog-style-guide.md).
 - Chatbot + LifecycleManager → `dynamic` z `ssr: false` przez `DeferredClientWidgets`
 
 ### GPU optimization
-- `will-change: filter, opacity, transform` na Portfolio FocusCard (caching blur w teksturze)
 - `translateZ(0)` na sticky kontenerach + scroll containers
-- `backface-visibility: hidden` na /o-nas zoom hero + conic-gradient blobs
-- `scaleY` zamiast `height` w Impact bar chart (zero layout passes)
+- Sceny przewijane podstron (2026-10): `position: sticky` + własny postęp przewijania w zmiennych CSS (`usePin` / `useFrame`), zmienna pisana co klatkę na najbliższym elemencie, który ją czyta, `will-change` tylko na czas ruchu (dawny zoom hero na /o-nas z GSAP usunięty)
+- Proces (Wstęga): WebGL na płótnie o wysokości toru (natywny scroll = wstęga nie rozjeżdża się z tekstem), pasek trójkątów z CPU ~30 fps, AA z `fwidth`, DPR z budżetu pikseli i limitu GPU, IO pauza; zapas canvas 2D (pas przy oknie, strażnik jakości). Tło: WebGL na płótnie sticky (rozmiar okna) z MSAA, rysowane w każdej klatce przewijania (paralaksa) i ~30 fps w spoczynku, wygaszenie pod tekstem w shaderze
+- Realizacje: style pisane tylko przy zmianie wartości, wskaźnik indeksu `translateX + scaleX`, cień kadru jako osobna warstwa z animowaną opacity (bez repaintu `box-shadow`)
+- Impact: napisy historii i pasek kroków przez WAAPI (opacity / transform), pauza poza ekranem; stos kart = jedna pętla rAF przy scrollu (`transform: scale` + `--sh`), wysokości kart mierzone tylko przy zmianie rozmiaru (`ResizeObserver`); odcień kształtów tła = zmienna `--im-tint` z przejściem w CSS (`@property`)
 
 ### Bundle slim
 - Inter font: pominięty italic (`style: ['normal']`) — **-66 KiB** woff2
@@ -464,16 +507,16 @@ Pełny style guide: [docs/blog-style-guide.md](./docs/blog-style-guide.md).
 - 953 paczki usunięte z node_modules (unused 3D/Sanity deps)
 
 ### Marquee optimization
-- TechStack: 4× → 3× duplikacja (oszczędność DOM nodes z hover handlerami)
+- TechStack (2026-09-24): 4 identyczne kopie + przesunięcie o -50% toru = pętla bez szwu (dawne 3 kopie przeskakiwały co cykl); czytnik ekranu czyta 1 kopię, reszta `aria-hidden`; stała wysokość = bez CLS
 
 ## Heading hierarchy (zweryfikowane)
 
 ```
-h1: AVENLY TWOJA FIRMA WYŻSZY POZIOM        (Hero)
-├─ h2: sekcje Home (Services, Process, Impact, Testimonials, AiConsultant, BlogTeaser, CallToAction)
-│  └─ h3: subsections + cards (4 steps Process, 4 cards Impact itp.)
-│     └─ h4: nested cards w sekcjach z h3 (Services accordion, *Client cards)
-└─ Footer: h3 Menu, h3 Legal
+h1: Twój biznes ma potencjał. Zamień go w klientów.   (Hero 12a, Sesja 29)
+├─ h2: sekcje Home (Realizacje, Impact, Process, Testimonials, Services, BlogTeaser)
+│  └─ h3: subsections + cards (nazwy realizacji w panelach, 4 steps Process, 4 kafle Impact, nazwy usług pod deską Oferty itp.)
+│     └─ h4: nested cards w sekcjach z h3 (*Client cards)
+└─ Footer (od 2026-09-28): h2 „Postaw kropkę nad i” + h2 nagłówki kolumn (Usługi, Na skróty, Kontakt)
 ```
 
 Naprawione w iteracji a11y (2026-05-23):
@@ -484,6 +527,8 @@ Naprawione w iteracji a11y (2026-05-23):
 - Kontakt InfoCard label: `<h4>` → `<p>` (etykieta pola, nie nagłówek)
 
 ## Scope cards layout pattern (5 strony-www subpages — Sesja 23)
+
+> HISTORYCZNE: wzorzec starych wersji podstron usług (`*Client.tsx`, dziś nieimportowane). Nowe podstrony mają zakres z terminem i pokazem w przyklejonym kadrze (CLAUDE.md „Podstrony usług - szkielet i one-page”).
 
 Wszystkie 5 podstron strony-www (`one-page`, `strona-firmowa`, `strona-szyta-na-miare`, `sklep-internetowy`, `system-crm`) używają identycznego wzorca dla sekcji "Zakres prac":
 
@@ -533,11 +578,13 @@ Wszystkie 5 podstron strony-www (`one-page`, `strona-firmowa`, `strona-szyta-na-
 
 ## Wireframe→Blueprint reveal pattern (3 makiety — strona-firmowa, one-page, szyta-na-miare)
 
+> HISTORYCZNE: makiety starych wersji podstron usług (`*Client.tsx`, dziś nieimportowane), w tym panel admina i fazy logowania, których już nie pokazujemy. Nowe podstrony: szkic z pomiaru gotowej treści (`_usluga/sketch.tsx`), odsłony opisane w notatkach podstron.
+
 Trzy podstrony usług używają tego samego wzorca makiety przeglądarki ze scroll-driven reveal'em wireframe → kolorowy blueprint:
 
-- `app/uslugi/strony-www/one-page/OnePageClient.tsx` (lane A/B/C narracja)
-- `app/uslugi/strony-www/strona-firmowa/CorporateWebsiteClient.tsx` (4 fazy)
-- `app/uslugi/strony-www/strona-szyta-na-miare/DedicatedWebsiteClient.tsx` (4 fazy z reveal na każdej — Sesja 25)
+- `app/(pl)/uslugi/strony-www/one-page/OnePageClient.tsx` (lane A/B/C narracja)
+- `app/(pl)/uslugi/strony-www/strona-firmowa/CorporateWebsiteClient.tsx` (4 fazy)
+- `app/(pl)/uslugi/strony-www/strona-szyta-na-miare/DedicatedWebsiteClient.tsx` (4 fazy z reveal na każdej — Sesja 25)
 
 **Kluczowa zasada 1:1 alignment (zweryfikowana przez wiele iteracji w Sesji 25):**
 
@@ -587,6 +634,8 @@ Wireframe i blueprint **MUSZĄ mieć identyczną strukturę JSX** w obu warstwac
 
 ## WebGL dev-mode resilience pattern (Sesja 25)
 
+> Stan 2026-10-07: zasada nadal ważna; nowe sceny rozwiązują ją prościej (płótno tworzone w efekcie przy każdym montażu + `loseContext()` w sprzątaniu). Przykład niżej pochodzi ze starych `*Client.tsx`.
+
 Każdy długo-żyjący shader na stronie usług (Rays + 4× bento ShaderCanvas) musi handlować React 19 Strict Mode + Chrome ~16 WebGL context limit. Bez tego po 3-5 nawigacji: white flash + `console.error("Rays compile: null")` + brak shadera.
 
 **Pattern (4 mechanizmy):**
@@ -632,11 +681,14 @@ return <canvas key={canvasKey} ref={canvasRef} ... />;
 ## Deploy flow
 
 ```
-1. npm run build                              (~30s)
-2. Upload `out/` na Hostinger (FTP / panel)   (~1-3 min)
-   ⚠️ Włącz "Pokaż ukryte pliki" — .htaccess musi się wgrać
-3. Cloudflare → Caching → Purge Everything    (~30s propagacja)
-4. (Opcjonalnie) PageSpeed Insights → wklej URL → Wait Lighthouse
+1. npm run deploy        (~40 s) = npm run build (next build + flatten-rsc.mjs + copy-404.mjs)
+                                   + npx wrangler@4 pages deploy out --project-name=avenly-web --branch=main
+   Logowanie Avenly (kontakt@avenly.pl) leży w osobnym profilu - wdrażaj z XDG_CONFIG_HOME=C:/Users/Start/.wrangler-avenly
+   (CLAUDE.md „Deploy flow”); samo `npm run deploy` użyje globalnego logowania RKS. Test: npm run deploy:preview
+   Ostatnie wdrożenie: 2026-10-06 a6a206db (lista: progress.md „Stan wdrożenia”)
+2. Purge cache NIE jest potrzebny (HTML max-age=0; chunki z hashem)
+3. (Opcjonalnie) PageSpeed Insights
+Rollback: dashboard Cloudflare → Workers & Pages → avenly-web → Deployments → „Rollback to this deployment”
 ```
 
 ## Znane ograniczenia / pułapki
@@ -648,31 +700,34 @@ return <canvas key={canvasKey} ref={canvasRef} ... />;
 - **Reset scrolla przy zmianie pathname** wymaga `setTimeout(300)` w `AnchorManager` żeby nie kolidować z `?target=`.
 - **Tailwind v4** — `tailwind.config.ts` to legacy v3 config; większość pól ignorowana. Realna konfiguracja w `app/globals.css` (`@theme inline`).
 - **`dynamic` z `ssr: false` w server component** zablokowane w Next 15+. Używaj client wrapperów (`DeferredClientWidgets`).
-- **Next.js 16 RSC payload bug (KRYTYCZNE — Sesja 20)**: dla nested routes generowane są pliki RSC payload z **slashami** w nazwie (`__next.uslugi/strony-www/one-page.txt`) — Apache interpretuje to jako foldery. Browser jednak fetchuje URL z **kropkami** (flat name) → 404 → client-side router silent fail → wszystkie `<Link>` na produkcji nie działają na lewy klik (middle click bypassa router więc działa). **Fix**: `scripts/flatten-rsc.mjs` jako post-build script kopiuje nested pliki na flat names. Zintegrowane z `npm run build`. **BEZ TEGO ŻADEN LINK NIE ZADZIAŁA NA PRODUKCJI.**
+- **Dwa root layouty (Sesja 28)**: przejście PL ↔ EN = pełne przeładowanie (toggle to zwykły `<a>`); globalne 404 trzeba podmieniać skryptem `scripts/copy-404.mjs` (Next nie używa `not-found.tsx` z grupy).
+- **Next.js 16 RSC payload bug (KRYTYCZNE — Sesja 20)**: dla nested routes generowane są pliki RSC payload z **slashami** w nazwie (`__next.uslugi/strony-www/one-page.txt`) — serwer (dawniej Apache, dziś Cloudflare Pages) traktuje to jako foldery. Browser jednak fetchuje URL z **kropkami** (flat name) → 404 → client-side router silent fail → wszystkie `<Link>` na produkcji nie działają na lewy klik (middle click bypassa router więc działa). **Fix**: `scripts/flatten-rsc.mjs` jako post-build script kopiuje nested pliki na flat names. Zintegrowane z `npm run build`. **BEZ TEGO ŻADEN LINK NIE ZADZIAŁA NA PRODUKCJI.**
 - **Safari mobile quirks (Sesja 21)**: 6 osobnych pułapek znalezionych w pełnym audicie projektu:
   - `100vh` zawiera URL bar Safari → sticky `h-screen` overflow'uje. Fix: `h-dvh` w 7 plikach (Portfolio + 6 podstron usług). NIE zmieniaj `h-[300vh]` (scroll distance pinów) — dvh dynamic powoduje pin jumps.
   - `overflow-x-auto + w-max + mx-auto` blokuje touch scroll w lewo na Safari mobile. Fix pattern: `flex justify-center + min-w-max + px-6 wrapper`. Zastosowane w Realizacje + ServicesHub filter.
-  - `overflow-x-clip` wymaga Safari 16+ (browserslist Safari 15+ → ignoruje, fallback to visible). Fix: `overflow-x-hidden` w 5 plikach client komponentów usług.
+  - `overflow-x-clip` wymaga Safari 16+ (browserslist Safari 15+ → ignoruje, fallback to visible). Sesja 21 zamieniła na `overflow-x-hidden`, ale to łamało sticky piny (scroll container) → **Sesja 22 cofnęła do `overflow-x-clip`** (drobny poziomy scroll na Safari 15 jest akceptowalny).
   - `flex-1` na dziecku `flex-col` nie daje pełnej szerokości (grow na main axis, nie cross). Fix dla responsive cards: `w-full md:flex-1` (Impact Stabilność karta).
   - Inline `backdropFilter` bez `WebkitBackdropFilter` → iOS WebView / Safari 14- ignoruje. Fix: para zawsze. Tailwind utility `backdrop-blur-*` auto-prefix'uje (te są OK).
   - Brak `viewportFit: 'cover'` → czarne marginesy notch. `<main min-h-screen>` → footer chowa się pod URL barem. Fix: `viewportFit: 'cover'` w viewport config + `min-h-dvh` na `<main>`.
 
 ### Bugi w danych (do naprawy w przyszłości)
-- `app/data/services.ts` design card: `href: '/uslugi/design/design-stron-internetowych'` → **nie istnieje**. Sitemap omija (hardcoded `SERVICE_PAGES`), ale Services.tsx (taby Home) prowadzi w 404.
-- `app/data/services.ts` marketing card: `href: '/uslugi/marketing/audyt-seo-wydajnosci'` → **niezgodny slug**, folder to `audyt-wydajnosci-seo`.
-- `app/uslugi/marketing/page.tsx` i `app/uslugi/marketing/audyt-wydajnosci-seo/page.tsx` zwracają `return null` → pusta strona.
-- `app/data/posts.ts` post #2 blockquote linkuje `/audyt` → strona nie istnieje (powinno być `/kontakt`).
+- ~~`app/data/services.ts` design / marketing hrefs~~ — nieaktualne: kategoria `design` usunięta 2026-10-01; kategorie `ai` / `marketing` mapowane w `Services.tsx` przez `CATEGORY_HREF`.
+- `app/(pl)/uslugi/marketing/page.tsx` i `.../audyt-wydajnosci-seo/page.tsx` zwracają `return null` (placeholdery z metadata `noindex`) → do wypełnienia albo usunięcia.
+- ~~`app/data/posts.ts` post #2 blockquote linkuje `/audyt`~~ — naprawione (link do `/kontakt`).
+- `components/sections/Portfolio.tsx` + `lib/i18n/home/portfolio.ts` — martwy kod od Sesji 30 (do usunięcia).
+- **Propozycje czekające na wybór właściciela (stan 2026-10-07):** O nas (wejście + układ), strona firmowa (wersja kart), Strona interaktywna (krajobraz, Technologia, Detal, Zakres), sklep (tekst hero, scena zakupu), chatboty (Wiedza) - tabela w PRACA-ROWNOLEGLA.md „Stan”. Strona główna i podstrony etapu 2 nie mają otwartych propozycji.
+- Stare wersje podstron usług (`*Client.tsx` + stare słowniki), nieimportowane pliki chatbotów, `app/(pl)/o-nas/parts.tsx.tmp.*`, martwy kod po UI/UX, `ServiceTemplate` / `AvenlyAICta` / `ProcessAccordion` — do usunięcia przy porządkach (lista: PRACA-ROWNOLEGLA.md „Chat 0”).
 
 ### Chatbot
-- Wszystkie callsy client-side przez `NEXT_PUBLIC_*` zmienne — baked-in at build time → zmiana endpointu lub secretu wymaga rebuildu i ponownego uploadu `out/` na Hostinger.
+- Wszystkie callsy client-side przez `NEXT_PUBLIC_*` zmienne — baked-in at build time → zmiana endpointu lub secretu wymaga rebuildu i `npm run deploy`.
 - `sendMessage` przyjmuje opcjonalny `overrideText?: string` — używany przez quick reply buttons; onClick na przycisku send to `() => sendMessage()`, NIE `sendMessage` (inaczej `MouseEvent` przekazany jako string).
 - Wymaga w Supabase tabeli `chat_messages` z RLS policy `anon INSERT` oraz `chatbot_config` z `anon SELECT`.
 
 ### Deploy
-- **`.htaccess` często ukryty w FTP** — włącz "Pokaż ukryte pliki" przed uploadem.
-- **Cloudflare cache** serwuje stare wersje po deploy — zrób Purge Everything (lub Development Mode na 30 min do testów).
+- **Wrangler musi być zalogowany na konto Avenly** (kontakt@avenly.pl) - inne konto Cloudflare (np. klubu RKS przy `rksweb`) daje błąd autoryzacji projektu `avenly-web`. Od 2026-09-30 logowanie Avenly leży w osobnym katalogu `C:\Users\Start\.wrangler-avenly` (globalne zostaje dla RKS) - wdrażać z `XDG_CONFIG_HOME=C:/Users/Start/.wrangler-avenly` (polecenia w CLAUDE.md „Deploy flow”).
+- **Purge nie jest potrzebny**, poza podmianą obrazu w `public/portfolio/` pod tą samą nazwą (cache 30 dni) - zmień nazwę pliku albo zrób purge.
+- Poczta `@avenly.pl` zostaje na Hostingerze (MX/SPF/DKIM w DNS Cloudflare) - przy zmianach DNS nie ruszać tych rekordów.
 
 ### Inne
 - Footer ma `href: '#uslugi'` — sekcja `Services` ma jednocześnie `id="oferta"` (wrapper z page.tsx) i `id="uslugi"` (sama `<section>`). Dwa id na ten sam obszar — kompatybilność wsteczna, ale do uporządkowania.
-- `OnePageClient.tsx` Counter animuje 0 → 3 obok napisu "3–5 dni" — wizualnie sugeruje że licznik dochodzi do 5; lepiej zmienić target lub usunąć counter.
 - Wszystkie 3 posty bloga datowane styczeń 2026 — wygląda jak content seed; warto rozłożyć daty lub dodać świeżą treść.

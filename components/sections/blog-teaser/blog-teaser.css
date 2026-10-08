@@ -1,0 +1,210 @@
+/* Sekcja "Blog" na stronie głównej (components/sections/BlogTeaser.tsx + blog-teaser/*). Chat 4, praca
+   równoległa (PRACA-ROWNOLEGLA.md): style sekcji tylko w tym pliku, wszystkie klasy z prefiksem bt-.
+   Karty wpisów w języku całej strony: głęboka neutralna czerń z ostrym refleksem krawędzi u góry
+   (jak karty "Dlaczego Avenly"), zdjęcie w ramce z włosową obwódką, jeden akcent (kolor marki --brand), bez blur /
+   mgiełek / cieni za tekstem, bez efektów najechania na karcie (reaguje tylko strzałka "Czytaj wpis").
+   Stany startowe animacji wyłącznie pod [data-live] (JS działa) i przy prefers-reduced-motion:
+   no-preference - bez JS i przy ograniczonym ruchu treść stoi od razu. */
+
+.bt {
+  --bt-ease: cubic-bezier(.16, 1, .3, 1);
+  --bt-acc: var(--hl); /* akcent nagłówków (globals.css, propozycje akcentu 2026-09-28) */
+  position: relative; width: 100%; padding: 104px 0 120px; background: #050505; color: #f8fafc; overflow-x: clip;
+}
+@media (min-width: 768px) { .bt { padding: 136px 0 152px; } }
+
+/* ── Nagłówek ── */
+.bt-head { display: grid; gap: 20px; margin-bottom: 52px; }
+.bt-head .im-title { margin-bottom: 20px; }
+.bt-head .im-lead { margin: 0; max-width: 40rem; text-wrap: pretty; }
+@media (min-width: 1024px) {
+  .bt-head { grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 48px; margin-bottom: 64px; }
+}
+
+.bt-all {
+  justify-self: start; display: inline-flex; align-items: center; gap: 10px; padding: 11px 0;
+  color: #e2e8f0; font-size: 15px; font-weight: 500; line-height: 22px; text-decoration: none;
+  -webkit-tap-highlight-color: transparent; transition: color .4s, opacity .2s;
+}
+.bt-all-text { text-decoration: underline 1px rgba(255, 255, 255, .26); text-underline-offset: 6px; transition: text-decoration-color .4s; }
+.bt-arrow { display: inline-block; width: 16px; height: 16px; flex: none; color: var(--bt-acc); transition: transform .5s var(--bt-ease); }
+.bt-all:active { opacity: .7; }
+.bt-all:focus-visible { outline: 2px solid #60a5fa; outline-offset: 4px; border-radius: 6px; }
+
+/* ── Karta ── */
+.bt-card {
+  position: relative; display: flex; flex-direction: column; height: 100%; padding: 8px; border-radius: 24px;
+  background: linear-gradient(180deg, #0b0b0d 0%, #060607 46%, #030304 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), inset 0 0 0 1px rgba(255, 255, 255, .07);
+}
+/* Zdjęcie w ramce: promień dopasowany do karty (24 - 8), włosowa obwódka i refleks u góry. */
+.bt-media { position: relative; flex: none; overflow: hidden; border-radius: 16px; aspect-ratio: 16 / 10; background: #0c0c0f; }
+.bt-media::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08), inset 0 1px 0 rgba(255, 255, 255, .14);
+}
+.bt-img { object-fit: cover; filter: saturate(.9) brightness(.94); }
+
+.bt-body { display: flex; flex-direction: column; flex: 1; min-width: 0; gap: 12px; padding: 20px 16px 14px; }
+.bt-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin: 0; font-size: 13.5px; line-height: 1.4; color: #94a3b8; }
+.bt-meta-dot { width: 3px; height: 3px; border-radius: 50%; background: rgba(148, 163, 184, .6); }
+.bt-title { margin: 0; font-size: 20px; line-height: 1.3; font-weight: 600; letter-spacing: -.012em; color: #f8fafc; text-wrap: balance; }
+.bt-ex {
+  margin: 0; font-size: 15px; line-height: 1.6; color: #94a3b8;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.bt-foot {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: auto 0 0; padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, .07); font-size: 14.5px; font-weight: 500; line-height: 1.4;
+}
+.bt-read { display: inline-flex; align-items: center; gap: 8px; color: #e2e8f0; transition: color .4s; }
+.bt-mins { font-size: 13.5px; font-weight: 400; color: #94a3b8; }
+
+/* Link w tytule rozciągnięty na całą kartę. */
+.bt-link { color: inherit; text-decoration: none; outline: none; -webkit-tap-highlight-color: transparent; }
+.bt-link::after { content: ''; position: absolute; inset: 0; z-index: 2; border-radius: inherit; }
+.bt-card:has(.bt-link:focus-visible) { outline: 2px solid #60a5fa; outline-offset: 4px; }
+.bt-card:active { opacity: .85; }
+
+@media (hover: hover) {
+  .bt-all:hover { color: #fff; }
+  .bt-all:hover .bt-all-text { text-decoration-color: #f8fafc; }
+  .bt-all:hover .bt-arrow, .bt-card:hover .bt-arrow { transform: translateX(3px); }
+  .bt-card:hover .bt-read { color: #fff; }
+}
+
+/* ── Układ KARTY (wybór właściciela 2026-09-28): trzy równe karty w rzędzie ── */
+.bt-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
+.bt-grid > li { min-width: 0; }
+@media (min-width: 1024px) { .bt-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; } }
+/* < 1024: poziomy pasek kart z przyciąganiem (następna karta wystaje zza krawędzi). Pasek sięga krawędzi
+   EKRANU (nie kontenera - na tablecie kontener jest węższy i karta ucinała się przed brzegiem), a pierwsza
+   karta zaczyna się równo z nagłówkiem (padding = odległość treści kontenera od krawędzi ekranu).
+   Wartości zamiast procentów: procent w scroll-padding liczy się od szerokości samego paska, więc
+   przyciąganie stawiało kartę przy krawędzi. Kontener Tailwinda: 100% / od 640 px max 640 / od 768 px
+   max 768, zawsze z paddingiem 24 px (px-6). */
+@media (max-width: 1023.98px) {
+  .bt-grid {
+    --bt-bleed: 24px;
+    grid-auto-flow: column; grid-auto-columns: min(80vw, 400px); overflow-x: auto; overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory; scroll-padding-inline: var(--bt-bleed); scrollbar-width: none;
+    margin: 0 calc(var(--bt-bleed) * -1); padding: 0 var(--bt-bleed) 4px;
+  }
+  .bt-grid::-webkit-scrollbar { display: none; }
+  @media (min-width: 640px) { .bt-grid { --bt-bleed: calc((100vw - 640px) / 2 + 24px); } }
+  @media (min-width: 768px) { .bt-grid { --bt-bleed: calc((100vw - 768px) / 2 + 24px); } }
+  .bt-grid > li { scroll-snap-align: start; }
+}
+
+/* ── Układ PANORAMA na stronie głównej (wybór właściciela 2026-09-29, pan.tsx) ──
+   Przewijanie = jazda kamery w bok wzdłuż okładek (scena sticky na pełną szerokość ekranu, --t 0-1 z pan.tsx).
+   Nagłówek sekcji w scenie; wszystko przy krawędziach wrappera: nagłówek jak w innych sekcjach ("Wszystkie
+   wpisy" przy prawej krawędzi), okładka w kadrze, tytuł wpisu i licznik przy lewej (--x0 = lewa krawędź treści
+   kontenera w scenie). --w (szerokość okładki) i --x0 mierzy pan.tsx - cała scena mieści się w oknie; wartości
+   w CSS to przybliżenie na czas przed JS. Karty KARTY (wyżej) zostają dla /blog i ograniczonego ruchu. */
+.bw { position: relative; height: calc(var(--n) * 70vh + 90vh); }
+.bw-stick {
+  --g: 3vw;
+  --x0: max(24px, (100vw - 1280px) / 2 + 24px);
+  --w: min(100vw - 2 * var(--x0), (100vh - 480px) * 16 / 7);
+  position: sticky; top: 0; display: flex; flex-direction: column; justify-content: center;
+  height: 100vh; height: 100svh; padding-block: 32px; overflow: hidden; margin-inline: calc(50% - 50vw);
+}
+/* Telefon / tablet: scena kończy się nad przyciskiem czatu (24 + 56 px od dołu). */
+@media (max-width: 1023px) {
+  .bw-stick { --g: 4vw; --w: min((100vw - 2 * var(--x0)) * .9, (100vh - 520px) * 4 / 3); padding-block: 20px 60px; }
+}
+@media (min-width: 1024px) and (max-height: 820px) { .bw-stick { padding-block: 24px; } }
+.bw-wrap { flex: none; }
+
+/* Nagłówek: standardowy .bt-head (tekst + "Wszystkie wpisy" przy prawej krawędzi), mniejszy odstęp pod spodem.
+   Telefon / tablet: "Wszystkie wpisy" w wierszu etykiety "Blog" po prawej (oszczędza wysokość sceny). */
+.bw-head { margin-bottom: 40px; }
+@media (max-width: 1023px) {
+  .bw-head { position: relative; margin-bottom: 24px; }
+  .bw-head > .bt-all { position: absolute; top: -13px; right: 0; }
+}
+/* Niskie ekrany (laptop 1366 × 768, mały telefon): bez podtytułu w scenie, inaczej okładka byłaby miniaturą -
+   jak podpowiedź w Realizacjach poniżej 820 px wysokości. */
+@media (max-width: 1023px) and (max-height: 740px), (min-width: 1024px) and (max-height: 820px) {
+  .bw-head .im-lead { display: none; }
+  .bw-head .im-title { margin-bottom: 0; }
+}
+@media (min-width: 1024px) and (max-height: 820px) { .bw-head { margin-bottom: 32px; } }
+
+.bw-strip {
+  display: flex; flex: none; gap: var(--g); width: max-content; margin: 0; padding: 0; list-style: none;
+  transform: translate3d(calc(var(--x0) - var(--t, 0) * (var(--n) - 1) * (var(--w) + var(--g))), 0, 0);
+  will-change: transform;
+}
+.bw-item {
+  --rel: calc(var(--t, 0) * (var(--n) - 1) - var(--i));
+  --abs: max(var(--rel), calc(var(--rel) * -1));
+  flex: 0 0 var(--w); min-width: 0;
+}
+.bw-card { position: relative; }
+.bw-frame {
+  position: relative; aspect-ratio: 16 / 7; border-radius: 28px;
+  background: linear-gradient(180deg, #0b0b0d 0%, #060607 46%, #030304 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), inset 0 0 0 1px rgba(255, 255, 255, .07);
+}
+@media (max-width: 1023px) { .bw-frame { aspect-ratio: 4 / 3; border-radius: 24px; } }
+@media (max-width: 1023px) and (max-height: 740px) { .bw-frame { aspect-ratio: 16 / 10; } } /* niski telefon: okładka na pełną szerokość */
+.bw-par { position: absolute; inset: 8px; overflow: hidden; border-radius: 20px; background: #0c0c0f; }
+/* Zdjęcie przesuwa się wolniej niż ramka (głębia); okładki poza kadrem przygasają. */
+.bw-par .bt-img { transform: translate3d(calc(var(--rel) * 9%), 0, 0) scale(1.22); will-change: transform; }
+.bw-shade { position: absolute; inset: 8px; border-radius: 20px; background: #050505; opacity: min(.74, calc(var(--abs) * .8)); pointer-events: none; }
+@media (max-width: 1023px) { .bw-par, .bw-shade { border-radius: 16px; } }
+
+/* Tytuł wpisu pod okładką (teksty okładek poza kadrem znikają); komputer: "6 min czytania · Czytaj wpis →"
+   w prawej kolumnie, równo z prawą krawędzią okładki. Link tytułu rozciągnięty na całą kartę. */
+.bw-copy { display: grid; gap: 10px; padding-top: 20px; opacity: max(0, calc(1 - var(--abs) * 1.5)); }
+.bw-title { margin: 0; font-size: clamp(21px, 2.2vw, 30px); line-height: 1.2; font-weight: 600; letter-spacing: -.02em; color: #f8fafc; text-wrap: balance; }
+.bw-copy .bt-foot { margin: 0; padding-top: 4px; border-top: 0; }
+@media (min-width: 1024px) {
+  .bw-copy { grid-template-columns: minmax(0, 1fr) auto; column-gap: 48px; }
+  .bw-copy .bt-meta, .bw-title { grid-column: 1; }
+  .bw-title { max-width: 46rem; }
+  .bw-copy .bt-foot { grid-column: 2; grid-row: 1 / span 2; align-self: end; flex-direction: row-reverse; gap: 24px; padding: 0 0 6px; }
+}
+.bw-item:not([data-on]) .bt-link { pointer-events: none; }
+.bw-card:has(.bt-link:focus-visible) .bw-frame { outline: 2px solid #60a5fa; outline-offset: 4px; }
+@media (hover: hover) {
+  .bw-card:hover .bt-arrow { transform: translateX(3px); }
+  .bw-card:hover .bt-read { color: #fff; }
+}
+
+/* Licznik i linia postępu przejazdu pod okładką. */
+.bw-nav { display: flex; align-items: center; gap: 16px; width: var(--w); margin-top: 20px; }
+@media (max-width: 1023px) { .bw-nav { margin-top: 12px; } }
+.bw-count { font-size: 15px; color: #94a3b8; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bw-count b { font-weight: 600; color: #f8fafc; }
+.bw-track { position: relative; flex: 1; max-width: 320px; height: 1px; background: rgba(255, 255, 255, .12); }
+@media (max-width: 1023px) { .bw-track { max-width: 160px; } } /* prawy dolny róg zajmuje przycisk czatu */
+.bw-track > i { position: absolute; inset: 0; background: var(--brand); transform: scaleX(var(--t, 0)); transform-origin: 0 50%; }
+
+/* Scena ma własny oddech (padding i wyśrodkowanie w oknie) - mniejszy odstęp sekcji u góry, żeby przerwa po
+   Ofercie była taka jak między innymi sekcjami. */
+.bt:has(.bw) { padding-top: 80px; }
+@media (min-width: 768px) { .bt:has(.bw) { padding-top: 72px; } }
+
+/* ── Wejście (tylko z JS i bez ograniczonego ruchu) ── */
+@media (prefers-reduced-motion: no-preference) {
+  .bt[data-live] .bt-rv { opacity: 0; transform: translateY(18px); transition: opacity .9s var(--bt-ease), transform 1.1s var(--bt-ease); transition-delay: calc(var(--d, 0) * 90ms); }
+  .bt[data-in] .bt-rv { opacity: 1; transform: none; }
+
+  .bt-rvs[data-live] > li {
+    opacity: 0; transform: translateY(32px);
+    transition: opacity .9s var(--bt-ease), transform 1.2s var(--bt-ease); transition-delay: calc(var(--k, 0) * 120ms + 80ms);
+  }
+  .bt-rvs[data-in] > li { opacity: 1; transform: none; }
+  /* Zdjęcie dojeżdża z lekkiego zbliżenia razem z kartą. */
+  .bt-rvs[data-live] .bt-img { transform: scale(1.08); transition: transform 1.8s var(--bt-ease) calc(var(--k, 0) * 120ms + 80ms); }
+  .bt-rvs[data-in] .bt-img { transform: none; }
+
+  /* Panorama: okładki wjeżdżają kaskadą z prawej (w kierunku jazdy kamery), licznik po nich. */
+  .bt[data-live] .bw-item { opacity: 0; transform: translate3d(72px, 0, 0); transition: opacity 1s var(--bt-ease), transform 1.4s var(--bt-ease); transition-delay: calc(var(--i, 0) * 120ms + 280ms); }
+  .bt[data-in] .bw-item { opacity: 1; transform: none; }
+  .bt[data-live] .bw-nav { opacity: 0; transition: opacity 1s var(--bt-ease) .7s; }
+  .bt[data-in] .bw-nav { opacity: 1; }
+}

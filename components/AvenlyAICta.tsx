@@ -3,6 +3,8 @@
 import { Bot, Sparkles } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { getServiceTheme } from '@/lib/service-theme';
+import { localeFromPathname } from '@/lib/i18n/locale';
+import { avenlyAiCtaDict } from '@/lib/i18n/avenly-ai-cta';
 
 export const AvenlyAICta = () => {
   const openVoiceflow = () => {
@@ -11,6 +13,8 @@ export const AvenlyAICta = () => {
 
   const pathname = usePathname();
   const theme = getServiceTheme(pathname);
+  const locale = localeFromPathname(pathname);
+  const t = avenlyAiCtaDict[locale];
 
   return (
     <div className="relative rounded-[2rem] md:rounded-[2.5rem] overflow-hidden border border-white/10 bg-[#080808]">
@@ -37,11 +41,11 @@ export const AvenlyAICta = () => {
                 </div>
                 <div>
                     <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 flex items-center gap-2">
-                        Masz pytania?
+                        {t.heading}
                         <Sparkles size={18} className={theme.text400} />
                     </h2>
                     <p className="text-slate-400 text-base md:text-lg leading-relaxed max-w-lg">
-                        Nie musisz czekać na maila. Nasz asystent <span className={`${theme.text300} font-medium`}>Avenly AI</span> zna szczegóły techniczne i wyceni wstępnie Twój projekt.
+                        {t.descriptionPre}<span className={`${theme.text300} font-medium`}>{t.assistantName}</span>{t.descriptionPost}
                     </p>
                 </div>
             </div>
@@ -51,7 +55,7 @@ export const AvenlyAICta = () => {
                 className={`w-full md:w-auto px-6 py-3.5 md:px-8 md:py-4 rounded-xl bg-white text-black font-bold ${theme.hoverBg50} hover:scale-[1.02] transition-all cursor-pointer shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] whitespace-nowrap flex items-center justify-center gap-2`}
             >
                 <Bot size={20} />
-                Zapytaj Avenly AI
+                {t.buttonLabel}
             </button>
         </div>
     </div>

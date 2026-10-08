@@ -1,0 +1,369 @@
+/* PO WYBORZE WŁAŚCICIELA (2026-10-05) w tym pliku zostały tylko style sceny „W dół” (mods-down.tsx) i mini-ekranów
+   (mods-ui.tsx); style „Rośnie” i „Menu rośnie” usunięte przy optymalizacji wydajności - kopia całości
+   w docs/archiwum/usluga-system-crm/.
+   Sekcja modułów „Trzy ekrany to początek. System rośnie z Tobą.” - podstrona „System CRM”, RUNDA 4: trzy propozycje
+   bez interakcji (steruje wyłącznie przewijanie). Style tylko w tym pliku, prefiks cr8-. Szkielet (sv-, usluga.css)
+   i wspólne części przykładowego systemu (cr-, system-crm.css: .cr-win, .cr-av, .cr-chip, .cr-narr, .cr-sec*,
+   .cr-bloom / .cr-bloom-out) są tylko używane; nadpisania cudzych klas wyłącznie pod własnymi klasami.
+     .cr8-count / -reel / -meter  licznik „Włączone moduły” (bęben + znaczniki),
+     .cr8-u-*                     mini-ekrany modułów (mods-ui.tsx), wymiary w em od --fs, statyczne,
+     .cr8-slot / .cr8-src         znak wolnego miejsca: gwiazdka w lewym górnym rogu pola i punkty w pozostałych rogach,
+     .cr8-empty                   puste miejsce „na to, czego potrzebuje Twoja firma”,
+     .cr8-a-*   „Rośnie”       (mods-rise.tsx)  przypięta: okno rośnie rzędami do 3 × 3, dziewiąte miejsce zostaje puste,
+     .cr8-b-*   „Menu rośnie”  (mods-menu.tsx)  przypięta: menu dostaje pozycję, widok przejeżdża na ekran modułu,
+     .cr8-c-*   „W dół”        (mods-down.tsx)  bez przypięcia: dolna krawędź okna idzie za przewijaniem.
+   POJAWIANIE SIĘ = „ROZEJŚCIE” (właściciel 2026-10-05: „te wszystkie animacje linii, która leci i zmienia wireframe na
+   coś… wywal i zrób animację taką pojawiania płynną, tak jak się nebula rozchodzi”). Tu NIE MA już szkieletów
+   z włosowych linii, lotu punktów, lecących linii światła ani odsłon przycięciem prostą krawędzią. Ekran modułu
+   (i pozycja menu, i zdanie pustego miejsca) pojawia się wspólną klasą .cr-bloom (generowany bloom.css): kilka kłębów
+   gazu pojawia się od lewej do prawej, rośnie i zlewa się; znak wolnego miejsca schodzi dopełnieniem (.cr-bloom-out).
+   --bloom (0-1): w „Rośnie” i „Menu rośnie” pisze je scena z przewijania, w „W dół” gra przejście CSS (czas).
+   Zostaje prawdziwy ruch: krawędź okna rosnącego o rząd / piętro (płyta i jej zawartość kończą się razem na tej
+   krawędzi), płytka menu, przejazd widoku, licznik-bęben, jeden odjazd kamery.
+   ZASADA STANU KOŃCOWEGO: reguły podstawowe rysują stan końcowy (--bloom ma wartość początkową 1, --cn zapas = koniec),
+   a przypięcia i stany „przed” są tylko pod .sv[data-live] i przy prefers-reduced-motion: no-preference. Bez JS i przy
+   ograniczonym ruchu: zwykła sekcja, wszystkie moduły widoczne, licznik 8 / 8.
+   Język: czerń z kryciem, ostry refleks u góry (--sv-edge), włosowe linie, biel jako stan aktywny; kolor podstrony
+   (--sv-ac) tylko w liniach, punktach i znacznikach stanu. Bez blur, tekstu z gradientem, wersalików i kafli ze szkła. */
+
+/* ══ WSPÓLNE ═════════════════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* Licznik: cyfry jedna pod drugą, --cn (ułamkowe) przesuwa je w górę; bez --cn stoi ostatnia (--to). Znacznik modułu
+   zapala się, gdy licznik go minie (--j = numer modułu dochodzącego, ujemny = moduł „na start”). */
+.cr8-count { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; min-width: 0; margin: 0; font-size: 14px; line-height: 1.2; color: #94a3b8; }
+.cr8-count > b { display: inline-flex; align-items: center; gap: .3em; font-size: 22px; line-height: 1.15; font-weight: 600; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: #f8fafc; white-space: nowrap; }
+.cr8-reel { display: inline-block; height: 1.15em; overflow: hidden; }
+.cr8-reel-in { display: block; transform: translate3d(0, calc(var(--cn, var(--to, 0)) * -1.15em), 0); }
+.cr8-reel-in > span { display: block; height: 1.15em; line-height: 1.15em; text-align: right; }
+.cr8-meter { display: grid; grid-auto-flow: column; gap: 4px; }
+.cr8-meter i { position: relative; width: 12px; height: 3px; border-radius: 2px; background: rgba(255, 255, 255, .18); overflow: hidden; }
+.cr8-meter i::after { content: ''; position: absolute; inset: 0; background: rgb(var(--sv-ac)); opacity: clamp(0, calc(var(--cn, 99) - var(--j, -1)), 1); }
+
+/* Nazwa modułu, zdanie o nim, zdanie pustego miejsca. */
+.cr8-name { display: flex; align-items: center; gap: 9px; min-width: 0; margin: 0; font-size: 16.5px; line-height: 1.25; font-weight: 600; letter-spacing: -.01em; color: #f8fafc; }
+.cr8-name svg { flex: none; width: 17px; height: 17px; color: #94a3b8; }
+.cr8-text { margin: 0; font-size: 14.5px; line-height: 1.5; color: #94a3b8; text-wrap: pretty; }
+.cr8-more { margin: 0; max-width: 17em; font-size: 15.5px; line-height: 1.4; color: #cbd5e1; text-align: center; text-wrap: balance; }
+
+/* Znak wolnego miejsca (Spot w mods-ui.tsx): gwiazdka w lewym górnym rogu pola i punkty w trzech pozostałych rogach
+   (środki 7,5 px od krawędzi pola). Ostry, bez poświaty, stoi spokojnie - w tym miejscu pojawi się ekran modułu.
+   Pole znaku = pole tego, co się rozchodzi (ten sam prostokąt - wtedy .cr-bloom-out jest dokładnym dopełnieniem).
+   W zwykłym układzie znak widać tylko w pustym miejscu. */
+.cr8-slot {
+  --pt: radial-gradient(circle at 50% 50%, rgb(var(--sv-ac)) 0 1.5px, rgb(var(--sv-ac) / 0) 2.2px);
+  display: none; position: absolute; inset: 0; pointer-events: none;
+  background: var(--pt) 100% 0 / 15px 15px no-repeat, var(--pt) 0 100% / 15px 15px no-repeat, var(--pt) 100% 100% / 15px 15px no-repeat;
+}
+.cr8-src { position: absolute; left: 0; top: 0; width: 15px; height: 15px; background: rgb(var(--sv-ac)); clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%); }
+
+/* Puste miejsce: znak wolnego miejsca (zostaje) i przerywany obrys ze zdaniem (pojawiają się rozejściem; rogi obrysu
+   leżą w środkach gwiazdki i punktów znaku). */
+.cr8-empty { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; min-height: 132px; }
+.cr8-empty > .cr8-slot { display: block; }
+.cr8-empty-in { display: grid; place-items: center; min-width: 0; margin: 7px; padding: 16px 20px; border-radius: 10px; border: 1px dashed rgba(255, 255, 255, .28); }
+
+/* ══ MINI-EKRANY MODUŁÓW (mods-ui.tsx) ═══════════════════════════════════════════════════════════════════════════
+   Statyczne (stan końcowy). .cr8-ln = element z włosową linią u dołu, .cr8-pt = punkt w kolorze podstrony,
+   .cr8-dot = zwykła kropka stanu. Napis, który się nie mieści, gaśnie przy prawej krawędzi zamiast się ucinać. */
+.cr8-as { position: relative; min-width: 0; }
+.cr8-u { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: .55em; min-width: 0; font-size: var(--fs, 14.5px); line-height: 1.3; color: #e2e8f0; }
+.cr8-u :where(p, ul, ol) { margin: 0; padding: 0; list-style: none; }
+.cr8-ln { position: relative; }
+.cr8-ln::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: rgba(255, 255, 255, .09); pointer-events: none; }
+.cr8-u-h { display: flex; align-items: baseline; justify-content: space-between; gap: 1em; padding-bottom: .6em; font-size: .9em; color: #94a3b8; white-space: nowrap; }
+.cr8-u-h.cr8-ln::after { background: rgba(255, 255, 255, .16); }
+.cr8-u-h b { font-weight: 600; font-variant-numeric: tabular-nums; color: #f8fafc; }
+.cr8-u-rows { display: grid; grid-template-columns: minmax(0, 1fr); }
+.cr8-u-row { display: flex; align-items: center; gap: .75em; min-width: 0; min-height: 3.2em; padding: .4em 0; }
+.cr8-u-rows > :last-child::after, .cr8-u-acc > :last-child::after { display: none; }
+.cr8-u-tx { flex: 1 1 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: .1em; min-width: 0; }
+.cr8-u-t, .cr8-u-s, .cr8-u-tail {
+  display: block; min-width: 0; overflow: hidden; white-space: nowrap;
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 1.3em), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 1.3em), transparent);
+}
+.cr8-u-t { font-weight: 600; color: #f8fafc; }
+.cr8-u-s { font-size: .9em; color: #94a3b8; }
+/* dopisek po prawej: pole szersze o strefę gaśnięcia - krótki napis nie gaśnie, za długi gaśnie w tej strefie */
+.cr8-u-tail { flex: 0 1 auto; max-width: 50%; margin-right: -1.3em; padding-right: 1.3em; color: #94a3b8; }
+.cr8-dot, .cr8-pt { flex: none; display: block; width: .46em; height: .46em; border-radius: 50%; background: rgb(var(--sv-ac)); }
+.cr8-dot:not([data-on]) { background: #64748b; }
+.cr8-u .cr-chip { flex: none; padding: .2em .75em; gap: .45em; font-size: .9em; }
+.cr8-u .cr-av { width: 1.9em; height: 1.9em; font-size: .82em; }
+.cr8-u-note { display: flex; align-items: center; gap: .65em; min-width: 0; }
+.cr8-u-note .cr8-u-t { flex: 1 1 0; font-weight: 500; color: #cbd5e1; }
+/* 0 Zlecenia: kreski etapu */
+.cr8-u-steps { flex: none; display: grid; grid-auto-flow: column; gap: 3px; }
+.cr8-u-steps i { width: 1em; height: 2px; background: rgba(255, 255, 255, .2); }
+.cr8-u-steps i[data-on] { background: rgb(var(--sv-ac)); }
+/* 1 Klienci: historia kontaktu jako oś z punktami */
+.cr8-u-hist-h { margin-top: .5em; }
+.cr8-u-hist { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); gap: .65em; padding: .2em 0 .1em; }
+.cr8-u-hist::before { content: ''; position: absolute; left: calc(.23em - .5px); top: .85em; bottom: .75em; width: 1px; background: rgb(var(--sv-ac) / .5); }
+.cr8-u-hist li { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: .8em; align-items: center; min-width: 0; }
+.cr8-u-hist .cr8-u-t { font-weight: 500; color: #e2e8f0; }
+.cr8-u-hist .cr8-u-tail { max-width: none; font-size: .9em; }
+/* 2 Kalendarz: tydzień roboczy, wpisy w kolumnach dni */
+.cr8-u-week { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .45em; min-width: 0; }
+.cr8-u-day { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: .45em; min-width: 0; }
+.cr8-u-day > b { padding-bottom: .35em; box-shadow: inset 0 -1px 0 rgba(255, 255, 255, .14); font-size: .9em; font-weight: 500; color: #94a3b8; }
+.cr8-u-day[data-now] > b { box-shadow: inset 0 -2px 0 rgb(var(--sv-ac)); font-weight: 600; color: #f8fafc; }
+.cr8-u-lane { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: .35em; min-height: 5.6em; }
+.cr8-u-ev { display: grid; grid-template-columns: minmax(0, 1fr); gap: .05em; min-width: 0; padding: .32em .4em .38em; border-radius: .5em; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .13); }
+.cr8-u-ev > i { font-style: normal; font-size: .9em; font-variant-numeric: tabular-nums; color: #94a3b8; white-space: nowrap; }
+.cr8-u-ev > span { overflow: hidden; white-space: nowrap; font-weight: 600; color: #e2e8f0; -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - .8em), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - .8em), transparent); }
+.cr8-u-ev[data-on] { box-shadow: inset 0 0 0 1px rgb(var(--sv-ac)); }
+.cr8-u-ev[data-on] > i, .cr8-u-ev[data-on] > span { color: #f8fafc; }
+/* 3 Zadania: odhaczone zadanie = pole wypełnione kolorem podstrony ze znakiem, napis przygaszony */
+.cr8-box { position: relative; flex: none; width: 1.25em; height: 1.25em; border-radius: .36em; box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .42); }
+.cr8-u-row[data-do] .cr8-box { background: rgb(var(--sv-ac)); box-shadow: none; }
+.cr8-u-row[data-do] .cr8-box::after { content: ''; position: absolute; left: 24%; top: 26%; width: 50%; height: 28%; border-left: 2px solid var(--cr-ink, #03121c); border-bottom: 2px solid var(--cr-ink, #03121c); transform: rotate(-45deg); }
+.cr8-u-row[data-do] .cr8-u-t { opacity: .58; }
+/* 4 Role i uprawnienia: tabela dostępu - punkt = moduł otwarty, kłódka = zamknięty */
+.cr8-u-acc { display: grid; grid-template-columns: minmax(0, 1fr); }
+.cr8-u-acc-h, .cr8-u-acc-r { display: grid; grid-template-columns: minmax(5.4em, 1.5fr) repeat(var(--n, 6), minmax(0, 1fr)); align-items: center; column-gap: .3em; min-width: 0; }
+.cr8-u-acc-h { padding-bottom: .5em; font-size: .86em; color: #94a3b8; }
+.cr8-u-acc-h > span { overflow: hidden; white-space: nowrap; text-align: center; }
+.cr8-u-acc-r { min-height: 3.2em; padding: .4em 0; }
+.cr8-u-cell { display: grid; place-items: center; min-width: 0; }
+.cr8-u-cell svg { width: 1em; height: 1em; color: #64748b; }
+/* ta sama tabela OBRÓCONA (moduły w wierszach, role w kolumnach) - domyślnie schowana; włącza ją scena w wąskim polu
+   („W dół” poniżej 1024 px), gdzie sześć kolumn modułów nie zmieściłoby podpisów. Kolumny w ułamkach pola (nazwa
+   modułu 1,22 : rola 1 : 1 : 1) - te same w nagłówku i w wierszach, bo pismo nagłówka jest na napisach, nie na siatce.
+   Rachunek dla pola 280 px (telefon 320 px, pismo 13,5 px): nazwa modułu 77 px („Ustawienia” ok. 72), rola 63 px
+   („Pracownik” w 12 px ok. 58); dla 304 px (telefon 360 px): 84 i 69 px. */
+.cr8-u-accf { display: none; grid-template-columns: minmax(0, 1fr); }
+.cr8-u-accf-h, .cr8-u-accf-r { display: grid; grid-template-columns: minmax(0, 1.22fr) repeat(var(--n, 3), minmax(0, 1fr)); align-items: center; column-gap: .3em; min-width: 0; }
+.cr8-u-accf-h { padding-bottom: .45em; }
+.cr8-u-accf-h > span { overflow: hidden; white-space: nowrap; text-align: center; font-size: max(12px, .86em); color: #cbd5e1; }
+.cr8-u-accf-r { min-height: 2.3em; padding: .25em 0; }
+.cr8-u-accf-l { overflow: hidden; white-space: nowrap; font-weight: 500; color: #f8fafc; }
+.cr8-u-accf > :last-child::after { display: none; }
+/* 5 Powiadomienia: ikona kanału w obrączce, stan z punktem (zaplanowane = pusty punkt) */
+.cr8-ico { flex: none; display: grid; place-items: center; width: 2.1em; height: 2.1em; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22); color: #e2e8f0; }
+.cr8-ico svg { width: 1em; height: 1em; }
+.cr8-state { flex: none; display: inline-flex; align-items: center; gap: .45em; font-size: .9em; color: #cbd5e1; white-space: nowrap; }
+.cr8-state::before { content: ''; flex: none; width: .44em; height: .44em; border-radius: 50%; background: rgb(var(--sv-ac)); }
+.cr8-state[data-wait]::before { background: transparent; box-shadow: inset 0 0 0 1.5px rgb(var(--sv-ac)); }
+/* 6 Raporty: liczniki według etapu (włosowa linia, na niej kreska w kolorze podstrony z punktem na końcu) i linia tygodni */
+.cr8-u-rep { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.1em; min-width: 0; }
+.cr8-u-bars { display: grid; grid-template-columns: minmax(0, 1fr); }
+.cr8-u-bar { display: grid; grid-template-columns: minmax(4.6em, 30%) minmax(0, 1fr) 1.6em; align-items: center; column-gap: .8em; min-width: 0; min-height: 2.3em; }
+.cr8-u-bar-l { overflow: hidden; white-space: nowrap; color: #cbd5e1; }
+.cr8-u-bar > b { font-weight: 600; font-variant-numeric: tabular-nums; color: #f8fafc; text-align: right; }
+.cr8-u-bar-t { display: block; height: 1.2em; margin-right: .3em; }
+.cr8-u-bar-t.cr8-ln::after { bottom: calc(50% - .5px); background: rgba(255, 255, 255, .16); }
+.cr8-u-bar-f { position: absolute; left: 0; top: calc(50% - 1px); width: calc(var(--v, 1) * 100%); height: 2px; background: rgb(var(--sv-ac)); }
+.cr8-u-bar-t > .cr8-pt { position: absolute; left: calc(var(--v, 1) * 100% - .23em); top: calc(50% - .23em); }
+.cr8-u-trend { display: grid; grid-template-columns: minmax(0, 1fr); gap: .7em; min-width: 0; }
+.cr8-u-trend-l { font-size: .9em; color: #94a3b8; }
+.cr8-u-plot { display: block; height: 6em; margin: .3em .4em 0; }
+.cr8-u-plot.cr8-ln::after { background: rgba(255, 255, 255, .16); }
+.cr8-u-plot svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.cr8-u-plot polyline { fill: none; stroke: rgba(255, 255, 255, .72); stroke-width: 1.25px; stroke-linejoin: round; stroke-linecap: round; }
+.cr8-u-plot > .cr8-pt { position: absolute; margin: -.23em 0 0 -.23em; }
+/* 7 Portal klienta: zlecenie, oś etapów (linia w kolorze podstrony do bieżącego etapu), wiadomość, dokumenty */
+.cr8-u-portal { display: grid; grid-template-columns: minmax(0, 1fr); gap: .85em; min-width: 0; }
+.cr8-u-big { overflow: hidden; white-space: nowrap; font-size: 1.22em; line-height: 1.25; font-weight: 600; letter-spacing: -.015em; color: #f8fafc; }
+.cr8-u-axis { position: relative; display: grid; grid-template-columns: repeat(var(--n, 5), minmax(0, 1fr)); padding-top: .1em; }
+.cr8-u-axis::before, .cr8-u-axis::after { content: ''; position: absolute; left: calc(50% / var(--n, 5)); }
+.cr8-u-axis::before { right: calc(50% / var(--n, 5)); top: calc(.43em - .5px); height: 1px; background: rgba(255, 255, 255, .2); }
+.cr8-u-axis::after { top: calc(.43em - 1px); width: calc((100% - 100% / var(--n, 5)) * var(--to, .75)); height: 2px; background: rgb(var(--sv-ac)); }
+.cr8-u-axis li { display: grid; justify-items: center; gap: .55em; min-width: 0; }
+.cr8-u-axis .cr8-pt { position: relative; z-index: 1; width: .66em; height: .66em; }
+.cr8-u-axis li:not([data-s]) .cr8-pt { background: #0a0a0c; box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .4); }
+.cr8-u-axis li[data-s="now"] .cr8-pt { background: #f8fafc; box-shadow: 0 0 0 3px rgb(var(--sv-ac) / .55); }
+.cr8-u-axis li > span { max-width: 100%; overflow: hidden; white-space: nowrap; font-size: .88em; color: #94a3b8; }
+.cr8-u-axis li[data-s="now"] > span { font-weight: 600; color: #f8fafc; }
+.cr8-u-docs { display: flex; flex-wrap: wrap; gap: .5em; }
+.cr8-u-docs li { display: inline-flex; align-items: center; gap: .5em; padding: .4em .8em; border-radius: .6em; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14); font-size: .9em; color: #e2e8f0; }
+.cr8-u-docs svg { width: 1em; height: 1em; color: #94a3b8; }
+
+/* ── Wielkości. s = pole w oknie: jedno pismo (po odjeździe kamery zostaje >= 12 px), bez dopisków i nagłówka ekranu.
+   Nagłówki kolumn tabeli ról tylko w „l” i tylko na szerokim ekranie. l = cały widok: wyższe wiersze. ── */
+.cr8-as[data-size="s"] :is(.cr8-u-h, .cr8-u-s, .cr8-u-steps, .cr8-u-note, .cr8-u-docs, .cr8-u-trend, .cr8-u-hist) { display: none; }
+.cr8-as[data-size="s"] :is(.cr8-u-row, .cr8-u-acc-r) { min-height: 2.8em; padding: .25em 0; }
+.cr8-as[data-size="s"] :is(.cr-chip, .cr8-state, .cr8-u-day > b, .cr8-u-ev > i) { font-size: 1em; }
+.cr8-as[data-size="s"] .cr-av { width: 1.6em; height: 1.6em; font-size: 1em; }
+.cr8-as[data-size="s"] .cr8-u-axis li:not([data-s="now"]) > span { display: none; }
+.cr8-as[data-size="s"] .cr8-u-axis li[data-s="now"] > span { max-width: none; overflow: visible; font-size: 1em; }
+.cr8-as:not([data-size="l"]) .cr8-u-acc-h { display: none; }
+.cr8-as[data-size="l"] .cr8-u { gap: .8em; }
+.cr8-as[data-size="l"] :is(.cr8-u-row, .cr8-u-acc-r) { min-height: clamp(3.6em, 8.6vh, 5em); }
+.cr8-as[data-size="l"] .cr8-u-bar { min-height: clamp(2.6em, 6vh, 3.6em); }
+@media (max-width: 899.98px) { .cr8-as .cr8-u-acc-h { display: none; } }
+@media (min-width: 900px) {
+  .cr8-as[data-size="l"] .cr8-u-rep { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2.6em; }
+  .cr8-as[data-size="l"] .cr8-u-plot { height: 9em; }
+}
+
+/* ══ 3. „W DÓŁ” (mods-down.tsx) - bez przypięcia ═════════════════════════════════════════════════════════════════
+   Zwykły układ (bez JS, ograniczony ruch): wysokie okno - trzy ekrany na start, pod nimi każdy kolejny moduł jako
+   piętro (numer, nazwa, zdanie | mini-ekran), puste miejsce i pasek stanu z licznikiem 8 / 8 (ostatni element listy
+   pięter). --fx / --fy = odstępy piętra (treść piętra i znak wolnego miejsca zajmują ten sam prostokąt). */
+.cr8-c-sys { position: relative; min-width: 0; }
+.cr-win.cr8-c-win { position: absolute; inset: 0; }
+.cr8-c-body { position: relative; z-index: 1; padding-top: 48px; }
+.cr8-c-start, .cr8-c-floors { list-style: none; margin: 0; padding: 0; }
+.cr8-c-start { display: grid; grid-template-columns: minmax(0, 1fr); }
+.cr8-c-col { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 12px; min-width: 0; padding: 20px 18px 24px; }
+.cr8-c-col + .cr8-c-col { border-top: 1px solid var(--cr-line); }
+.cr8-c-col .cr8-text { margin-top: -6px; }
+.cr8-c-wrap { position: relative; }
+.cr8-c-floor { --fx: 18px; --fy: 26px; position: relative; min-width: 0; padding: var(--fy) var(--fx); border-top: 1px solid var(--cr-line); }
+.cr8-c-in { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; min-width: 0; }
+.cr8-c-what { min-width: 0; }
+.cr8-c-n { display: block; font-size: 13.5px; line-height: 1; font-weight: 600; font-variant-numeric: tabular-nums; color: #cbd5e1; }
+.cr8-c-title { margin: 10px 0 8px; font-size: clamp(26px, 2.7vw, 38px); line-height: 1.08; font-weight: 700; letter-spacing: -.035em; color: #f8fafc; }
+.cr8-c-d { margin: 0; max-width: 24rem; font-size: 16.5px; line-height: 1.55; color: #94a3b8; text-wrap: pretty; }
+.cr8-c-screen { min-width: 0; }
+.cr8-c-floor--more { --fy: 22px; }
+.cr8-c-floor--more .cr8-empty { min-height: 160px; }
+.cr8-c-foot { display: flex; align-items: center; min-height: 52px; padding: 6px 18px; border-top: 1px solid var(--cr-line); }
+@media (min-width: 1024px) {
+  .cr8-c-start { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .cr8-c-col { padding: 26px 26px 30px; }
+  .cr8-c-col + .cr8-c-col { border-top: 0; border-left: 1px solid var(--cr-line); }
+  .cr8-c-col .cr8-as, .cr8-c-screen .cr8-as { --fs: 15.5px; }
+  .cr8-c-floor { --fx: 34px; --fy: 38px; }
+  .cr8-c-in { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: center; min-height: 188px; }
+  .cr8-c-floor--more { --fy: 30px; }
+  .cr8-c-foot { padding: 6px 34px; }
+  .cr8-c-foot .cr8-meter i { width: 22px; }
+  .cr8-c .cr8-u-rep { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2.4em; }
+}
+
+/* ── TELEFON I TABLET (do 1023 px; właściciel 2026-10-05: „dostosuj całą podstronę do urządzeń mobilnych”).
+   Od 1024 px nic się nie zmienia - wszystko niżej jest w zapytaniach max-width. Rachunek szerokości (kontener px-6):
+     ekran 320 → okno 304, pole mini-ekranu 280 (pismo 13,5 px)      ekran 430 → okno 406, pole 374
+     ekran 360 → okno 336, pole 304 (pismo 14,5 px)                  480-767 → okno 432-592, pole 396-556
+     ekran 375 → okno 351, pole 319                                  768-1023 (kontener 768) → okno 720;
+     ekran 390 → okno 366, pole 334                                    piętro: opis 254 px | pole 382 px
+   Poniżej 480 px okno sięga bliżej krawędzi ekranu (12 px, poniżej 360 px: 8 px), żeby pole miało ok. 300-340 px.
+   Pismo mini-ekranu: napisy główne 14,5 px (13,5 px poniżej 360), dopiski i etykiety .9em = 13 px (12,2 px). ── */
+@media (max-width: 1023.98px) {
+  /* napisy w wąskim polu łamią się (do dwóch linii), zamiast gasnąć przy krawędzi - żadne słowo nie jest ucięte */
+  .cr8-c .cr8-u-t, .cr8-c .cr8-u-s, .cr8-c .cr8-u-big { white-space: normal; -webkit-mask-image: none; mask-image: none; }
+  .cr8-c .cr8-u-t, .cr8-c .cr8-u-big { text-wrap: balance; }
+  .cr8-c .cr8-u-note { align-items: baseline; }
+  /* Klienci: dopisek po prawej (zlecenie, do ok. 150 px) może zająć więcej niż pół wiersza */
+  .cr8-c .cr8-u-row > .cr8-u-tail { max-width: 62%; }
+  /* Role i uprawnienia: tabela obrócona - moduły w wierszach (pełne nazwy), role w kolumnach */
+  .cr8-c .cr8-u-acc { display: none; }
+  .cr8-c .cr8-u-accf { display: grid; }
+  /* Powiadomienia: treść na całą szerokość wiersza, pod nią odbiorca po lewej i stan po prawej (w jednym wierszu
+     ikona + treść + stan zostawiały treści ok. 160 px z potrzebnych ok. 270) */
+  .cr8-c .cr8-u[data-m="5"] .cr8-u-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: .2em .75em; }
+  .cr8-c .cr8-u[data-m="5"] .cr8-u-tx { display: contents; }
+  .cr8-c .cr8-u[data-m="5"] .cr8-ico { grid-area: 1 / 1 / 3 / 2; align-self: start; margin-top: .1em; }
+  .cr8-c .cr8-u[data-m="5"] .cr8-u-t { grid-area: 1 / 2 / 2 / 4; }
+  .cr8-c .cr8-u[data-m="5"] .cr8-u-s { grid-area: 2 / 2 / 3 / 3; }
+  .cr8-c .cr8-u[data-m="5"] .cr8-state { grid-area: 2 / 3 / 3 / 4; }
+  /* Portal klienta: podpisy etapów w 12 px, wyśrodkowane pod punktami; najdłuższy („Zapytanie”, „Produkcja” - ok. 56 px
+     przy kolumnie 56 px na ekranie 320) może wystawać po pół piksela na strony zamiast się ucinać */
+  .cr8-c .cr8-u-axis li { justify-content: center; }
+  .cr8-c .cr8-u-axis li > span { max-width: none; overflow: visible; font-size: max(12px, .86em); }
+}
+/* Kalendarz w wąskiej kolumnie dnia (telefon: 51-70 px, tablet: 57 px): we wpisie sama godzina - nazwa („Dostawa”
+   ok. 62 px) by się ucinała; wyróżniony termin opisuje zdanie pod tygodniem. Od 640 do 767 px kolumna ma ponad 100 px. */
+@media (max-width: 639.98px), (min-width: 768px) and (max-width: 1023.98px) {
+  .cr8-c .cr8-u-ev > span { display: none; }
+  .cr8-c .cr8-u-ev { justify-items: center; padding: .34em .1em .38em; }
+  .cr8-c .cr8-u-day > b { text-align: center; }
+  .cr8-c .cr8-u-lane { min-height: 0; }
+}
+/* Zlecenia w polu węższym niż ok. 550 px: bez kresek etapu (nazwa zlecenia potrzebuje ok. 156 px obok stanu) */
+@media (max-width: 639.98px) { .cr8-c .cr8-u-steps { display: none; } }
+@media (max-width: 767.98px) {
+  .cr8-c-col { gap: 10px; padding: 16px 18px 18px; }
+  /* opis sekcji: cztery wyrównane linie zamiast ostatniej z jednym słowem */
+  .sv.cr .cr8-c .cr-sec-lead { text-wrap: balance; }
+}
+@media (max-width: 479.98px) {
+  /* nagłówek sekcji: zdanie w kolorze podstrony od nowej linii („Trzy ekrany / to początek. / System rośnie / z Tobą.”
+     zamiast „…ekrany to / początek. System / …” z wiszącym „to” i zmianą koloru w środku linii) */
+  .sv.cr .cr8-c .cr-sec-head .sv-h2 .im-accent { display: block; }
+  .cr8-c-sys { margin-inline: -12px; }
+  .cr8-c-col { padding-inline: 16px; }
+  .cr8-c-floor { --fx: 16px; --fy: 24px; }
+  .cr8-c-in { gap: 16px; }
+  .cr8-c-floor--more .cr8-empty { min-height: 132px; }
+  /* licznik w jednej linii: napis 116 + liczba 48 + znaczniki 93 + odstępy 24 = 281 px z 304 (ekran 360) */
+  .cr8-c-foot { padding-inline: 16px; }
+  .cr8-c-foot .cr8-meter { gap: 3px; }
+  .cr8-c-foot .cr8-meter i { width: 9px; }
+}
+@media (max-width: 359.98px) {
+  .cr8-c-sys { margin-inline: -16px; }
+  .cr8-c .cr8-as { --fs: 13.5px; }
+  .cr8-c-col { padding-inline: 12px; }
+  .cr8-c-floor { --fx: 12px; }
+  /* licznik: 108 + 44 + 85 + 20 = 257 px z 280 */
+  .cr8-c-foot { padding-inline: 12px; }
+  .cr8-c-foot .cr8-count { gap: 6px 10px; font-size: 13px; }
+  .cr8-c-foot .cr8-count > b { font-size: 20px; }
+  .cr8-c-foot .cr8-meter i { width: 8px; }
+}
+/* tablet (i telefon poziomo od 768 px): „Zlecenia” na całą szerokość okna, pod nimi „Klienci” i „Kalendarz” obok
+   siebie; piętro = opis po lewej, mini-ekran po prawej (jak na komputerze, w proporcji 2 : 3) */
+@media (min-width: 768px) and (max-width: 1023.98px) {
+  .cr8-c-start { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cr8-c-col { padding: 22px 24px 26px; }
+  .cr8-c-col:first-child { grid-column: 1 / -1; }
+  .cr8-c-col:nth-child(3) { border-left: 1px solid var(--cr-line); }
+  .cr8-c-floor { --fx: 24px; --fy: 30px; }
+  .cr8-c-in { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 36px; align-items: center; }
+  .cr8-c-foot { padding: 6px 24px; }
+}
+
+/* ── Na żywo (właściciel 2026-10-05: „w dół fajne, tylko daj o wiele niżej ten pasek, gdzie się odkrywa” oraz
+   „żeby nie było sytuacji, kiedy użytkownik już zescrollował i widzi cały element, a część nie jest revealed”).
+   LINIA WZROSTU: okno „kończy się” nisko, tuż nad bąblem czatu. JEDYNE MIEJSCE STROJENIA to `bottom` paska stanu
+   niżej: max(92px, 10svh) = linia na 90% wysokości ekranu, ale nie niżej niż 92 px nad jego dołem (bąbel czatu
+   zajmuje 80 px + 12 px oddechu; na telefonach zawsze decyduje 92 px). Wartość ze `svh` (małe okno przeglądarki)
+   nie zmienia się, gdy chowa się pasek adresu - linia nie skacze. Scena czyta tę wartość z CSS i mierzy prawdziwe
+   położenie paska, więc nie ma tu stałych do pilnowania w dwóch plikach (wysokość paska też: 52 px tylko tutaj).
+   NISKI EKRAN (małe okno poniżej 500 px wysokości: telefon poziomo, bardzo mały telefon): drugi człon min() robi
+   się mocno ujemny - pasek się nie przykleja i stoi zwyczajnie na dole okna, okno widać w całości, a piętra odsłaniają
+   się przy wejściu na ekran (PLAIN_AT w mods-down.tsx). Przy linii 92 px nad dołem ekranu 390 px i pasku 52 px nad
+   paskiem zostawałoby ok. 250 px - piętro (240-470 px) nie miałoby się gdzie pokazać.
+   PASEK STANU z licznikiem to dół okna: przykleja go sam CSS (position: sticky) w obrębie listy pięter, więc stoi
+   nieruchomo także przy przewijaniu palcem. Płyta okna i lista pięter (`clip-path` pisany przez scenę wprost na
+   tych dwóch elementach) kończą się razem w połowie wysokości paska - szew jest pod nieprzezroczystym paskiem, więc klatka opóźnienia skryptu go nie odsłania.
+   PIĘTRO wchodzi do okna jako puste miejsce (znak wolnego miejsca) i od razu się odsłania: scena stawia mu data-open,
+   a rozejście gra SAMO do końca (przejście CSS zmiennej --bloom: czas, nie położenie przewijania; 1,1 s = BLOOM_MS
+   w mods-down.tsx), potem warstwy dostają data-bloomed. Nigdy wstecz. Bez data-open piętro stoi w stanie „przed”
+   (--bloom: 0) - tylko tutaj, pod .sv[data-live] i bez ograniczonego ruchu.
+   --cn = licznik (liczba odsłoniętych modułów; bęben i znaczniki dochodzą przejściem, gdy scena jest gotowa: data-ready). ── */
+@media (prefers-reduced-motion: no-preference) {
+  .sv[data-live] .cr8-c-sys:not([data-in]) { opacity: 0; }
+  .sv[data-live] .cr8-c-sys[data-in] { transition: opacity 1.1s ease; }
+  /* WYDAJNOŚĆ (właściciel 2026-10-06: „jak się mockup rozwija przy scrollu, to niemiłosiernie laguje”): szew okna to
+     `clip-path` pisany przez scenę WPROST na płycie okna i na liście pięter (nie zmienne CSS na przodkach - te się
+     dziedziczą i co klatkę przeliczały style całego okna). Oba elementy mają własne warstwy, więc przesuwanie szwu
+     nie maluje od nowa ich treści (płyta ma duży rozmyty cień, lista - wszystkie mini-ekrany). Nic tu nie jest
+     skalowane, więc własna warstwa nie rozmywa pisma ani włosowych linii. NIE wracać do --cy / --cut na przodkach. */
+  .sv[data-live] .cr8-c-win, .sv[data-live] .cr8-c-floors { will-change: transform; }
+  .sv[data-live] .cr8-c-foot {
+    position: sticky; z-index: 3; height: 52px; min-height: 0; border-radius: 0 0 18px 18px; background: #060607;
+    bottom: min(max(92px, 10vh), (100vh - 500px) * 999);
+    bottom: min(max(92px, 10svh), (100svh - 500px) * 999);
+  }
+  .sv[data-live] .cr8-c-floor > .cr8-slot { display: block; inset: var(--fy) var(--fx); }
+  .sv[data-live] .cr8-c-floor:not([data-open]) :is(.cr-bloom, .cr-bloom-out) { --bloom: 0; }
+  .sv[data-live] .cr8-c-floor[data-open] :is(.cr-bloom, .cr-bloom-out) { --bloom: 1; transition: --bloom 1.1s cubic-bezier(.4, 0, .3, 1); }
+  .sv[data-live] .cr8-c-sys[data-ready] .cr8-reel-in { transition: transform .7s var(--cr-move, ease) .3s; }
+  .sv[data-live] .cr8-c-sys[data-ready] .cr8-meter i::after { transition: opacity .5s ease .3s; }
+  /* telefon i tablet: trzy ekrany na start krócej (bez zdań o modułach i historii kontaktu) */
+  @media (max-width: 1023.98px) {
+    .sv[data-live] .cr8-c-col .cr8-text, .sv[data-live] .cr8-c-col .cr8-u-hist, .sv[data-live] .cr8-c-col .cr8-u-hist-h { display: none; }
+  }
+  /* telefon: ZWARTY START - trzy krótkie paski (nazwa + dwa wiersze ekranu, bez nagłówków ekranów), żeby pierwsze
+     dokładane piętro pojawiło się po niecałym ekranie przewijania. Rachunek dla 390 × 844: pasek okna 48 + „Zlecenia”
+     162 + „Klienci” 143 + „Kalendarz” 179 (tydzień z godzinami i zdanie o wyróżnionym terminie) = ok. 534 px
+     (dawniej ok. 760) - 0,63 wysokości ekranu, na 375 × 660 i 320 × 640 ok. 0,8. */
+  @media (max-width: 767.98px) {
+    .sv[data-live] .cr8-c-col .cr8-u-h { display: none; }
+    .sv[data-live] .cr8-c-col .cr8-u-rows > :nth-child(n + 3), .sv[data-live] .cr8-c-col .cr8-u-rows > :nth-child(2)::after { display: none; }
+    .sv[data-live] .cr8-c-col .cr8-u[data-m="1"] .cr8-u-row { min-height: 2.7em; padding: .3em 0; }
+  }
+}

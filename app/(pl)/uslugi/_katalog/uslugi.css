@@ -1,0 +1,377 @@
+/* Katalog usług (/uslugi, /uslugi/strony-www, /uslugi/design oraz EN) - chat 2, praca równoległa, etap 2
+   (PRACA-ROWNOLEGLA.md). Style tylko w tym pliku; własne klasy z prefiksem us-. Rysunki usług to komponent
+   Oferty (components/sections/services/drawings.tsx, klasy .of-*) - tu stylowane WYŁĄCZNIE wewnątrz .us-art,
+   bez importu services.css (strona główna jest zamrożona).
+   Wybory właściciela (2026-09-29 / 30): układ pierwotnej wersji /uslugi (wyśrodkowany nagłówek, filtr kategorii,
+   siatka kart), wersja "Galeria", karty "Plan", niski nagłówek jako dodatek nad galerią, karty bez przesuwania
+   pozycji, bez widocznej ścieżki i bez etykiety nad nagłówkiem, tło = Mgławica z podstrony Realizacje (sky.tsx +
+   nebula.ts). Język strony głównej: tło #050505,
+   karty w głębokiej neutralnej czerni z ostrym refleksem krawędzi u góry, ostre linie, jeden kolor marki
+   (--brand), kolory usług (--acc / --oc = "r g b", jasne odcienie kolorów podstron jak w Ofercie) w akcentach.
+   Bez blur / mgiełek / tekstu z gradientem / efektów najechania na kartach (reagują linki, strzałki, filtr).
+   Stany "przed wejściem" tylko pod [data-live] (JS działa) i przy prefers-reduced-motion: no-preference. */
+
+.us {
+  --us-ease: cubic-bezier(.16, 1, .3, 1);
+  --us-line: rgba(255, 255, 255, .08);
+  --us-card-edge: inset 0 1px 0 rgba(255, 255, 255, .1), inset 0 0 0 1px rgba(255, 255, 255, .07);
+  --us-r: 22px; /* promień ramy karty (Kadr: rama 10 px + ekran 12 px); kontur wejścia Obrys go śledzi */
+  position: relative; padding-bottom: 120px; background: #050505; color: #f8fafc; overflow-x: clip;
+}
+@media (min-width: 768px) { .us { padding-bottom: 152px; } }
+
+/* ── MGŁAWICA - tło całej podstrony (sky.tsx + nebula.ts, kopia tła podstrony Realizacje; właściciel 2026-09-30:
+   „podkradnij tło, które jest na podstronie Realizacje”, „wybieram tło mgławicę”). Jedno płótno przyklejone do okna
+   ZA całą treścią (sticky + ujemny margines = nie zajmuje miejsca), nagłówek i galeria nad nim, koniec podstrony
+   gaśnie do czerni stopki (.us-sky-end). Start z czerni: płótno bez wygaszania, do pierwszej klatki czysta czerń
+   (bez zastępczej poświaty). Bez WebGL / Save-Data ([data-fail]): poświata CSS w kolorze marki od dołu okna. ── */
+.us { isolation: isolate; } /* warstwy: mgławica (0) pod nagłówkiem i galerią (1) */
+.us-sky { position: sticky; top: 0; z-index: 0; height: 100vh; height: 100lvh; margin-bottom: -100vh; margin-bottom: -100lvh; overflow: hidden; pointer-events: none; }
+.us-sky-neb { position: absolute; inset: 0; }
+.us-sky-neb[data-fail] { background: radial-gradient(60% 45% at 50% 100%, rgb(var(--brand-rgb, 59 130 246) / .16), transparent 70%); }
+.us-sky-neb canvas { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; }
+.us-sky-neb[data-ready] canvas { opacity: 1; }
+.us-sky-end { position: absolute; left: 0; right: 0; bottom: 0; z-index: 0; height: min(60vh, 560px); pointer-events: none; background: linear-gradient(180deg, rgba(5, 5, 5, 0), rgba(5, 5, 5, .72) 55%, #050505); }
+
+/* ── Nagłówek strony: niski, wyśrodkowany - tylko dodatek nad galerią (właściciel: "zajmuje trochę ekranu,
+   ale widać usługi"), nie hero jak na stronie głównej. Mgławica świeci pod nim od dołu okna. Zdanie i opis stoją
+   niżej, tuż nad kategoriami - zdanie, opis i filtr czytają się jako jedna grupa (właściciel 2026-09-30: „daj niżej,
+   tak żeby było w symbiozie z kategoriami”). ── */
+.us-hero { position: relative; z-index: 1; padding: 148px 0 40px; }
+@media (min-width: 1024px) { .us-hero { padding: 184px 0 52px; } }
+.us-hero-in { position: relative; width: 100%; }
+/* Kamera przy przewijaniu (--hp 0-1 z Catalog.tsx): treść nagłówka unosi się, lekko maleje i gaśnie - odjazd
+   od ujęcia do galerii. */
+@media (prefers-reduced-motion: no-preference) {
+  .us-hero-in { transform: translate3d(0, calc(var(--hp, 0) * -60px), 0) scale(calc(1 - var(--hp, 0) * .04)); opacity: calc(1 - var(--hp, 0) * 1.6); transform-origin: 50% 30%; will-change: transform, opacity; }
+}
+
+/* Góra = „Kropka” (wybór właściciela 2026-09-30, wyśrodkowana): jedno wielkie zdanie z kropką w kolorze marki
+   (jak w logo „AVENLY.” i „Zacznijmy.” na Kontakcie), pod nim krótki opis; filtr kategorii też pośrodku. */
+.us-hero-copy { margin: 0 auto; text-align: center; }
+.us .us-title { margin: 0 auto 22px; max-width: 18ch; font-size: clamp(44px, 6.8vw, 108px); line-height: .98; letter-spacing: -.05em; text-wrap: balance; }
+/* Zdanie nagłówka wysuwa się spod maski (jak linijki w Ofercie). */
+.us-mask { display: block; overflow: hidden; padding: .04em 0 .12em; margin: -.04em 0 -.12em; }
+.us-line { display: block; }
+.us .us-lead { margin: 0 auto; max-width: 36rem; font-size: 17px; text-wrap: balance; }
+/* Telefon (właściciel 2026-10-01: „widzisz, co tu się dzieje? masakra, zrób tak ładnie na mobile tę górę”): opis łamał
+   się w poszarpane linie z wiszącym „siebie pasuje.” / „asystent / AI.” - teraz linie wyważone (balance), twarde spacje
+   w słowniku (jednoliterowe słowa, „asystent AI”), nieco większe zdanie, spokojniejszy rytm do paska kategorii. */
+@media (max-width: 639.98px) {
+  .us-hero { padding: 140px 0 34px; }
+  .us .us-title { margin-bottom: 18px; font-size: clamp(44px, 12.6vw, 56px); }
+  .us .us-lead { max-width: 21rem; font-size: 16px; line-height: 1.6; }
+  .us-lead-s { display: block; } /* każde zdanie od nowej linii, linie zdania wyważone (balance dziedziczy się) */
+}
+
+/* WEJŚCIE (właściciel 2026-09-30: „najpierw czerń kosmosu, dopiero potem tło się pojawia i tekst potem po kolei”):
+   tekst czeka schowany, aż mgławica się pojawi (data-go na .us - Catalog.tsx), potem zdanie spod maski, opis i filtr
+   po kolei; karty czekają na data-cards (wejście kart - Obrys niżej). Przed hydratacją galerii karta jest schowana
+   (bez błysku gotowej karty, która potem znikała i dopiero wchodziła - błąd zgłoszony 2026-10-01).
+   Bezpiecznik (tylko na wypadek zepsutego JS): tekst wychodzi sam po 6 s, karty po 8 s; bez JS <noscript> pokazuje
+   wszystko od razu. */
+@keyframes us-rise { from { opacity: 0; transform: translateY(18px); } }
+@keyframes us-line { from { transform: translate3d(0, 108%, 0); } }
+@keyframes us-show { to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  .us:not([data-go]) .us-line { transform: translate3d(0, 108%, 0); animation: us-show 1s cubic-bezier(.19, 1, .22, 1) 6s forwards; }
+  .us:not([data-go]) .us-in { opacity: 0; transform: translateY(18px); animation: us-show 1s var(--us-ease) 6s forwards; }
+  .us[data-go] .us-line { animation: us-line 1.3s cubic-bezier(.19, 1, .22, 1) both; animation-delay: calc(var(--d, 0) * 140ms + 60ms); }
+  .us[data-go] .us-in { animation: us-rise 1.1s var(--us-ease) both; animation-delay: calc(var(--d, 0) * 120ms + 60ms); }
+  .us-art:not([data-live]) { opacity: 0; animation: us-show .8s ease 8s forwards; }
+}
+
+/* ── Przyciski ── */
+.us-arrow { display: inline-block; width: 16px; height: 16px; flex: none; color: var(--brand); transition: transform .5s var(--us-ease); }
+/* Główny przycisk = biały jak w hero i stopce ("Bezpłatna konsultacja"). */
+.us-cta {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  height: 54px; padding: 0 26px; border-radius: 14px;
+  font-size: 15px; font-weight: 700; line-height: 1; white-space: nowrap; text-decoration: none;
+  color: #020617; background: #fff; box-shadow: inset 0 -1px 0 rgba(2, 6, 23, .12);
+  transition: background-color .35s ease, transform .2s ease;
+}
+.us-cta svg { flex: none; transition: transform .45s var(--us-ease); }
+.us-cta:active { transform: scale(.985); }
+.us-note { font-size: 13.5px; line-height: 1.4; color: #94a3b8; }
+.us-soon {
+  display: inline-flex; align-items: center; height: 26px; padding: 0 11px; border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, .16); font-size: 13px; font-weight: 500; color: #94a3b8; white-space: nowrap;
+}
+
+.us-cta:focus-visible, .us-pair:focus-visible, .us-filter-btn:focus-visible {
+  outline: 2px solid #60a5fa; outline-offset: 3px; border-radius: 12px;
+}
+.us-cta:focus-visible { border-radius: 14px; }
+@media (hover: hover) {
+  .us-pair:hover .us-arrow { transform: translateX(3px); }
+  .us-cta:hover { background: #eef3fb; }
+  .us-cta:hover svg { transform: translateX(3px); }
+}
+
+/* ── Filtr kategorii (jak w pierwotnej wersji: wyśrodkowany, przyklejony pod nawigacją; pełne tło bez rozmycia) ── */
+/* Przyklejony wyżej: --us-stick z Catalog.tsx (12 px przy schowanej nawigacji, pod nawigacją, gdy wraca); bez JS / przed
+   pomiarem pod nawigacją jak dawniej. Przejście top = tempo nawigacji (0,5 s ease-in-out). */
+.us-filter { position: sticky; top: var(--us-stick, 84px); z-index: 20; display: flex; justify-content: center; margin: 0 -24px 44px; padding: 0 24px; transition: top .5s ease-in-out; }
+@media (min-width: 1024px) { .us-filter { top: var(--us-stick, 96px); } }
+.us-filter-bar { display: flex; max-width: 100%; padding: 5px; border-radius: 16px; background: #0b0b0d; box-shadow: var(--us-card-edge); }
+/* Tor przycisków: gdy kategorie się nie mieszczą (telefon), przewija się w poziomie wewnątrz pigułki, a krawędź z ukrytymi
+   kategoriami łagodnie gaśnie (--fl / --fr z Catalog.tsx) - dawniej słowo ucinało się na twardej krawędzi („Design i U”). */
+@property --fl { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --fr { syntax: '<length>'; inherits: false; initial-value: 0px; }
+.us-filter-track {
+  display: flex; gap: 4px; min-width: 0; border-radius: 12px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none;
+  -webkit-mask: linear-gradient(90deg, transparent, #000 var(--fl), #000 calc(100% - var(--fr)), transparent);
+  mask: linear-gradient(90deg, transparent, #000 var(--fl), #000 calc(100% - var(--fr)), transparent);
+  transition: --fl .3s ease, --fr .3s ease;
+}
+.us-filter-track::-webkit-scrollbar { display: none; } /* bez paska przewijania (tor przewija się palcem) */
+.us-filter-btn {
+  flex: none; height: 42px; padding: 0 18px; border: 0; border-radius: 12px; background: transparent; cursor: pointer;
+  font: inherit; font-size: 14.5px; font-weight: 600; line-height: 1; color: #94a3b8; white-space: nowrap;
+  -webkit-tap-highlight-color: transparent; transition: background-color .4s var(--us-ease), color .4s var(--us-ease);
+}
+.us-filter-btn[aria-pressed="true"] { background: #f8fafc; color: #050505; }
+@media (hover: hover) { .us-filter-btn:not([aria-pressed="true"]):hover { color: #e2e8f0; background: rgba(255, 255, 255, .05); } }
+@media (max-width: 639.98px) { .us-filter-btn { padding: 0 12px; font-size: 14px; } } /* ciaśniej: przy krawędzi widać początek następnej kategorii */
+
+/* ── Siatka kart ── */
+/* ── Siatka galerii: 3 kolumny (2 na tablecie, 1 na telefonie). Karty tylko się pojawiają - bez przesuwania
+   pozycji (właściciel: "nie shiftuj pozycji boxów"). ── */
+.us-list { position: relative; z-index: 1; }
+.us-grid { display: grid; gap: 18px; }
+@media (min-width: 700px) { .us-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .us-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; } }
+
+/* ══ Karta usługi z rysunkiem ═════════════════════════════════════════════════════════════════════ */
+.us-art {
+  --out: cubic-bezier(.16, 1, .3, 1); --draw: cubic-bezier(.65, 0, .35, 1); --base: .3s;
+  position: relative; isolation: isolate; display: flex; flex-direction: column; min-width: 0; padding: 10px; border-radius: var(--us-r);
+}
+/* WYGLĄD „KADR” (wybór właściciela 2026-10-01 z Plan / Arkusz / Kadr / Zakładka / Horyzont): karta = kadr w ciemnym
+   szkle jak w sekcji Realizacje - przydymiona, lekko przezroczysta rama (mgławica delikatnie przebija, BEZ rozmycia),
+   cienki refleks u góry, blik z lewego górnego rogu, kolor usługi od dołu; rysunek na „ekranie” osadzonym w ramie.
+   Tło karty jako osobna warstwa pod treścią (art-card.tsx, Outline): przy wejściu pojawia się samą przezroczystością
+   (kompozytor), bez przejść koloru tła i cienia, które przemalowywały kartę w każdej klatce. */
+.us-art-bg {
+  position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(160deg, rgba(22, 22, 27, .46), rgba(9, 9, 11, .58) 45%, rgba(4, 4, 6, .7));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), inset 0 -1px 0 rgba(0, 0, 0, .55), inset 1px 0 0 rgba(255, 255, 255, .05),
+    inset -1px 0 0 rgba(255, 255, 255, .03), inset 0 0 18px rgba(0, 0, 0, .3), 0 0 0 1px rgba(255, 255, 255, .06);
+}
+.us-art-bg::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
+  background: radial-gradient(80% 45% at 10% -8%, rgba(255, 255, 255, .07), transparent 60%),
+    radial-gradient(90% 40% at 50% 112%, rgb(var(--acc) / .16), transparent 65%);
+}
+/* Deska = ekran w ramie: czarny, papier kreślarski (ostra siatka kropek), cienki pierścień jak zrzut w kadrze Realizacji;
+   na szerokiej karcie światło przesuwa się po krawędzi ekranu. */
+.us-art-board {
+  position: relative; padding: 16px 16px 14px; border-radius: 12px;
+  background: radial-gradient(circle, rgba(255, 255, 255, .07) 1px, transparent 1.4px) 0 0 / 16px 16px, #070708;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .45), 0 0 0 2px rgba(255, 255, 255, .06);
+  clip-path: inset(-3px round 12px);
+}
+.us-art-board::before {
+  content: ''; position: absolute; inset: -1px; z-index: 2; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: linear-gradient(90deg, transparent 0 40%, rgb(var(--acc)) 50%, transparent 60% 100%) 0 0 / 250% 100% no-repeat;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation: us-sweep 7s cubic-bezier(.45, 0, .55, 1) infinite paused;
+  animation-delay: calc(var(--i, 0) * -1.8s);
+  opacity: .9;
+}
+.us-art[data-vis] .us-art-board::before { animation-play-state: running; will-change: transform; } /* własna warstwa: światło nie przemalowuje deski */
+@keyframes us-sweep { from { background-position: 100% 0; } to { background-position: 0% 0; } }
+
+/* Rysunek (komponent Oferty). */
+.us-art .of-dw { min-width: 0; }
+.us-art .of-dw-box { position: relative; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 8px; }
+.us-art .of-dw-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.us-art .of-dw-cam { position: absolute; inset: 0; transform-origin: 0 0; }
+.us-art .of-dw-drag { position: absolute; inset: 0; }
+.us-art .of-dw-cap { display: flex; justify-content: center; margin: 12px 0 0; min-height: 22px; font-size: 14.5px; line-height: 1.5; color: #f1f5f9; }
+.us-art .of-dw-fig { display: none; }
+.us-art .of-dw-beats { display: grid; flex: 0 1 auto; min-width: 0; justify-items: center; text-align: center; }
+.us-art .of-dw-beats > span { grid-area: 1 / 1; opacity: 0; }
+.us-art .of-dw-beats > span:first-child { opacity: 1; }
+
+.us-art .of-dw path, .us-art .of-dw circle { fill: none; stroke-linejoin: round; stroke-linecap: round; }
+.us-art .of-dw .of-k-main, .us-art .of-dw .of-k-paper { stroke: rgba(255, 255, 255, .72); stroke-width: calc(1.25px * var(--u, 1)); }
+.us-art .of-dw .of-k-thick { stroke: rgba(255, 255, 255, .72); stroke-width: calc(2.6px * var(--u, 1)); }
+.us-art .of-dw .of-k-soft { stroke: rgba(255, 255, 255, .28); stroke-width: calc(1px * var(--u, 1)); }
+.us-art .of-dw .of-k-acc { stroke: rgb(var(--oc)); stroke-width: calc(1.5px * var(--u, 1)); }
+.us-art .of-dw .of-k-dash { stroke: rgba(255, 255, 255, .3); stroke-width: calc(1px * var(--u, 1)); stroke-dasharray: 3 4; stroke-linecap: butt; }
+.us-art .of-dw .of-k-bar { stroke: rgba(255, 255, 255, .2); stroke-width: 4px; }
+.us-art .of-dw .of-k-barHi { stroke: rgba(255, 255, 255, .5); stroke-width: 5px; }
+.us-art .of-dw .of-k-barXL { stroke: rgba(255, 255, 255, .86); stroke-width: 8px; }
+.us-art .of-dw .of-k-barAcc { stroke: rgb(var(--oc) / .75); stroke-width: 4px; }
+.us-art .of-dw .of-k-barAccXL { stroke: rgb(var(--oc)); stroke-width: 8px; }
+.us-art .of-dw .of-k-fill { fill: rgba(255, 255, 255, .028); }
+.us-art .of-dw .of-k-accFill { fill: rgb(var(--oc) / .13); }
+.us-art .of-dw .of-k-lit { fill: rgb(var(--oc) / .34); }
+.us-art .of-dw .of-k-dot { fill: rgb(var(--oc)); }
+.us-art .of-dw .of-k-paper { fill: #09090b; }
+.us-art .of-dw .of-k-ink { fill: #060607; stroke: #fff; stroke-width: calc(1.25px * var(--u, 1)); }
+.us-art .of-lead path { stroke: rgba(255, 255, 255, .45); stroke-width: calc(1px * var(--u, 1)); }
+.us-art .of-lead circle { fill: rgba(255, 255, 255, .9); }
+.us-art .of-mark, .us-art-legend-n {
+  display: inline-grid; place-items: center; border-radius: 50%; border: 1px solid rgb(var(--acc) / .6);
+  color: rgb(var(--acc)); color: color-mix(in oklab, rgb(var(--acc)) 70%, #fff);
+  font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums;
+}
+.us-art .of-mark { position: absolute; z-index: 1; width: 22px; height: 22px; margin: -11px 0 0 -11px; background: #070708; font-size: 11px; }
+.us-art .of-dw .of-pen { fill: #fff; stroke: rgb(var(--oc) / .45); stroke-width: calc(3px * var(--u, 1)); paint-order: stroke; opacity: 0; }
+.us-art .of-dw .of-lv { opacity: 0; }
+.us-art .of-dw .of-lv--rest { opacity: 1; }
+
+/* Wejście: deska otwiera się ze szczeliny (data-enter), rysunek rysuje się linia po linii (data-in),
+   potem odnośniki i numery; kamera najeżdża przy rysowaniu, w scenkach prowadzi ją WAAPI (art-card.tsx). */
+@media (prefers-reduced-motion: no-preference) {
+  .us-art[data-live]:not([data-enter]) .us-art-board { clip-path: inset(calc(50% - 1px) -3px round 12px); }
+  .us-art[data-live] .of-dw :is(path:not(.of-lv), path.of-lv--rest)[pathLength] { stroke-dasharray: 1 1; stroke-dashoffset: 1; opacity: 0; }
+  .us-art[data-live] .of-dw path.of-lv[pathLength]:not(.of-lv--rest) { stroke-dasharray: 1 1; stroke-dashoffset: 1; }
+  .us-art[data-live][data-in] .of-dw :is(path:not(.of-lv), path.of-lv--rest)[pathLength] {
+    stroke-dashoffset: 0; opacity: 1;
+    transition: stroke-dashoffset 1.1s var(--draw) calc(var(--base) + var(--d, 0ms)), opacity .15s linear calc(var(--base) + var(--d, 0ms));
+  }
+  .us-art[data-live] .of-dw :is(path:not(.of-lv), path.of-lv--rest):not([pathLength]), .us-art[data-live] .of-lead circle { opacity: 0; }
+  .us-art[data-live][data-in] .of-dw :is(path:not(.of-lv), path.of-lv--rest):not([pathLength]),
+  .us-art[data-live][data-in] .of-lead circle { opacity: 1; transition: opacity .7s ease calc(var(--base) + var(--d, 0ms) + .3s); }
+  .us-art[data-live] .of-mark { opacity: 0; transform: scale(.6); }
+  .us-art[data-live][data-in] .of-mark { opacity: 1; transform: none; transition: opacity .5s ease calc(var(--base) + var(--d, 0ms)), transform .8s var(--out) calc(var(--base) + var(--d, 0ms)); }
+  .us-art[data-live]:not([data-in]) .of-dw-cam { transform: translate(3%, 3%) scale(.94); }
+  .us-art[data-live][data-in] .of-dw-cam { transition: transform 2.8s var(--out) var(--base); }
+  .us-art[data-live]:not([data-in]) .of-dw-cap { opacity: 0; }
+  .us-art[data-live][data-in] .of-dw-cap { transition: opacity .8s ease 1.2s; }
+}
+
+/* ══ Wejście boxu - OBRYS (wybór właściciela 2026-10-01 z propozycji Obrys / Kropka / Kurtyna / Skan) ══
+   Kontur karty rysuje się jak linia rysunku, na jego czole biegnie punkt światła w kolorze usługi; potem pojawia się tło
+   karty, deska otwiera się ze szczeliny i rysuje się rysunek, na końcu tekst i kreska w kolorze usługi. Kolejne kolumny
+   co 110 ms, karty bez przesuwania („nie shiftuj pozycji boxów”).
+   Zasady (poprawki 2026-10-01, właściciel: „laguje i buguje się reveal, najpierw jakby jest cały, potem dopiero
+   reveal”): (1) schowanie jest NATYCHMIASTOWE - przejścia są zadeklarowane tylko w stanie [data-enter], więc karta,
+   która właśnie dostała data-live, nie gaśnie na oczach (dawniej przejścia działały w obie strony: gotowa karta
+   wisiała pół sekundy i dopiero znikała); (2) sam article NIGDY nie jest wycięty ani przezroczysty po hydratacji -
+   IntersectionObserver mierzy właśnie jego (clip-path samego elementu zeruje widoczność w Chrome); (3) animowane są
+   tylko tanie właściwości: przezroczystość warstw (tło, deska, tekst), kontur na własnej warstwie (will-change), deska
+   ze szczeliny (clip-path jak w Ofercie). */
+.us-art-edge { position: absolute; inset: 0; z-index: 4; display: none; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.us-art-edge rect { x: .5px; y: .5px; width: calc(100% - 1px); height: calc(100% - 1px); rx: calc(var(--us-r) - .5px); fill: none; }
+.us-art-edge-line { stroke: rgba(255, 255, 255, .34); stroke-width: 1px; stroke-dasharray: 1 1; stroke-dashoffset: 1; }
+.us-art-edge-head { stroke: rgb(var(--acc)); stroke-width: 2px; stroke-linecap: round; stroke-dasharray: .08 2; stroke-dashoffset: .08; opacity: 0; } /* przerwa dłuższa niż obwód - punkt nie zawija się na koniec konturu */
+@keyframes us-head { 0% { stroke-dashoffset: .08; opacity: 1; } 90% { opacity: 1; } 100% { stroke-dashoffset: -.92; opacity: 0; } }
+
+@media (prefers-reduced-motion: no-preference) {
+  .us-art[data-live] .us-art-edge { display: block; will-change: transform; }
+  /* przed wejściem (bez przejść) */
+  .us-art[data-live]:not([data-enter]) :is(.us-art-bg, .us-art-board, .us-art-body) { opacity: 0; }
+  /* fokus klawiatury na karcie, która jeszcze nie weszła - treść od razu widoczna */
+  .us-art[data-live]:not([data-enter]):focus-within :is(.us-art-bg, .us-art-board, .us-art-body) { opacity: 1; }
+  /* wejście */
+  .us-art[data-enter] .us-art-edge-line { stroke-dashoffset: 0; transition: stroke-dashoffset 1.1s var(--draw) calc(var(--i, 0) * 110ms); }
+  .us-art[data-enter] .us-art-edge-head { animation: us-head 1.1s var(--draw) calc(var(--i, 0) * 110ms) both; }
+  .us-art[data-enter] .us-art-edge { opacity: 0; visibility: hidden; transition: opacity .9s ease calc(var(--i, 0) * 110ms + 1.5s), visibility 0s linear calc(var(--i, 0) * 110ms + 2.4s); }
+  .us-art[data-enter] .us-art-bg { transition: opacity .8s ease calc(var(--i, 0) * 110ms + .55s); }
+  .us-art[data-enter] .us-art-board { transition: clip-path 1.35s cubic-bezier(.7, 0, .2, 1) calc(.6s + var(--i, 0) * 110ms), opacity .3s ease calc(.55s + var(--i, 0) * 110ms); }
+  .us-art[data-enter] .us-art-body { transition: opacity .9s var(--out) calc(.85s + var(--i, 0) * 110ms); }
+}
+
+/* Tekst pod deską: numer i kategoria, nazwa, chwyt i konkret, legenda 1-3 (numery jak na rysunku), link. */
+.us-art-body { display: flex; flex-direction: column; flex: 1; min-width: 0; padding: 22px 16px 4px; }
+.us-art-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 12px; font-size: 13.5px; line-height: 1.4; color: #94a3b8; }
+.us-art-n { font-weight: 600; color: rgb(var(--acc)); font-variant-numeric: tabular-nums; }
+.us-art-cat { padding-left: 12px; border-left: 1px solid rgba(255, 255, 255, .14); color: #cbd5e1; }
+.us-art-meta .us-soon { margin-left: auto; }
+.us-art-name { margin: 0 0 12px; font-size: clamp(24px, 2.2vw, 32px); line-height: 1.12; font-weight: 600; letter-spacing: -.025em; color: #f8fafc; text-wrap: balance; }
+.us-art-link { color: inherit; text-decoration: none; outline: none; -webkit-tap-highlight-color: transparent; }
+.us-art-link::after { content: ''; position: absolute; inset: 0; z-index: 3; border-radius: inherit; }
+.us-art:has(.us-art-link:focus-visible) { outline: 2px solid #60a5fa; outline-offset: 4px; }
+.us-art:has(.us-art-link):active { opacity: .9; }
+.us-art-line { margin: 0 0 22px; max-width: 38rem; font-size: 16px; line-height: 1.65; color: #94a3b8; text-wrap: pretty; }
+.us-art-hook { color: #e2e8f0; }
+.us-art-legend { list-style: none; margin: 0; padding: 0; display: grid; }
+.us-art-legend li {
+  display: flex; align-items: center; gap: 12px; padding: 11px 0; border-top: 1px solid rgb(var(--acc) / .16);
+  font-size: 15px; font-weight: 500; line-height: 1.35; color: #e2e8f0;
+}
+.us-art-legend li:last-child { border-bottom: 1px solid rgb(var(--acc) / .16); }
+.us-art-legend-n { flex: none; width: 22px; height: 22px; font-size: 11.5px; }
+.us-art-foot { display: flex; margin: auto 0 0; padding: 18px 0 12px; }
+.us-art-go { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; color: #e2e8f0; transition: color .4s; }
+.us-art-go .us-arrow { color: rgb(var(--acc)); }
+.us-art-round { display: none; }
+@media (hover: hover) {
+  .us-art:hover .us-art-go { color: #fff; }
+  .us-art:hover .us-art-go .us-arrow { transform: translateX(3px); }
+}
+
+/* ── Karta galerii (wybory właściciela: wersja "Galeria" 2026-09-29, wygląd "Kadr" 2026-10-01): rama Kadr (wyżej), ekran
+   z rysunkiem na całą szerokość ramy, pod nim numer i kategoria, nazwa, chwyt, u dołu "Zobacz szczegóły" i okrągły
+   przycisk ze strzałką. Odnośniki 1-3 schowane (bez legendy - jest na podstronie usługi). ── */
+.us-art--tile { padding: 10px 10px 0; }
+.us-art--tile .us-art-board { padding: 24px 18px 12px; }
+.us-art--tile .us-art-board::before { display: none; }
+.us-art--tile .of-lead, .us-art--tile .of-mark { display: none; }
+.us-art--tile .of-dw-cap { margin-top: 10px; font-size: 13.5px; color: #cbd5e1; }
+.us-art--tile .us-art-body { padding: 18px 12px 10px; }
+.us-art--tile .us-art-name { margin-bottom: 8px; font-size: 25px; line-height: 1.18; }
+.us-art--tile .us-art-line { margin-bottom: 6px; font-size: 15.5px; line-height: 1.55; }
+.us-art--tile .us-art-foot { align-items: center; justify-content: space-between; padding: 14px 0; }
+.us-art--tile .us-art-round {
+  display: inline-grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, .14); background: rgba(255, 255, 255, .03); color: rgb(var(--acc)); transition: background-color .4s, border-color .4s;
+}
+.us-art--tile .us-art-round svg { width: 17px; height: 17px; transition: transform .5s var(--us-ease); }
+@media (hover: hover) {
+  .us-art--tile:hover .us-art-round { background: rgb(var(--acc) / .1); border-color: rgb(var(--acc) / .8); }
+  .us-art--tile:hover .us-art-round svg { transform: translate(2px, -2px); }
+}
+@media (prefers-reduced-motion: no-preference) {
+}
+
+/* Box "Nie wiesz, co wybrać?" - kafel jak karty usług (deska z rysunkiem konsultacji, cta-art.tsx), pod deską
+   pytanie, zdanie i biały przycisk przy dolnej krawędzi (w jednej linii z "Zobacz szczegóły" sąsiednich kart). */
+.us-art--cta .us-art-line { margin-bottom: 16px; color: #94a3b8; }
+.us-art-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; margin-top: auto; padding: 4px 0 16px; }
+.us-art--cta .us-cta { height: 46px; padding: 0 20px; font-size: 14.5px; }
+
+/* Strona kategorii z jedną usługą (Design): deska po lewej, tekst po prawej. */
+@media (min-width: 1024px) {
+  .us-art--wide { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); align-items: center; gap: 0; }
+  .us-art--wide .us-art-body { padding: 24px 28px 16px 36px; }
+  .us-art--wide .us-art-name { font-size: clamp(30px, 3vw, 44px); }
+}
+.us-pairs { margin-top: 88px; padding-top: 28px; border-top: 1px solid rgba(255, 255, 255, .14); }
+.us-pairs-t { margin: 0 0 12px; font-size: 22px; line-height: 1.2; font-weight: 600; letter-spacing: -.015em; color: #f8fafc; }
+.us-pairs-list { list-style: none; margin: 0; padding: 0; display: grid; column-gap: 32px; }
+@media (min-width: 640px) { .us-pairs-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .us-pairs-list { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.us-pair {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px;
+  border-bottom: 1px solid var(--us-line); color: #e2e8f0; font-size: 16.5px; font-weight: 500; text-decoration: none; transition: color .4s;
+}
+@media (hover: hover) { .us-pair:hover { color: #fff; } }
+
+/* Telefon: mniejsze numery na rysunku, ciaśniejsza deska. */
+@media (max-width: 639.98px) {
+  .us-art:not(.us-art--tile) { padding: 8px; }
+  .us-art-board { padding: 12px 12px 10px; }
+  .us-art .of-mark { width: 19px; height: 19px; margin: -9.5px 0 0 -9.5px; font-size: 10px; }
+  .us-art .of-dw-cap { font-size: 13.5px; }
+  .us-art-body { padding: 20px 12px 2px; }
+  .us-art--tile { padding: 8px 8px 0; }
+  .us-art--tile .us-art-board { padding: 20px 14px 10px; }
+  .us-art--tile .us-art-body { padding: 16px 12px 6px; }
+}
+
+/* Ograniczony ruch: statyczny rysunek (bez scenek i pióra), podpis = trzy kroki naraz, bez przejść. */
+@media (prefers-reduced-motion: reduce) {
+  .us *, .us *::before, .us *::after { transition-duration: 0s !important; transition-delay: 0s !important; animation: none !important; }
+  .us-art .of-dw path.of-lv:not(.of-lv--rest), .us-art .of-dw .of-pen { opacity: 0 !important; }
+  .us-art .of-dw-beats { gap: 2px; }
+  .us-art .of-dw-beats > span { grid-area: auto; opacity: 1; }
+  .us-art-board::before { opacity: 0; }
+}

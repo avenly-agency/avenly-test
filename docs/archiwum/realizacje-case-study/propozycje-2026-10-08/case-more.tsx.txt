@@ -1,0 +1,364 @@
+'use client';
+
+import { useCallback, useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
+import {
+  Copy, Facts, Meta, Name, Shot, SiteButton, SPEED, VoidShot, nameOf, nb, pinAt, scaleX, sentences, setVar, shotsOf, show, splitLead,
+  type MainProps,
+} from './case';
+import { SIZES } from './cards';
+import { Frame, setPage } from './frame';
+import { Rv, scrollFrac, sda, useReducedPref } from './shared';
+import { clamp01, put, smooth, useScrollLoop } from './versions';
+
+// Case study - druga piątka propozycji całej podstrony (2026-10-08, właściciel: „daj jeszcze pięć, możesz dać jedno
+// layoutowo takie jak było kiedyś, tylko zmodernizowane”). Przełącznik i wspólne klocki: ./case.tsx, style: ./case.css.
+//   Klasyczna - układ dawnej wersji: nagłówek z liczbami obok, przyklejony kadr „Strona na żywo”, punkt wyjścia
+//               i rozwiązanie w dwóch kolumnach, zakres obok technologii, galeria.
+//   Redakcja  - artykuł w magazynie: wielki tytuł, metryczka na liniach, zdjęcie otwierające (kadr), tekst w szpaltach
+//               z inicjałem, wyimek na całą szerokość.
+//   Droga     - linia rysuje się w dół strony przez stacje 01-03 (zapalają się, gdy dojdzie do nich czoło linii)
+//               i kończy w dużym kadrze z gotową stroną.
+//   Kropka    - nazwa kończy się kropką w kolorze realizacji; kropka otwiera się jak przysłona na cały ekran i zostaje
+//               sama strona klienta, bez ramy.
+// (Głębia = Taśma z kamerą lecącą w głąb - case.tsx.)
+
+const Head = ({ no, label }: { no: string; label: string }) => (
+  <h2 className="rl-cf-ob-h"><span className="rl-cf-no">{no}</span>{label}</h2>
+);
+
+// ── KLASYCZNA ─────────────────────────────────────────────────────────────────────────────────────
+/** Akapity po ok. dwa zdania (do ~330 znaków) - długi opis nie stoi jedną ścianą tekstu. Treść bez zmian. */
+const paras = (s: string) => {
+  const out: string[] = [];
+  for (const x of sentences(s)) {
+    const last = out[out.length - 1];
+    if (last !== undefined && last.length + x.length <= 330) out[out.length - 1] = `${last} ${x}`;
+    else out.push(x);
+  }
+  return out;
+};
+
+/** Punkt wyjścia / rozwiązanie: numer, tytuł i spokojny tekst w akapitach (bez wielkiego pierwszego zdania). */
+const Part = ({ no, label, text, i = 0 }: { no: string; label: string; text: string; i?: number }) => (
+  <Rv className="rl-cf-kl-part" style={{ '--i': i } as CSSProperties}>
+    <p className="rl-cf-kl-no" aria-hidden="true">{no}</p>
+    <h2 className="rl-cf-kl-h">{label}</h2>
+    {paras(text).map((p, k) => <p key={k} className="rl-cf-kl-p">{nb(p)}</p>)}
+  </Rv>
+);
+
+// Runda 4 (właściciel: „klasyczną dopracuj, nie dodawaj niepotrzebnych rzeczy typu grupy w akademii, bo to jest useless,
+// dopracuj designowo punkty wyjścia i rozwiązanie, bo jakoś dziwnie wygląda”): bez liczb „w skrócie” (obok nazwy stoi
+// opis z linkiem), punkt wyjścia i rozwiązanie jako dwie równe kolumny na liniach, kadr na całą szerokość wrappera.
+export const Klasyczna = ({ project, item, num, t }: MainProps) => {
+  const liveRef = useRef<HTMLElement>(null);
+  const shots = shotsOf(project);
+  return (
+    <>
+      <section className="rl-cf-kl-hero" aria-labelledby="rl-cf-h1">
+        <div className="rl-cf-kl-top container mx-auto px-6">
+          <div className="rl-cf-kl-copy" style={{ '--len-s': nameOf(item).lenS } as CSSProperties}>
+            <Meta num={num} item={item} year={project.year} />
+            <Name item={item} className="rl-cf-ob-name" />
+          </div>
+          <div className="rl-cf-kl-side">
+            <p className="im-lead rl-cf-lead rl-in" style={{ '--d': 4 } as CSSProperties}>{nb(project.description)}</p>
+            <SiteButton item={item} t={t} />
+          </div>
+        </div>
+      </section>
+
+      {/* Strona na żywo: kadr przyklejony do ekranu, strona klienta przewija się w nim (wysokość sekcji liczy useLivePage) */}
+      <section ref={liveRef} className="rl-cs-live rl-cf-kl-live" aria-labelledby="rl-cf-live-h">
+        <div className="rl-cs-stick" data-rl-stick="">
+          <div className="container mx-auto px-6">
+            <div className="rl-cs-live-head">
+              <h2 id="rl-cf-live-h" className="rl-cf-rail-l">{t.liveLabel}</h2>
+              <p className="rl-cs-hint">{t.liveHint}</p>
+            </div>
+            <div className="rl-cf-kl-fr">
+              <Frame
+                slug={item.slug} alt={`${t.cardAltPrefix} ${item.name}`} accent={item.accent} domain={item.domain}
+                size="case" sizes={SIZES.case} hostRef={liveRef} eager sky={item.slug}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="rl-cf-story" aria-label={t.storyAria}>
+        <div className="container mx-auto px-6">
+          <div className="rl-cf-kl-pair">
+            <Part no="01" label={t.challengeLabel} text={project.challenge} />
+            <Part no="02" label={t.solutionLabel} text={project.solution} i={1} />
+          </div>
+          <Rv className="rl-cf-kl-facts"><Facts project={project} item={item} t={t} numbers={false} top /></Rv>
+          {shots.length > 0 && (
+            <div className="rl-cf-kl-gal">
+              <h2 className="rl-cf-kl-sub">{t.galleryLabel}</h2>
+              <div className="rl-cf-ch-shots" data-n={shots.length}>
+                {shots.map((src, k) => (
+                  <Shot key={src} item={item} src={src} alt={`${t.galleryAltPrefix} ${item.name} (${k + 1})`} anim="enter" />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+    </>
+  );
+};
+
+// ── REDAKCJA ──────────────────────────────────────────────────────────────────────────────────────
+export const Redakcja = ({ project, item, num, t }: MainProps) => {
+  const [quote, rest] = splitLead(project.solution);
+  const shots = shotsOf(project);
+  const tech = project.techStack ?? [];
+  const by: [string, ReactNode][] = [
+    [t.clientLabel, project.client],
+    [t.yearLabel, project.year],
+    [t.techLabel, tech.join(', ')],
+  ];
+  return (
+    <article className="rl-cf-rd">
+      <header className="rl-cf-rd-head container mx-auto px-6" aria-labelledby="rl-cf-h1">
+        <div className="rl-cf-rd-title" style={{ '--len-s': nameOf(item).lenS } as CSSProperties}>
+          <Meta num={num} item={item} year={project.year} />
+          <Name item={item} className="rl-cf-rd-name" />
+        </div>
+        <p className="rl-cf-rd-deck rl-in" style={{ '--d': 4 } as CSSProperties}>{project.description}</p>
+        <dl className="rl-cf-rd-by rl-in" style={{ '--d': 5 } as CSSProperties}>
+          {by.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
+          {item.domain && (
+            <div>
+              <dt>{t.viewOnline}</dt>
+              <dd><a href={`https://${item.domain}`} target="_blank" rel="noopener noreferrer" className="rl-cf-rd-a">{item.domain}</a></dd>
+            </div>
+          )}
+        </dl>
+      </header>
+
+      {/* zdjęcie otwierające: kadr na szerokość wrappera, strona klienta przewija się w nim, gdy kadr jedzie przez ekran */}
+      <div className="rl-cf-rd-hero container mx-auto px-6">
+        <div className="rl-cf-fr-in">
+          <Frame
+            slug={item.slug} alt={`${t.cardAltPrefix} ${item.name}`} accent={item.accent} domain={item.domain}
+            size="case" sizes={SIZES.case} anim="none" eager sky={item.slug}
+          />
+        </div>
+      </div>
+
+      <div className="rl-cf-rd-body container mx-auto px-6">
+        <Rv className="rl-cf-rd-sec">
+          <Head no="01" label={t.challengeLabel} />
+          <p className="rl-cf-rd-p rl-cf-rd-first">{project.challenge}</p>
+        </Rv>
+        <Rv className="rl-cf-rd-quote"><p>{quote}</p></Rv>
+        <Rv className="rl-cf-rd-sec">
+          <Head no="02" label={t.solutionLabel} />
+          <p className="rl-cf-rd-p">{rest || project.solution}</p>
+        </Rv>
+        <div className="rl-cf-ch-shots rl-cf-rd-shots" data-n={Math.max(1, shots.length)}>
+          {shots.length
+            ? shots.map((src, k) => (
+              <Shot key={src} item={item} src={src} alt={`${t.galleryAltPrefix} ${item.name} (${k + 1})`} anim="enter" />
+            ))
+            : <Shot item={item} alt={`${t.cardAltPrefix} ${item.name}`} anim="enter" />}
+        </div>
+        <Rv className="rl-cf-rd-sec rl-cf-rd-sec--wide">
+          <Head no="03" label={t.statsLabel} />
+          <Facts project={project} item={item} t={t} />
+        </Rv>
+      </div>
+    </article>
+  );
+};
+
+// ── DROGA ─────────────────────────────────────────────────────────────────────────────────────────
+const Station = ({ no, label, flip, visual, children }: { no: string; label: string; flip?: boolean; visual?: ReactNode; children: ReactNode }) => (
+  <div className="rl-cf-dr-st" data-flip={flip ? '' : undefined}>
+    <div className="rl-cf-dr-tx">
+      <Head no={no} label={label} />
+      {children}
+    </div>
+    {visual && <div className="rl-cf-dr-pic" aria-hidden="true">{visual}</div>}
+  </div>
+);
+
+export const Droga = ({ project, item, num, t }: MainProps) => {
+  const reduced = useReducedPref();
+  const ref = useRef<HTMLDivElement>(null);
+  const fillRef = useRef<HTMLElement>(null);
+  const shots = shotsOf(project);
+
+  // stacja zapala się, gdy dojdzie do niej czoło linii (64% wysokości okna), i zostaje zapalona
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver((es) => {
+      for (const e of es) if (e.isIntersecting) { e.target.setAttribute('data-on', ''); io.unobserve(e.target); }
+    }, { rootMargin: '0px 0px -36% 0px' });
+    el.querySelectorAll('.rl-cf-dr-st').forEach((s) => io.observe(s));
+    return () => io.disconnect();
+  }, []);
+
+  useScrollLoop(() => {
+    const el = ref.current, fill = fillRef.current;
+    if (!el || !fill) return;
+    const vh = window.innerHeight;
+    const r = el.getBoundingClientRect();
+    if (r.bottom < -200 || r.top > vh + 200) return;
+    const v = `scaleY(${clamp01((vh * 0.64 - (r.top - scrollFrac())) / Math.max(1, r.height)).toFixed(4)})`;
+    if (fill.style.transform !== v) fill.style.transform = v;
+  }, !reduced, []);
+
+  return (
+    <>
+      <header className="rl-cf-dr-head container mx-auto px-6" aria-labelledby="rl-cf-h1">
+        <div className="rl-cf-kl-copy" style={{ '--len-s': nameOf(item).lenS } as CSSProperties}>
+          <Meta num={num} item={item} year={project.year} />
+          <Name item={item} className="rl-cf-ob-name" />
+          <p className="im-lead rl-cf-lead rl-in" style={{ '--d': 4 } as CSSProperties}>{project.description}</p>
+          <SiteButton item={item} t={t} />
+        </div>
+      </header>
+      <div className="container mx-auto px-6">
+        <div ref={ref} className="rl-cf-dr">
+          <i className="rl-cf-dr-line" aria-hidden="true"><b ref={fillRef} /></i>
+          <Station no="01" label={t.challengeLabel} visual={<VoidShot item={item} />}>
+            <Copy text={project.challenge} />
+          </Station>
+          <Station no="02" label={t.solutionLabel} flip visual={<Shot item={item} src={shots[0]} />}>
+            <Copy text={project.solution} />
+          </Station>
+          <Station no="03" label={t.statsLabel}>
+            <Facts project={project} item={item} t={t} />
+          </Station>
+          {/* koniec drogi: gotowa strona w dużym kadrze (przewija się, gdy kadr jedzie przez ekran) */}
+          <div className="rl-cf-dr-st rl-cf-dr-end">
+            <h2 className="rl-cf-ob-h"><span className="rl-cf-no">04</span>{t.liveLabel}</h2>
+            <Frame
+              slug={item.slug} alt={`${t.cardAltPrefix} ${item.name}`} accent={item.accent} domain={item.domain}
+              size="case" sizes={SIZES.case} anim="none" sky={item.slug}
+            />
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+// ── KROPKA ────────────────────────────────────────────────────────────────────────────────────────
+/** Położenie elementu względem przodka z pozycjonowaniem (bez transformacji - wejście nazwy spod maski nie przeszkadza). */
+const offsetIn = (el: HTMLElement, root: HTMLElement) => {
+  let x = 0, y = 0;
+  let n: HTMLElement | null = el;
+  while (n && n !== root) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent as HTMLElement | null; }
+  return { x, y };
+};
+
+export const Kropka = ({ project, item, num, t }: MainProps) => {
+  const reduced = useReducedPref();
+  const secRef = useRef<HTMLElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const plateRef = useRef<HTMLDivElement>(null);
+  const dotRef = useRef<HTMLSpanElement>(null);
+  const winRef = useRef<HTMLDivElement>(null);
+  const barRef = useRef<HTMLElement>(null);
+  const name = nameOf(item);
+  const geo = useRef({ css: false, cx: 0, cy: 0, r0: 6, r1: 1200, q0: 0.25, q1: 0.95, clip: '', frame: null as HTMLElement | null });
+
+  const frame = useCallback(() => {
+    const sec = secRef.current, stage = stageRef.current;
+    if (!sec || !stage) return;
+    const { p: q, near } = pinAt(sec, stage);
+    if (!near) return;
+    const g = geo.current;
+    // a: 0 = kropka przy nazwie, 1 = przysłona otwarta na cały ekran
+    const a = smooth(0.02, g.q0 * 0.96, q);
+    const win = winRef.current;
+    if (win) {
+      // promień rośnie coraz szybciej - jak wlot w kropkę
+      const clip = `circle(${(g.r0 + (g.r1 - g.r0) * Math.pow(a, 2.4)).toFixed(1)}px at ${g.cx.toFixed(1)}px ${g.cy.toFixed(1)}px)`;
+      if (clip !== g.clip) { g.clip = clip; win.style.clipPath = clip; win.style.setProperty('-webkit-clip-path', clip); }
+      // kropka w kolorze realizacji staje się oknem: barwa schodzi, zostaje strona klienta
+      setVar(win, '--tint', (1 - smooth(0.04, 0.5, a)).toFixed(3));
+      const wc = a > 0.001 && a < 0.999 ? 'clip-path' : '';
+      if (win.style.willChange !== wc) win.style.willChange = wc;
+    }
+    put(plateRef.current, 'none', 1 - smooth(0.45, 0.85, a));
+    show(plateRef.current, a < 0.86);
+    const pp = clamp01((q - g.q0) / Math.max(0.0001, g.q1 - g.q0));
+    if (!g.css) setPage(g.frame, pp);
+    scaleX(barRef.current, pp);
+  }, []);
+
+  useEffect(() => {
+    const sec = secRef.current, stage = stageRef.current, dot = dotRef.current, win = winRef.current;
+    if (reduced || !sec || !stage || !dot || !win) return;
+    const page = win.querySelector<HTMLElement>('.rl-page');
+    const measure = () => {
+      const { x, y } = offsetIn(dot, stage);
+      const cx = x + dot.offsetWidth / 2, cy = y + dot.offsetHeight / 2;
+      const w = stage.clientWidth, vh = stage.offsetHeight;
+      const view = win.querySelector<HTMLElement>('.rl-frame-view');
+      const travel = view && page ? Math.max(0, page.offsetHeight - view.clientHeight) : 0;
+      const intro = vh, run = travel / SPEED;
+      const d = Math.round(intro + run + vh * 0.16);
+      setVar(sec, '--cf-d', `${d}px`);
+      setVar(sec, '--cf-p0', `${((intro / d) * 100).toFixed(3)}%`);
+      setVar(sec, '--cf-p1', `${(((intro + run) / d) * 100).toFixed(3)}%`);
+      geo.current = {
+        css: sda(), cx, cy, r0: Math.max(2, dot.offsetWidth / 2), q0: intro / d, q1: (intro + run) / d, clip: '',
+        // do najdalszego rogu ekranu
+        r1: Math.hypot(Math.max(cx, w - cx), Math.max(cy, vh - cy)) + 4,
+        frame: win.querySelector<HTMLElement>('.rl-frame'),
+      };
+      frame();
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    [stage, plateRef.current, page].forEach((el) => { if (el) ro.observe(el); });
+    document.fonts?.ready.then(measure);
+    const late = window.setTimeout(measure, 60);
+    return () => {
+      ro.disconnect();
+      window.clearTimeout(late);
+      ['--cf-d', '--cf-p0', '--cf-p1'].forEach((v) => sec.style.removeProperty(v));
+      win.style.clipPath = '';
+      win.style.removeProperty('-webkit-clip-path');
+    };
+  }, [reduced, frame]);
+
+  useScrollLoop(frame, !reduced, []);
+
+  return (
+    <section ref={secRef} className="rl-cf-ko rl-cf-sda" aria-labelledby="rl-cf-h1">
+      <div ref={stageRef} className="rl-cf-ko-stage">
+        <div className="rl-cf-ko-box container mx-auto px-6">
+          <div ref={plateRef} className="rl-cf-ko-plate" style={{ '--len': name.len + 1, '--len-s': name.lenS + 1 } as CSSProperties}>
+            <Meta num={num} item={item} year={project.year} />
+            <h1 id="rl-cf-h1" className="rl-cf-name">
+              <span className="rl-mask">
+                <span className="rl-line" style={{ '--d': 2 } as CSSProperties}>
+                  {name.node}<span ref={dotRef} className="rl-cf-ko-dot" aria-hidden="true" />
+                </span>
+              </span>
+            </h1>
+            <p className="im-lead rl-cf-lead rl-in" style={{ '--d': 4 } as CSSProperties}>{project.description}</p>
+            <SiteButton item={item} t={t} />
+          </div>
+        </div>
+        {/* okno: strona klienta na cały ekran, bez ramy - odsłania ją przysłona otwierana z kropki */}
+        <div ref={winRef} className="rl-cf-ko-win">
+          <h2 className="sr-only">{t.liveLabel}</h2>
+          <Frame
+            slug={item.slug} alt={`${t.cardAltPrefix} ${item.name}`} accent={item.accent} domain={item.domain}
+            size="case" sizes="100vw" manual anim="none" eager sky={item.slug}
+          />
+          <i className="rl-cf-bar rl-cf-ko-bar" aria-hidden="true"><b ref={barRef} /></i>
+        </div>
+      </div>
+    </section>
+  );
+};

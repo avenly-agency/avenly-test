@@ -1,0 +1,225 @@
+/* Podstrona „Chatboty AI” - sekcja WIEDZA, wersja „PRZYPISY” (chat 13, runda 3 sekcji Wiedza: „bardziej premium
+   animacje”). Style tylko tej wersji, prefiks ch-kn- (ch-n- należy do sceny nocy). Wspólne części przypiętych scen
+   (wysoki kontener, przyklejony ekran, plany gwiazd, narrator, lista dla czytników): wiedza.css (ch-k-); asystent
+   jako gwiazda, dymki, obwódka ze światłem z góry (.ch-lit): chatboty.css.
+   Scena (wiedza-przypisy.tsx): po lewej JEDNO miejsce rozmowy - pytanie, odpowiedź WIELKIM pismem, pod nią przypisy;
+   po prawej talia pięciu dokumentów firmy w głębi (CSS 3D), wychodząca lekko za prawą krawędź ekranu.
+   Zmienne ze sceny na .ch-kn-pin: --p postęp · --sp / --sp2 gwiazda autora · --say / --say2 odpowiedź słowo po słowie ·
+   --m1 / --m2 marker (fragment odpowiedzi i linijka dokumentu naraz) · --f1 / --f2 lot paska do gniazda przypisu ·
+   --hot krawędź cytowanego dokumentu w kolorze podstrony · --out pierwsza rozmowa odjeżdża · --void puste gniazdo
+   przypisu · --dim talia przygasa. Na kartach talii: --s miejsce w talii (0 = przód) · --x karta za prawą krawędzią
+   (wlot przy budowie, obieg przy przeglądzie) · --w wysunięcie ku kamerze · --sc linia skanu · --z kolejność ·
+   --rw rysowanie włosowych linii. Na paskach przypisów (pomiar w JS): --dx / --dy skąd leci · --zs skala na starcie ·
+   --ox / --oy punkt zaczepienia skali (początek linijki w pasku).
+   Bez rozmyć, poświat i cieni; kolor podstrony tylko w markerze, numerach, krawędzi cytowanej karty i kółku człowieka.
+   Poza żywą sceną (bez JS, ograniczony ruch, niski ekran) cała scena jest wyłączona przez wiedza.css. */
+
+/* ══ ROZMOWA: dwie wymiany w tej samej komórce (widać bieżącą) ══ */
+.ch-kn-turns { display: grid; min-width: 0; }
+.ch-kn-turn { grid-area: 1 / 1; display: grid; gap: var(--vg, 18px); align-content: start; justify-items: start; min-width: 0; }
+.ch-kn-turn .ch-msg[data-who="client"] { justify-content: flex-start; padding-left: 0; }
+
+/* odpowiedź wielkim pismem: słowa to bloki w linii stojące jeden za drugim (odstęp = padding słowa, łamanie między
+   blokami), dzięki temu słowo może się unosić przy odsłonie, a przecinek i twarda spacja nie odrywają się od słowa */
+.ch-kn-big {
+  --gap: .24em;
+  margin: 0; max-width: 17ch; font-size: clamp(34px, min(4.6vw, 7.4vh), 76px); font-weight: 600; line-height: 1.06;
+  letter-spacing: -.035em; color: #f8fafc; text-wrap: balance;
+}
+.ch-kn-big > .ch-spark { display: grid; width: 26px; height: 26px; margin: 0 0 12px; }
+.ch-kn-w { display: inline-block; padding-right: var(--gap); white-space: nowrap; }
+.ch-kn-w[data-join], .ch-kn-w:last-child { padding-right: 0; }
+
+/* marker: ostry, półprzezroczysty pas pod dolną częścią tekstu, przeciągany od lewej (nie podkreślenie).
+   Fragment z kilku słów = kilka kawałków: każdy rysuje swój odcinek (--a początek, --b długość), a odstęp do
+   następnego słowa należy do kawałka (data-join), więc pas jest ciągły także przez spacje */
+.ch-kn-mk {
+  --mm: clamp(0, calc((var(--m, 1) - var(--a, 0)) / var(--b, 1)), 1);
+  background: linear-gradient(rgb(var(--sv-ac) / .55), rgb(var(--sv-ac) / .55)) no-repeat 0 92% / calc(var(--mm) * 100%) 50%;
+}
+.ch-kn-mk[data-first] { margin-left: -.07em; padding-left: .07em; }
+.ch-kn-mk[data-last] { margin-right: -.07em; padding-right: .07em; }
+.ch-kn-mk[data-join] { padding-right: var(--gap, .24em); }
+/* numer przypisu za fragmentem: górą równo z wersalikami, nie powiększa linii */
+.ch-kn-sup { display: inline-block; margin-left: .09em; padding-top: .1em; font-size: 1em; line-height: 1; letter-spacing: 0; vertical-align: top; }
+.ch-kn-sup i { display: block; font-size: max(.34em, 13px); font-style: normal; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; color: var(--ch-ac-hi); }
+
+/* przypisy: numer w kolorze podstrony + pasek (kopia linijki dokumentu z nazwą dokumentu) */
+.ch-kn-notes { list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, max-content)); gap: 12px 26px; align-items: start; margin: 0; padding: 0; min-width: 0; }
+.ch-kn-note { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: start; min-width: 0; }
+.ch-kn-num { padding-top: 10px; font-size: 15px; font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; color: var(--ch-ac-hi); }
+.ch-kn-strip { position: relative; display: grid; gap: 2px; justify-self: start; min-width: 0; padding: 9px 14px 10px; border-radius: 12px; background: rgba(4, 4, 5, .9); }
+.ch-kn-strip-d { font-size: 13.5px; line-height: 1.3; color: #94a3b8; }
+.ch-kn-strip-l { font-size: 15px; line-height: 1.35; color: #f8fafc; }
+
+/* pytanie spoza wiedzy: puste gniazdo przypisu (przerywana włosowa ramka, bez koloru podstrony) i człowiek */
+.ch-kn-miss { align-items: center; }
+.ch-kn-none {
+  display: flex; align-items: center; margin: 0; min-height: 60px; padding: 9px 16px 10px; border-radius: 12px;
+  border: 1px dashed rgba(255, 255, 255, .3); font-size: 15px; line-height: 1.35; color: #94a3b8; white-space: nowrap;
+}
+.ch-kn-hand { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: center; margin: 0; max-width: 22rem; font-size: 15px; line-height: 1.35; color: #e2e8f0; text-wrap: pretty; }
+.ch-kn-hand > i { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .5); background: #050505; }
+.ch-kn-hand svg { width: 16px; height: 16px; color: #e2e8f0; }
+.ch-kn-hand b { display: block; font-size: 13.5px; font-weight: 600; line-height: 1.3; color: var(--ch-ac-hi); }
+.ch-kn-hand[data-on] > i { border-color: rgb(var(--sv-ac)); background: rgb(var(--sv-ac)); box-shadow: 0 0 0 5px rgb(var(--sv-ac) / .22); }
+.ch-kn-hand[data-on] svg { color: #0a0a0a; }
+
+/* ══ TALIA DOKUMENTÓW: czarne szkło z obwódką świecącą od góry; wachlarz w głąb liczony z miejsca w talii (--s) ══ */
+.ch-kn-deck {
+  --cw: min(30vw, max(420px, 24vw), 54vh); --chh: calc(var(--cw) * 1.25);
+  --fx: 26px; --fy: -18px; --fz: -70px; --ry: -16deg; --exit: calc(var(--cw) + 9vw); --pull: 46px;
+}
+.ch-kn-card {
+  --lit-a: .5;
+  position: absolute; inset: 0; display: grid; align-content: start; gap: .55em; padding: clamp(20px, 2vw, 32px);
+  border-radius: 16px; overflow: hidden; background: var(--ch-glass), rgba(5, 5, 5, .92);
+  color: #cbd5e1; font-size: clamp(17px, 1.3vw, 19px); line-height: 1.3;
+}
+.ch-kn-card > b { margin-bottom: .35em; font-size: 1.14em; font-weight: 600; letter-spacing: -.012em; color: #f8fafc; }
+.ch-kn-lines { position: relative; display: grid; gap: .5em; justify-items: start; }
+.ch-kn-ln { display: block; }
+.ch-kn-card[data-src] .ch-kn-ln { color: #f1f5f9; }
+.ch-kn-rows { display: grid; gap: clamp(16px, 2.6vh, 28px); margin-top: 1.4em; }
+.ch-kn-rows i { height: 1px; background: rgba(255, 255, 255, .14); transform-origin: 0 50%; }
+/* krawędź cytowanego dokumentu w kolorze podstrony (ta sama obwódka co .ch-lit, osobna warstwa z kryciem --hot) */
+.ch-kn-card[data-src]::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none; opacity: var(--hot, 0);
+  background: linear-gradient(180deg, rgb(var(--sv-ac)), rgb(var(--sv-ac) / .4) 48%, rgb(var(--sv-ac) / .12) 92%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+
+/* ══ TELEFON I TABLET: wygląd (układ żywej sceny niżej) ══ */
+@media (max-width: 1023.98px) {
+  .ch-kn-big { max-width: 13em; font-size: clamp(27px, min(7.6vw, 4.5vh), 40px); }
+  /* gwiazda autora stoi w pierwszej linii przed pierwszym słowem (nad tekstem zabrałaby wysokość) */
+  .ch-kn-big > .ch-spark { display: inline-grid; width: .62em; height: .62em; margin: 0 .2em 0 0; vertical-align: -.03em; }
+  .ch-kn-notes { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .ch-kn-num { padding-top: 6px; }
+  /* pasek w jednej linii: nazwa dokumentu i linijka obok siebie (zawijają się dopiero, gdy brak miejsca) */
+  .ch-kn-strip { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; padding: 5px 11px 6px; border-radius: 10px; }
+  .ch-kn-none { justify-self: start; min-height: 0; padding: 5px 12px 6px; border-radius: 10px; }
+  .ch-kn-hand { gap: 10px; max-width: none; }
+  .ch-kn-hand > i { width: 30px; height: 30px; }
+  .ch-kn-hand svg { width: 14px; height: 14px; }
+  .ch-kn-hand b { display: inline; margin-right: .2em; font-size: 15px; line-height: inherit; }
+  .ch-kn-card { gap: .5em; padding: 11px 14px; border-radius: 13px; font-size: 15px; }
+  .ch-kn-card > b { margin-bottom: .2em; font-size: 16.5px; }
+  .ch-kn-lines { gap: .35em; }
+  .ch-kn-rows { gap: 12px; margin-top: 1em; }
+}
+
+/* ══ ŻYWA SCENA ═══════════════════════════════════════════════════════════════════════════════════════════════
+   Komputer (od 1024 px): rozmowa w lewych 58% kontenera przy jego lewej krawędzi, talia przy prawej krawędzi ekranu
+   (środek w pasie między nawigacją a dołem ekranu). Telefon i tablet: talia u góry (pod pasem nawigacji, do --db),
+   rozmowa pod nią, narrator na dole. */
+@media (prefers-reduced-motion: no-preference) and (min-height: 521px) {
+  /* 340vh zamiast 280vh: przegląd talii dostaje ok. 11vh przewijania na kartę (spokojniej) */
+  .sv[data-live] .ch-kn-pin { height: 440vh; height: calc(100svh + 340vh); }
+
+  /* talia */
+  .sv[data-live] .ch-kn-deck {
+    position: absolute; right: 1.4vw; top: calc(50% + 70px - var(--chh) / 2); width: var(--cw); height: var(--chh);
+    perspective: 1400px; opacity: calc(1 - var(--dim, 0) * .5);
+  }
+  .sv[data-live] .ch-kn-card {
+    z-index: var(--z, calc(10 - var(--i)));
+    transform:
+      translate3d(
+        calc(var(--s, var(--i)) * var(--fx) + var(--x, 0) * var(--exit) - var(--w, 0) * 12px),
+        calc(var(--s, var(--i)) * var(--fy) - var(--x, 0) * 4vh - var(--w, 0) * 8px),
+        calc(var(--s, var(--i)) * var(--fz) + var(--w, 0) * var(--pull)))
+      rotateY(calc(var(--ry) - var(--x, 0) * 24deg));
+  }
+  /* włosowe linie rysują się od lewej przy lądowaniu karty (po kolei) */
+  .sv[data-live] .ch-kn-rows i { transform: scaleX(clamp(0, calc(var(--rw, 1) * 1.6 - var(--r, 0) * .12), 1)); }
+  /* przegląd: biała linia skanu przechodzi od lewej przez linijki karty z przodu i nic po niej nie zostaje */
+  .sv[data-live] .ch-kn-lines::after {
+    content: ''; position: absolute; left: 0; top: -8px; bottom: -8px; width: 100%; pointer-events: none;
+    border-left: 1px solid rgba(255, 255, 255, .95);
+    transform: translateX(calc(var(--sc, 0) * 100%));
+    opacity: clamp(0, min(calc(var(--sc, 0) * 14), calc((1 - var(--sc, 0)) * 14)), 1);
+  }
+
+  /* rozmowa */
+  .sv[data-live] .ch-kn .ch-kn-side {
+    --vg: clamp(14px, 2.2vh, 24px); --arc: 120;
+    position: absolute; left: 24px; top: clamp(104px, 15vh, 168px); display: grid; gap: var(--vg); width: calc(58% - 24px);
+  }
+  .sv[data-live] .ch-kn-turn[data-turn="0"] {
+    opacity: calc(1 - var(--out, 1));
+    transform: translate(calc(var(--out, 1) * -4vw), calc(var(--out, 1) * -7vh));
+  }
+  .sv[data-live] .ch-kn-big > .ch-spark { opacity: var(--sk, 1); transform: scale(calc(.3 + var(--sk, 1) * .7)); }
+  /* słowo `i` z `n` pojawia się, gdy postęp wypowiedzi (--sy) minie jego miejsce */
+  .sv[data-live] .ch-kn-w {
+    --on: clamp(0, calc(var(--sy, 1) * (var(--n, 1) + 1) - var(--i, 0)), 1);
+    opacity: var(--on); transform: translateY(calc((1 - var(--on)) * .26em));
+  }
+  .sv[data-live] .ch-kn-sup {
+    --t: clamp(0, calc(var(--m, 1) * 4 - 3), 1);
+    opacity: var(--t); transform: scale(calc(.4 + var(--t) * .6)); transform-origin: 0 80%;
+  }
+  /* pasek przypisu: startuje dokładnie na linijce dokumentu (--dx / --dy, skala --zs) i leci łukiem do gniazda;
+     numer przypisu wyskakuje przy dokowaniu */
+  .sv[data-live] .ch-kn-strip {
+    --fl: var(--f, 1);
+    transform-origin: calc(var(--ox, 0) * 1px) calc(var(--oy, 0) * 1px);
+    transform:
+      translate(
+        calc(var(--dx, 0) * (1 - var(--fl)) * 1px),
+        calc((var(--dy, 28) * (1 - var(--fl)) - var(--fl) * (1 - var(--fl)) * var(--arc, 0)) * 1px))
+      scale(calc(1 + (var(--zs, 1) - 1) * (1 - var(--fl))));
+    opacity: min(1, calc(var(--fl) * 12));
+  }
+  .sv[data-live] .ch-kn-num {
+    --t: clamp(0, calc(var(--f, 1) * 5 - 4), 1);
+    opacity: var(--t); transform: scale(calc(.5 + var(--t) * .5)); transform-origin: 0 60%;
+  }
+  .sv[data-live] .ch-kn-none { opacity: var(--void, 1); transform: translateY(calc((1 - var(--void, 1)) * 10px)); }
+  .sv[data-live] .ch-kn-hand { transition: opacity .6s ease, transform .9s var(--sv-ease); }
+  .sv[data-live] .ch-kn-hand > i { transition: border-color .5s ease .5s, background-color .5s ease .5s, box-shadow .5s ease .5s; }
+  .sv[data-live] .ch-kn-hand svg { transition: color .5s ease .5s; }
+  .sv[data-live] .ch-kn-hand:not([data-on]) { opacity: 0; transform: translateY(10px); transition: none; }
+  .sv[data-live] .ch-kn-hand:not([data-on]) :is(i, svg) { transition: none; }
+
+  /* pomiar lotu pasków (measure w wiedza-przypisy.tsx): na chwilę stan spoczynku - talia ułożona, bez ruchu rozmowy */
+  .sv[data-live] .ch-kn-pin[data-measure] .ch-kn-card { --s: var(--i) !important; --x: 0 !important; --w: 0 !important; }
+  .sv[data-live] .ch-kn-pin[data-measure] :is(.ch-kn-turn, .ch-kn-strip) { transform: none !important; }
+}
+
+/* komputer z niskim oknem: mniejsze pismo odpowiedzi i ciaśniejszy rytm, żeby przypisy nie weszły na narratora */
+@media (min-width: 1024px) and (max-height: 700px) {
+  .ch-kn-big { font-size: clamp(30px, min(4.6vw, 6.2vh), 76px); }
+  .ch-kn-big > .ch-spark { width: 22px; height: 22px; margin-bottom: 8px; }
+  .sv[data-live] .ch-kn .ch-kn-side { top: 100px; }
+}
+@media (min-width: 1024px) and (max-height: 620px) {
+  .sv[data-live] .ch-kn .ch-kn-side > .ch-k-meta { display: none; }
+}
+
+@media (max-width: 1023.98px) and (prefers-reduced-motion: no-preference) and (min-height: 521px) {
+  /* --db = dół talii: rozmowa (do ok. 250 px) i narrator (ok. 170 px od dołu) muszą się zmieścić pod nią */
+  .sv[data-live] .ch-kn { --db: clamp(212px, calc(100vh - 428px), 46vh); }
+  @supports (height: 100svh) { .sv[data-live] .ch-kn { --db: clamp(212px, calc(100svh - 428px), 46svh); } }
+  /* karta jest tu niska i szeroka, więc wachlarz w górę liczony z jej wysokości (tylne karty wystają ok. 5 px każda);
+     góra tylnej karty zostaje pod pasem nawigacji (96 px), dół karty z przodu 4 px nad --db */
+  .sv[data-live] .ch-kn-deck {
+    --cw: min(64vw, max(270px, 40vw)); --chh: calc((var(--db) - 104px) / 1.14);
+    --fx: 15px; --fy: calc(var(--chh) * -.07 - 2px); --fz: -56px; --ry: -12deg; --exit: 104vw; --pull: 26px;
+    left: 24px; right: auto; top: calc(100px + var(--chh) * .14); perspective: 900px;
+  }
+  .sv[data-live] .ch-kn .ch-kn-side { --vg: 8px; --arc: 0; left: 24px; right: 24px; top: calc(var(--db) + 10px); width: auto; }
+  .sv[data-live] .ch-kn .ch-kn-side > .ch-k-meta { display: none; }
+  .sv[data-live] .ch-kn .ch-kn-turn .ch-bub { padding: 7px 13px 8px; font-size: 15px; line-height: 1.4; }
+}
+/* bardzo niski telefon (poniżej 620 px wysokości): zostaje talia, odpowiedź i przypisy - bez dymka pytania */
+@media (max-width: 1023.98px) and (max-height: 619.98px) and (prefers-reduced-motion: no-preference) and (min-height: 521px) {
+  .sv[data-live] .ch-kn { --db: 200px; }
+  .sv[data-live] .ch-kn-card { gap: 4px; padding: 7px 12px; }
+  .sv[data-live] .ch-kn-card > b { margin-bottom: 0; }
+  .sv[data-live] .ch-kn .ch-kn-turn .ch-msg { display: none; }
+  .ch-kn-big { font-size: 25px; }
+}

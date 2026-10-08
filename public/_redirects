@@ -1,0 +1,57 @@
+# Avenly Web - Cloudflare Pages redirects (odpowiednik sekcji 301 z .htaccess)
+# Format: <źródło> <cel> <kod>. Pages samo obsługuje: usuwanie .html, trailing slash
+# (katalog/index.html) i custom 404 (/404.html) - tych reguł tu NIE przenosimy.
+# Każdy stary URL w dwóch wariantach (z / i bez), bo dopasowanie jest dokładne.
+
+# --- Restrukturyzacja oferty stron-www (2026-05-28) ---
+/uslugi/strony-www/profesjonalna-strona-firmowa /uslugi/strony-www/strona-firmowa/ 301
+/uslugi/strony-www/profesjonalna-strona-firmowa/ /uslugi/strony-www/strona-firmowa/ 301
+/uslugi/strony-www/strona-wordpress /uslugi/strony-www/strona-firmowa/ 301
+/uslugi/strony-www/strona-wordpress/ /uslugi/strony-www/strona-firmowa/ 301
+/uslugi/strony-www/dedykowane-strony-www /uslugi/strony-www/strona-szyta-na-miare/ 301
+/uslugi/strony-www/dedykowane-strony-www/ /uslugi/strony-www/strona-szyta-na-miare/ 301
+/uslugi/strony-www/aplikacje-webowe /uslugi/strony-www/system-crm/ 301
+/uslugi/strony-www/aplikacje-webowe/ /uslugi/strony-www/system-crm/ 301
+/uslugi/strony-www/sklepy-internetowe /uslugi/strony-www/sklep-internetowy/ 301
+/uslugi/strony-www/sklepy-internetowe/ /uslugi/strony-www/sklep-internetowy/ 301
+/uslugi/strony-www/sklep /uslugi/strony-www/sklep-internetowy/ 301
+/uslugi/strony-www/sklep/ /uslugi/strony-www/sklep-internetowy/ 301
+
+# --- Projekt UI/UX nie jest już osobną usługą (2026-10-01): kategoria Design i podstrona UI/UX -> Strony WWW ---
+/uslugi/design/ui-ux /uslugi/strony-www/ 301
+/uslugi/design/ui-ux/ /uslugi/strony-www/ 301
+/uslugi/design /uslugi/strony-www/ 301
+/uslugi/design/ /uslugi/strony-www/ 301
+/en/services/design/ui-ux /en/services/websites/ 301
+/en/services/design/ui-ux/ /en/services/websites/ 301
+/en/services/design /en/services/websites/ 301
+/en/services/design/ /en/services/websites/ 301
+
+# --- Wersja EN: polskie slugi pod /en -> angielskie (2026-07-07) ---
+/en/uslugi/strony-www/strona-szyta-na-miare /en/services/websites/custom-website/ 301
+/en/uslugi/strony-www/strona-szyta-na-miare/ /en/services/websites/custom-website/ 301
+/en/uslugi/strony-www/strona-firmowa /en/services/websites/company-website/ 301
+/en/uslugi/strony-www/strona-firmowa/ /en/services/websites/company-website/ 301
+/en/uslugi/strony-www/sklep-internetowy /en/services/websites/online-store/ 301
+/en/uslugi/strony-www/sklep-internetowy/ /en/services/websites/online-store/ 301
+/en/uslugi/strony-www/system-crm /en/services/websites/crm-system/ 301
+/en/uslugi/strony-www/system-crm/ /en/services/websites/crm-system/ 301
+/en/uslugi/strony-www/one-page /en/services/websites/one-page/ 301
+/en/uslugi/strony-www/one-page/ /en/services/websites/one-page/ 301
+/en/uslugi/automatyzacje-ai/chatboty-ai /en/services/ai-automation/ai-chatbots/ 301
+/en/uslugi/automatyzacje-ai/chatboty-ai/ /en/services/ai-automation/ai-chatbots/ 301
+/en/uslugi/design/ui-ux /en/services/websites/ 301
+/en/uslugi/design/ui-ux/ /en/services/websites/ 301
+/en/uslugi/design /en/services/websites/ 301
+/en/uslugi/design/ /en/services/websites/ 301
+/en/uslugi/strony-www /en/services/websites/ 301
+/en/uslugi/strony-www/ /en/services/websites/ 301
+/en/uslugi /en/services/ 301
+/en/uslugi/ /en/services/ 301
+/en/o-nas /en/about-us/ 301
+/en/o-nas/ /en/about-us/ 301
+/en/kontakt /en/contact/ 301
+/en/kontakt/ /en/contact/ 301
+/en/realizacje /en/work/ 301
+/en/realizacje/ /en/work/ 301
+/en/realizacje/* /en/work/:splat 301

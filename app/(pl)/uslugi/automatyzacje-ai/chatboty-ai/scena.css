@@ -1,0 +1,177 @@
+/* Podstrona „Chatboty AI” - 1. SCENA GŁÓWNA (chat 13, praca równoległa, etap 3, runda 2). Prefiks ch-h-.
+   Pierwszy ekran + przypięty film: scenka Oferty w trzech taktach z narratorem (jedno zdanie naraz).
+     .ch-h-night   „Noc”     - ogromny zegar, niebo i horyzont; przewijanie = czas (22:00 -> 02:07 -> 08:00),
+     .ch-h-flight  „Przelot” - wypowiedzi w głębi, kamera leci przez rozmowę (perspektywa CSS),
+     .ch-h-type    „Napisy”  - rozmowa wielkimi literami: pytanie jako obrys, odpowiedź pełnym pismem
+                               (blok linijek to .ch-h-lines - NIE .ch-h-type, bo tę klasę nosi sekcja).
+   Zmienne pisze scena.tsx z postępu przewijania: --cam (najazd kamery z pierwszego ekranu, 0-1), --say (odpowiedź
+   słowo po słowie), --dawn / --end (rano), --c (położenie kamery w „Przelocie”), --copy-h (wysokość nagłówka).
+   NAJPIERW układ statyczny (bez JS i przy ograniczonym ruchu: zwykły blok ze stanem końcowym), niżej film - tylko pod
+   .sv[data-live] i prefers-reduced-motion: no-preference. Wspólne części (dymki, gwiazda, narrator, skrzynka):
+   chatboty.css. Bez rozmyć, poświat i masek za tekstem; kolor podstrony tylko w liniach i punktach.
+   Sprawdzone zrzutami 2026-10-04 (1440 x 900 i 390 x 844, trzy wersje, po 4-5 klatek przewijania). */
+
+.ch-h { --ch-clock: clamp(120px, 23vw, 360px); --ch-top: max(108px, 19vh); }
+.ch-h-stage { position: relative; }
+
+/* ── układ statyczny: nagłówek po lewej (siatka .ch-hero-in), scena po prawej ── */
+.ch-h-scene { display: grid; gap: 20px; align-content: start; min-width: 0; }
+.ch-h-sky, .ch-h-horizon, .ch-h-field { display: none; }
+.ch-h-clock { margin: 0; font-size: clamp(72px, 9vw, 140px); font-weight: 600; line-height: .86; letter-spacing: -.06em; font-variant-numeric: tabular-nums; white-space: nowrap; color: #f8fafc; }
+.ch-h-status { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0; font-size: 15px; line-height: 1.3; color: #e2e8f0; }
+.ch-h-status .ch-spark { width: 15px; height: 15px; }
+.ch-h-status span:first-child { padding-right: 10px; border-right: 1px solid rgba(255, 255, 255, .22); color: #94a3b8; }
+.ch-h-right { display: grid; gap: 18px; min-width: 0; }
+.ch-h-talk { display: grid; gap: 10px; align-content: start; min-width: 0; }
+.ch-h-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin: 0 0 4px; font-size: 13.5px; line-height: 1.3; color: #94a3b8; }
+.ch-h-fly { display: grid; gap: 10px; align-content: start; min-width: 0; }
+.ch-h-item-box { margin-top: 8px; }
+.ch-h-time { font-size: 20px; font-weight: 600; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: #f8fafc; }
+.ch-h-q { margin: 0; font-size: clamp(34px, 5vw, 64px); font-weight: 700; line-height: 1; letter-spacing: -.045em; color: #94a3b8; text-wrap: balance; }
+.ch-h-a { display: flex; align-items: flex-start; gap: .26em; margin: .2em 0 0; font-size: clamp(34px, 5vw, 64px); font-weight: 700; line-height: 1.02; letter-spacing: -.045em; color: #f8fafc; text-wrap: balance; }
+.ch-h-a > .ch-spark { flex: none; width: .46em; height: .46em; margin-top: .26em; }
+.ch-h-star { position: absolute; width: var(--s, 7px); height: var(--s, 7px); background: #fff; opacity: var(--o, .5); clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%); }
+@media (min-width: 640px) { .ch-h-box .ch-inbox-rows { grid-template-columns: minmax(0, .7fr) minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1.5fr); } }
+@media (min-width: 1024px) { .ch-h-narr { grid-column: 1 / -1; } }
+
+/* ══ FILM (JS działa, ruch dozwolony): wysoki kontener, przyklejony ekran, elementy na swoich miejscach w kadrze ══ */
+@media (prefers-reduced-motion: no-preference) {
+  .sv[data-live] .ch-h { height: 400vh; height: calc(100svh + 300vh); }
+  .sv[data-live] .ch-h-stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: clip; }
+  .sv[data-live] .ch-h-in { position: relative; display: block; height: 100%; padding-top: 0; container-type: inline-size; }
+  .sv[data-live] .ch-h-scene { position: absolute; inset: 0; display: block; }
+  /* nagłówek strony: przy najeździe kamery gaśnie i odjeżdża w górę; po najeździe nie łapie kliknięć */
+  .sv[data-live] .ch-h-copy { position: absolute; left: 24px; top: 132px; z-index: 3; width: min(42%, 34rem); opacity: calc(1 - var(--cam, 0) * 1.7); transform: translate3d(0, calc(var(--cam, 0) * -46px), 0); }
+  .sv[data-live] .ch-h[data-film] .ch-h-copy { visibility: hidden; }
+  /* narrator: wchodzi po najeździe kamery, przy lewej krawędzi kontenera */
+  .sv[data-live] .ch-h-narr { position: absolute; left: 24px; z-index: 2; width: min(38%, 30rem); margin: 0; opacity: clamp(0, calc(var(--cam, 0) * 2.4 - 1.4), 1); }
+  .sv[data-live] .ch-h-meta { opacity: var(--cam, 0); }
+  /* odpowiedź pisana przewijaniem: słowo `i` z `n` pojawia się, gdy --say minie jego miejsce */
+  .sv[data-live] .ch-h-say .ch-w {
+    --on: clamp(0, calc(var(--say, 0) * (var(--n) + 1) - var(--i)), 1);
+    opacity: var(--on); transform: translate3d(0, calc((1 - var(--on)) * .28em), 0);
+  }
+
+  /* ── „NOC” ── */
+  .sv[data-live] .ch-h-sky, .sv[data-live] .ch-h-horizon { display: block; position: absolute; left: calc(50% - 50vw); width: 100vw; pointer-events: none; }
+  .sv[data-live] .ch-h-sky { top: 0; bottom: 0; }
+  .sv[data-live] .ch-h-night .ch-h-star { opacity: calc(var(--o, .5) * (1 - var(--dawn, 0) * .85)); transform: translate3d(0, calc(var(--cam, 0) * var(--d, 1) * -70px), 0); }
+  /* gwiazda klienta: zapala się kolorem podstrony, gdy klient zaczyna pisać */
+  .sv[data-live] .ch-h-night .ch-h-star-client { left: 84%; top: 11%; --s: 15px; background: rgb(var(--sv-ac)); opacity: 0; transform: scale(.2); transition: opacity .9s ease, transform 1.2s var(--sv-ease); }
+  .sv[data-live] .ch-h-night[data-film] .ch-h-star-client { opacity: calc(1 - var(--dawn, 0)); transform: none; }
+  /* horyzont: krawędź planety (motyw hero strony głównej); druga linia w kolorze podstrony jaśnieje przed świtem */
+  .sv[data-live] .ch-h-horizon { bottom: 0; height: 36%; overflow: hidden; }
+  .sv[data-live] .ch-h-horizon i { position: absolute; left: 50%; top: 38%; width: 300vw; height: 300vw; margin-left: -150vw; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .15); }
+  .sv[data-live] .ch-h-horizon i + i {
+    border-color: rgb(var(--sv-ac)); border-width: 2px; opacity: var(--dawn, 0);
+    -webkit-mask-image: linear-gradient(90deg, transparent 18%, #000 74%); mask-image: linear-gradient(90deg, transparent 18%, #000 74%);
+  }
+  /* zegar: na pierwszym ekranie ogromny po prawej (wychodzi za krawędź), po najeździe mały znacznik czasu po lewej */
+  .sv[data-live] .ch-h-night .ch-h-clock {
+    position: absolute; left: 24px; top: var(--ch-top); z-index: 2; transform-origin: 0 0; font-size: var(--ch-clock);
+    transform: translate3d(calc((1 - var(--cam, 0)) * 42vw), calc((1 - var(--cam, 0)) * 3vh), 0) scale(calc(.4 + (1 - var(--cam, 0)) * .6));
+  }
+  @supports (width: 1cqw) {
+    .sv[data-live] .ch-h-night .ch-h-clock { transform: translate3d(calc((1 - var(--cam, 0)) * 45cqw), calc((1 - var(--cam, 0)) * 3vh), 0) scale(calc(.4 + (1 - var(--cam, 0)) * .6)); }
+  }
+  .sv[data-live] .ch-h-night .ch-h-status { position: absolute; left: 24px; top: calc(var(--ch-top) + var(--ch-clock) * .344 + 20px); z-index: 2; opacity: var(--cam, 0); }
+  .sv[data-live] .ch-h-night .ch-h-status span:first-child { opacity: calc(1 - var(--dawn, 0)); }
+  .sv[data-live] .ch-h-night .ch-h-narr { top: calc(var(--ch-top) + var(--ch-clock) * .344 + 92px); }
+  .sv[data-live] .ch-h-right { position: absolute; left: 46%; right: 24px; top: calc(var(--ch-top) + 10px); z-index: 2; }
+  .sv[data-live] .ch-h-night .ch-h-talk { opacity: calc(1 - var(--dawn, 0) * .5); }
+  .sv[data-live] .ch-h-night .ch-h-box { opacity: clamp(0, calc(var(--dawn, 0) * 2.4 - .7), 1); transform: translate3d(0, calc((1 - var(--dawn, 0)) * 34px), 0); }
+
+  /* ── „PRZELOT” ── wypowiedzi wiszą w głębi (co 820 px), kamera leci do przodu; --z / --o / --pass pisze scena */
+  .sv[data-live] .ch-h-fly {
+    position: absolute; inset: 0; display: block; perspective: 1100px; perspective-origin: 50% 46%;
+    transform: translate3d(calc((1 - var(--cam, 0)) * 15vw), 0, 0);
+  }
+  .sv[data-live] .ch-h-flight .ch-h-meta { position: absolute; left: 24px; top: 116px; margin: 0; transform: translate3d(calc((1 - var(--cam, 0)) * -15vw), 0, 0); }
+  .sv[data-live] .ch-h-field { display: block; position: absolute; left: 50%; top: 46%; width: 0; height: 0; transform-style: preserve-3d; transform: translate3d(0, 0, calc(var(--c, 0) * 820px)); }
+  .sv[data-live] .ch-h-field .ch-h-star { left: 0; top: 0; transform: translate3d(var(--x), var(--y), var(--fz)); }
+  .sv[data-live] .ch-h-item {
+    position: absolute; left: 50%; top: 46%; width: min(540px, 84vw); margin: 0; opacity: var(--o, 0);
+    transform: translate(-50%, -50%) translate3d(calc(var(--x, 0px) + var(--pass, 0) * var(--px, 0px)), calc(var(--pass, 0) * -30px), var(--z, -2400px));
+    will-change: transform, opacity;
+  }
+  .sv[data-live] .ch-h-item[data-side="r"] { --x: 17vw; --px: 40vw; }
+  .sv[data-live] .ch-h-item[data-side="l"] { --x: -17vw; --px: -40vw; }
+  .sv[data-live] .ch-h-item:not([data-focus]) { pointer-events: none; }
+  .sv[data-live] .ch-h-item .ch-msg { padding: 0; }
+  .sv[data-live] .ch-h-flight .ch-bub { padding: 17px 24px 18px; font-size: clamp(18px, 1.7vw, 25px); }
+  .sv[data-live] .ch-h-flight .ch-msg > .ch-spark { width: 22px; height: 22px; margin-top: 17px; }
+  .sv[data-live] .ch-h-item-box .ch-inbox { padding: 22px 24px 24px; background: #08080a; }
+  /* dymki lotu kryją to, co za nimi (dalsza wypowiedź nie prześwituje przez bliższą) */
+  .sv[data-live] .ch-h-flight .ch-msg[data-who="client"] .ch-bub { background: #131316; }
+  .sv[data-live] .ch-h-flight .ch-msg[data-who="bot"] .ch-bub { background: linear-gradient(rgb(var(--sv-ac) / .1), rgb(var(--sv-ac) / .1)), #0c0c0e; }
+  .sv[data-live] .ch-h-flight .ch-h-narr { top: auto; bottom: 9vh; }
+
+  /* ── „NAPISY” ── pytanie wjeżdża zza prawej krawędzi jako obrys, odpowiedź wybija się pod nim, rano obie maleją */
+  .sv[data-live] .ch-h-lines { position: absolute; left: 24px; right: 24px; top: 30vh; top: 30svh; z-index: 2; transform: translate3d(0, calc(var(--end, 0) * -13vh), 0); }
+  .sv[data-live] .ch-h-lines .ch-h-meta { margin-bottom: 20px; align-items: baseline; }
+  .sv[data-live] .ch-h-big { transform-origin: 0 0; transform: scale(calc(1 - var(--end, 0) * .56)); }
+  .sv[data-live] .ch-h-q {
+    font-size: clamp(44px, 7.6vw, 132px); line-height: .98; letter-spacing: -.05em; white-space: nowrap;
+    opacity: calc(.5 + var(--cam, 0) * .5); transform: translate3d(calc((1 - var(--cam, 0)) * 43vw), 0, 0);
+  }
+  @supports (-webkit-text-stroke: 1px #fff) {
+    .sv[data-live] .ch-h-q { color: transparent; -webkit-text-stroke: 1.5px rgba(255, 255, 255, .66); }
+  }
+  .sv[data-live] .ch-h-a { margin-top: .16em; font-size: clamp(40px, 6.4vw, 112px); }
+  .sv[data-live] .ch-h-a:not([data-on]) > .ch-spark { opacity: 0; }
+  .sv[data-live] .ch-h-a > .ch-spark { transition: opacity .6s ease; }
+  .sv[data-live] .ch-h-lines ~ .ch-h-box {
+    position: absolute; left: 24px; right: 24px; top: 45vh; top: 45svh; z-index: 2; max-width: 54rem;
+    opacity: clamp(0, calc(var(--end, 0) * 2.2 - .8), 1); transform: translate3d(0, calc((1 - var(--end, 0)) * 54px), 0);
+  }
+  .sv[data-live] .ch-h-lines ~ .ch-h-box .ch-inbox { gap: 16px; padding: 26px 28px 28px; }
+  .sv[data-live] .ch-h-lines ~ .ch-h-box .ch-inbox-t { font-size: 17px; }
+  .sv[data-live] .ch-h-lines ~ .ch-h-box :is(dd) { font-size: 16.5px; }
+  .sv[data-live] .ch-h-lines ~ .ch-h-narr { top: auto; bottom: 9vh; }
+
+  /* ── tablet i telefon: te same ujęcia ułożone pod pion ── */
+  @media (max-width: 1023.98px) {
+    .sv[data-live] .ch-h { --ch-clock: clamp(88px, 26vw, 200px); }
+    .sv[data-live] .ch-h-copy { left: 24px; right: 24px; top: 108px; width: auto; }
+    .sv[data-live] .ch-h-narr { left: 24px; right: 24px; width: auto; }
+    /* Noc: zegar stoi pod nagłówkiem (--copy-h), po najeździe mały w lewym górnym rogu; rozmowa pod narratorem */
+    .sv[data-live] .ch-h-night .ch-h-clock {
+      top: 84px;
+      transform: translate3d(0, calc((1 - var(--cam, 0)) * (var(--copy-h, 440px) + 44px)), 0) scale(calc(.5 + (1 - var(--cam, 0)) * .5));
+    }
+    .sv[data-live] .ch-h-night .ch-h-status { top: calc(84px + var(--ch-clock) * .43 + 12px); }
+    .sv[data-live] .ch-h-night .ch-h-narr { top: calc(84px + var(--ch-clock) * .43 + 52px); }
+    .sv[data-live] .ch-h-right { left: 24px; right: 24px; top: calc(84px + var(--ch-clock) * .43 + 176px); }
+    .sv[data-live] .ch-h-night .ch-h-star-client { left: 82%; top: 15%; }
+    /* Przelot: na pierwszym ekranie tunel stoi pod nagłówkiem (pierwsza wypowiedź wygląda zza dolnej krawędzi) */
+    .sv[data-live] .ch-h-fly { transform: translate3d(0, calc((1 - var(--cam, 0)) * 44vh), 0); }
+    .sv[data-live] .ch-h-flight .ch-h-meta { top: 92px; transform: none; }
+    .sv[data-live] .ch-h-item[data-side="r"] { --x: 3vw; --px: 62vw; }
+    .sv[data-live] .ch-h-item[data-side="l"] { --x: -3vw; --px: -62vw; }
+    .sv[data-live] .ch-h-flight .ch-bub { padding: 13px 17px 14px; font-size: 16.5px; }
+    .sv[data-live] .ch-h-item-box { width: min(560px, 92vw); }
+    .sv[data-live] .ch-h-item-box .ch-inbox { padding: 18px 18px 20px; }
+    .sv[data-live] .ch-h-flight .ch-h-narr, .sv[data-live] .ch-h-lines ~ .ch-h-narr { bottom: 7vh; }
+    /* Napisy: wielkie linijki łamią się w dwie; pytanie wjeżdża z prawej dopiero z najazdem kamery */
+    /* Napisy: wielkie linijki łamią się w dwie; na pierwszym ekranie pytanie-obrys stoi pod nagłówkiem (--copy-h) */
+    .sv[data-live] .ch-h-lines { top: 108px; transform: translate3d(0, calc((1 - var(--cam, 0)) * (var(--copy-h, 440px) + 8px) + var(--end, 0) * -8px), 0); }
+    .sv[data-live] .ch-h-q { font-size: clamp(40px, 12.4vw, 92px); white-space: normal; opacity: calc(.5 + var(--cam, 0) * .5); transform: none; }
+    .sv[data-live] .ch-h-a { font-size: clamp(36px, 11vw, 84px); }
+    .sv[data-live] .ch-h-big { transform: scale(calc(1 - var(--end, 0) * .5)); }
+    .sv[data-live] .ch-h-lines ~ .ch-h-box { top: 36vh; top: 36svh; }
+    .sv[data-live] .ch-h-lines ~ .ch-h-box .ch-inbox { padding: 18px 18px 20px; }
+  }
+  @media (max-width: 639.98px) {
+    /* telefon: w „Nocy” zostaje pierwsza wymiana, a zapytanie w skrzynce zajmuje rano miejsce rozmowy */
+    .sv[data-live] .ch-h-night .ch-h-talk .ch-h-msg:nth-of-type(n + 3) { display: none; }
+    .sv[data-live] .ch-h-night .ch-h-talk { opacity: calc(1 - var(--dawn, 0) * 1.6); }
+    .sv[data-live] .ch-h-night .ch-h-box { position: absolute; left: 0; right: 0; top: 0; }
+    /* horyzont wchodzi dopiero z najazdem kamery - na pierwszym ekranie stoi tam ogromny zegar */
+    .sv[data-live][data-on] .ch-h-horizon { height: 26%; opacity: var(--cam, 0); }
+  }
+}
+
+/* ── układ statyczny na wąskich ekranach ── */
+@media (max-width: 639.98px) {
+  .ch-h-clock { font-size: clamp(64px, 20vw, 96px); }
+}

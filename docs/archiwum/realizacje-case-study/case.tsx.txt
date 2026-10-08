@@ -1,0 +1,169 @@
+'use client';
+
+import { useRef, type CSSProperties } from 'react';
+import Link from 'next/link';
+import { ArrowRight, ArrowUpRight } from 'lucide-react';
+import { SectionLabel } from '@/components/ui/SectionLabel';
+import type { ProjectsData, RealizacjeDict, WorkItem } from '@/lib/i18n/projects';
+import { localizeHref, type Locale } from '@/lib/i18n/locale';
+import { nn } from './cards';
+import { Frame } from './frame';
+import { Rv, useEnter, useIntro, useLiveRoot } from './shared';
+import { Sky } from './sky';
+import './realizacje.css';
+
+// Case study (/realizacje/[slug] i /en/work/[slug]). Układ pierwotnej wersji: powrót do listy, nagłówek (nazwa,
+// opis, link do strony) z liczbami obok, makieta strony, wyzwanie i rozwiązanie, technologie, galeria. Nowe:
+// makieta „na żywo” - kadr przykleja się do ekranu, a w nim przewija się CAŁA strona klienta (od góry do dołu,
+// dwa razy szybciej niż Twoje przewijanie); tło = mgławica podstrony w barwach tej realizacji; zakres prac
+// (fakty jak w sekcji Realizacje na stronie głównej); dawne końcowe CTA „Podoba Ci się ten efekt?” (tuż nad
+// stopką) zastąpione przyciskiem w treści i linkiem do następnej realizacji.
+
+type Project = ProjectsData[number];
+
+/** Najdłuższe słowo nazwy - rozmiar nagłówka dopasowuje się tak, żeby słowo mieściło się w kolumnie (np. „Mcentrumfizjoterapia”). */
+const longest = (s: string) => Math.max(...s.split(' ').map((w) => w.length));
+
+export const CaseView = ({
+  project, item, num, next, nextNum, t, locale,
+}: {
+  project: Project; item: WorkItem; num: number; next: WorkItem; nextNum: number; t: RealizacjeDict; locale: Locale;
+}) => {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const liveRef = useRef<HTMLElement>(null);
+  useLiveRoot(rootRef);
+  const onSky = useIntro(rootRef);
+  const stats = project.stats ?? [];
+  const tech = project.techStack ?? [];
+  const gallery = project.gallery ?? [];
+
+  return (
+    <div ref={rootRef} className="rl rl-cs" style={{ '--ac': item.accent } as CSSProperties}>
+      {/* mgławica podstrony w barwach tej realizacji; blask wokół kadru „Strona na żywo” */}
+      <noscript><style>{'.rl .rl-line,.rl .rl-in{animation:none!important;transform:none!important;opacity:1!important}'}</style></noscript>
+      <Sky tint={item.slug} onReady={onSky} />
+      <section className="rl-cs-hero" aria-labelledby="rl-cs-h1">
+        <div className="rl-cs-hero-in container mx-auto px-6">
+          <div className="rl-cs-top">
+            <div className="rl-cs-copy">
+              <p className="rl-cs-meta rl-in" style={{ '--d': 1 } as CSSProperties}>
+                <span className="rl-card-num">{nn(num)}</span>
+                <span>{item.kind}</span>
+                <span className="rl-proof-dot" aria-hidden="true">·</span>
+                <span>{project.year}</span>
+              </p>
+              <h1 id="rl-cs-h1" className="im-title rl-cs-title" style={{ '--len': longest(item.name) } as CSSProperties}>
+                <span className="rl-mask"><span className="rl-line" style={{ '--d': 2 } as CSSProperties}>{item.name}</span></span>
+              </h1>
+              <p className="im-lead rl-cs-lead rl-in" style={{ '--d': 4 } as CSSProperties}>{project.description}</p>
+              {item.domain && (
+                <div className="rl-cs-actions rl-in" style={{ '--d': 5 } as CSSProperties}>
+                  <a href={`https://${item.domain}`} target="_blank" rel="noopener noreferrer" className="rl-ghost rl-cs-site">
+                    {t.viewOnline}
+                    <ArrowUpRight aria-hidden="true" />
+                  </a>
+                  <span className="rl-cs-domain">{item.domain}</span>
+                </div>
+              )}
+            </div>
+            {stats.length > 0 && (
+              <dl className="rl-cs-stats" aria-label={t.statsLabel}>
+                {stats.map((s, k) => (
+                  <div key={s.label} className="rl-stat rl-in" style={{ '--d': 5 + k } as CSSProperties}>
+                    <dt>{s.label}</dt>
+                    <dd>{s.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Strona na żywo: kadr przyklejony do ekranu, strona klienta przewija się w nim (wysokość sekcji liczy useLivePage). */}
+      <section ref={liveRef} className="rl-cs-live" aria-labelledby="rl-cs-live-h">
+        <div className="rl-cs-stick" data-rl-stick="">
+          <div className="container mx-auto px-6">
+            <div className="rl-cs-live-head">
+              <h2 id="rl-cs-live-h" className="rl-cs-label"><SectionLabel align="start">{t.liveLabel}</SectionLabel></h2>
+              <p className="rl-cs-hint">{t.liveHint}</p>
+            </div>
+            <Frame
+              slug={item.slug} alt={`${t.cardAltPrefix} ${item.name}`} accent={item.accent} domain={item.domain}
+              size="case" sizes="(max-width: 1279px) 100vw, 1232px" hostRef={liveRef} eager sky={item.slug}
+            />
+          </div>
+        </div>
+      </section>
+
+      <div className="rl-cs-body container mx-auto px-6">
+        <div className="rl-cs-cols">
+          <Rv className="rl-cs-col">
+            <h2 className="rl-cs-h"><span className="rl-cs-no">01</span>{t.challengeLabel}</h2>
+            <p className="rl-cs-p">{project.challenge}</p>
+          </Rv>
+          <Rv className="rl-cs-col" style={{ '--i': 1 } as CSSProperties}>
+            <h2 className="rl-cs-h"><span className="rl-cs-no">02</span>{t.solutionLabel}</h2>
+            <p className="rl-cs-p">{project.solution}</p>
+          </Rv>
+        </div>
+
+        <div className="rl-cs-cols rl-cs-facts">
+          <Rv className="rl-cs-col">
+            <h2 className="rl-cs-h rl-cs-h--sm">{t.scopeLabel}</h2>
+            <ul className="rl-cs-list">{item.scope.map((s) => <li key={s}>{s}</li>)}</ul>
+          </Rv>
+          <Rv className="rl-cs-col" style={{ '--i': 1 } as CSSProperties}>
+            <h2 className="rl-cs-h rl-cs-h--sm">{t.techLabel}</h2>
+            <ul className="rl-cs-list">{tech.map((s) => <li key={s}>{s}</li>)}</ul>
+          </Rv>
+        </div>
+
+        <Rv className="rl-cs-mid">
+          <p className="rl-cs-mid-t">{t.midCtaTitle}</p>
+          <Link href={localizeHref('/kontakt', locale)} prefetch={false} className="rl-cta">
+            {t.cta}
+            <ArrowRight aria-hidden="true" />
+          </Link>
+        </Rv>
+
+        {gallery.length > 0 && (
+          <section className="rl-cs-gallery" aria-labelledby="rl-cs-gal-h">
+            <h2 id="rl-cs-gal-h" className="rl-cs-h rl-cs-h--sm">{t.galleryLabel}</h2>
+            <div className="rl-cs-gal">
+              {gallery.map((src, k) => (
+                <GalleryFrame key={src} src={src} alt={`${t.galleryAltPrefix} ${item.name} (${k + 1})`} i={k} item={item} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        <NextProject next={next} num={nextNum} t={t} locale={locale} />
+      </div>
+      <div className="rl-sky-end" aria-hidden="true" />
+    </div>
+  );
+};
+
+const GalleryFrame = ({ src, alt, i, item }: { src: string; alt: string; i: number; item: WorkItem }) => (
+  <Frame slug="" alt={alt} accent={item.accent} domain={item.domain} size="lg" sizes="" live={false} sky={item.slug} style={{ '--i': i } as CSSProperties}>
+    {/* eslint-disable-next-line @next/next/no-img-element -- statyczny eksport, obraz bez optymalizacji */}
+    <img className="rl-stage" src={src} alt={alt} loading="lazy" decoding="async" draggable={false} />
+  </Frame>
+);
+
+const NextProject = ({ next, num, t, locale }: { next: WorkItem; num: number; t: RealizacjeDict; locale: Locale }) => {
+  const ref = useRef<HTMLElement>(null);
+  useEnter(ref, 0.3);
+  return (
+    <nav ref={ref} className="rl-more" aria-label={t.nextProject} style={{ '--ac': next.accent, '--len': longest(next.name) } as CSSProperties}>
+      <p className="rl-more-label">{t.nextProject}</p>
+      <Link href={localizeHref(`/realizacje/${next.slug}`, locale)} prefetch={false} className="rl-more-link">
+        <span className="rl-more-num">{nn(num)}</span>
+        <span className="rl-more-name">{next.name}</span>
+        <span className="rl-more-kind">{next.kind}</span>
+        <ArrowRight className="rl-arrow rl-more-arrow" aria-hidden="true" />
+      </Link>
+    </nav>
+  );
+};

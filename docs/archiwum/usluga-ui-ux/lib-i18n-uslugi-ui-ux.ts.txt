@@ -1,0 +1,158 @@
+import type { Locale } from '@/lib/i18n/locale';
+
+/**
+ * Słownik podstrony /uslugi/design/ui-ux. WZORZEC jak w lib/i18n/home/* :
+ * - interface UiUxDict z samymi stringami (JSX/ikony/shadery/klasy zostają w komponencie),
+ * - export uiUxDict: Record<Locale, UiUxDict>,
+ * - PL = tekst 1:1 z komponentu sprzed ekstrakcji (bajt w bajt, łącznie ze
+ *   spacjami wokół <br>),
+ * - EN = copy wg PRODUCT.md (benefit voice, sentence case, bez em/en dashes,
+ *   zero fabrykowanych metryk, "Bezpłatna konsultacja" → "Free consultation").
+ * Import WYŁĄCZNIE w server page (PL i EN) - słownik wędruje do klienta jako
+ * props (RSC payload), nie w bundlu JS.
+ */
+
+interface CardText {
+  title: string;
+  desc: string;
+}
+
+export interface UiUxDict {
+  breadcrumbBack: string;
+  hero: {
+    badge: string;
+    /** Pierwsza linia H1 (z końcową spacją - przed <br>). */
+    h1Line1: string;
+    /** Akcentowana część H1 (gradient span). */
+    h1Accent: string;
+    lead: string;
+    cta: string;
+  };
+  bento: {
+    heading: string;
+    lead: string;
+    /** 4 karty bento w stałej kolejności (ikony/layout w komponencie). */
+    cards: [CardText, CardText, CardText, CardText];
+  };
+  scope: {
+    badge: string;
+    /** Część nagłówka przed <br> (z końcową spacją). */
+    headingLine1: string;
+    /** Część nagłówka po <br> (z wiodącą spacją). */
+    headingLine2: string;
+    items: CardText[];
+  };
+}
+
+export const uiUxDict: Record<Locale, UiUxDict> = {
+  pl: {
+    breadcrumbBack: 'Wróć do: Design',
+    hero: {
+      badge: 'Projektowanie UI/UX',
+      h1Line1: 'Zyskaj interfejs, który ',
+      h1Accent: 'zamienia ruch w klientów.',
+      lead: 'Klienci wchodzą na stronę i wychodzą bez kontaktu? Dostajesz przemyślaną architekturę (UX) i nowoczesny wygląd (UI), dzięki którym odwiedzający płynnie stają się klientami. Budujesz autorytet i przestajesz tracić zapytania.',
+      cta: 'Bezpłatna konsultacja',
+    },
+    bento: {
+      heading: 'Co zyskujesz dzięki UX?',
+      lead: 'Pozbywasz się błędów, które przepalały Twój budżet. Dostajesz stronę zaprojektowaną tak, by realnie zwiększać sprzedaż.',
+      cards: [
+        {
+          title: 'Każdy element pracuje na zysk',
+          desc: 'Prowadzimy Twojego klienta za rękę, prosto do finalizacji zakupu lub wypełnienia formularza kontaktowego. Układ, treść i przyciski celują w jedno: Twój zysk.',
+        },
+        {
+          title: 'Przewaga na mobile',
+          desc: 'Przejmujesz klientów kupujących na smartfonach. Otrzymujesz interfejs równie wygodny, szybki i wciągający co dedykowana aplikacja natywna.',
+        },
+        {
+          title: 'Spójność i autorytet',
+          desc: 'Otrzymujesz pełny system wizualny. Twoja marka od pierwszych sekund budzi natychmiastowe zaufanie i sprawia wrażenie lidera w swojej branży.',
+        },
+        {
+          title: 'Psychologia, która sprzedaje',
+          desc: 'Twoja strona od razu wygląda premium. Odpowiednio kierujemy wzrokiem Twojego klienta, budując w nim poczucie bezpieczeństwa i chęć współpracy z Twoją firmą.',
+        },
+      ],
+    },
+    scope: {
+      badge: 'Zakres prac',
+      headingLine1: 'Co dokładnie otrzymujesz ',
+      headingLine2: ' w pakiecie?',
+      items: [
+        {
+          title: 'Audyt i analiza UX',
+          desc: 'Zaczynamy od namierzenia błędów obecnego interfejsu, które powodują ucieczkę klientów, oraz analizujemy przewagi konkurencji.',
+        },
+        {
+          title: 'Układ i przepływ',
+          desc: 'Tworzymy surowy szkic struktury i ułożenia elementów (Low-Fi), aby upewnić się, że nawigacja na stronie jest logiczna i intuicyjna.',
+        },
+        {
+          title: 'Finalny design (UI)',
+          desc: 'Nakładamy kinowy wygląd, dobieramy paletę kolorów, fonty i autorskie ikony. Projektujemy finalny interfejs piksel po pikselu.',
+        },
+        {
+          title: 'Interaktywny prototyp',
+          desc: 'Otrzymujesz klikalną wersję projektu. Możesz sprawdzić jak zachowają się przyciski i animacje, jeszcze przed napisaniem linijki kodu.',
+        },
+      ],
+    },
+  },
+  en: {
+    breadcrumbBack: 'Back to: Design',
+    hero: {
+      badge: 'UI/UX design',
+      h1Line1: 'Get an interface that ',
+      h1Accent: 'turns traffic into customers.',
+      lead: 'Visitors land on your site and leave without getting in touch? You get a well thought out structure (UX) and a modern look (UI) that turn visitors smoothly into customers. You build authority and stop losing enquiries.',
+      cta: 'Free consultation',
+    },
+    bento: {
+      heading: 'What do you gain from UX?',
+      lead: 'You get rid of the mistakes that were burning your budget. You get a site designed to genuinely grow your sales.',
+      cards: [
+        {
+          title: 'Every element works for profit',
+          desc: 'We guide your customer by the hand, straight to completing a purchase or filling in the contact form. Layout, copy and buttons all aim at one thing: your profit.',
+        },
+        {
+          title: 'The edge on mobile',
+          desc: 'You win over customers who buy on their phones. You get an interface as comfortable, fast and engaging as a dedicated native app.',
+        },
+        {
+          title: 'Consistency and authority',
+          desc: 'You get a complete visual system. From the very first seconds your brand earns instant trust and looks like a leader in its field.',
+        },
+        {
+          title: 'Psychology that sells',
+          desc: 'Your site looks premium right away. We guide your customer\'s eye the right way, building a sense of security and a desire to work with your company.',
+        },
+      ],
+    },
+    scope: {
+      badge: 'Scope of work',
+      headingLine1: 'What exactly do you get ',
+      headingLine2: ' in the package?',
+      items: [
+        {
+          title: 'UX audit and analysis',
+          desc: 'We start by pinpointing the flaws in your current interface that make customers leave, and we analyse where competitors have the edge.',
+        },
+        {
+          title: 'Layout and flow',
+          desc: 'We create a rough draft of the structure and element layout (low-fi) to make sure navigation across the site is logical and intuitive.',
+        },
+        {
+          title: 'Final design (UI)',
+          desc: 'We add a cinematic look and choose the colour palette, fonts and custom icons. We design the final interface pixel by pixel.',
+        },
+        {
+          title: 'Interactive prototype',
+          desc: 'You get a clickable version of the project. You can check how buttons and animations behave before a single line of code is written.',
+        },
+      ],
+    },
+  },
+};

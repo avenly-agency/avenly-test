@@ -1,0 +1,212 @@
+'use client';
+
+import { useCallback, useEffect, useRef, type CSSProperties } from 'react';
+import { Bell, Check } from 'lucide-react';
+import type { LeadCopy } from '@/lib/i18n/uslugi/system-crm-lead';
+import { lin, seg, usePin, useReducedPref } from '../../_usluga/shared';
+import { LeadPin, Reel, bloom, clearSteps, flag, mark, narrate, pinProgress, put, px, stepsOf, unbloom, useFit, useKick, useRise, wipe } from './lead-kit';
+import { offsetTo } from './scene';
+import type { SceneProps } from './types';
+import { Win } from './ui';
+import './lead.css';
+
+// SEKCJA „NIC JUŻ NIE GINIE”, wersja „LEJEK” - przypięta (280vh), sterowana wyłącznie przewijaniem. Szeroki plan na
+// wiele spraw naraz: tablica z ogólnymi etapami (Nowe -> W kontakcie -> Oferta -> W realizacji -> Zamknięte), każda
+// sprawa to punkt z nazwiskiem. „Nic nie ginie” pokazane na wszystkich sprawach firmy, a nie na jednym zleceniu.
+// WSZYSTKO, CO SIĘ POJAWIA, POJAWIA SIĘ ROZEJŚCIEM (.cr-bloom z system-crm.css; decyzja właściciela 2026-10-05:
+// „tak jak się nebula rozchodzi” - bez linii światła i przycięć; usunięte: linia przeglądu, okno rosnące
+// przycięciem, linia do karty, lądowania z linią światła na krawędzi):
+//   Plan ogólny   okno systemu rozchodzi się przy wejściu sceny i stoi odchylone w głąb; najazd je prostuje.
+//   Postój        jedna sprawa stoi: licznik dni bez ruchu przewija się do piątego dnia, punkt sprawy spokojnie
+//                 dostaje obwódkę w kolorze podstrony (zmiana stanu), reszta tablicy przygasa. Pod tablicą, od punktu
+//                 tej sprawy, rozchodzi się jej karta.
+//   Przypomnienie obok karty, też od punktu sprawy, rozchodzi się przypomnienie dla właściwej osoby.
+//   Ruch          rozchodzi się odhaczenie rozmowy, punkt sprawy jedzie na następny etap (prawdziwe przesunięcie),
+//                 liczniki etapów i stan na karcie obracają się jak bębny. Na koniec cała tablica znów świeci.
+// Telefon: etapy to wiersze (lejek od góry do dołu), sprawy to same punkty - nazwisko ma tylko karta pod tablicą;
+// punkt jedzie o wiersz w dół. Od 768 px etapy to kolumny z nazwiskami, punkt jedzie o kolumnę w prawo.
+// Sprawa-bohater leży w układzie w etapie DOCELOWYM (stan końcowy bez JS), scena cofa ją o zmierzoną drogę do pustego
+// miejsca w etapie, w którym stoi (offsetTo w ResizeObserver) - ten sam kod działa w kolumnach i w wierszach.
+// Z tego samego pomiaru: punkt startu rozejścia karty i przypomnienia (--bloom-x / --bloom-y = punkt stojącej sprawy).
+// Zmienne: na obiekcie --zin (najazd); na wnętrzu okna --mv (ruch sprawy), --dd (licznik dni), --dx / --dy (droga
+// sprawy), data-st (idle / stall / moved), data-focus; na karcie, przypomnieniu i odhaczeniu --bloom + data-bloomed.
+// Bez JS / ograniczony ruch: zwykła sekcja w stanie końcowym - sprawa na nowym etapie, karta i przypomnienie widoczne.
+
+const LEN = 280;
+/** Etap, na którym sprawa stoi, i etap, na który rusza (indeksy w `x.stages`). */
+const FROM = 2, TO = 3;
+/** Oś sceny (postęp przypięcia 0-1): najazd, licznik dni, chwila zauważenia sprawy, rozejścia karty, przypomnienia
+    i odhaczenia, ruch sprawy, koniec przygaszenia tablicy. */
+const ZIN: [number, number] = [0, 0.16];
+const DAYS: [number, number] = [0.26, 0.36];
+const STALL = 0.4;
+const CARD: [number, number] = [0.46, 0.59];
+const NOTE: [number, number] = [0.65, 0.75];
+const OK: [number, number] = [0.79, 0.84];
+const MOVE: [number, number] = [0.85, 0.93];
+const END = 0.95;
+const CUTS = [0.25, 0.63, 0.77];
+
+export const LeadFunnel = ({ t, x, headId }: SceneProps<LeadCopy>) => {
+  const f = x.funnel;
+  const person = t.team[f.hero.who] ?? t.team[0];
+  const say = (s: string) => s.replace('{name}', person.name);
+  /** Ostatni dzień postoju na liczniku (ostatnia pozycja bębna to stan po ruszeniu sprawy). */
+  const dmax = Math.max(0, f.hero.days.length - 2);
+  const total = f.cases.reduce((sum, col) => sum + col.length, 0) + 1;
+  const reduced = useReducedPref();
+  const ref = useRef<HTMLElement>(null);
+  const viewRef = useRef<HTMLDivElement>(null);
+  const objRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const heroRef = useRef<HTMLLIElement>(null);
+  const gapRef = useRef<HTMLLIElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const noteRef = useRef<HTMLDivElement>(null);
+  const okRef = useRef<HTMLSpanElement>(null);
+  const stepEls = useRef<HTMLElement[]>([]);
+  useRise(viewRef, !reduced);
+  useFit(viewRef, objRef, !reduced);
+
+  const draw = useCallback((p: number) => {
+    const obj = objRef.current, body = bodyRef.current;
+    if (!obj || !body) return;
+    const zin = seg(p, ZIN[0], ZIN[1]);
+    put(obj, '--zin', zin.toFixed(4));
+    // po najeździe żadnych przekształceń 3D - tekst rastrowany ostro
+    flag(obj, 'data-flat', zin >= 1);
+    const mv = seg(p, MOVE[0], MOVE[1]);
+    put(body, '--mv', mv.toFixed(4));
+    put(body, '--dd', (lin(p, DAYS[0], DAYS[1]) * dmax).toFixed(3));
+    // karta sprawy, przypomnienie i odhaczenie rozchodzą się po kolei (łagodny start i koniec)
+    if (cardRef.current) bloom(cardRef.current, seg(p, CARD[0], CARD[1]));
+    if (noteRef.current) bloom(noteRef.current, seg(p, NOTE[0], NOTE[1]));
+    if (okRef.current) bloom(okRef.current, seg(p, OK[0], OK[1]));
+    // system zauważa sprawę, która stoi: spokojna zmiana stanu punktu, reszta tablicy przygaszona (jedno miejsce akcji)
+    const caught = p >= STALL;
+    mark(body, 'data-st', !caught ? 'idle' : mv < 1 ? 'stall' : 'moved');
+    flag(body, 'data-focus', caught && p < END);
+    narrate(stepEls.current, p, CUTS);
+  }, [dmax]);
+
+  useEffect(() => {
+    const root = ref.current, obj = objRef.current, body = bodyRef.current;
+    const card = cardRef.current, note = noteRef.current;
+    if (!root || !obj || !body || !card || !note) return;
+    stepEls.current = stepsOf(root);
+    if (reduced) {
+      // stan końcowy z układu „bez JS” - zdejmujemy wszystko, co scena zdążyła zapisać
+      wipe(obj, ['--zin'], ['data-flat']);
+      wipe(body, ['--mv', '--dd', '--dx', '--dy'], ['data-st', 'data-focus']);
+      [card, note].forEach((el) => { unbloom(el); wipe(el, ['--bloom-x', '--bloom-y']); });
+      unbloom(okRef.current);
+      clearSteps(stepEls.current);
+      return;
+    }
+    let alive = true;
+    const measure = () => {
+      const hero = heroRef.current, gap = gapRef.current;
+      if (!alive || !hero || !gap) return;
+      // droga sprawy: z pustego miejsca w etapie, na którym stoi, do jej miejsca w etapie docelowym
+      const h = offsetTo(hero, body), g = offsetTo(gap, body);
+      const dx = g.x - h.x, dy = g.y - h.y;
+      put(body, '--dx', px(dx));
+      put(body, '--dy', px(dy));
+      // punkt stojącej sprawy = miejsce, od którego rozchodzą się jej karta i przypomnienie
+      const dot = hero.querySelector<HTMLElement>('.cr7-b-dot');
+      if (!dot) return;
+      const d = offsetTo(dot, body);
+      const cx = d.x + d.w / 2 + dx, cy = d.y + d.h / 2 + dy;
+      [card, note].forEach((el) => {
+        const r = offsetTo(el, body);
+        put(el, '--bloom-x', px(cx - r.x));
+        put(el, '--bloom-y', px(cy - r.y));
+      });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(body);
+    document.fonts?.ready.then(measure).catch(() => {});
+    return () => { alive = false; ro.disconnect(); };
+  }, [reduced]);
+
+  usePin(ref, draw, !reduced);
+  const kick = useCallback(() => { if (ref.current) draw(pinProgress(ref.current)); }, [draw]);
+  useKick(kick, !reduced);
+
+  return (
+    <LeadPin rootRef={ref} kind="b" len={LEN} headId={headId} x={x} steps={f.steps} stepsAria={t.film.stepsAria}>
+      <div ref={viewRef} className="cr7-fitview">
+        <div ref={objRef} className="cr7-obj cr7-b-obj">
+          <div className="cr7-rise cr-bloom">
+            <div className="cr7-b-cam">
+              <Win app={t.app} className="cr7-b-win">
+                <div ref={bodyRef} className="cr7-b" style={{ '--n': x.stages.length, '--dmax': dmax } as CSSProperties}>
+                  <p className="cr7-b-h"><span>{f.title}</span><b>{total}</b></p>
+                  <ol className="cr7-b-cols" aria-label={x.stagesAria}>
+                    {x.stages.map((stage, i) => {
+                      const list = f.cases[i] ?? [];
+                      return (
+                        <li key={stage} className="cr7-b-col">
+                          <div className="cr7-b-col-h">
+                            <span>{stage}</span>
+                            {/* etap, z którego sprawa wychodzi, i etap, do którego dochodzi: licznik-bęben */}
+                            {i === FROM && <Reel className="cr7-b-mv" items={[String(list.length + 1), String(list.length)]} />}
+                            {i === TO && <Reel className="cr7-b-mv" items={[String(list.length), String(list.length + 1)]} />}
+                            {i !== FROM && i !== TO && <b>{list.length}</b>}
+                          </div>
+                          <ul className="cr7-b-cases">
+                            {list.map((item) => (
+                              <li key={item.name} className="cr7-b-case">
+                                <i className="cr7-b-dot" aria-hidden="true" />
+                                <span className="cr7-b-case-n">{item.name}</span>
+                                <span className="cr7-b-case-a">{item.age}</span>
+                              </li>
+                            ))}
+                            {/* puste miejsce po sprawie-bohaterze: trzyma jej położenie na postoju (do pomiaru drogi) */}
+                            {i === FROM && (
+                              <li ref={gapRef} className="cr7-b-case cr7-b-gap" aria-hidden="true">
+                                <i className="cr7-b-dot" />
+                                <span className="cr7-b-case-n">{f.hero.name}</span>
+                              </li>
+                            )}
+                            {i === TO && (
+                              <li ref={heroRef} className="cr7-b-case cr7-b-hero">
+                                <i className="cr7-b-dot" aria-hidden="true" />
+                                <span className="cr7-b-case-n">{f.hero.name}</span>
+                                <Reel className="cr7-b-case-a cr7-b-days" items={f.hero.days} />
+                              </li>
+                            )}
+                          </ul>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                  <div className="cr7-b-detail">
+                    <div ref={cardRef} className="cr7-b-card cr-bloom">
+                      <span className="cr7-b-face" aria-hidden="true">{f.hero.name.charAt(0)}</span>
+                      <b className="cr7-b-card-n">{f.hero.name}</b>
+                      <span className="cr7-b-idle">
+                        <i aria-hidden="true" />
+                        <Reel className="cr7-b-mv" items={[f.hero.idle, f.hero.idleDone]} />
+                      </span>
+                      <Reel className="cr7-b-mv cr7-b-card-t" items={[f.hero.text, f.hero.textDone]} />
+                    </div>
+                    <div ref={noteRef} className="cr7-b-note cr-bloom">
+                      <span className="cr7-b-note-ico"><Bell aria-hidden="true" /></span>
+                      <span className="cr7-b-note-b">
+                        <span className="cr7-b-note-l"><span>{f.note.label}</span><span>{f.note.time}</span></span>
+                        <span className="cr7-b-note-t">{say(f.note.text)}</span>
+                        <span ref={okRef} className="cr7-b-note-ok cr-bloom"><Check aria-hidden="true" />{say(f.note.done)}</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </Win>
+            </div>
+          </div>
+        </div>
+      </div>
+    </LeadPin>
+  );
+};

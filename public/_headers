@@ -1,0 +1,29 @@
+# Avenly Web - Cloudflare Pages headers (odpowiednik sekcji cache + security z .htaccess)
+# Kompresję (Brotli/Gzip) i HTTPS robi Cloudflare sam. HTML zostaje na domyślnym
+# "max-age=0, must-revalidate" + ETag (świeża treść od razu po deployu, bez purge).
+
+# Nagłówki bezpieczeństwa - wszystkie ścieżki
+/*
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  X-Frame-Options: SAMEORIGIN
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+
+# Chunki Next.js z hashem w nazwie - cache 1 rok, immutable (zmiana treści = nowy URL)
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Obrazy portfolio - 30 dni
+/portfolio/*
+  Cache-Control: public, max-age=2592000
+
+# Render planety hero (element LCP na mobile) - 30 dni; przy podmianie obrazu zmień nazwę pliku
+/hero-planet-*
+  Cache-Control: public, max-age=2592000
+
+# Adresy *.pages.dev (produkcyjny i preview) poza indeksem Google - zero duplicate content
+https://:project.pages.dev/*
+  X-Robots-Tag: noindex
+https://:version.:project.pages.dev/*
+  X-Robots-Tag: noindex

@@ -1,0 +1,243 @@
+/* Scena główna „Z punktów” (hero-points.tsx) - podstrona „System CRM”, scena WYBRANA przez właściciela 2026-10-04.
+   Style tylko w tym pliku, prefiks cr1c-.
+   Pierwszy ekran + przypięta scena sterowana przewijaniem: chmura punktów-gwiazd (płótno 2D, hero-points-field.ts)
+   zbiera się w układ systemu, a prawdziwe okno „Pracowni Dąb” rozchodzi się od środka tego układu.
+   2026-10-05 (decyzja właściciela dla całej podstrony): ROZEJŚCIE zamiast ukośnej kurtyny z linią światła - okno
+   ma wspólną klasę .cr-bloom z system-crm.css; żadnych lecących linii ani przycięć prostą krawędzią (NIE wracać).
+     .cr1c-stage / -in / -copy / -obj / -narr   powłoka sceny (nagłówek, obiekt, narrator - jak FilmShell w scene.tsx),
+     .cr1c-field                                płótno na cały przyklejony ekran (punkty i włosowe linie),
+     .cr1c-wincam / -win                        okno systemu: skala kamery (--s) i rozejście (--bloom),
+     .cr1c-tabs … .cr1c-day                     wnętrze okna (hero-points-system.tsx), wymiary w em,
+     .cr1c-probe                                miara ekranu (szerokość × 100svh) dla decyzji „przypiąć czy nie”.
+   Zmienne pisze scena na sekcji .cr1c: --cam (najazd), --s (skala okna = rzut płótna), --bloom (rozejście 0-1),
+   --fin (finał), --copy-h (wysokość nagłówka).
+   PRZYPIĘCIE i stany „przed” (w tym --bloom: 0) tylko pod .sv[data-live] .cr1c[data-pin] i przy
+   prefers-reduced-motion: no-preference. data-pin ustawia scena, gdy ekran jest dość wysoki (PIN_MIN_H
+   w hero-points.tsx). Bez JS, przy ograniczonym ruchu i na bardzo niskim ekranie (telefon poziomo): zwykły układ -
+   nagłówek, gotowe okno i lista zdań, bez płótna.
+   TELEFON (właściciel 2026-10-05: „dostosuj całą podstronę do urządzeń mobilnych”) - rachunek w komentarzach niżej:
+   nagłówek w dwóch liniach i ciaśniejszy (chmura dostaje ok. 40-50% pierwszego ekranu), okno prawie na szerokość
+   ekranu z częściami dobranymi do wysokości pola (@container), narrator najwyżej w 3 liniach obok bąbla czatu.
+   Język: czerń z kryciem i ostry refleks u góry (--sv-edge), włosowe linie, biel jako stan aktywny; kolor podstrony
+   tylko w liniach, punktach i znacznikach. Bez blur, mgiełek i tekstu z gradientem. Narrator: .cr-narr (system-crm.css). */
+
+.cr1c { position: relative; z-index: 1; }
+/* każde ogniwo ma position - pomiar celów punktów idzie łańcuchem offsetParent do .cr1c-stage */
+.cr1c-stage, .cr1c-in, .cr1c-obj, .cr1c-obj-in, .cr1c-wincam { position: relative; }
+.cr1c-in { display: grid; gap: 40px; padding-top: 132px; }
+.cr1c-copy, .cr1c-obj, .cr1c-narr { min-width: 0; }
+.cr1c-wincam { width: 100%; }
+.cr1c-field { display: none; }
+/* miara ekranu: 100svh nie zmienia się, gdy telefon chowa pasek adresu - decyzja o przypięciu nie przeskakuje */
+.cr1c-probe { position: absolute; left: 0; top: 0; z-index: -1; width: 100%; height: 100vh; height: 100svh; visibility: hidden; pointer-events: none; }
+/* od 1024 px nagłówek jest wierszem: h1 przy lewej krawędzi kontenera, opis, przycisk i linia dowodów w prawej kolumnie */
+@media (min-width: 1024px) {
+  .cr1c-in { padding-top: 128px; }
+  .sv.cr .cr1c-copy .sv-head { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); column-gap: 72px; align-items: end; }
+  .sv.cr .cr1c-copy .sv-title { grid-column: 1; grid-row: 1 / span 3; margin: 0; max-width: 15ch; font-size: clamp(52px, 5.4vw, 92px); }
+  .sv.cr .cr1c-copy :is(.sv-lead, .sv-actions, .sv-proof) { grid-column: 2; }
+  .sv.cr .cr1c-copy .sv-lead { max-width: 30rem; }
+  .sv.cr .cr1c-copy .sv-actions { margin-top: 26px; }
+  .sv.cr .cr1c-copy .sv-proof { margin-top: 14px; }
+}
+/* TELEFON - nagłówek. Pismo szkieletu (12,6vw) łamało tytuł na trzy linie z samotnym „proces.” na końcu i nagłówek
+   zajmował ok. 500 z 660-840 px ekranu. „pod Twój proces.” ma ok. 7,9 em szerokości (Inter 700, odstęp liter -.05em),
+   więc przy 10,2vw mieści się w jednej linii z zapasem 6-9% (390 px: pismo 39,8 px, linia ok. 313 z 342 px;
+   320 px: 32,6 px, ok. 257 z 272 px) - tytuł ma dwie wyważone linie, a razem z ciaśniejszymi odstępami nagłówek
+   kończy się ok. 400-430 px od góry (było ok. 500-550). Reszta pierwszego ekranu (ok. 30-55%) to chmura punktów. */
+@media (max-width: 767.98px) { .cr1c-in { gap: 32px; padding-top: 108px; } }
+@media (max-width: 639.98px) {
+  .sv.cr .cr1c-copy .sv-title { margin-bottom: 14px; font-size: clamp(32px, 10.2vw, 54px); }
+  .sv.cr .cr1c-copy .sv-lead { font-size: 16px; line-height: 1.5; }
+  .sv.cr .cr1c-copy .sv-actions { margin-top: 22px; }
+  .sv.cr .cr1c-copy .sv-proof { margin-top: 12px; }
+}
+
+/* ══ OKNO PRZYKŁADOWEGO SYSTEMU (hero-points-system.tsx) ══════════════════════════════════════════════════════════
+   Pulpit firmy: zakładki modułów i zespół, tablica zleceń w etapach, zapytania, zadania, tydzień w kalendarzu.
+   Wszystkie wymiary w em od pisma okna (.cr1c-win) - w przypiętej scenie pismo rośnie z ekranem, więc okno jest
+   duże na dużym ekranie i mieści się na niskim. Najmniejsze pismo .84em = 12,2 px przy podstawie 14,5 px. */
+.cr1c-win { font-size: 14.5px; }
+.cr1c-tabs { display: flex; align-items: center; justify-content: space-between; gap: 1em; min-height: 3.1em; padding: 0 1.25em; border-bottom: 1px solid var(--cr-line, rgba(255, 255, 255, .1)); }
+.cr1c-tablist { list-style: none; margin: 0; padding: 0; display: flex; gap: .2em; min-width: 0; }
+.cr1c-tablist li { flex: none; padding: .42em .8em; border-radius: .6em; font-size: .9em; line-height: 1.3; color: #94a3b8; white-space: nowrap; }
+.cr1c-tablist li[data-cur] { background: rgba(255, 255, 255, .07); font-weight: 600; color: #f8fafc; }
+.cr1c-team { flex: none; display: flex; align-items: center; }
+.cr1c-av { flex: none; display: inline-grid; place-items: center; width: 1.9em; height: 1.9em; border-radius: 50%; background: #09090b; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .3); font-size: .83em; font-weight: 600; font-style: normal; line-height: 1; color: #f8fafc; }
+.cr1c-team .cr1c-av + .cr1c-av { margin-left: -.4em; }
+
+.cr1c-body { display: grid; gap: 1.25em; min-width: 0; padding: 1.1em 1.25em 1.3em; }
+.cr1c-pan { min-width: 0; }
+.cr1c-pan-h { display: flex; align-items: baseline; justify-content: space-between; gap: 1em; margin: 0; padding-bottom: .55em; border-bottom: 1px solid var(--cr-line, rgba(255, 255, 255, .1)); font-size: .9em; line-height: 1.3; color: #94a3b8; }
+.cr1c-pan-h b { font-weight: 600; font-variant-numeric: tabular-nums; color: #f8fafc; }
+
+/* tablica zleceń: etapy jako kolumny (linia etapu w kolorze podstrony), w nich karty */
+.cr1c-cols { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr)); }
+.cr1c-col { display: grid; gap: .55em; align-content: start; min-width: 0; padding: 0 .65em .25em; }
+.cr1c-col:first-child { padding-left: 0; }
+.cr1c-col:last-child { padding-right: 0; }
+.cr1c-col + .cr1c-col { border-left: 1px solid rgba(255, 255, 255, .07); }
+.cr1c-col-h { box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: .6em; height: 2.6em; border-bottom: 2px solid rgb(var(--sv-ac) / .55); font-size: .9em; line-height: 1.2; color: #e2e8f0; white-space: nowrap; }
+.cr1c-col-h b { font-weight: 600; font-variant-numeric: tabular-nums; color: #94a3b8; }
+.cr1c-card { position: relative; display: grid; gap: .3em; align-content: start; min-width: 0; padding: .75em .85em .8em; border-radius: .8em; background: #09090b; box-shadow: var(--sv-edge); }
+.cr1c-card-t { min-width: 0; font-size: .98em; line-height: 1.3; font-weight: 600; letter-spacing: -.01em; color: #f8fafc; }
+.cr1c-card-s { display: flex; align-items: center; gap: .55em; min-width: 0; font-size: .86em; line-height: 1.35; color: #94a3b8; }
+.cr1c-card-s .cr1c-av { font-size: .97em; }
+.cr1c-card-who { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cr1c-note { justify-self: start; display: inline-flex; align-items: center; gap: .45em; max-width: 100%; padding: .2em .7em; border-radius: 999px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14); font-size: .84em; line-height: 1.3; color: #e2e8f0; white-space: nowrap; }
+.cr1c-note::before { content: ''; flex: none; width: .45em; height: .45em; border-radius: 50%; background: rgb(var(--sv-ac)); }
+
+/* zapytania, zadania, kalendarz: wiersz z kropką w kolorze podstrony (na nią ląduje punkt z płótna) */
+.cr1c-low { display: grid; gap: .95em; min-width: 0; }
+.cr1c-rows { list-style: none; margin: 0; padding: 0; }
+.cr1c-row { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: .75em; align-items: center; padding: .55em 0 .6em; border-bottom: 1px solid rgba(255, 255, 255, .07); }
+.cr1c-dot { display: block; flex: none; width: .44em; height: .44em; border-radius: 50%; background: rgb(var(--sv-ac)); }
+.cr1c-row > .cr1c-dot { grid-row: 1 / span 2; }
+.cr1c-row-t, .cr1c-row-s { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cr1c-row-t { font-size: .98em; line-height: 1.3; font-weight: 600; color: #f8fafc; }
+.cr1c-row-s { grid-column: 2; font-size: .86em; line-height: 1.35; color: #94a3b8; }
+.cr1c-days { list-style: none; margin: .65em 0 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .4em; }
+.cr1c-day { display: grid; align-content: space-between; gap: .3em; min-width: 0; min-height: 3.2em; padding: .45em .55em .5em; border-radius: .6em; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12); }
+.cr1c-day[data-on] { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .32); }
+.cr1c-day-n { font-size: .84em; line-height: 1.2; color: #94a3b8; }
+.cr1c-day[data-on] .cr1c-day-n { font-weight: 600; color: #f8fafc; }
+.cr1c-day-m { display: flex; align-items: center; gap: .45em; min-width: 0; font-size: .84em; line-height: 1.2; color: #e2e8f0; white-space: nowrap; }
+
+/* TELEFON - okno: jedna kolumna, pismo 14,5 px (najmniejsze 12,2 px). Tablica = dwa pierwsze etapy obok siebie,
+   każdy na pół szerokości (karty większe, nic nie jest ucinane; dawny pasek z trzecim etapem gasnącym przy krawędzi
+   dawał na 320-390 px karty po ok. 90-115 px i wielokropki w napisach). W etapie jedna karta bez terminu,
+   w karcie sam klient (kto prowadzi - inicjał), kalendarz bez wiersza pod kaflami.
+   Wysokości części przy 14,5 px (tytuł karty w dwóch liniach): pasek okna 42 · zakładki 42 · odstępy wnętrza 21 ·
+   tablica 131 · zapytania 128 · zadania 128 · kalendarz 79 · przerwy 12. Razem: tablica + zapytania 335,
+   + kalendarz 425, + zakładki 467, + zadania (bez zakładek) 565, wszystko 607. */
+@media (max-width: 767.98px) {
+  .cr1c-win .cr-win-bar { min-height: 42px; }
+  .cr1c-win .cr-win-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .cr1c-tabs { min-height: 2.9em; padding: 0 .75em; }
+  .cr1c-tablist { flex: 1; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 2.6em), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 2.6em), transparent); }
+  .cr1c-team { display: none; }
+  .cr1c-body { gap: .85em; padding: .7em .8em .75em; }
+  .cr1c-pan--board .cr1c-pan-h { display: none; }
+  .cr1c-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cr1c-col:nth-child(n + 3) { display: none; }
+  .cr1c-col:nth-child(2) { padding-right: 0; }
+  .cr1c-card-t { font-size: .95em; }
+  .cr1c-low { gap: .8em; }
+  .cr1c-row { padding: .5em 0 .55em; }
+  .cr1c-day { min-height: 3.05em; }
+  .cr1c-card[data-more], .cr1c-note, .cr1c-pan--cal .cr1c-rows, .cr1c-day-m > span { display: none; }
+}
+@media (min-width: 768px) {
+  .cr1c-low { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.6em; }
+}
+/* telefon i tablet: w karcie sam klient - „· kto prowadzi” nie mieści się w wąskiej kolumnie (ucinał się wielokropkiem) */
+@media (max-width: 1023.98px) { .cr1c-card-by { display: none; } }
+/* tablet i mały laptop: jedna karta w etapie, w kaflach dnia sama kropka terminu (napis się nie mieści) */
+@media (min-width: 768px) and (max-width: 1279.98px) {
+  .cr1c-card[data-more], .cr1c-day-m > span { display: none; }
+}
+@media (min-width: 1280px) { .cr1c-win { font-size: 15.5px; } }
+
+/* ZWYKŁY UKŁAD na żywej stronie (ekran za niski na przypięcie - sekcja nie ma data-pin): zdania narratora są listą.
+   Szkielet pokazuje na telefonie tylko bieżące zdanie (ustawia je scena), a tu sceny nie ma - bez tych reguł
+   wszystkie zdania byłyby niewidoczne. Przy ograniczonym ruchu reguły szkieletu i tak nie działają. */
+.sv.cr[data-live] .cr1c:not([data-pin]) .sv-step { grid-area: auto; padding-top: 0; }
+.sv.cr[data-live] .cr1c:not([data-pin]) .sv-step-bar { display: none; }
+.sv.cr[data-live] .cr1c:not([data-pin]) .sv-step-body { opacity: 1; transform: none; color: #e2e8f0; transition: none; }
+@media (max-width: 767.98px) { .sv.cr[data-live] .cr1c:not([data-pin]) .sv-steps { gap: 14px; } }
+
+/* ══ PRZYPIĘTA SCENA (tylko .sv[data-live] .cr1c[data-pin]) ══════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: no-preference) {
+  /* wysokości: przypięty ekran = 100svh (stałe przy chowaniu paska adresu), droga = 360vh (vh na telefonie też stałe) */
+  .sv[data-live] .cr1c[data-pin] { height: calc(100vh + var(--len, 360) * 1vh); height: calc(100svh + var(--len, 360) * 1vh); }
+  .sv[data-live] .cr1c[data-pin] .cr1c-stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; overflow: clip; }
+  .sv[data-live] .cr1c[data-pin] .cr1c-in { display: block; height: 100%; padding-top: 0; }
+  /* płótno: cały przyklejony ekran, NAD oknem (punkty lądują na kropkach okna, a układ gaśnie tam, gdzie okno już
+     się rozeszło - liczy to samo płótno), pod nagłówkiem i narratorem; nie łapie dotyku */
+  .sv[data-live] .cr1c[data-pin] .cr1c-field { display: block; position: absolute; left: 0; top: 0; z-index: 2; width: 100%; height: 100%; pointer-events: none; }
+  .sv[data-live] .cr1c[data-pin] .cr1c-copy { position: absolute; left: 24px; right: 24px; top: 124px; z-index: 3; }
+  /* dopiero po wejściu (data-go) - inaczej reguła sceny wygrałaby ze stanem „przed wejściem” ze szkieletu */
+  .sv[data-live][data-go] .cr1c[data-pin] .cr1c-copy { opacity: calc(1 - var(--cam, 0) * 2.6); transform: translate3d(0, calc(var(--cam, 0) * -70px), 0); }
+  .sv[data-live] .cr1c[data-pin][data-far] .cr1c-copy { visibility: hidden; }
+  /* obiekt sceny: pole na okno między nawigacją a narratorem. Na pierwszym ekranie okna jeszcze nie widać
+     (--bloom 0), ale stoi niżej (pod nagłówkiem) - blask mgławicy (data-sky) siada wtedy pod chmurą punktów.
+     container = wysokość pola dla zapytań @container (telefon: które części okna się mieszczą). */
+  .sv[data-live] .cr1c[data-pin] .cr1c-obj {
+    position: absolute; left: 24px; right: 24px; top: 88px; bottom: 142px; z-index: 1; container: cr1c / size;
+    transform: translate3d(0, calc((1 - var(--cam, 0)) * (var(--copy-h, 320px) + 80px)), 0);
+  }
+  /* wejście (.sv-late) ma element bez własnych przekształceń; kamera (skala) siedzi na .cr1c-wincam */
+  .sv[data-live] .cr1c[data-pin] .cr1c-obj-in { display: flex; flex-direction: column; justify-content: center; height: 100%; }
+  .sv[data-live] .cr1c[data-pin] .cr1c-wincam { display: flex; flex-direction: column; flex: 0 1 auto; min-height: 0; transform: scale(var(--s, 1)); }
+  /* ROZEJŚCIE: okno ma wspólną klasę .cr-bloom (system-crm.css) - odsłania się od lewej do prawej nierównym,
+     miękkim czołem z kłębów gazu (dwie tekstury szumu). Stan „przed” (--bloom: 0) tylko tutaj, pod przypięciem;
+     postęp pisze scena z przewijania, po zakończeniu okno dostaje data-bloomed (maska zdjęta). */
+  .sv[data-live] .cr1c[data-pin] { --bloom: 0; }
+  .sv[data-live] .cr1c[data-pin] .cr1c-win { display: flex; flex-direction: column; flex: 0 1 auto; min-height: 0; }
+  /* wydajność (2026-10-05): okno przed rozejściem (--bloom = 0, atrybut z hero-points.tsx) jest w całości zamaskowane -
+     nie jest rysowane; skalę kamery scena pisze wprost w stylu .cr1c-wincam (reguła z --s wyżej to stan przed JS) */
+  .sv[data-live] .cr1c[data-pin] .cr1c-win[data-veil] { visibility: hidden; }
+  .sv[data-live] .cr1c[data-pin] .cr1c-win > * { flex: none; }
+  .sv[data-live] .cr1c[data-pin] .cr1c-win > .cr1c-body { flex: 0 1 auto; min-height: 0; }
+  /* finał: terminy na kartach pojawiają się po kolei tym samym rozejściem (.cr-bloom na .cr1c-note, --i = numer
+     karty; własny --bloom terminu liczony z --fin - każdy jest w całości najpóźniej przy --fin = 1) */
+  .sv[data-live] .cr1c[data-pin] .cr1c-note { --bloom: clamp(0, var(--fin, 0) * 5 - min(var(--i, 0), 5) * .8, 1); }
+  /* narrator: jedno zdanie naraz (.cr-narr), pojawia się, gdy nagłówek odjedzie */
+  .sv[data-live] .cr1c[data-pin] .cr1c-narr { position: absolute; left: 24px; right: 24px; bottom: 34px; z-index: 3; max-width: 46rem; opacity: calc(var(--cam, 0) * 5 - 4); }
+}
+
+/* komputer i tablet: pismo okna rośnie z ekranem (okno duże na dużym, mieści się na niskim) */
+@media (prefers-reduced-motion: no-preference) and (min-width: 768px) {
+  .sv[data-live] .cr1c[data-pin] .cr1c-win { font-size: clamp(14.5px, min(2.05vh, 1.75vw), 22px); }
+}
+/* druga karta w etapie tylko na wysokim ekranie */
+@media (prefers-reduced-motion: no-preference) and (min-width: 1280px) and (max-height: 979.98px) {
+  .sv[data-live] .cr1c[data-pin] .cr1c-card[data-more] { display: none; }
+}
+/* niski ekran komputera / tabletu: bez nagłówka tablicy i wiersza pod kalendarzem (okno ok. 416 px), jeszcze niższy
+   (laptop 1366 × 768 z paskami przeglądarki ma ok. 610-650 px) - także bez zakładek (ok. 371 px). Poniżej 590 px
+   scena w ogóle nie jest przypinana (PIN_MIN_H_WIDE w hero-points.tsx). */
+@media (prefers-reduced-motion: no-preference) and (min-width: 768px) and (max-height: 699.98px) {
+  .sv[data-live] .cr1c[data-pin] .cr1c-pan--board .cr1c-pan-h, .sv[data-live] .cr1c[data-pin] .cr1c-pan--cal .cr1c-rows { display: none; }
+}
+@media (prefers-reduced-motion: no-preference) and (min-width: 768px) and (max-height: 639.98px) {
+  .sv[data-live] .cr1c[data-pin] .cr1c-tabs { display: none; }
+}
+/* tablet w pionie (768-1023 px): bąbel czatu stoi przy prawej krawędzi na wysokości zdania narratora - zdanie
+   kończy się przed nim (łamie się na dwie linie zamiast wjeżdżać pod bąbel) */
+@media (prefers-reduced-motion: no-preference) and (min-width: 768px) and (max-width: 1023.98px) {
+  .sv[data-live] .cr1c[data-pin] .cr1c-narr { padding-right: 96px; }
+}
+
+/* TELEFON - przypięta scena. Pole okna: od 84 px (nawigacja) do 142 px nad dołem ekranu (narrator), okno 12 px od
+   krawędzi. O tym, które części okna się mieszczą, decyduje wysokość pola (@container; 100svh nie zmienia się
+   z paskiem adresu, więc nic nie przeskakuje w czasie przewijania). Pole = 100svh - 226:
+     320 × 640 (pole 388, narrator 168)  tablica + zapytania (335)
+     375 × 660, 390 × 664 (434-438)      + kalendarz (425)
+     360 × 740 (514)                     + zakładki (467)
+     390 × 844 (618), 430 × 932 (706)    + zadania + zakładki (607)
+   Bez obsługi @container: tablica, zapytania i kalendarz (425).
+   Narrator: bąbel czatu zajmuje prawy dolny róg (56 px, 16 px od krawędzi, 24 px od dołu) - zdanie kończy się 80 px
+   od prawej krawędzi ekranu (8 px przed bąblem). Poniżej 480 px bez numeru w kółku: zdanie ma wtedy 286 px
+   na 390, 256 na 360 i 216 na 320 px - najwyżej 3 linie (na 320 px mniejszym pismem). */
+@media (prefers-reduced-motion: no-preference) and (max-width: 767.98px) {
+  .sv[data-live] .cr1c[data-pin] .cr1c-copy { top: 100px; }
+  .sv[data-live] .cr1c[data-pin] .cr1c-obj { left: 12px; right: 12px; top: 84px; }
+  .sv[data-live] .cr1c[data-pin] .cr1c-narr { padding-right: 72px; }
+  .sv[data-live] .cr1c[data-pin] .cr1c-tabs, .sv[data-live] .cr1c[data-pin] .cr1c-pan--task { display: none; }
+  @container cr1c (min-height: 474px) and (max-height: 571.98px) { .sv[data-live] .cr1c[data-pin] .cr1c-tabs { display: flex; } }
+  @container cr1c (min-height: 572px) { .sv[data-live] .cr1c[data-pin] .cr1c-pan--task { display: block; } }
+  @container cr1c (min-height: 614px) { .sv[data-live] .cr1c[data-pin] .cr1c-tabs { display: flex; } }
+  @container cr1c (max-height: 429.98px) { .sv[data-live] .cr1c[data-pin] .cr1c-pan--cal { display: none; } }
+}
+@media (prefers-reduced-motion: no-preference) and (max-width: 639.98px) {
+  .sv[data-live] .cr1c[data-pin] .cr1c-narr { padding-right: 56px; }
+}
+@media (prefers-reduced-motion: no-preference) and (max-width: 479.98px) {
+  .sv[data-live] .cr1c[data-pin] .cr1c-narr .sv-step-n { display: none; }
+}
+/* najwęższe telefony: mniejsze pismo zdania i zapas na czwartą linię (dłuższe zdania w wersji angielskiej) */
+@media (prefers-reduced-motion: no-preference) and (max-width: 359.98px) {
+  .sv[data-live] .cr1c[data-pin] .cr1c-obj { bottom: 168px; }
+  .sv[data-live] .cr1c[data-pin] .cr1c-narr .sv-step-t { font-size: 15.5px; }
+}

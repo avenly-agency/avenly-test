@@ -1,0 +1,39 @@
+'use client';
+
+import type { ModsCopy } from '@/lib/i18n/uslugi/system-crm-mods';
+import { ModsDown } from './mods-down';
+import { ModsMenu } from './mods-menu';
+import { ModsRise } from './mods-rise';
+import type { SceneVersion } from './types';
+import './mods.css'; // style sekcji we własnym pliku (praca równoległa), prefiks cr8-
+
+// SEKCJA MODUŁÓW „Trzy ekrany to początek. System rośnie z Tobą.” - RUNDA 4 (właściciel 2026-10-04: „moduły przerób
+// na nowe… Rośnie mi się najbardziej podoba, więc coś w tym stylu, tylko ładniej i bardziej pasujące”).
+// Zasada z „Rośnie” zostaje: okno systemu zaczyna od trzech ekranów i naprawdę rośnie o kolejne moduły, a na końcu
+// zostaje puste miejsce „na to, czego potrzebuje Twoja firma”. Mini-ekrany modułów są napisane od nowa - z prawdziwą
+// treścią przykładowej firmy (mods-ui.tsx). Żadnych latających kafli, nic do klikania - steruje przewijanie.
+// POJAWIANIE SIĘ (decyzja właściciela 2026-10-05, cała podstrona): „te wszystkie animacje linii, która leci i zmienia
+// wireframe na coś lub coś na coś, coś się pojawia - wywal i zrób animację taką pojawiania płynną, tak jak się nebula
+// rozchodzi”. Dlatego w żadnej scenie NIE MA szkieletu z punktów i włosowych linii, lotu punktów, lecących linii
+// światła ani odsłon przycięciem. Wolne miejsce zaznacza spokojny znak (gwiazdka w rogu pola i punkty w pozostałych
+// rogach), a ekran modułu pojawia się ROZEJŚCIEM - wspólna klasa .cr-bloom (generowany bloom.css: kłęby gazu od lewej
+// do prawej; znak schodzi dopełnieniem, .cr-bloom-out). Zostaje prawdziwy ruch: krawędź rosnącego okna, płytka menu,
+// przejazd widoku, licznik-bęben, jeden odjazd kamery, narrator.
+// WYBÓR WŁAŚCICIELA (2026-10-05): „W dół” - „w dół fajne, tylko daj o wiele niżej ten pasek, gdzie się odkrywa”.
+// Dlatego jest pierwsza (wersja domyślna). „Rośnie” i „Menu rośnie” zostają w panelu do potwierdzenia przez właściciela.
+//   wdol    „W dół”        BEZ przypięcia (mods-down.tsx)    dolna krawędź okna stoi nisko na stałej linii ekranu:
+//                          okno wydłuża się o kolejne piętra-moduły tak, jak przewijasz; piętro odsłania się przy
+//                          wejściu do okna i gra samo do końca (czas, nie położenie przewijania).
+//   rosnie  „Rośnie”       przypięta, 320vh (mods-rise.tsx)  jedno okno rośnie rzędami do układu 3 × 3: pierwszy rząd
+//                          to trzy ekrany na start, dziewiąte pole zostaje puste; kamera robi jeden spokojny odjazd.
+//   menu    „Menu rośnie”  przypięta, 330vh (mods-menu.tsx)  okno w skali 1: w menu przybywa pozycji, a widok
+//                          przejeżdża na duży ekran nowego modułu (jeden naraz); ostatnie miejsce zostaje puste.
+// Teksty: główny słownik (t.grow - nagłówek, moduły, licznik, puste miejsce; t.roles / t.board / t.team / t.app -
+// dane mini-ekranów; t.film.stepsAria) + lib/i18n/uslugi/system-crm-mods.ts (zdania narratora, dopiski mini-ekranów).
+// Style: mods.css (prefiks cr8-).
+
+export const modsVersions: SceneVersion<ModsCopy>[] = [
+  { id: 'wdol', label: 'W dół', Scene: ModsDown },
+  { id: 'rosnie', label: 'Rośnie', Scene: ModsRise },
+  { id: 'menu', label: 'Menu rośnie', Scene: ModsMenu },
+];

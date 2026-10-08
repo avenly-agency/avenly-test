@@ -1,0 +1,41 @@
+import type { Metadata } from "next";
+import { ServicePageSchema } from "@/components/seo/ServicePageSchema";
+import { i18nAlternates } from "@/lib/i18n/locale";
+
+const SERVICE = {
+  name: "UI/UX design",
+  description:
+    "We design UI/UX interfaces built on psychology and research that maximise conversion. A proven user journey architecture and a modern design in one package.",
+  path: "/en/services/design/ui-ux",
+};
+
+export const metadata: Metadata = {
+  title: "UI/UX design | Interfaces that sell",
+  description:
+    "Users leaving your site? We design UI/UX interfaces built on psychology and research that maximise conversion. Figma, prototypes, design system - see how we do it.",
+  alternates: i18nAlternates("/uslugi/design/ui-ux", "en"),
+  keywords: ["UI design", "UX design", "UI/UX agency", "website design", "Figma", "design system", "UI project quote"],
+  openGraph: {
+    title: "UI/UX design - Avenly",
+    description: SERVICE.description,
+    url: SERVICE.path,
+    type: "website",
+  },
+};
+
+export default function UiUxLayoutEn({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <ServicePageSchema
+        name={SERVICE.name}
+        description={SERVICE.description}
+        path={SERVICE.path}
+        categoryName="Design"
+        categoryPath="/en/services/design"
+        serviceType="UI/UX Design"
+        locale="en"
+      />
+      {children}
+    </>
+  );
+}

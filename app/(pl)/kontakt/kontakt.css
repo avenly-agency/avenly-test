@@ -1,0 +1,283 @@
+/* ── KONTAKT (/kontakt i /en/contact) ─────────────────────────────────────────────────────────
+   Restyling istniejącego układu do designu strony głównej (praca równoległa, etap 2, chat 4,
+   2026-09-29). Zasady: tło #050505, karta formularza w czerni luksusowej (głęboka neutralna czerń
+   z ostrym refleksem krawędzi u góry), ostre linie, jeden kolor marki (--brand / --brand-hi
+   z globals.css) w drobnych akcentach, biały przycisk jak w hero i stopce, etykiety zwykłym Inter
+   w pisowni zdaniowej. Bez backdrop-filter, rozmytych poświat, tekstu z gradientem i efektów
+   najechania na kartach (reagują tylko linki, pola i przyciski). Treść przy krawędziach kontenera.
+   Układ „Obok siebie” (wybór właściciela 2026-09-29): nagłówek i dane po lewej, formularz po prawej;
+   telefon: nagłówek, dane, formularz. Ruch = animacje CSS od pierwszej klatki (działają bez JS,
+   bez błędu hydratacji). */
+
+.kt {
+  --kt-line: rgba(255, 255, 255, .1);
+  --kt-out: cubic-bezier(.16, 1, .3, 1);
+  position: relative;
+  min-height: 100vh;
+  background: #050505;
+  color: #94a3b8;
+  overflow-x: clip;
+}
+
+.kt-main { position: relative; isolation: isolate; padding: 116px 0 88px; }
+.kt-main > .container { position: relative; z-index: 1; }
+
+/* ── Tło (Backdrop.tsx) ────────────────────────────────────────────────── */
+/* Warstwa na całą sekcję, płótno przyklejone do okna; pod płótnem czerń (zanim shader wystartuje
+   i gdy WebGL niedostępny). Dół sekcji gaśnie do czerni stopki. */
+.kt-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: clip; background: #050505; }
+.kt-bg-stick { position: sticky; top: 0; height: 100vh; height: 100lvh; }
+.kt-bg-canvas { display: block; width: 100%; height: 100%; opacity: 0; transition: opacity 1.4s ease; }
+.kt-bg-stick[data-ready] .kt-bg-canvas { opacity: 1; }
+.kt-bg::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 280px;
+  background: linear-gradient(180deg, rgba(5, 5, 5, 0) 0%, rgba(5, 5, 5, .1) 20%, rgba(5, 5, 5, .35) 42%, rgba(5, 5, 5, .66) 64%, rgba(5, 5, 5, .9) 84%, #050505 100%);
+}
+
+@media (min-width: 768px) { .kt-main { padding: 140px 0 112px; } }
+/* Od 1024 px strona wypełnia ekran i stoi pośrodku (wysokie ekrany 2K / 4K, jak dawny układ). */
+@media (min-width: 1024px) {
+  .kt-main { min-height: 100vh; min-height: 100svh; display: flex; align-items: center; padding: 136px 0 104px; }
+  .kt-main > .container { width: 100%; }
+}
+
+/* ── Siatka ────────────────────────────────────────────────────────────── */
+.kt-grid { display: grid; grid-template-columns: minmax(0, 1fr); row-gap: 48px; }
+.kt-head { min-width: 0; }
+
+@media (min-width: 1024px) {
+  /* nagłówek i dane po lewej, formularz po prawej (od ~1280 px pola parami - karta mieści się
+     w oknie 1440 x 900 razem z przyciskiem) */
+  .kt-grid {
+    grid-template-columns: minmax(0, 13fr) minmax(0, 11fr);
+    grid-template-rows: auto 1fr;
+    column-gap: clamp(48px, 5vw, 96px); row-gap: 0;
+  }
+  .kt-head { grid-column: 1; grid-row: 1; }
+  .kt-info { grid-column: 1; grid-row: 2; margin-top: 56px; }
+  .kt-card { grid-column: 2; grid-row: 1 / span 2; align-self: start; }
+}
+
+/* ── Nagłówek (klasy .im-* z globals.css, tu tylko ułożenie i większy h1) ── */
+.kt .kt-title {
+  margin-bottom: 24px;
+  font-size: clamp(44px, 14vw, 104px); line-height: .98; letter-spacing: -.045em;
+}
+@media (min-width: 768px) { .kt .kt-title { font-size: clamp(64px, 8.2vw, 112px); margin-bottom: 28px; } }
+/* h1 w masce: linijka wychodzi od dołu; zapas na dół litery (j, y) - line-height .98 */
+.kt-mask { display: block; overflow: clip; padding-bottom: .14em; margin-bottom: -.14em; }
+.kt-mask-i { display: inline-block; }
+.kt .kt-lead { margin: 0; max-width: 34rem; text-wrap: pretty; }
+@media (min-width: 1024px) { .kt .kt-lead { font-size: 19px; } }
+
+/* ── Dane kontaktu ─────────────────────────────────────────────────────── */
+.kt-info-list { list-style: none; margin: 0; padding: 0; display: grid; }
+.kt-info-item {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 10px; row-gap: 10px;
+  min-width: 0;
+}
+.kt-info-ico { display: grid; place-items: center; color: #cbd5e1; }
+.kt-info-label { font-size: 14px; font-weight: 500; line-height: 1.3; color: #94a3b8; }
+.kt-info-val { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; }
+.kt-info-link, .kt-info-text {
+  font-size: 18px; font-weight: 500; line-height: 1.35; letter-spacing: -.01em; color: #f1f5f9;
+  overflow-wrap: anywhere;
+}
+.kt-info-link {
+  display: inline-flex; align-items: center; min-height: 32px;
+  text-decoration: underline; text-decoration-color: transparent; text-decoration-thickness: 1px; text-underline-offset: 5px;
+  transition: color .35s ease, text-decoration-color .35s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.kt-info-link:hover { color: #fff; text-decoration-color: var(--brand-hi); }
+.kt-info-link:focus-visible { outline: 2px solid var(--brand-hi); outline-offset: 3px; border-radius: 4px; }
+.kt-info-text { padding: 4px 0; }
+@media (pointer: coarse) { .kt-info-link { min-height: 44px; } }
+
+/* rząd trzech pozycji z włosową linią u góry, na telefonie jedna pod drugą (zwarcie - formularz
+   zaczyna się wcześniej; dwa numery telefonu obok siebie, na wąskim ekranie się zawijają) */
+.kt-info-item { padding: 14px 0 12px; row-gap: 4px; border-top: 1px solid var(--kt-line); }
+.kt-info-ico { width: 16px; }
+.kt-info-val--row { flex-direction: row; flex-wrap: wrap; column-gap: 22px; row-gap: 0; }
+@media (min-width: 640px) {
+  .kt-info-list { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 28px; }
+  .kt-info-item { align-content: start; padding: 18px 0 0; row-gap: 10px; }
+  .kt-info-val--row { flex-direction: column; row-gap: 2px; }
+}
+/* laptop / tablet w poziomie (1024-1279): lewa kolumna za wąska na trzy pozycje - adres e-mail i godziny
+   łamały się w połowie; dwie kolumny (e-mail | telefon, pod spodem godziny) */
+@media (min-width: 1024px) and (max-width: 1279.98px) {
+  .kt-info-list { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 22px; }
+}
+
+/* ── Karta formularza ──────────────────────────────────────────────────── */
+/* Formularz "Bez karty" (wybór właściciela 2026-09-29): wprost na czerni, bez płyty i obwódki - jego
+   kształt wyznacza strumień Opływu (Backdrop.tsx omija zaokrąglony prostokąt wokół .kt-card).
+   Klasa .kt-card zostaje jako kontener formularza (pomiar w tle, zapytania kontenera, nakładka "wysłane"). */
+.kt-card { position: relative; min-width: 0; container-type: inline-size; padding: 4px 0 0; }
+
+.kt-card-in { transition: opacity .45s ease; }
+.kt-card[data-done] .kt-card-in { opacity: 0; }
+
+.kt-card-head {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px;
+  margin-bottom: 26px; padding-bottom: 22px; border-bottom: 1px solid var(--kt-line);
+}
+.kt-card-title { margin: 0; font-size: 23px; font-weight: 600; line-height: 1.2; letter-spacing: -.025em; color: #fff; }
+.kt-card-meta { margin: 0; font-size: 14px; line-height: 1.3; color: #94a3b8; }
+@media (min-width: 640px) { .kt-card-title { font-size: 27px; } }
+
+.kt-form { display: grid; gap: 22px; }
+.kt-row { display: grid; gap: 22px 28px; }
+@media (min-width: 640px) { .kt-form { gap: 26px; } .kt-row { row-gap: 26px; } }
+@container (min-width: 400px) { .kt-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ── Pola ──────────────────────────────────────────────────────────────── */
+.kt-field { position: relative; min-width: 0; }
+.kt-label { display: block; margin-bottom: 2px; font-size: 14.5px; font-weight: 500; line-height: 1.3; color: #cbd5e1; }
+
+/* Pola "na linii" (runda 5): zamiast ramek jedna włosowa linia u dołu (kontrast 3:1 z tłem), przy
+   fokusie od lewej narasta linia w kolorze marki (2 px) - jak linie Opływu. Bez pudełek w pudełku. */
+.kt-input {
+  display: block; width: 100%; height: 48px; padding: 0 1px;
+  border: 0; border-radius: 0;
+  background: linear-gradient(var(--brand-hi), var(--brand-hi)) no-repeat 0 100% / 0% 2px;
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, .36);
+  color: #f8fafc;
+  font: inherit; font-size: 17px; line-height: 1.4; /* >= 16 px = bez zoomu pola na iOS */
+  outline: none;
+  transition: background-size .6s var(--kt-out), box-shadow .3s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.kt-input::placeholder { color: #7d8899; opacity: 1; }
+@media (hover: hover) { .kt-input:hover { box-shadow: inset 0 -1px 0 rgba(255, 255, 255, .58); } }
+.kt-input:focus-visible, .kt-input:focus { background-size: 100% 2px; }
+.kt-input[aria-invalid="true"] { box-shadow: inset 0 -1px 0 rgba(248, 113, 113, .9); }
+.kt-input[aria-invalid="true"]:focus { background-image: linear-gradient(#f87171, #f87171); }
+.kt-textarea { height: auto; min-height: 104px; padding: 12px 1px 10px; resize: none; }
+/* autouzupełnianie Chrome nie maluje pola na jasno (tło podmienia dopiero po "nieskończonym" przejściu) */
+.kt-input:-webkit-autofill { -webkit-text-fill-color: #f8fafc; caret-color: #f8fafc; transition: background-color 600000s 0s, color 600000s 0s; }
+
+.kt-err { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 13.5px; line-height: 1.35; color: #f87171; }
+.kt-err svg { flex: none; }
+
+/* ── Lista usług (ServiceSelect) ───────────────────────────────────────── */
+.kt-sel-btn { display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: left; cursor: pointer; }
+.kt-sel-val, .kt-sel-ph { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kt-sel-ph { color: #7d8899; }
+.kt-sel-chev { flex: none; color: #94a3b8; transition: transform .35s var(--kt-out); }
+.kt-sel[data-open] .kt-sel-btn { background-size: 100% 2px; }
+.kt-sel[data-open] .kt-sel-chev { transform: rotate(180deg); }
+
+/* Panel co najmniej 19rem (w dwóch kolumnach pole ma ~210 px i nazwy by się ucinały), rośnie w lewo
+   od prawej krawędzi pola, nie wychodzi poza kartę (100cqw = szerokość treści karty). */
+.kt-sel-panel {
+  position: absolute; right: 0; top: 100%; z-index: 50; margin-top: 8px;
+  width: max(100%, 19rem); max-width: 100cqw;
+  border-radius: 14px; overflow: hidden;
+  background: #0b0b0d; border: 1px solid rgba(255, 255, 255, .12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06), 0 28px 60px -24px rgba(0, 0, 0, .95);
+  visibility: hidden; opacity: 0; transform: translateY(-6px);
+  transition: opacity .22s ease, transform .3s var(--kt-out), visibility 0s linear .3s;
+}
+.kt-sel[data-open] .kt-sel-panel { visibility: visible; opacity: 1; transform: none; transition: opacity .22s ease, transform .3s var(--kt-out), visibility 0s; }
+.kt-sel-list { list-style: none; margin: 0; padding: 6px 0; max-height: min(60vh, 420px); overflow-y: auto; overscroll-behavior: contain; }
+.kt-sel-group + .kt-sel-group { margin-top: 4px; padding-top: 4px; border-top: 1px solid rgba(255, 255, 255, .07); }
+.kt-sel-cat { display: flex; align-items: center; gap: 8px; padding: 10px 16px 6px; font-size: 13px; font-weight: 500; line-height: 1.3; color: #94a3b8; }
+.kt-sel-cat i { flex: none; width: 6px; height: 6px; border-radius: 50%; }
+.kt-sel-opts { list-style: none; margin: 0; padding: 0 6px; }
+.kt-sel-opt {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 44px;
+  padding: 10px 12px; border: 0; border-radius: 10px; background: transparent; cursor: pointer; text-align: left;
+  font: inherit; font-size: 15px; line-height: 1.3; color: #e2e8f0;
+  transition: background-color .2s ease, color .2s ease;
+}
+.kt-sel-opt-t { min-width: 0; }
+@media (hover: hover) { .kt-sel-opt:hover { background: rgba(255, 255, 255, .05); color: #fff; } }
+.kt-sel-opt[aria-selected="true"] { background: rgb(var(--brand-rgb) / .12); color: #fff; }
+.kt-sel-opt[aria-selected="true"] svg { flex: none; color: var(--brand-hi); }
+.kt-sel-opt:focus-visible { outline: 2px solid var(--brand-hi); outline-offset: -2px; }
+
+/* ── Zgoda ─────────────────────────────────────────────────────────────── */
+.kt-check { display: flex; align-items: flex-start; gap: 12px; min-height: 44px; padding: 10px 0 0; cursor: pointer; }
+.kt-check-in { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.kt-check-box {
+  flex: none; display: grid; place-items: center; width: 20px; height: 20px; margin-top: 1px;
+  border-radius: 6px; border: 1px solid rgba(255, 255, 255, .28); background: #040405; color: #fff;
+  transition: background-color .25s ease, border-color .25s ease;
+}
+.kt-check-box svg { opacity: 0; transform: scale(.6); transition: opacity .2s ease, transform .3s var(--kt-out); }
+.kt-check-in:checked + .kt-check-box { background: var(--brand); border-color: var(--brand); }
+.kt-check-in:checked + .kt-check-box svg { opacity: 1; transform: none; }
+.kt-check-in:focus-visible + .kt-check-box { outline: 2px solid var(--brand-hi); outline-offset: 3px; }
+.kt-check-in[aria-invalid="true"] + .kt-check-box { border-color: rgba(248, 113, 113, .75); }
+.kt-check-t { font-size: 14.5px; line-height: 1.5; color: #94a3b8; }
+.kt-check + .kt-err { margin-top: 0; }
+.kt-inline-link { color: #e2e8f0; text-decoration: underline; text-decoration-color: rgba(226, 232, 240, .4); text-underline-offset: 3px; transition: color .3s ease, text-decoration-color .3s ease; }
+.kt-inline-link:hover { color: #fff; text-decoration-color: var(--brand-hi); }
+.kt-inline-link:focus-visible { outline: 2px solid var(--brand-hi); outline-offset: 2px; border-radius: 3px; }
+
+/* ── Błąd wysyłki ──────────────────────────────────────────────────────── */
+.kt-alert {
+  display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px;
+  border-radius: 12px; border: 1px solid rgba(248, 113, 113, .35); background: rgba(248, 113, 113, .06);
+  font-size: 14.5px; line-height: 1.45; color: #fecaca;
+}
+.kt-alert svg { flex: none; margin-top: 2px; color: #f87171; }
+
+/* ── Przycisk (biały, jak "Bezpłatna konsultacja" w hero i stopce) ──────── */
+.kt-submit {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; height: 56px; margin-top: 6px; padding: 0 26px;
+  border: 0; border-radius: 14px; cursor: pointer;
+  font: inherit; font-size: 15.5px; font-weight: 700; line-height: 1; white-space: nowrap;
+  color: #020617; background: #fff; box-shadow: inset 0 -1px 0 rgba(2, 6, 23, .12);
+  transition: background-color .35s ease, transform .2s ease, opacity .3s ease;
+}
+.kt-submit svg { flex: none; transition: transform .45s var(--kt-out); }
+@media (hover: hover) {
+  .kt-submit:hover { background: #eef3fb; }
+  .kt-submit:hover svg:not(.kt-spin) { transform: translateX(3px); }
+}
+.kt-submit:active { transform: scale(.985); }
+.kt-submit:focus-visible { outline: 2px solid var(--brand-hi); outline-offset: 3px; }
+.kt-submit:disabled { cursor: progress; opacity: .75; }
+.kt-spin { animation: kt-spin 1s linear infinite; }
+@keyframes kt-spin { to { transform: rotate(360deg); } }
+
+/* ── Wysłane ───────────────────────────────────────────────────────────── */
+.kt-done {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 32px 24px; text-align: center;
+}
+.kt-done-ico {
+  display: grid; place-items: center; width: 64px; height: 64px; margin-bottom: 24px;
+  border-radius: 50%; border: 1px solid rgb(var(--brand-rgb) / .55); background: rgb(var(--brand-rgb) / .08); color: var(--brand-hi);
+}
+.kt-done-title { margin: 0 0 12px; font-size: 28px; font-weight: 700; line-height: 1.15; letter-spacing: -.03em; color: #fff; outline: none; }
+.kt-done-body { margin: 0 0 20px; max-width: 26rem; font-size: 16px; line-height: 1.6; color: #94a3b8; text-wrap: pretty; }
+.kt-again {
+  min-height: 44px; padding: 0 4px; border: 0; background: none; cursor: pointer;
+  font: inherit; font-size: 15px; font-weight: 500; color: #e2e8f0;
+  text-decoration: underline; text-decoration-color: rgba(226, 232, 240, .4); text-underline-offset: 5px;
+  transition: color .3s ease, text-decoration-color .3s ease;
+}
+.kt-again:hover { color: #fff; text-decoration-color: var(--brand-hi); }
+.kt-again:focus-visible { outline: 2px solid var(--brand-hi); outline-offset: 3px; border-radius: 4px; }
+
+/* ── Ruch: wejście od pierwszej klatki (bez JS), kolejno --d ────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  .kt-rv { animation: kt-in 1s var(--kt-out) both; animation-delay: calc(var(--d, 0) * 90ms + 60ms); }
+  .kt-mask-i { animation: kt-rise 1.2s var(--kt-out) both; animation-delay: calc(var(--d, 0) * 90ms + 60ms); }
+  .kt-done { animation: kt-fade .7s var(--kt-out) both; }
+  .kt-done-ico { animation: kt-pop .8s var(--kt-out) .1s both; }
+}
+@keyframes kt-in { from { opacity: 0; transform: translateY(18px); } }
+@keyframes kt-rise { from { transform: translateY(108%); } }
+@keyframes kt-fade { from { opacity: 0; transform: translateY(10px); } }
+@keyframes kt-pop { from { opacity: 0; transform: scale(.7); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .kt *, .kt *::before, .kt *::after { transition-duration: 0s !important; }
+  .kt-spin { animation-duration: 2.4s; }
+}

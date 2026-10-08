@@ -1,0 +1,173 @@
+/* Podstrona „Chatboty AI” - sekcja WIEDZA, wersja „KONKRETY” (wiedza-konkrety.tsx, runda 4 sekcji Wiedza).
+   Prefiks ch-kf-. Wspólne części przypiętych scen (wysoki kontener, przyklejony ekran, plany gwiazd, narrator, lista
+   dla czytników, odpowiedź .ch-k-ans, podpis źródła .ch-k-src, jedno miejsce rozmowy .ch-k-turns): wiedza.css;
+   asystent jako gwiazda, dymki, słowa po kolei, etykieta przykładu: chatboty.css.
+   Scena: JEDNA kolumna przy lewej krawędzi kontenera - etykieta przykładu, pytanie klienta, OGROMNY konkret
+   (tablica), zdanie odpowiedzi z gwiazdą asystenta jako autorem, podpis źródła. Prawa część ekranu zostaje ciemna
+   (same plany gwiazd), narrator w lewym dolnym rogu.
+   Tablica (.ch-kf-board): okno .ch-kf-slot na dokładnie jedno pole (--row) przycina pionowy pasek .ch-kf-strip
+   czterech pól - trzy konkrety i znak zapytania z samego obrysu. Pasek przesuwa --roll (0-3, z przewijania):
+   stara wartość wychodzi górą, nowa wjeżdża od dołu; sąsiednie pole widać tylko w trakcie przewijania.
+   Pola przygaszone (krycie .22), bieżący konkret pełny i biały (data-on - zapala go krok sceny).
+   Kreski po lewej stronie tablicy = spis tego, co asystent wie: jedna na pole, bieżąca w kolorze podstrony,
+   ostatnia pusta w środku.
+   Geometria na .ch-kf-side: --kf pismo tablicy (= jej skala), --row wysokość pola, --qh stała wysokość wiersza
+   pytania (dymek dosunięty do dołu, więc tablica nie skacze, gdy pytanie łamie się na dwie linie), --g1 / --g2
+   odstępy nad i pod tablicą, --af pismo odpowiedzi, --av szerokość kolumny autora (gwiazda / kółko człowieka).
+   BUDŻET WYSOKOŚCI: --kf ma trzeci warunek „wysokość ekranu - stałe części”, żeby podpis kończył się nad narratorem.
+   Stała (359 / 431 / 397 px) = etykieta + pytanie + odstępy + jedna linia odpowiedzi + przekazanie człowiekowi
+   (43 px, najwyższy wariant) + narrator z dołem ekranu (141 px: 62 + dwie linie) + zapas ok. 24 px; liczby opisane
+   przy regułach. Po zmianie którejkolwiek z tych części trzeba przeliczyć stałą.
+   Bez rozmyć, poświat, masek i tekstu z gradientem; kolor podstrony tylko w kresce bieżącego pola, gwieździe,
+   podpisie źródła i kółku człowieka. Całość żyje tylko w przypiętej scenie (.sv[data-live], ruch bez ograniczeń,
+   ekran wyższy niż 520 px) - bez tego scena jest wyłączona (wiedza.css) i zostaje lista pytań z odpowiedziami. */
+
+@media (prefers-reduced-motion: no-preference) and (min-height: 521px) {
+  .sv[data-live] .ch-kf { --kh: 100vh; }
+  @supports (height: 100svh) { .sv[data-live] .ch-kf { --kh: 100svh; } }
+  .sv[data-live] .ch-kf-pin { height: 400vh; height: calc(100svh + 300vh); }
+
+  /* ── kolumna przy lewej krawędzi kontenera ──
+     stała 359 px = etykieta 24 + odstęp 12 + pytanie 56 + nad / pod tablicą 4 + 6 + odpowiedź 37 + odstęp 10
+     + przekazanie 43 + narrator 141 + zapas 26 (góra kolumny --top liczona osobno) */
+  .sv[data-live] .ch-kf .ch-kf-side {
+    --top: clamp(104px, 13vh, 156px); --qh: 56px; --g1: 4px; --g2: 6px; --rg: 10px;
+    --av: 36px; --ag: 14px; --ss: 24px; --af: clamp(22px, 1.9vw, 28px); --al: 1.3;
+    --kf: max(96px, min(21vw, calc(var(--kh) * .38), calc((var(--kh) - var(--top) - 359px) / 1.04)));
+    --row: calc(var(--kf) * 1.04);
+    position: absolute; left: 24px; right: 24px; top: var(--top); display: grid; gap: 12px; align-content: start;
+  }
+  /* tablica i rozmowa leżą w tej samej komórce: wymiana ma pusty środkowy wiersz dokładnie na wysokość tablicy */
+  .sv[data-live] .ch-kf-stack { display: grid; min-width: 0; }
+  .sv[data-live] .ch-kf-stack > * { grid-area: 1 / 1; min-width: 0; }
+
+  /* ── tablica ──
+     Pole ma 1,04 em: linia pisma .9 em od góry pola (.03 em), cyfry od .117 em do linii bazowej na .844 em,
+     pod nią zapas na przecinek i ogonki jednostki. Okno jest przesunięte o .04 em w lewo (światło z lewej strony
+     cyfr), więc cyfry stoją optycznie przy krawędzi kontenera; przycięcie zaczyna się .08 em przed krawędzią. */
+  .sv[data-live] .ch-kf-board {
+    position: relative; align-self: start; height: var(--row); margin-top: calc(var(--qh) + var(--g1));
+    font-size: var(--kf); font-weight: 700; line-height: .9; letter-spacing: -.06em; font-variant-numeric: tabular-nums;
+    color: #f8fafc;
+  }
+  .sv[data-live] .ch-kf-slot { height: var(--row); margin-left: -.08em; padding-left: .04em; overflow: hidden; overflow: clip; }
+  .sv[data-live] .ch-kf-strip { transform: translate3d(0, calc(var(--roll, 3) * var(--row) * -1), 0); }
+  /* pole: --lv = ile pola wyszło już górą okna (0-1) - wychodzące pole lekko maleje (do .96) przy linii bazowej */
+  .sv[data-live] .ch-kf-fact {
+    --lv: clamp(0, calc(var(--roll, 3) - var(--i)), 1);
+    display: block; height: var(--row); margin: 0; padding-top: .03em; white-space: nowrap;
+    opacity: .22; transform-origin: 0 81%; transform: scale(calc(1 - var(--lv) * .04));
+    transition: opacity .6s ease;
+  }
+  .sv[data-live] .ch-kf-fact[data-on] { opacity: 1; }
+  /* jednostka w tej samej linii, mniejsza, na linii bazowej (odstęp po wartości liczony w jej własnym piśmie) */
+  .sv[data-live] .ch-kf-unit { margin-left: .3em; font-size: .3em; font-weight: 600; letter-spacing: -.02em; color: #cbd5e1; }
+  /* to, czego asystent nie wie: sam obrys znaku, w środku widać niebo */
+  .sv[data-live] .ch-kf-void { color: transparent; -webkit-text-stroke: 1.5px rgba(255, 255, 255, .7); }
+  @supports not (-webkit-text-stroke: 1px #fff) { .sv[data-live] .ch-kf-void { color: #64748b; } }
+  .sv[data-live] .ch-kf-note { margin-left: .9em; font-size: max(15px, .16em); font-weight: 500; letter-spacing: -.01em; color: #94a3b8; }
+
+  /* kreski: od góry cyfr do linii bazowej, po jednej na pole; --on = bliskość pola (1 = bieżące). Bieżąca kreska
+     w kolorze podstrony wydłuża się ku cyfrom; ostatnia (znak zapytania) jest pusta w środku i nie rośnie */
+  .sv[data-live] .ch-kf-ticks {
+    position: absolute; right: calc(100% + 10px); top: .117em; width: 8px; height: .727em;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .sv[data-live] .ch-kf-ticks i {
+    --d: max(calc(var(--roll, 3) - var(--i)), calc(var(--i) - var(--roll, 3)));
+    --on: clamp(0, calc(1 - var(--d) * 1.5), 1);
+    position: relative; display: block; flex: none; width: 100%; height: 1px; background: rgba(255, 255, 255, .32);
+  }
+  .sv[data-live] .ch-kf-ticks i::after {
+    content: ''; position: absolute; left: 0; right: 0; top: -.5px; height: 2px; background: rgb(var(--sv-ac));
+    opacity: var(--on); transform-origin: 0 50%; transform: scaleX(calc(1 + var(--on) * .5));
+  }
+  .sv[data-live] .ch-kf-ticks i[data-void] { height: 5px; margin: -2px 0; background: none; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .42); }
+  .sv[data-live] .ch-kf-ticks i[data-void]::after { top: 0; height: 100%; background: none; box-shadow: inset 0 0 0 1px rgb(var(--sv-ac)); transform: none; }
+
+  /* ── rozmowa: wiersz pytania (stała wysokość, dymek przy dole), pusty wiersz tablicy, odpowiedź ── */
+  .sv[data-live] .ch-kf-turn { grid-template-rows: var(--qh) calc(var(--g1) + var(--row) + var(--g2)) auto; gap: 0; }
+  .sv[data-live] .ch-kf-turn > .ch-msg { grid-row: 1; align-self: end; min-width: 0; }
+  .sv[data-live] .ch-kf-turn .ch-bub { padding: 12px 18px 13px; font-size: clamp(16px, 1.25vw, 19px); }
+  /* odpowiedź: gwiazda asystenta jako autor w wąskiej kolumnie, obok zdanie, pod zdaniem podpis źródła */
+  .sv[data-live] .ch-kf-reply {
+    grid-row: 3; display: grid; grid-template-columns: var(--av) minmax(0, 1fr); gap: var(--rg) var(--ag);
+    align-items: start; min-width: 0;
+  }
+  .sv[data-live] .ch-kf-reply > .ch-spark { width: var(--ss); height: var(--ss); margin-top: calc((var(--af) * var(--al) - var(--ss)) / 2); }
+  .sv[data-live] .ch-kf-reply .ch-k-ans { max-width: 50rem; font-size: var(--af); line-height: var(--al); }
+  /* podpis pojawia się, gdy zdanie jest już napisane */
+  .sv[data-live] .ch-kf-reply > .ch-k-src { grid-column: 2; transition-delay: .8s; }
+  .sv[data-live] .ch-kf-reply > .ch-k-src:not([data-on]) { transition-delay: 0s; }
+
+  /* przekazanie człowiekowi: kółko z człowiekiem pod gwiazdą (ta sama kolumna), obok podpis w stylu źródła
+     i zdanie o przekazaniu; kółko zapala się kolorem podstrony chwilę po pojawieniu się wiersza */
+  .sv[data-live] .ch-kf-hand {
+    grid-column: 1 / -1; display: grid; grid-template-columns: var(--av) minmax(0, 1fr); column-gap: var(--ag);
+    align-items: center; min-width: 0; transition: opacity .6s ease, transform .9s var(--sv-ease);
+  }
+  .sv[data-live] .ch-kf-hand > i {
+    display: grid; place-items: center; width: var(--av); height: var(--av); border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, .5); background: #050505;
+    transition: border-color .5s ease .45s, background-color .5s ease .45s, box-shadow .5s ease .45s;
+  }
+  .sv[data-live] .ch-kf-hand svg { width: 16px; height: 16px; color: #e2e8f0; transition: color .5s ease .45s; }
+  .sv[data-live] .ch-kf-hand[data-on] > i { border-color: rgb(var(--sv-ac)); background: rgb(var(--sv-ac)); box-shadow: 0 0 0 5px rgb(var(--sv-ac) / .22); }
+  .sv[data-live] .ch-kf-hand[data-on] svg { color: #0a0a0a; }
+  .sv[data-live] .ch-kf-hand:not([data-on]) { opacity: 0; transform: translateY(10px); transition: none; }
+  .sv[data-live] .ch-kf-hand:not([data-on]) :is(i, svg) { transition: none; }
+  .sv[data-live] .ch-kf-hand-in { display: grid; gap: 1px; min-width: 0; }
+  .sv[data-live] .ch-kf-hand-t { margin: 0; font-size: 15.5px; line-height: 1.4; color: #e2e8f0; text-wrap: pretty; }
+
+  /* ── komputer ── */
+  @media (min-width: 1024px) {
+    /* narrator szerzej niż w pozostałych scenach: najdłuższe zdanie (także po angielsku) zostaje w dwóch liniach,
+       na które liczony jest budżet wysokości */
+    .sv[data-live] .ch-kf .ch-k-narr { max-width: 46rem; }
+  }
+  /* niższe okno: ciaśniejszy rytm i mniejsze pismo rozmowy - tablica zostaje duża.
+     stała 431 px = góra 98 + etykieta 24 + odstęp 10 + pytanie 46 + 4 + 6 + odpowiedź 29 + odstęp 8
+     + przekazanie 43 + narrator 141 + zapas 22 */
+  @media (min-width: 1024px) and (max-height: 760px) {
+    .sv[data-live] .ch-kf .ch-kf-side {
+      --top: 98px; --qh: 46px; --rg: 8px; --af: 22px; gap: 10px;
+      --kf: max(96px, min(21vw, calc(var(--kh) * .38), calc((var(--kh) - 431px) / 1.04)));
+    }
+    .sv[data-live] .ch-kf-turn .ch-bub { padding: 9px 16px 10px; font-size: 16px; }
+  }
+  /* bardzo niskie okno (np. 1366 x 650): bez etykiety przykładu (431 - 34 = 397 px) */
+  @media (min-width: 1024px) and (max-height: 660px) {
+    .sv[data-live] .ch-kf-meta { display: none; }
+    .sv[data-live] .ch-kf .ch-kf-side { --kf: max(96px, min(21vw, calc(var(--kh) * .38), calc((var(--kh) - 397px) / 1.04))); }
+  }
+  @media (min-width: 2560px) and (min-height: 761px) {
+    .sv[data-live] .ch-kf .ch-kf-side { --af: 32px; }
+    .sv[data-live] .ch-kf-void { -webkit-text-stroke-width: 2px; }
+  }
+
+  /* ── telefon i tablet: ta sama opowieść w jednej kolumnie; tablicę ogranicza szerokość ekranu (27vw), więc
+        okno sięga prawej krawędzi ekranu (dłuższa jednostka nie jest przycinana). Wiersz pytania mieści dwie linie.
+        Na wyższych ekranach kolumna zaczyna się niżej (nie zostaje pusty środek ekranu). ── */
+  @media (max-width: 1023.98px) {
+    .sv[data-live] .ch-kf .ch-kf-side {
+      --top: clamp(100px, calc(var(--kh) * .5 - 290px), 30vh); --qh: 62px; --g1: 6px; --g2: 8px; --rg: 8px;
+      --av: 30px; --ag: 10px; --ss: 18px; --af: clamp(17.5px, 2.6vw, 22px); --al: 1.34;
+      --kf: min(27vw, calc(var(--kh) * .2));
+      gap: 10px;
+    }
+    .sv[data-live] .ch-kf-slot { margin-right: -24px; }
+    .sv[data-live] .ch-kf-turn .ch-bub { padding: 8px 14px 9px; font-size: 15px; line-height: 1.4; }
+    .sv[data-live] .ch-kf-hand svg { width: 14px; height: 14px; }
+    .sv[data-live] .ch-kf-hand-t { font-size: 15px; }
+  }
+  /* niższy telefon: bez etykiety przykładu, kolumna od razu pod nawigacją */
+  @media (max-width: 1023.98px) and (max-height: 639.98px) {
+    .sv[data-live] .ch-kf-meta { display: none; }
+    .sv[data-live] .ch-kf .ch-kf-side { --top: 96px; }
+  }
+  /* bardzo niski albo bardzo wąski telefon: mniejsze pismo odpowiedzi i zdania o przekazaniu */
+  @media (max-width: 1023.98px) and (max-height: 599.98px), (max-width: 359.98px) {
+    .sv[data-live] .ch-kf .ch-kf-side { --af: 15.5px; --g2: 6px; --rg: 6px; }
+    .sv[data-live] .ch-kf-hand-t { font-size: 14.5px; line-height: 1.35; }
+  }
+}

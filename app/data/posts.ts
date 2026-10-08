@@ -52,7 +52,7 @@ export const blogPosts: BlogPost[] = [
       <blockquote>
         <strong>Chcesz sprawdzić, jak konsultant AI sprawdzi się w Twojej branży?</strong><br>
         Umów się na bezpłatną konsultację z ekspertami Avenly. Pomożemy Ci dobrać narzędzia, które realnie zwiększą Twoje zyski. <br>
-        <a href="/kontakt">Zarezerwuj termin konsultacji</a>
+        <a href="/kontakt">Bezpłatna konsultacja</a>
       </blockquote>
     `,
 	},
@@ -90,7 +90,7 @@ export const blogPosts: BlogPost[] = [
       <blockquote>
         <strong>Twoja strona ładuje się zbyt wolno?</strong><br>
         Przeprowadzimy dla Ciebie darmowy audyt wydajności i wskażemy wąskie gardła, które blokują Twoją sprzedaż. <br>
-        <a href="/kontakt">Zamów darmowy audyt szybkości</a>
+        <a href="/kontakt">Bezpłatna konsultacja</a>
       </blockquote>
     `,
 	},
@@ -124,7 +124,7 @@ export const blogPosts: BlogPost[] = [
       <blockquote>
         <strong>Zbudujmy Twoją cyfrową przewagę.</strong><br>
         Szukasz partnera, który stworzy dla Ciebie stronę generującą realne zapytania? Porozmawiajmy o Twoim projekcie.<br>
-        <a href="/kontakt">Skontaktuj się z zespołem Avenly</a>
+        <a href="/kontakt">Bezpłatna konsultacja</a>
       </blockquote>
     `,
 	},

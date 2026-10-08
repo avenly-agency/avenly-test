@@ -3,7 +3,7 @@
  * Każda funkcja zwraca gotowy obiekt do podania w <JsonLd data={...} />
  */
 
-import { SITE, CONTACT, ADDRESS, SAME_AS, GOOGLE_BUSINESS, COMPANY_IDS } from './seo-data';
+import { SITE, CONTACT, ADDRESS, SAME_AS, COMPANY_IDS } from './seo-data';
 
 /** Organization - globalna na każdej stronie. Generuje Knowledge Panel signal. */
 export function organizationSchema() {
@@ -82,16 +82,8 @@ export function localBusinessSchema() {
       },
     ],
     sameAs: SAME_AS,
-    // AggregateRating - tylko jeśli mamy realne dane
-    ...(GOOGLE_BUSINESS.reviewsCount > 0 && {
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: GOOGLE_BUSINESS.ratingValue.toFixed(1),
-        reviewCount: GOOGLE_BUSINESS.reviewsCount,
-        bestRating: 5,
-        worstRating: 1,
-      },
-    }),
+    // Bez AggregateRating (2026-09-28): ocena Google nie jest pokazywana na stronie (decyzja
+    // właściciela: słaby social proof), a dane strukturalne mają opisywać widoczną treść.
   };
 }
 
@@ -222,19 +214,55 @@ export function caseStudySchema(project: {
   client: string;
   year: string;
   mainImage: string;
-}) {
-  const url = `${SITE.url}/realizacje/${project.slug}`;
+}, opts: {
+  /** Ścieżka strony w danym języku (np. `/en/work/slug`) - `@id` musi zgadzać się z ItemList na stronie głównej. */
+  path?: string;
+  /** Nazwa wyświetlana (jak h1 i tytuł strony). */
+  name?: string;
+  language?: string;
+} = {}) {
+  const url = `${SITE.url}${opts.path ?? `/realizacje/${project.slug}`}`;
   return {
     '@context': 'https://schema.org',
     '@type': 'CreativeWork',
     '@id': `${url}#case-study`,
-    name: project.title,
+    name: opts.name ?? project.title,
     description: project.description,
     url,
-    image: project.mainImage,
+    // adres obrazu w danych strukturalnych musi być pełny
+    image: project.mainImage.startsWith('http') ? project.mainImage : `${SITE.url}${project.mainImage}`,
     datePublished: `${project.year}-01-01`,
     creator: { '@id': `${SITE.url}/#organization` },
     about: project.client,
-    inLanguage: SITE.language,
+    inLanguage: opts.language ?? SITE.language,
+  };
+}
+
+/**
+ * ItemList wybranych realizacji (homepage, sekcja "Realizacje"). `url`/`image` = ścieżki
+ * względne (zlokalizowane); case studies dostają @id spójne z caseStudySchema.
+ */
+export function featuredWorkSchema(list: { name: string; items: Array<{ name: string; url: string; image: string }> }) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: list.name,
+    numberOfItems: list.items.length,
+    itemListElement: list.items.map((item, i) => {
+      const url = `${SITE.url}${item.url}`;
+      const isCaseStudy = item.url.includes('/realizacje/') || item.url.includes('/work/');
+      return {
+        '@type': 'ListItem',
+        position: i + 1,
+        item: {
+          '@type': 'CreativeWork',
+          ...(isCaseStudy ? { '@id': `${url}#case-study` } : {}),
+          name: item.name,
+          url,
+          image: `${SITE.url}${item.image}`,
+          creator: { '@id': `${SITE.url}/#organization` },
+        },
+      };
+    }),
   };
 }

@@ -1,0 +1,516 @@
+/* Podstrona „Strona one-page” (/uslugi/strony-www/one-page i EN) - chat 7, praca równoległa, etap 3 (pilot przebudowy
+   podstron usług). Style tylko w tym pliku, prefiks one- (nie op- - to Opinie). Szkielet wspólny (korzeń, tło-mgławica,
+   wejście, nagłówek, szkic, kroki, zakończenie): app/(pl)/uslugi/_usluga/usluga.css (sv-).
+   RUNDA 4 (2026-10-01) - nowy koncept: podstrona jako krótki film w trzech scenach (wzór ruchu: Plansze z Realizacji,
+   Panorama z Bloga, rysunki z Oferty, hero), w kadrze ZAPROJEKTOWANA strona one-page klienta.
+     .one-st  strona klienta w kadrze (site.tsx) - własna paleta, wymiary w em od szerokości kadru,
+     .one-fr  kadr w czarnym szkle (rama, pasek adresu, okno) - wspólny dla scen,
+     .one-a   scena 1 „Film”: pierwszy ekran + przypięta scena z kamerą (droga klienta przez gotową stronę: pierwszy
+              ekran -> oferta i opinia -> formularz i zapytanie; bez etapu szkicu),
+     .one-b   scena 2 „Kiedy wystarczy jedna strona”: stos czterech kart z rysunkami (wygląd karty do wyboru),
+     .one-c   scena 3 „Zakres”: lista, a obok przyklejony kadr z pokazem każdego punktu.
+   Przypięte sceny, maski i ruch tylko pod .sv[data-live] i przy prefers-reduced-motion: no-preference; zmienne ruchu
+   mają wartości domyślne = stan końcowy (bez JS i przy ograniczonym ruchu zwykła strona).
+   Notatki: docs/podstrony/usluga-one-page.md. */
+
+/* --one-paper: okno kadru ze szkicem = sama PRZEZROCZYSTA CZERŃ (właściciel 2026-10-01: „czarny, ale z opacity,
+   i może tego highlight w lewym górnym rogu usuń”, potem „usuń kropki z tego szkicu z hero”). Czysta czerń z kryciem:
+   bez szarego / granatowego barwnika (przydymione szkło rgba(24, 25, 32) wychodziło na mgławicy szaro), bez bliku
+   w rogu i bez papieru kreślarskiego z kropek - NIE wracać. Okno leży na ramie, więc krycia się składają (razem
+   ok. 70-80%). */
+.one {
+  --one-morph: 1.1s cubic-bezier(.62, 0, .18, 1);
+  --one-paper: linear-gradient(160deg, rgba(0, 0, 0, .36), rgba(0, 0, 0, .5));
+}
+@property --f1 { syntax: '<number>'; inherits: true; initial-value: 1; }
+@property --f2 { syntax: '<number>'; inherits: true; initial-value: 1; }
+@property --f3 { syntax: '<number>'; inherits: true; initial-value: 1; }
+@property --sent { syntax: '<number>'; inherits: true; initial-value: 0; }
+
+/* ══ STRONA KLIENTA W KADRZE (.one-st) ══════════════════════════════════════════════════════════════════════
+   Zaprojektowana strona „twojafirma.pl”: krem, butelkowa zieleń, terakota, musztarda; ilustracje z prostych brył. */
+.one-st {
+  --st-bg: #f3ede2; --st-ink: #1b1915; --st-mut: #6f675b; --st-pri: #1f4a3a; --st-acc: #e2673a; --st-sun: #f1b94a; --st-card: #fffaf2; --st-line: #dfd5c2;
+  container-type: inline-size; background: var(--st-bg); color: var(--st-ink); text-align: left;
+}
+.one-st-in { padding: 0 4.6em; font-size: var(--one-fs, 1.3cqw); line-height: 1.5; letter-spacing: 0; }
+.one-st p { margin: 0; }
+.one-st svg { display: block; flex: none; }
+.one-st-nav { display: flex; align-items: center; justify-content: space-between; height: 5.4em; }
+.one-st-logo { display: inline-flex; align-items: center; gap: .55em; font-size: 1.15em; font-weight: 700; letter-spacing: -.03em; color: var(--st-ink); }
+.one-st-logo i { width: 1.05em; height: 1.05em; border-radius: 50% 50% 50% 0; background: var(--st-acc); }
+.one-st-links { display: flex; align-items: center; gap: 2em; font-size: .95em; font-weight: 500; color: #3d382f; }
+.one-st-navbtn { padding: .62em 1.25em; border-radius: 99em; background: var(--st-ink); color: var(--st-bg); font-weight: 600; }
+.one-st-hero { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, .88fr); gap: 3.6em; align-items: center; padding: 2em 0 4.6em; }
+.one-st-eyebrow { display: inline-flex; align-items: center; gap: .7em; font-size: .9em; font-weight: 600; color: var(--st-pri); }
+.one-st-eyebrow i { width: 1.9em; height: .14em; border-radius: 1em; background: var(--st-acc); }
+.one-st .one-st-h1 { margin-top: .45em; font-size: 4.1em; line-height: .98; font-weight: 700; letter-spacing: -.055em; text-wrap: balance; }
+.one-st .one-st-p { margin-top: 1.05em; max-width: 27em; font-size: 1.15em; color: var(--st-mut); }
+.one-st-actions { display: flex; align-items: center; gap: .9em; margin-top: 2em; }
+.one-st-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: .5em; height: 3.2em; padding: 0 1.6em; border-radius: 99em; background: var(--st-acc); color: #fff; font-weight: 600; white-space: nowrap; }
+.one-st-btn > svg { width: 1.1em; height: 1.1em; }
+.one-st-ghost { display: inline-flex; align-items: center; height: 3.2em; padding: 0 1.5em; border-radius: 99em; box-shadow: inset 0 0 0 .1em var(--st-ink); font-weight: 600; white-space: nowrap; }
+.one-st .one-st-perks { display: flex; flex-wrap: wrap; gap: .6em 1.6em; margin-top: 2.1em; font-size: .92em; font-weight: 500; color: #3d382f; }
+.one-st-perks span { display: inline-flex; align-items: center; gap: .5em; }
+.one-st-perks i { display: grid; place-items: center; width: 1.4em; height: 1.4em; border-radius: 50%; background: var(--st-pri); color: var(--st-bg); }
+.one-st-perks i svg { width: .85em; height: .85em; stroke-width: 3; }
+.one-st-art { position: relative; aspect-ratio: 1 / 1.03; }
+.one-st-art > i { position: absolute; display: block; }
+.one-st-art-arch { inset: 0 5% 0 7%; border-radius: 50% 50% 1.8em 1.8em / 44% 44% 1.8em 1.8em; background: var(--st-pri); }
+.one-st-art-sun { right: 0; top: 7%; width: 34%; aspect-ratio: 1; border-radius: 50%; background: var(--st-sun); }
+.one-st-art-hill { left: 7%; bottom: 0; width: 58%; height: 36%; border-radius: 50% 50% 0 1.8em / 100% 100% 0 1.8em; background: var(--st-acc); }
+.one-st-art-bar { right: 14%; bottom: 13%; width: 21%; aspect-ratio: 1; border-radius: 50%; box-shadow: inset 0 0 0 .55em var(--st-bg); }
+.one-st-art-card { position: absolute; left: -5%; bottom: 11%; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: .45em .8em; width: 50%; padding: 1em 1.2em; border-radius: 1.2em; background: var(--st-card); box-shadow: 0 1.4em 2.6em -1.4em rgba(27, 25, 21, .5); }
+.one-st-art-card i { grid-row: 1 / span 2; display: grid; place-items: center; width: 2.3em; height: 2.3em; border-radius: 50%; background: var(--st-acc); color: #fff; }
+.one-st-art-card i svg { width: 1.2em; height: 1.2em; stroke-width: 3; }
+.one-st-art-card b { display: block; height: .55em; border-radius: .5em; background: var(--st-ink); }
+.one-st-art-card b:last-child { width: 62%; background: #b7ad9c; }
+.one-st-chips { display: flex; flex-wrap: wrap; gap: .7em; padding: 0 0 2.4em; }
+.one-st-chips span { padding: .5em 1.15em; border-radius: 99em; box-shadow: inset 0 0 0 .09em #c9bfab; font-size: .92em; font-weight: 600; color: var(--st-mut); }
+.one-st-offer { padding: 3.4em 0 4em; border-top: 1px solid var(--st-line); }
+.one-st-head { display: flex; align-items: baseline; justify-content: space-between; gap: 2em; }
+.one-st .one-st-h2 { font-size: 2.4em; line-height: 1.04; font-weight: 700; letter-spacing: -.05em; }
+.one-st .one-st-s { font-size: .95em; color: var(--st-mut); }
+.one-st-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.4em; margin-top: 2em; }
+.one-st-card { padding: .8em .8em 1.3em; border-radius: 1.5em; background: var(--st-card); box-shadow: 0 0 0 1px var(--st-line); }
+.one-st-card-art { position: relative; display: block; aspect-ratio: 16 / 10; overflow: hidden; border-radius: 1em; }
+.one-st-card-art i { position: absolute; display: block; }
+.one-st-card-art[data-v="0"] { background: var(--st-pri); }
+.one-st-card-art[data-v="0"] i:first-child { right: 12%; top: 16%; width: 30%; aspect-ratio: 1; border-radius: 50%; background: var(--st-sun); }
+.one-st-card-art[data-v="0"] i:last-child { left: -6%; bottom: -46%; width: 64%; aspect-ratio: 1; border-radius: 50%; background: var(--st-acc); }
+.one-st-card-art[data-v="1"] { background: var(--st-sun); }
+.one-st-card-art[data-v="1"] i:first-child { left: 30%; bottom: 0; width: 40%; height: 72%; border-radius: 99em 99em 0 0; background: var(--st-pri); }
+.one-st-card-art[data-v="1"] i:last-child { right: 10%; top: 14%; width: 16%; aspect-ratio: 1; border-radius: 50%; background: var(--st-bg); }
+.one-st-card-art[data-v="2"] { background: var(--st-acc); }
+.one-st-card-art[data-v="2"] i:first-child { left: 12%; top: 18%; width: 34%; aspect-ratio: 1; border-radius: 50%; background: var(--st-bg); }
+.one-st-card-art[data-v="2"] i:last-child { right: -8%; bottom: -30%; width: 58%; aspect-ratio: 1; border-radius: 50% 50% 0 50%; background: var(--st-pri); }
+.one-st .one-st-h3 { margin: 1em .5em 0; font-size: 1.22em; font-weight: 700; letter-spacing: -.03em; }
+.one-st-card .one-st-s { margin: .3em .5em 0; }
+.one-st .one-st-price { display: flex; align-items: center; justify-content: space-between; margin: 1.1em .5em 0; font-weight: 700; }
+.one-st-price i { display: grid; place-items: center; width: 2.3em; height: 2.3em; border-radius: 50%; background: var(--st-ink); color: var(--st-bg); }
+.one-st-price i svg { width: 1.05em; height: 1.05em; }
+.one-st-quote { padding: 3.4em 0 4.2em; border-top: 1px solid var(--st-line); text-align: center; }
+.one-st-qm { display: block; height: .5em; font: 700 7.5em/1 Georgia, 'Times New Roman', serif; color: var(--st-acc); }
+.one-st .one-st-q { max-width: 17em; margin: .15em auto 0; font-size: 2.4em; line-height: 1.14; font-weight: 600; letter-spacing: -.045em; text-wrap: balance; }
+.one-st-quote .one-st-s { margin-top: 1.3em; }
+.one-st-contact { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 3em; align-items: center; padding: 2.8em; border-radius: 2.1em; background: var(--st-pri); color: var(--st-bg); }
+.one-st-contact .one-st-p { color: rgba(243, 237, 226, .76); }
+.one-st .one-st-lines { display: grid; gap: .6em; margin-top: 1.9em; font-size: .95em; color: rgba(243, 237, 226, .88); }
+.one-st-lines span { display: flex; align-items: center; gap: .65em; }
+.one-st-lines svg { width: 1.15em; height: 1.15em; color: var(--st-sun); }
+.one-st-form { display: grid; gap: .8em; padding: 1.4em; border-radius: 1.5em; background: var(--st-card); color: var(--st-ink); }
+.one-st-field { display: grid; align-content: start; gap: .2em; min-height: 3.8em; padding: .7em 1em; border-radius: .85em; background: #fff; box-shadow: inset 0 0 0 1px var(--st-line); }
+.one-st-field[data-big] { min-height: 5.8em; }
+.one-st-lab { font-size: .78em; font-weight: 500; color: var(--st-mut); }
+.one-st-val { justify-self: start; font-weight: 500; white-space: nowrap; clip-path: inset(0 calc((1 - var(--f, 1)) * 100%) 0 0); }
+.one-st-send { width: 100%; transform: scale(calc(1 - var(--k, 0) * .03)); }
+.one-st-send-a { opacity: calc(1 - var(--sent, 0)); }
+.one-st-send-b { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: .5em; border-radius: inherit; background: var(--st-pri); opacity: var(--sent, 0); }
+.one-st-send-b svg { width: 1.15em; height: 1.15em; stroke-width: 3; }
+.one-st-cur { position: absolute; left: 56%; top: 52%; z-index: 2; opacity: var(--co, 0); transform-origin: 0 0; transform: translate(calc((1 - var(--cx, 1)) * 15em), calc((1 - var(--cx, 1)) * -9em)) scale(calc(1 - var(--k, 0) * .18)); pointer-events: none; }
+.one-st-cur svg { width: 2em; height: 2em; fill: var(--st-ink); stroke: #fff; stroke-width: 1.5px; }
+.one-st-foot { display: flex; align-items: center; justify-content: space-between; gap: 2em; padding: 2.3em 0 2.7em; font-size: .88em; color: var(--st-mut); }
+@container (max-width: 430px) {
+  .one-st-in { padding: 0 1.3em; font-size: var(--one-fs-n, 4.2cqw); }
+  .one-st-nav { height: 4.6em; }
+  .one-st-navlink { display: none; }
+  .one-st-hero { grid-template-columns: minmax(0, 1fr); gap: 2.2em; padding: 1em 0 2.8em; }
+  .one-st .one-st-h1 { font-size: 2.7em; }
+  .one-st-actions { flex-wrap: wrap; margin-top: 1.5em; }
+  .one-st-art { aspect-ratio: 1 / .86; }
+  .one-st-offer { padding: 2.4em 0 2.8em; }
+  .one-st-head { display: block; }
+  .one-st .one-st-h2 { font-size: 1.9em; }
+  .one-st-cards { grid-template-columns: minmax(0, 1fr); gap: 1em; margin-top: 1.4em; }
+  .one-st-quote { padding: 2.6em 0 3em; }
+  .one-st .one-st-q { font-size: 1.7em; }
+  .one-st-contact { grid-template-columns: minmax(0, 1fr); gap: 1.6em; padding: 1.5em; border-radius: 1.6em; }
+  .one-st-form { padding: 1.1em; }
+  .one-st-foot { flex-direction: column; align-items: flex-start; gap: .5em; padding: 1.8em 0 2.2em; }
+  .one-st-cur { display: none; }
+}
+
+/* ══ KADR (.one-fr) - rama, pasek z adresem, okno ═══════════════════════════════════════════════════════════
+   CZARNY Z KRYCIEM (właściciel 2026-10-01: „ten pierwszy box też zrób ciemny, taki czarny, a nie szary”, potem „czarny,
+   ale z opacity, i może tego highlight w lewym górnym rogu usuń”): przezroczysta czysta czerń (mgławica przebija, bez
+   rozmycia), ostry refleks u góry, kolor podstrony od dołu, BEZ bliku w lewym górnym rogu.
+   Historia (NIE wracać): przydymione szkło z szarym / granatowym barwnikiem („szary, nie pasuje totalnie”); pełna,
+   nieprzezroczysta czerń. */
+.one-fr-rim {
+  position: relative; isolation: isolate; display: flex; flex-direction: column; padding: 8px; border-radius: 26px;
+  background: linear-gradient(160deg, rgba(0, 0, 0, .52), rgba(0, 0, 0, .64));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18), inset 0 -1px 0 rgba(0, 0, 0, .55), inset 1px 0 0 rgba(255, 255, 255, .06), inset -1px 0 0 rgba(255, 255, 255, .035),
+    inset 0 0 18px rgba(0, 0, 0, .3), 0 0 0 1px rgba(255, 255, 255, .07), 0 50px 90px -50px rgba(0, 0, 0, .95), 0 18px 34px -18px rgba(0, 0, 0, .8);
+}
+.one-fr-rim::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+  background: radial-gradient(90% 40% at 50% 112%, rgb(var(--sv-ac) / .2), transparent 65%);
+}
+.one-fr-bar { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 30px; padding: 0 8px 8px; font-size: 12.5px; line-height: 1; color: #94a3b8; white-space: nowrap; }
+.one-fr-url { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.one-fr-url > i { width: 6px; height: 6px; border-radius: 50%; background: rgb(var(--sv-ac)); }
+.one-fr-state { display: grid; justify-items: end; }
+.one-fr-state b { grid-area: 1 / 1; font-weight: 500; color: #e2e8f0; }
+.one-fr-state b:not([data-s="0"]) { display: none; }
+.one-fr-view { position: relative; aspect-ratio: 3 / 4; overflow: hidden; border-radius: 18px; background: var(--one-paper); box-shadow: 0 0 0 1px rgba(0, 0, 0, .5), 0 0 0 2px rgba(255, 255, 255, .06); isolation: isolate; }
+@media (min-width: 768px) { .one-fr-view { aspect-ratio: 16 / 10; } }
+.one-fr-view::after { content: ''; position: absolute; inset: 0; z-index: 5; border-radius: inherit; pointer-events: none; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08); }
+
+/* ══ SCENA 1 - FILM ════════════════════════════════════════════════════════════════════════════════════════ */
+.one-a { position: relative; z-index: 1; --ang: 112deg; }
+.one-a-in { display: grid; gap: 44px; padding-top: 138px; }
+.one-a .sv-title { max-width: 11.5ch; margin-bottom: 26px; font-size: clamp(48px, 13.4vw, 64px); line-height: .94; }
+.one-a .sv-lead { max-width: 32rem; }
+.one-a-cam { min-width: 0; }
+.one-a-frame { position: relative; }
+/* dwie warstwy okna: szkic pod spodem i gotowa strona nad nim (bez JS / przy ograniczonym ruchu widać tylko gotową stronę) */
+.one-a-layer { position: absolute; inset: 0; overflow: hidden; }
+.one-a-layer--sketch, .one-a-beam { display: none; }
+.one-a-page { position: absolute; left: 0; top: 0; width: 100%; transform: translate3d(0, var(--y, 0px), 0); will-change: transform; }
+/* powiadomienie o zapytaniu: karta w czerni luksusowej przy prawym górnym rogu kadru */
+.one-a-note { position: absolute; right: -10px; top: 56px; z-index: 6; width: 262px; padding: 14px 16px 16px; border-radius: 16px; background: linear-gradient(180deg, #0c0c0f, #060607 46%, #030304); box-shadow: var(--sv-edge), inset 0 0 0 1px rgb(var(--sv-ac) / .7), 0 24px 44px -22px rgba(0, 0, 0, .95); opacity: var(--note, 1); transform: translate3d(calc((1 - var(--note, 1)) * 34px), calc((1 - var(--note, 1)) * 12px), 0); }
+.one-a-note p { margin: 0; }
+.one-a-note-h { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; line-height: 1.2; color: #f8fafc; }
+.one-a-note-h svg { width: 15px; height: 15px; color: rgb(var(--sv-ac)); }
+.one-a-note-h span { margin-left: auto; font-size: 12.5px; font-weight: 400; color: #94a3b8; }
+.one-a-note .one-a-note-from { margin-top: 8px; font-size: 13.5px; color: #cbd5e1; }
+.one-a-note-msg { font-size: 13.5px; line-height: 1.45; color: #94a3b8; }
+/* telefon: powiadomienie na dole kadru, na całą jego szerokość (u góry zasłaniało adres i pierwsze pole formularza);
+   wjeżdża od dołu */
+@media (max-width: 639.98px) {
+  .one-a-note { left: 14px; right: 14px; top: auto; bottom: 16px; width: auto; transform: translate3d(0, calc((1 - var(--note, 1)) * 22px), 0); }
+}
+/* najwęższe telefony (320-350 px): „Jedna strona,” ma zostać w jednej linii (przy 48 px łamało się na trzy linie) */
+@media (max-width: 350px) { .one-a .sv-title { font-size: 39px; } }
+@media (min-width: 640px) and (max-width: 1023.98px) { .one-a .sv-title { font-size: clamp(64px, 10vw, 96px); } }
+@media (min-width: 1024px) {
+  .one-a .sv-title { font-size: clamp(64px, 7.4vw, 124px); }
+  .one-a .sv-lead { font-size: 20px; }
+}
+
+/* wejście kadru: tylko przezroczystość i przesunięcie własnością `translate` (składa się z przekształceniem kadru).
+   Dawna animacja szkieletu podmieniała całe `transform` - kadr wjeżdżał jako wielka płaska rama i kurczył się na miejsce. */
+@keyframes one-late { from { opacity: 0; translate: 0 36px; } }
+@media (prefers-reduced-motion: no-preference) {
+  /* przypięta scena: 340vh drogi (najazd kamery z odsłoną szkicu, pierwszy ekran strony klienta, oferta i opinia,
+     formularz, zapytanie) */
+  .sv[data-live] .one-a { height: 440vh; height: calc(100svh + 340vh); }
+  .sv[data-live] .one-a-stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: clip; }
+  .sv[data-live] .one-a-in { position: relative; display: block; height: 100%; padding-top: 0; }
+  /* nagłówek: przy najeździe kamery maleje w lewy górny róg (--cam 0-1), opis i przycisk gasną */
+  .sv[data-live] .one-a-copy { --hs: .5; position: absolute; left: 24px; right: 24px; top: 124px; z-index: 2; }
+  .sv[data-live] .one-a-copy .sv-title { transform-origin: 0 0; transform: translate3d(0, calc(var(--cam, 0) * -40px), 0) scale(calc(1 - var(--cam, 0) * var(--hs))); will-change: transform; }
+  /* dopiero PO wejściu (data-go): wcześniej ta reguła wygrywała ze stanem „przed wejściem” ze szkieletu i opis z
+     przyciskiem były widać na czarnym ekranie, zanim cokolwiek weszło, a potem pojawiały się drugi raz (zgłoszenie
+     właściciela: „najpierw jest tak, potem dopiero drugi raz się wszystko pojawia”) */
+  .sv[data-live][data-go] .one-a-copy :is(.sv-lead, .sv-actions, .sv-proof) { opacity: calc(1 - var(--cam, 0) * 3.4); transform: translate3d(0, calc(var(--cam, 0) * -46px), 0); }
+  /* kamera: kadr na starcie w głębi (pochylony, mniejszy, niżej), przy najeździe prostuje się i rośnie na cały ekran.
+     --h-* = stan kadru przed najazdem; --sv-skw pogrubia linie szkicu odwrotnie do skali. W spoczynku (data-still)
+     bez will-change - kadr rastrowany w rzeczywistej skali (ostre linie szkicu w pomniejszonym kadrze). */
+  .sv[data-live] .one-a-cam { position: absolute; left: 16px; right: 16px; top: 146px; bottom: 142px; perspective: 1500px; perspective-origin: 50% 30%; }
+  .sv[data-live] .one-a-frame {
+    --h-s: .92; --sv-skw: calc(1 / (var(--h-s) + var(--cam, 0) * (1 - var(--h-s))));
+    display: flex; flex-direction: column; height: 100%; transform-origin: 50% 0; will-change: transform;
+    /* telefon / tablet: kadr stoi tuż POD nagłówkiem, opisem i przyciskiem - stały odstęp 40 px od linii dowodów
+       (--copy-h z film.tsx; kadr zaczyna się 22 px niżej niż tekst, stąd + 18 px). Dawne 42vh na niskich ekranach
+       wjeżdżało kadrem na tekst, a na wysokich zostawiało pod tekstem dużą pustkę (właściciel: „mockup do góry”). */
+    transform: translate3d(0, calc((1 - var(--cam, 0)) * (var(--copy-h, 330px) + 18px)), 0) rotateX(calc((1 - var(--cam, 0)) * 14deg)) scale(calc(var(--h-s) + var(--cam, 0) * (1 - var(--h-s))));
+  }
+  .sv[data-live] .one-a[data-still] .one-a-frame { will-change: auto; }
+  .sv[data-on] .one-a-frame.sv-late { animation-name: one-late; }
+  /* pomiar szkicu (sketch.tsx ustawia data-scan): bez przekształceń kadru */
+  .sv[data-scan] .one-a-frame { transform: none !important; }
+  .sv[data-live] .one-a .one-fr-rim { flex: 1; min-height: 0; }
+  .sv[data-live] .one-a .one-fr-view { flex: 1; min-height: 0; aspect-ratio: auto; }
+  .sv[data-live] .one-a-steps { position: absolute; left: 24px; right: 24px; bottom: 34px; padding-right: 56px; opacity: calc(var(--cam, 0) * 2.4 - 1.2); }
+  /* nazwa miejsca na stronie w pasku adresu (data-state 0-2 z film.tsx) */
+  .sv[data-live] .one-fr-state b { display: block; transition: opacity .5s ease, transform .7s var(--sv-ease); }
+  .sv[data-live] .one-a:not([data-state="0"]) .one-fr-state b[data-s="0"],
+  .sv[data-live] .one-a:not([data-state="1"]) .one-fr-state b[data-s="1"],
+  .sv[data-live] .one-a:not([data-state="2"]) .one-fr-state b[data-s="2"] { opacity: 0; transform: translateY(7px); }
+  /* SZKIC W KADRZE = SAM OBRAZ I BAZA CAŁEJ STRONY (właściciel 2026-10-02: „zostaw ten szkic w hero, żeby był i też się
+     odsłaniał, ale już nie jako opowieść, tylko wizualna część”, potem „dodaj te wireframe i tak bazowo, żeby się
+     odkryciem tak fajnie odkryło”). Szkic leży POD gotową stroną; gotowa strona ma maskę z czterech pasów (pierwszy
+     ekran / oferta / opinia / kontakt - granice --b1..3 w px strony z film.tsx), każdy pas odsłania się własną ukośną
+     linią (--r1..4 = położenie w % pasa), a na granicy biegnie ostra linia światła (--o1..4 = jej widoczność).
+     Podpisy i etykiety nie mówią o szkicu. Maska i światło jadą razem ze stroną (są na elementach strony). */
+  .sv[data-live] .one-a-layer--sketch { display: block; }
+  .sv[data-live] .one-a-layer--final .one-st, .sv[data-live] .one-a-beam {
+    --p1: 0 0; --p2: 0 var(--b1, 100%); --p3: 0 var(--b2, 100%); --p4: 0 var(--b3, 100%);
+    --s1: 100% var(--b1, 100%); --s2: 100% calc(var(--b2, 100%) - var(--b1, 100%)); --s3: 100% calc(var(--b3, 100%) - var(--b2, 100%)); --s4: 100% calc(100% - var(--b3, 100%));
+  }
+  .sv[data-live] .one-a-layer--final .one-st {
+    --m1: linear-gradient(var(--ang), #000 calc(var(--r1, 110) * 1%), transparent calc(var(--r1, 110) * 1% + .1%));
+    --m2: linear-gradient(var(--ang), #000 calc(var(--r2, 110) * 1%), transparent calc(var(--r2, 110) * 1% + .1%));
+    --m3: linear-gradient(var(--ang), #000 calc(var(--r3, 110) * 1%), transparent calc(var(--r3, 110) * 1% + .1%));
+    --m4: linear-gradient(var(--ang), #000 calc(var(--r4, 110) * 1%), transparent calc(var(--r4, 110) * 1% + .1%));
+    -webkit-mask-image: var(--m1), var(--m2), var(--m3), var(--m4); mask-image: var(--m1), var(--m2), var(--m3), var(--m4);
+    -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+    -webkit-mask-position: var(--p1), var(--p2), var(--p3), var(--p4); mask-position: var(--p1), var(--p2), var(--p3), var(--p4);
+    -webkit-mask-size: var(--s1), var(--s2), var(--s3), var(--s4); mask-size: var(--s1), var(--s2), var(--s3), var(--s4);
+  }
+  .sv[data-live] .one-a-beam {
+    display: block; position: absolute; inset: 0; z-index: 3; pointer-events: none;
+    --l1: linear-gradient(var(--ang), transparent calc(var(--r1, 110) * 1% - .4%), rgb(255 255 255 / calc(var(--o1, 0) * .97)) calc(var(--r1, 110) * 1%), rgb(var(--sv-ac) / calc(var(--o1, 0) * .85)) calc(var(--r1, 110) * 1% + .22%), transparent calc(var(--r1, 110) * 1% + 1.2%));
+    --l2: linear-gradient(var(--ang), transparent calc(var(--r2, 110) * 1% - .4%), rgb(255 255 255 / calc(var(--o2, 0) * .97)) calc(var(--r2, 110) * 1%), rgb(var(--sv-ac) / calc(var(--o2, 0) * .85)) calc(var(--r2, 110) * 1% + .22%), transparent calc(var(--r2, 110) * 1% + 1.2%));
+    --l3: linear-gradient(var(--ang), transparent calc(var(--r3, 110) * 1% - .4%), rgb(255 255 255 / calc(var(--o3, 0) * .97)) calc(var(--r3, 110) * 1%), rgb(var(--sv-ac) / calc(var(--o3, 0) * .85)) calc(var(--r3, 110) * 1% + .22%), transparent calc(var(--r3, 110) * 1% + 1.2%));
+    --l4: linear-gradient(var(--ang), transparent calc(var(--r4, 110) * 1% - .4%), rgb(255 255 255 / calc(var(--o4, 0) * .97)) calc(var(--r4, 110) * 1%), rgb(var(--sv-ac) / calc(var(--o4, 0) * .85)) calc(var(--r4, 110) * 1% + .22%), transparent calc(var(--r4, 110) * 1% + 1.2%));
+    background-image: var(--l1), var(--l2), var(--l3), var(--l4); background-repeat: no-repeat;
+    background-position: var(--p1), var(--p2), var(--p3), var(--p4); background-size: var(--s1), var(--s2), var(--s3), var(--s4);
+  }
+}
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  .sv[data-live] .one-a-copy { --hs: .72; top: 128px; }
+  .sv[data-live] .one-a-cam { left: 24px; right: 24px; top: 152px; bottom: 128px; perspective: 1700px; perspective-origin: 72% 36%; }
+  /* KADR W HERO przed najazdem = „Duży, za krawędź ekranu” (wybór właściciela 2026-10-01 z: w głębi po prawej / duży
+     za krawędź / szeroki u dołu / prosto po prawej - pozostałe i przełącznik usunięte): obrócony ku nagłówkowi,
+     wychodzi za prawą i dolną krawędź ekranu. 2026-10-02 powiększony (skala 0,86 -> 0,98, niżej i dalej w prawo) po
+     uwadze właściciela „zwiększ ten mockup w hero, żeby dopełniał do dołu ekranu” - dolna krawędź kadru (także lewy
+     dolny róg, podniesiony obrotem) ma zawsze wychodzić poza ekran, stąd max() w --h-ty; lewa krawędź zostaje
+     tam, gdzie była (kadr nie wchodzi na tekst). */
+  .sv[data-live] .one-a-frame {
+    --h-o: 100% 0; --h-s: .98; --h-tx: 32vw; --h-ty: max(34vh, 300px); --h-ry: -16deg; --h-rx: 6deg; --h-rz: 2deg;
+    transform-origin: var(--h-o);
+    transform: translate3d(calc((1 - var(--cam, 0)) * var(--h-tx)), calc((1 - var(--cam, 0)) * var(--h-ty)), 0) rotateY(calc((1 - var(--cam, 0)) * var(--h-ry))) rotateX(calc((1 - var(--cam, 0)) * var(--h-rx))) rotateZ(calc((1 - var(--cam, 0)) * var(--h-rz))) scale(calc(var(--h-s) + var(--cam, 0) * (1 - var(--h-s))));
+  }
+  .sv[data-live] .one-a-steps { bottom: 40px; padding-right: 0; }
+}
+
+/* ══ SCENA 2 - KIEDY WYSTARCZY JEDNA STRONA: STOS ═══════════════════════════════════════════════════════════
+   Wybór właściciela 2026-10-01 („stos jest fajny”) z Panoramy / Stosu / Deski / Siatki - pozostałe układy usunięte.
+   Cztery karty (teksty kafli „Dlaczego One-Page?” z pierwotnej podstrony) nasuwają się jedna na drugą; przykryta
+   cofa się w głąb (--dp) i zostaje po niej zakładka (--one-tab = krok stosu = stała TAB w cases.tsx - zmieniać razem).
+   Rysunek rysuje się razem z przewijaniem (--d). Przyciemnienie przykrytej karty najwyżej za dwa poziomy.
+   KARTA = „Lakier” (wybór właściciela 2026-10-01 z Lakier / Deska / Plansza / Arkusz - pozostałe i przełącznik
+   usunięte): rysunek wprost na karcie po prawej na całej jej wysokości, papier kreślarski gaśnie ku tekstowi; po lewej
+   zakładka u góry, nazwa i opis u dołu, pod rysunkiem jego podpis.
+   TŁO KARTY = CZERŃ (właściciel 2026-10-01: „cofnij do poprzedniego i daj po prostu czarny zamiast szarego”):
+   czarna karta z ostrym refleksem u góry, liniami krawędzi i kolorem podstrony od
+   dołu, BEZ bliku w lewym górnym rogu (usunięty na prośbę właściciela). GŁĘBIA (depth.tsx, płótno WebGL .one-b-gl
+   w tle karty): świat świecących linii w kolorze podstrony, w każdej karcie inna scena - Zbieg / Horyzont / Fale /
+   Orbity („dla każdego unikalny shader w tle”); jasno przy rysunku, czysto pod tekstem. Papier kreślarski
+   z CSS zostaje tylko jako zapas (bez WebGL / ograniczony ruch). Okna i telefony w rysunkach = wypełnione płytki
+   (zasłaniają świat za sobą). Historia (NIE wracać): szarawy granat #14161f -> #050609 („szary”, „matowe,
+   cheap”); tafla z fazą, pasami odbicia, wypełnionymi płytkami i cieniem rysunku (cofnięta na prośbę właściciela).
+   Odrzucone (NIE wracać): rysunek w osobnym boksie pod paskiem zakładki („obrzydliwe te boxy”, pusty pas nad rysunkiem). */
+.one-b { position: relative; z-index: 1; padding: 104px 0 0; --one-tab: 60px; --one-dots: radial-gradient(circle, rgba(255, 255, 255, .09) 1px, transparent 1.4px) 0 0 / 18px 18px; }
+.one-b .sv-h2 { margin: 0 0 18px; font-size: clamp(36px, 4.6vw, 64px); line-height: 1; letter-spacing: -.045em; }
+.one .one-b-lead { margin: 0 0 36px; max-width: 38rem; font-size: 17px; text-wrap: pretty; }
+.one-b-track { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
+
+/* ── karta (czarna, w tle horyzont) ── */
+.one-b-card { position: relative; isolation: isolate; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: 'tab' 'txt' 'art'; min-width: 0; border-radius: 24px; }
+.one-b-card-bg {
+  position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+  /* czerń z minimalną przezroczystością (właściciel 2026-10-02: „daj na karty te cztery w backgroundzie opacity tego
+     czarnego minimalne”) - przez kartę lekko przebija niebo podstrony; ta sama czerń co przedtem, tylko z alfą */
+  background: linear-gradient(160deg, rgb(10 10 12 / .82), rgb(5 5 6 / .86) 42%, rgb(2 2 3 / .9));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .17), inset 0 -1px 0 rgba(0, 0, 0, .6), inset 1px 0 0 rgba(255, 255, 255, .06), inset -1px 0 0 rgba(255, 255, 255, .035),
+    inset 0 0 22px rgba(0, 0, 0, .32), 0 0 0 1px rgba(255, 255, 255, .07), 0 -22px 44px -26px rgba(0, 0, 0, .95);
+}
+.one-b-card-bg::before, .one-b-card-bg::after { content: ''; position: absolute; inset: 0; border-radius: inherit; }
+/* papier kreślarski pod rysunkiem (gaśnie ku tekstowi i krawędziom; zapas, gdy nie rysuje płótno) + kolor podstrony od dołu */
+.one-b-card-bg::before {
+  background: var(--one-dots);
+  -webkit-mask-image: radial-gradient(ellipse 80% 46% at 50% 70%, #000 24%, transparent 78%);
+  mask-image: radial-gradient(ellipse 80% 46% at 50% 70%, #000 24%, transparent 78%);
+}
+.one-b-card-bg::after { background: radial-gradient(70% 46% at 50% 112%, rgb(var(--sv-ac) / .2), transparent 68%); }
+/* głębia: płótno ze sceną karty (depth.tsx) na całej karcie; gdy rysuje ([data-ready]), papier z CSS gaśnie */
+.one-b-gl { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; }
+.one-b-gl canvas { display: block; width: 100%; height: 100%; opacity: 0; transition: opacity 1.4s ease; }
+.one-b-gl[data-ready] canvas { opacity: 1; }
+.one-b-card-bg::before { transition: opacity 1s ease; }
+.one-b-card-bg:has(.one-b-gl[data-ready])::before { opacity: 0; }
+/* przykryta karta ciemnieje */
+.one-b-card::after { content: ''; position: absolute; inset: 0; z-index: 3; border-radius: inherit; pointer-events: none; background: #020203; opacity: calc(min(var(--dp, 0), 2) * .28); }
+.one-b-meta { grid-area: tab; display: flex; align-items: center; gap: 14px; height: var(--one-tab); margin: 0; padding: 0 22px; font-size: 14px; line-height: 1; white-space: nowrap; }
+.one-b-n { font-variant-numeric: tabular-nums; }
+.one-b-n b { font-weight: 600; color: rgb(var(--sv-ac)); color: color-mix(in oklab, rgb(var(--sv-ac)) 72%, #fff); }
+.one-b-n i { font-style: normal; font-weight: 500; font-size: 12.5px; color: #7d8899; }
+.one-b-tag { padding-left: 14px; border-left: 1px solid rgba(255, 255, 255, .14); font-weight: 500; line-height: 1.3; color: #e2e8f0; }
+.one-b-body { grid-area: txt; padding: 8px 22px 0; }
+.one-b-t { margin: 0 0 12px; font-size: clamp(28px, 7.6vw, 38px); line-height: 1.03; font-weight: 600; letter-spacing: -.04em; color: #f8fafc; text-wrap: balance; }
+.one-b-d { margin: 0; max-width: 28rem; font-size: 16px; line-height: 1.6; color: #94a3b8; text-wrap: pretty; }
+.one-b-art { position: relative; grid-area: art; display: flex; flex-direction: column; justify-content: center; min-width: 0; margin: 0; padding: 26px 20px; }
+.one-b-art figcaption { margin-top: 16px; font-size: 14px; line-height: 1.5; color: #cbd5e1; text-align: center; text-wrap: balance; }
+/* rysunek (język rysunków Oferty) */
+.one-b-svg { display: block; width: 100%; height: auto; max-height: 34vh; margin: 0 auto; overflow: visible; }
+.one-b-svg path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.one-b-k-main { stroke: rgba(255, 255, 255, .78); stroke-width: 1.4px; }
+/* płytka (okno strony, telefon, kartka): ciemne wypełnienie zasłania horyzont i siatkę za rysunkiem */
+.one-b-svg path.one-b-k-panel { fill: rgba(4, 4, 6, .9); stroke: rgba(255, 255, 255, .8); stroke-width: 1.4px; }
+.one-b-svg path.one-b-k-pad { fill: rgba(4, 4, 6, .9); }
+.one-b-k-soft { stroke: rgba(255, 255, 255, .3); stroke-width: 1.1px; }
+.one-b-k-acc { stroke: rgb(var(--sv-ac)); stroke-width: 1.6px; }
+.one-b-k-dash { stroke: rgba(255, 255, 255, .34); stroke-width: 1.1px; stroke-dasharray: 3 4; stroke-linecap: butt; }
+.one-b-k-bar { stroke: rgba(255, 255, 255, .2); stroke-width: 4px; }
+.one-b-k-barHi { stroke: rgba(255, 255, 255, .5); stroke-width: 5px; }
+.one-b-k-barXL { stroke: rgba(255, 255, 255, .88); stroke-width: 8px; }
+.one-b-svg path.one-b-k-accFill { fill: rgb(var(--sv-ac) / .15); }
+.one-b-svg path.one-b-k-dot { fill: rgb(var(--sv-ac)); }
+.one-b-pulse { fill: #fff; stroke: rgb(var(--sv-ac) / .5); stroke-width: 5px; paint-order: stroke; }
+/* szybkościomierz (rysunek 4): tor łuku, łuk w kolorze podstrony, podziałka z kresek (pathLength 48 = 24 kreski) */
+.one-b-k-track { stroke: rgba(255, 255, 255, .12); stroke-width: 6px; }
+.one-b-k-arc { stroke: rgb(var(--sv-ac)); stroke-width: 6px; }
+.one-b-k-ticks, .one-b-svg .one-l-ticks { stroke: rgba(255, 255, 255, .28); stroke-width: 5px; stroke-linecap: butt; stroke-dasharray: .3 1.7; }
+.one-b-svg .one-l-ticks { stroke: rgb(var(--sv-ac)); }
+/* SCENKI (drawings.tsx, WAAPI): dodatki scenki są niewidoczne, dopóki scenka ich nie pokaże; punkty odniesienia
+   przekształceń: data-o="c" środek kształtu, "l" lewa krawędź */
+.one-b-svg .one-l, .sv[data-live] .one-b-svg .one-l { opacity: 0; }
+.one-b-svg [data-o="c"] { transform-box: fill-box; transform-origin: 50% 50%; }
+.one-b-svg [data-o="l"] { transform-box: fill-box; transform-origin: 0 50%; }
+.one-b-svg .one-l-ring { fill: none; stroke: rgb(var(--sv-ac)); stroke-width: 1.6px; }
+.one-b-svg path.one-l-fill { fill: rgb(var(--sv-ac) / .6); }
+.one-b-svg path.one-l-solid, .one-b-svg .one-l-badge { fill: rgb(var(--sv-ac)); }
+.one-b-svg .one-l-dot { fill: #fff; stroke: rgb(var(--sv-ac)); stroke-width: 2.4px; }
+.one-b-svg .one-l-comet { stroke: rgb(var(--sv-ac)); stroke: color-mix(in oklab, rgb(var(--sv-ac)) 40%, #fff); stroke-width: 2.6px; stroke-dasharray: .2 1; stroke-dashoffset: .2; }
+.one-b-svg .one-l-guide { stroke: rgb(var(--sv-ac)); stroke-width: 1.6px; }
+.one-b-svg .one-l-type { stroke: rgba(255, 255, 255, .72); stroke-width: 4px; }
+.one-b-svg .one-l-check { stroke: #fff; stroke-width: 2.1px; }
+
+@media (min-width: 1024px) {
+  .one-b { padding-top: 150px; }
+  .one .one-b-lead { margin-bottom: 52px; font-size: 18px; }
+  .one-b-card { border-radius: 28px; }
+  .one-b-t { margin-bottom: 16px; font-size: clamp(32px, 3.2vw, 48px); line-height: 1.02; letter-spacing: -.045em; }
+  .one-b-d { font-size: 17px; }
+  .one-b-art figcaption { margin-top: 22px; font-size: 15px; }
+  .one-b-svg { max-height: min(42vh, 400px); }
+
+  /* tekst po lewej (zakładka u góry, nazwa i opis u dołu), rysunek po prawej na całą wysokość karty */
+  .one-b-card { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); grid-template-rows: var(--one-tab) minmax(0, 1fr); grid-template-areas: 'tab art' 'txt art'; }
+  .one-b-card-bg::before {
+    -webkit-mask-image: radial-gradient(ellipse 46% 78% at 70% 50%, #000 26%, transparent 80%);
+    mask-image: radial-gradient(ellipse 46% 78% at 70% 50%, #000 26%, transparent 80%);
+  }
+  .one-b-card-bg::after { background: radial-gradient(52% 50% at 72% 112%, rgb(var(--sv-ac) / .2), transparent 70%); }
+  .one-b-meta { padding: 0 40px; }
+  .one-b-body { align-self: end; padding: 40px 24px 42px 40px; }
+  .one-b-art { grid-row: 1 / -1; padding: 46px 56px 40px 24px; }
+}
+@media (prefers-reduced-motion: reduce) { .one-b-pulse { display: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  /* rysunek rysuje się razem z przewijaniem, tekst karty jaśnieje */
+  .sv[data-live] .one-b-svg path { opacity: clamp(0, calc((var(--d, 1) * (var(--n) + 7) - var(--i)) * 3), 1); }
+  .sv[data-live] .one-b-svg path[pathLength] { stroke-dasharray: 1 1; stroke-dashoffset: calc(1 - clamp(0, (var(--d, 1) * (var(--n) + 7) - var(--i)) / 7, 1)); }
+  .sv[data-live] .one-b-pulse { opacity: clamp(0, calc((var(--d, 1) - .93) * 16), 1); }
+  /* wyjątki od kreskowania „rysowania”: podziałka z kresek i światło biegnące po ścieżce mają własny wzór */
+  .sv[data-live] .one-b-svg path.one-b-k-ticks[pathLength], .sv[data-live] .one-b-svg path.one-l-ticks[pathLength] { stroke-dasharray: .3 1.7; stroke-dashoffset: 0; }
+  .sv[data-live] .one-b-svg path.one-l-comet[pathLength] { stroke-dasharray: .2 1; stroke-dashoffset: .2; }
+  .sv[data-live] .one-b-card :is(.one-b-body, figcaption) { opacity: calc(.3 + .7 * var(--d, 1)); }
+  /* karta jest lekko przezroczysta: część PRZYKRYTĄ przez następną kartę odcinamy (--cut z cases.tsx = widoczna
+     wysokość), inaczej treść karty pod spodem przebijałaby jak duch przez kartę na wierzchu; ujemne odsunięcia
+     u góry i po bokach zostawiają obwódkę i cień karty */
+  .sv[data-live] .one-b-card { clip-path: inset(-80px -80px calc(var(--h, 0px) - var(--cut, 99999px)) -80px); }
+  /* stos: każda następna karta przykleja się o zakładkę niżej (wysoka karta dopiero, gdy widać jej dół - --h z cases.tsx);
+     odstęp NAD kartami 2-4 (nie pod 1-3) - przednia karta zwalnia pozostałe po kolei */
+  .sv[data-live] .one-b-track { display: block; padding-bottom: 8vh; }
+  .sv[data-live] .one-b-card {
+    position: sticky; top: calc(72px + var(--i) * var(--one-tab)); top: min(calc(72px + var(--i) * var(--one-tab)), calc(100svh - var(--h, 0px) - 12px));
+    transform-origin: 50% 0; transform: scale(calc(1 - var(--dp, 0) * .03)); will-change: transform;
+  }
+  /* przyciemnienie przykrywanej karty na własnej warstwie: zmiana krycia nie rysuje od nowa całej karty (wydajność, 2026-10-05) */
+  .sv[data-live] .one-b-card::after { will-change: opacity; }
+  .sv[data-live] .one-b-card + .one-b-card { margin-top: 14vh; }
+  @media (min-width: 1024px) {
+    .sv[data-live] .one-b-card { top: calc(96px + var(--i) * var(--one-tab)); top: min(calc(96px + var(--i) * var(--one-tab)), calc(100svh - var(--h, 0px) - 12px)); }
+  }
+}
+
+/* ══ SCENA 3 - ZAKRES Z POKAZEM W KADRZE ═══════════════════════════════════════════════════════════════════ */
+.one-c { position: relative; z-index: 1; padding: 104px 0 0; }
+.one-c-in { display: grid; grid-template-columns: minmax(0, 1fr); gap: 36px; }
+.one-c .sv-h2 { margin-bottom: 34px; font-size: clamp(36px, 4.6vw, 64px); line-height: 1; letter-spacing: -.045em; }
+/* termin na linii wymiarowej (motyw wymiaru z rysunków Oferty) */
+.one-term { display: grid; gap: 10px; max-width: 28rem; }
+.one-term-l { font-size: 14.5px; line-height: 1.3; color: #94a3b8; }
+.one-term-dim { display: flex; align-items: center; gap: 16px; }
+.one-term-dim i { position: relative; flex: 1; height: 1px; background: rgba(255, 255, 255, .32); }
+.one-term-dim i::before { content: ''; position: absolute; top: -6px; width: 1px; height: 13px; background: rgb(var(--sv-ac)); }
+.one-term-dim i:first-child::before { left: 0; }
+.one-term-dim i:last-child::before { right: 0; }
+.one-term-dim b { font-size: clamp(38px, 4.4vw, 60px); line-height: 1; font-weight: 600; letter-spacing: -.045em; white-space: nowrap; font-variant-numeric: tabular-nums; color: #f8fafc; }
+.one-c-items { list-style: none; margin: 40px 0 0; padding: 0; }
+.one-c-item { position: relative; display: grid; grid-template-columns: 44px minmax(0, 1fr); align-content: center; gap: 8px 0; padding: 28px 0 30px; }
+.one-c-item::before, .one-c-item::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 1px; background: rgba(255, 255, 255, .14); }
+.one-c-item::after { background: rgb(var(--sv-ac)); transform-origin: 0 50%; transform: scaleX(0); transition: transform .9s var(--sv-ease); }
+.one-c-n { grid-row: 1 / span 2; padding-top: 8px; font-size: 13.5px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; color: rgb(var(--sv-ac)); color: color-mix(in oklab, rgb(var(--sv-ac)) 72%, #fff); }
+.one-c-t { font-size: clamp(24px, 2.6vw, 36px); line-height: 1.1; font-weight: 600; letter-spacing: -.035em; color: #f8fafc; }
+.one-c-d { grid-column: 2; max-width: 26rem; font-size: 16.5px; line-height: 1.6; color: #94a3b8; text-wrap: pretty; }
+/* --phw / --php: szerokość kadru-telefonu i boczna grubość jego ramy (czyta je też scope.tsx) */
+.one-c-stick { position: relative; --phw: 300px; --php: 9px; }
+.one-c-frame { position: relative; display: flex; flex-direction: column; width: 100%; margin-inline: auto; }
+.one-c .one-fr-rim { flex: 1; min-height: 0; }
+.one-c .one-fr-view { contain: layout paint; }
+.one-c-page { position: absolute; left: 0; top: 0; width: var(--pw, 100%); transform-origin: 0 0; }
+/* kreska u dołu ekranu telefonu: pojawia się, gdy kadr zwęzi się do telefonu */
+.one-c-notch { position: absolute; left: 50%; bottom: 17px; z-index: 6; width: 96px; height: 4px; margin-left: -48px; border-radius: 4px; background: rgba(27, 25, 21, .62); opacity: 0; pointer-events: none; }
+.one-c-lock { width: 12px; height: 12px; color: #94a3b8; transition: color .5s ease; }
+.one-c-load { position: absolute; left: 10px; right: 10px; bottom: 2px; height: 2px; overflow: hidden; border-radius: 2px; }
+.one-c-load i { display: block; height: 100%; background: rgb(var(--sv-ac)); transform-origin: 0 50%; transform: scaleX(0); }
+.one-c-grid { position: absolute; inset: 0 3.5%; z-index: 3; opacity: 0; pointer-events: none; transition: opacity .8s ease;
+  background: linear-gradient(90deg, rgb(var(--sv-ac) / .55) 1px, transparent 1px) 0 0 / calc(100% / 12) 100%, linear-gradient(90deg, rgb(var(--sv-ac) / .07), rgb(var(--sv-ac) / .07)) 0 0 / calc(100% / 12 - 14px) 100%;
+  border-right: 1px solid rgb(var(--sv-ac) / .55); }
+@keyframes one-chip { 0%, 46%, 100% { background: transparent; color: var(--st-mut); } 8%, 34% { background: var(--st-ink); color: var(--st-bg); } }
+@keyframes one-load { 0% { transform: scaleX(0); opacity: 1; } 24% { transform: scaleX(1); opacity: 1; } 36%, 100% { transform: scaleX(1); opacity: 0; } }
+@keyframes one-type { 0% { clip-path: inset(0 100% 0 0); } 42%, 100% { clip-path: inset(0 0 0 0); } }
+@media (prefers-reduced-motion: no-preference) {
+  /* aktywny punkt listy: pełna jasność, jego linia rysuje się w kolorze podstrony */
+  .sv[data-live] .one-c-item > span { opacity: .34; transition: opacity .6s ease; }
+  .sv[data-live] .one-c-item[data-on] > span { opacity: 1; }
+  .sv[data-live] .one-c-item[data-on]::after { transform: none; }
+  /* pokaz w kadrze (data-demo na .one-c-stick) */
+  .sv[data-live] .one-c-frame { --f1: 0; --f2: 0; --f3: 0; --sent: 0; transition: width var(--one-morph), --f1 .3s ease, --f2 .3s ease, --f3 .3s ease, --sent .3s ease; }
+  .sv[data-live] .one-c .one-fr-rim { transition: padding var(--one-morph), border-radius var(--one-morph); }
+  .sv[data-live] .one-c .one-fr-view { transition: border-radius var(--one-morph); }
+  .sv[data-live] .one-c-notch { transition: opacity .35s ease; }
+  .sv[data-live] .one-c-page { transition: transform 1.2s var(--sv-ease); }
+  .sv[data-live] .one-c-stick[data-demo="0"] .one-c-grid { opacity: 1; }
+  .sv[data-live] .one-c-stick[data-demo="1"] .one-c-page { transform: translate3d(0, var(--y1, 0px), 0); }
+  .sv[data-live] .one-c-stick[data-demo="1"] .one-st-chips span { animation: one-chip 3.6s calc(var(--ci, 0) * .65s) infinite; }
+  .sv[data-live] .one-c-stick[data-demo="2"] .one-c-frame { --f1: 1; --f2: 1; --f3: 1; --sent: 1; transition: width var(--one-morph), --f1 .5s ease 1s, --f2 .5s ease 1.5s, --f3 .7s ease 2s, --sent .4s ease 2.9s; }
+  .sv[data-live] .one-c-stick[data-demo="2"] .one-c-page { transform: translate3d(0, var(--y2, 0px), 0); }
+  /* 3 - telefon: PRAWDZIWA zmiana szerokości kadru; strona przechodzi w układ na telefon jak przy zwężaniu okna.
+     Żeby nie przycinało: pismo strony w px (--one-fs / --one-fs-n ze scope.tsx zamiast cqw), okno z contain,
+     pomiar w scope.tsx nie pracuje w trakcie przejścia. Wąski ekran (kadr już w układzie na telefon): --pw / --ps. */
+  .sv[data-live] .one-c-stick[data-demo="3"] .one-c-frame { width: var(--phw); }
+  .sv[data-live] .one-c-stick[data-demo="3"] .one-fr-rim { padding: 10px var(--php) var(--php); border-radius: 42px; }
+  .sv[data-live] .one-c-stick[data-demo="3"] .one-fr-view { border-radius: 33px; }
+  .sv[data-live] .one-c-stick[data-demo="3"] .one-c-notch { opacity: 1; transition: opacity .5s ease .7s; }
+  .sv[data-live] .one-c-stick[data-demo="3"] .one-c-page { transform: scale(var(--ps, 1)); }
+  .sv[data-live] .one-c-stick[data-demo="4"] .one-c-load i { animation: one-load 2.4s cubic-bezier(.2, .9, .2, 1) infinite; }
+  .sv[data-live] .one-c-stick[data-demo="5"] .one-c-lock { color: rgb(var(--sv-ac)); }
+  .sv[data-live] .one-c-stick[data-demo="5"] .one-c-domain { color: #f8fafc; animation: one-type 3.4s steps(14, end) infinite; }
+}
+/* telefon / tablet: kadr przyklejony u góry, lista przewija się pod nim.
+   Z JS: to, co wjedzie pod kadr, gaśnie ([data-gone] ze scope.tsx) - bez czarnego pasa za kadrem, mgławica zostaje
+   ciągła (dawny czarny pas z gradientem wyglądał na telefonie jak czarne pudło na niebieskiej chmurze). Bez JS /
+   ograniczony ruch: zostaje pas w kolorze tła, żeby tekst nie nachodził na kadr. */
+@media (max-width: 1023.98px) {
+  .one-c-stick { position: sticky; top: 0; z-index: 2; order: -1; height: 46vh; height: 46svh; margin: 0 -24px; padding: 70px 24px 14px; background: linear-gradient(180deg, #050505 0, #050505 86%, rgba(5, 5, 5, 0)); --phw: 164px; --php: 6px; }
+  .one-c .sv-h2 .im-accent { display: block; }
+  /* lista stoi wprost na mgławicy (na telefonie gęstej i jasnej): całą sekcję przykrywa równa zasłona w kolorze tła,
+     która gaśnie u góry i u dołu - niebo zostaje widoczne, a tekst (także niebieski akcent nagłówka) jest czytelny.
+     To zasłona na całą szerokość ekranu, nie prostokąt za tekstem. */
+  .one-c::before { content: ''; position: absolute; inset: -60px 0 -80px; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(5, 5, 5, 0), rgba(5, 5, 5, .62) 110px, rgba(5, 5, 5, .62) calc(100% - 140px), rgba(5, 5, 5, 0)); }
+  .one-c-list > .sv-h2, .one-c-list > .one-term, .one-c-item { transition: opacity .28s ease; }
+  .one-c-list > [data-gone], .one-c-item[data-gone] { opacity: 0; }
+  @media (prefers-reduced-motion: no-preference) { .sv[data-live] .one-c-stick { background: none; } }
+  /* tablet: szerszy telefon w pokazie „na każdym telefonie” (164 px na dużym kadrze wyglądało jak znaczek) */
+  @media (min-width: 640px) { .one-c-stick { --phw: 236px; --php: 8px; } }
+  .one-c-frame { height: 100%; }
+  .one-c .one-fr-view { flex: 1; min-height: 0; aspect-ratio: auto; }
+  .one-c-notch { bottom: 11px; width: 54px; height: 3px; margin-left: -27px; }
+  .sv[data-live] .one-c-stick[data-demo="3"] .one-fr-rim { padding: 8px var(--php) var(--php); border-radius: 28px; }
+  .sv[data-live] .one-c-stick[data-demo="3"] .one-fr-view { border-radius: 20px; }
+}
+@media (min-width: 1024px) {
+  .one-c { padding-top: 150px; }
+  .one-c-in { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 72px; align-items: start; }
+  .one-c-item { min-height: 30vh; padding: 0; }
+  .one-c-items { margin-top: 56px; }
+  .one-c-stick { position: sticky; top: 13vh; height: 74vh; }
+  .one-c-frame { height: 100%; }
+  .one-c .one-fr-view { flex: 1; min-height: 0; aspect-ratio: auto; }
+}

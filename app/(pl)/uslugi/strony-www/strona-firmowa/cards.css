@@ -1,0 +1,153 @@
+/* ══ STRONA FIRMOWA - SCENA 3: „FUNDAMENT SKALOWANIA.” - STOS CZTERECH KART ═════════════════════════════════
+   Kopia wzorca stosu z one-page (docs/podstrony/usluga-one-page.md, punkt 4 „Wzorce”) z własnym prefiksem:
+   sf-b- (sekcja, stos, karta), sf-b-k- (rodzaje linii rysunku), sf-l- (dodatki scenek). Import w cards.tsx.
+   Cztery karty nasuwają się jedna na drugą; przykryta cofa się w głąb (--dp) i zostaje po niej zakładka
+   (--sf-tab = krok stosu = stała TAB w cards.tsx - zmieniać razem). Rysunek rysuje się razem z przewijaniem (--d),
+   po narysowaniu gra scenkę (drawings.tsx, WAAPI). Karta: rysunek wprost na karcie po prawej na całej jej wysokości;
+   po lewej zakładka u góry, nazwa i opis u dołu, pod rysunkiem jego podpis; telefon: jedna kolumna.
+   TŁO KARTY = CZERŃ z minimalną przezroczystością i ostrym refleksem u góry (decyzje właściciela z pilota - NIE
+   wracać do szarego / granatowego odcienia, fazy krawędzi, pasów odbicia, bliku w rogu, backdrop-filter, efektów
+   najechania, osobnych boxów pod rysunkiem). GŁĘBIA (depth.tsx, płótno WebGL .sf-b-gl w tle karty): świat świecących
+   linii w kolorze podstrony, w każdej karcie inna scena - Kratownica / Tarasy / Echo / Kryształ; jasno przy rysunku,
+   czysto pod tekstem. Papier kreślarski z CSS zostaje jako zapas (bez WebGL / ograniczony ruch). Okna i płytki
+   w rysunkach są wypełnione (zasłaniają świat za sobą).
+   Stany „przed wejściem” i przyklejanie tylko pod .sv[data-live] i przy prefers-reduced-motion: no-preference. */
+.sf-b { position: relative; z-index: 1; padding: 104px 0 0; --sf-tab: 60px; --sf-dots: radial-gradient(circle, rgba(255, 255, 255, .09) 1px, transparent 1.4px) 0 0 / 18px 18px; }
+.sv .sf-b .sv-h2 { margin: 0 0 18px; font-size: clamp(36px, 4.6vw, 64px); line-height: 1; letter-spacing: -.045em; }
+.sv .sf-b-lead { margin: 0 0 36px; max-width: 44rem; font-size: 17px; text-wrap: pretty; }
+.sf-b-track { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
+
+/* ── karta (czarna, w tle świat linii) ── */
+.sf-b-card { position: relative; isolation: isolate; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: 'tab' 'txt' 'art'; min-width: 0; border-radius: 24px; }
+.sf-b-card-bg {
+  position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+  /* czerń z minimalną przezroczystością - przez kartę lekko przebija niebo podstrony (tło karty 1:1 z pilota) */
+  background: linear-gradient(160deg, rgb(10 10 12 / .82), rgb(5 5 6 / .86) 42%, rgb(2 2 3 / .9));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .17), inset 0 -1px 0 rgba(0, 0, 0, .6), inset 1px 0 0 rgba(255, 255, 255, .06), inset -1px 0 0 rgba(255, 255, 255, .035),
+    inset 0 0 22px rgba(0, 0, 0, .32), 0 0 0 1px rgba(255, 255, 255, .07), 0 -22px 44px -26px rgba(0, 0, 0, .95);
+}
+.sf-b-card-bg::before, .sf-b-card-bg::after { content: ''; position: absolute; inset: 0; border-radius: inherit; }
+/* papier kreślarski pod rysunkiem (gaśnie ku tekstowi i krawędziom; zapas, gdy nie rysuje płótno) + kolor podstrony od dołu */
+.sf-b-card-bg::before {
+  background: var(--sf-dots);
+  -webkit-mask-image: radial-gradient(ellipse 80% 46% at 50% 70%, #000 24%, transparent 78%);
+  mask-image: radial-gradient(ellipse 80% 46% at 50% 70%, #000 24%, transparent 78%);
+}
+.sf-b-card-bg::after { background: radial-gradient(70% 46% at 50% 112%, rgb(var(--sv-ac) / .2), transparent 68%); }
+/* głębia: płótno ze sceną karty (depth.tsx) na całej karcie; gdy rysuje ([data-ready]), papier z CSS gaśnie */
+.sf-b-gl { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; }
+.sf-b-gl canvas { display: block; width: 100%; height: 100%; opacity: 0; transition: opacity 1.4s ease; }
+.sf-b-gl[data-ready] canvas { opacity: 1; }
+.sf-b-card-bg::before { transition: opacity 1s ease; }
+.sf-b-card-bg:has(.sf-b-gl[data-ready])::before { opacity: 0; }
+/* przykryta karta ciemnieje */
+.sf-b-card::after { content: ''; position: absolute; inset: 0; z-index: 3; border-radius: inherit; pointer-events: none; background: #020203; opacity: calc(min(var(--dp, 0), 2) * .28); }
+.sf-b-meta { grid-area: tab; display: flex; align-items: center; gap: 14px; height: var(--sf-tab); margin: 0; padding: 0 22px; font-size: 14px; line-height: 1; white-space: nowrap; }
+.sf-b-n { font-variant-numeric: tabular-nums; }
+.sf-b-n b { font-weight: 600; color: rgb(var(--sv-ac)); color: color-mix(in oklab, rgb(var(--sv-ac)) 72%, #fff); }
+.sf-b-n i { font-style: normal; font-weight: 500; font-size: 12.5px; color: #7d8899; }
+.sf-b-tag { padding-left: 14px; border-left: 1px solid rgba(255, 255, 255, .14); font-weight: 500; line-height: 1.3; color: #e2e8f0; }
+.sf-b-body { grid-area: txt; padding: 8px 22px 0; }
+.sf-b-t { margin: 0 0 12px; font-size: clamp(28px, 7.6vw, 38px); line-height: 1.03; font-weight: 600; letter-spacing: -.04em; color: #f8fafc; text-wrap: balance; }
+.sf-b-d { margin: 0; max-width: 28rem; font-size: 16px; line-height: 1.6; color: #94a3b8; text-wrap: pretty; }
+.sf-b-art { position: relative; grid-area: art; display: flex; flex-direction: column; justify-content: center; min-width: 0; margin: 0; padding: 26px 20px; }
+.sf-b-art figcaption { margin-top: 16px; font-size: 14px; line-height: 1.5; color: #cbd5e1; text-align: center; text-wrap: balance; }
+
+/* ── rysunek (język rysunków Oferty) ── */
+.sf-b-svg { display: block; width: 100%; height: auto; max-height: 34vh; margin: 0 auto; overflow: visible; }
+.sf-b-svg path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.sf-b-k-main { stroke: rgba(255, 255, 255, .78); stroke-width: 1.4px; }
+/* płytka (okno strony, podstrona, moduł): ciemne wypełnienie zasłania świat za rysunkiem */
+.sf-b-svg path.sf-b-k-panel { fill: rgba(4, 4, 6, .9); stroke: rgba(255, 255, 255, .8); stroke-width: 1.4px; }
+.sf-b-svg path.sf-b-k-pad { fill: rgba(4, 4, 6, .9); }
+/* płytka „w planach”: to samo wypełnienie, obrys przerywany (moduł jeszcze niewpięty) */
+.sf-b-svg path.sf-b-k-plan { fill: rgba(4, 4, 6, .9); stroke: rgba(255, 255, 255, .5); stroke-width: 1.2px; stroke-dasharray: 4 4; stroke-linecap: butt; }
+.sf-b-k-soft { stroke: rgba(255, 255, 255, .3); stroke-width: 1.1px; }
+.sf-b-k-acc { stroke: rgb(var(--sv-ac)); stroke-width: 1.6px; }
+.sf-b-k-dash { stroke: rgba(255, 255, 255, .34); stroke-width: 1.1px; stroke-dasharray: 3 4; stroke-linecap: butt; }
+.sf-b-k-bar { stroke: rgba(255, 255, 255, .2); stroke-width: 4px; }
+.sf-b-k-barS { stroke: rgba(255, 255, 255, .2); stroke-width: 2.4px; }
+.sf-b-k-barHi { stroke: rgba(255, 255, 255, .5); stroke-width: 5px; }
+.sf-b-k-barXL { stroke: rgba(255, 255, 255, .88); stroke-width: 8px; }
+.sf-b-k-barXXL { stroke: rgba(255, 255, 255, .9); stroke-width: 11px; }
+/* tytuł wyniku wyszukiwania (rysunek 3): kreska w kolorze podstrony */
+.sf-b-k-barAc { stroke: rgb(var(--sv-ac) / .82); stroke-width: 5px; }
+.sf-b-svg path.sf-b-k-accFill { fill: rgb(var(--sv-ac) / .15); }
+.sf-b-svg path.sf-b-k-dot { fill: rgb(var(--sv-ac)); }
+
+/* ── SCENKI (drawings.tsx, WAAPI): dodatki scenki są niewidoczne, dopóki scenka ich nie pokaże (reguła o większej
+   wadze niż reguła rysowania linii); punkty odniesienia przekształceń: data-o="c" środek kształtu, "l" lewa krawędź ── */
+.sf-b-svg .sf-l, .sv[data-live] .sf-b-svg .sf-l, .sv[data-live] .sf-b-svg path.sf-l { opacity: 0; }
+.sf-b-svg [data-o="c"] { transform-box: fill-box; transform-origin: 50% 50%; }
+.sf-b-svg [data-o="l"] { transform-box: fill-box; transform-origin: 0 50%; }
+.sf-b-svg .sf-l-ring { fill: none; stroke: rgb(var(--sv-ac)); stroke-width: 1.6px; }
+.sf-b-svg path.sf-l-fill { fill: rgb(var(--sv-ac) / .6); }
+.sf-b-svg path.sf-l-solid, .sf-b-svg .sf-l-badge { fill: rgb(var(--sv-ac)); }
+.sf-b-svg .sf-l-comet { stroke: rgb(var(--sv-ac)); stroke: color-mix(in oklab, rgb(var(--sv-ac)) 40%, #fff); stroke-width: 2.6px; stroke-dasharray: .2 1; stroke-dashoffset: .2; }
+.sf-b-svg .sf-l-guide { stroke: rgb(var(--sv-ac)); stroke-width: 1.6px; }
+.sf-b-svg .sf-l-check { stroke: #fff; stroke-width: 2.1px; }
+/* obrys ciągły, który zastępuje przerywany (moduł wpięty) i obrys w kolorze podstrony (nowa podstrona, wybrana podstrona) */
+.sf-b-svg .sf-l-frame { stroke: rgba(255, 255, 255, .86); stroke-width: 1.5px; }
+.sf-b-svg .sf-l-accframe { stroke: rgb(var(--sv-ac)); stroke-width: 1.8px; }
+/* jasny punkt na czole rysowanej linii (kreska o długości bliskiej zera z okrągłym końcem) */
+.sf-b-svg .sf-l-tip { stroke: #fff; stroke-width: 4.2px; stroke-dasharray: .003 1; stroke-dashoffset: 0; }
+/* miejsce na przyszłą podstronę (ramka przerywana ze znakiem plus) */
+.sf-b-svg .sf-l-ph path, .sf-b-svg path.sf-b-k-ph { stroke: rgba(255, 255, 255, .4); stroke-width: 1.1px; stroke-dasharray: 3 4; stroke-linecap: butt; }
+.sf-b-svg .sf-l-ph path.sf-l-plus, .sf-b-svg path.sf-b-k-plus { stroke: rgba(255, 255, 255, .5); stroke-width: 1.3px; stroke-dasharray: none; stroke-linecap: round; }
+/* nowa pozycja w menu */
+.sf-b-svg .sf-l-menu { stroke: rgb(var(--sv-ac)); stroke-width: 4.6px; }
+/* kursor klienta */
+.sf-b-svg path.sf-l-cursor { fill: #fff; stroke: rgba(2, 2, 3, .9); stroke-width: 1.1px; stroke-linejoin: round; }
+/* kurtyna (rysunek 4): linia światła na granicy starego i nowego układu + cieńsza linia za nią */
+.sf-b-svg .sf-l-beam { stroke: #fff; stroke-width: 1.7px; }
+.sf-b-svg .sf-l-beam2 { stroke: rgb(var(--sv-ac)); stroke-width: 1.1px; }
+
+@media (min-width: 1024px) {
+  .sf-b { padding-top: 150px; }
+  .sv .sf-b-lead { margin-bottom: 52px; font-size: 18px; }
+  .sf-b-card { border-radius: 28px; }
+  .sf-b-t { margin-bottom: 16px; font-size: clamp(32px, 3.2vw, 48px); line-height: 1.02; letter-spacing: -.045em; }
+  .sf-b-d { font-size: 17px; }
+  .sf-b-art figcaption { margin-top: 22px; font-size: 15px; }
+  .sf-b-svg { max-height: min(42vh, 400px); }
+
+  /* tekst po lewej (zakładka u góry, nazwa i opis u dołu), rysunek po prawej na całą wysokość karty */
+  .sf-b-card { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); grid-template-rows: var(--sf-tab) minmax(0, 1fr); grid-template-areas: 'tab art' 'txt art'; }
+  .sf-b-card-bg::before {
+    -webkit-mask-image: radial-gradient(ellipse 46% 78% at 70% 50%, #000 26%, transparent 80%);
+    mask-image: radial-gradient(ellipse 46% 78% at 70% 50%, #000 26%, transparent 80%);
+  }
+  .sf-b-card-bg::after { background: radial-gradient(52% 50% at 72% 112%, rgb(var(--sv-ac) / .2), transparent 70%); }
+  .sf-b-meta { padding: 0 40px; }
+  .sf-b-body { align-self: end; padding: 40px 24px 42px 40px; }
+  .sf-b-art { grid-row: 1 / -1; padding: 46px 56px 40px 24px; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* rysunek rysuje się razem z przewijaniem, tekst karty jaśnieje */
+  .sv[data-live] .sf-b-svg path { opacity: clamp(0, calc((var(--d, 1) * (var(--n) + 7) - var(--i)) * 3), 1); }
+  .sv[data-live] .sf-b-svg path[pathLength] { stroke-dasharray: 1 1; stroke-dashoffset: calc(1 - clamp(0, (var(--d, 1) * (var(--n) + 7) - var(--i)) / 7, 1)); }
+  /* dodatki scenek zostają ukryte także w trakcie rysowania (większa waga niż reguła wyżej) */
+  .sv[data-live] .sf-b-card .sf-b-svg .sf-l, .sv[data-live] .sf-b-card .sf-b-svg path.sf-l { opacity: 0; }
+  /* wyjątki od kreskowania „rysowania”: światło biegnące po ścieżce i punkt na czole linii mają własny wzór */
+  .sv[data-live] .sf-b-svg path.sf-l-comet[pathLength] { stroke-dasharray: .2 1; stroke-dashoffset: .2; }
+  .sv[data-live] .sf-b-svg path.sf-l-tip[pathLength] { stroke-dasharray: .003 1; stroke-dashoffset: 0; }
+  .sv[data-live] .sf-b-card :is(.sf-b-body, figcaption) { opacity: calc(.3 + .7 * var(--d, 1)); }
+  /* karta jest lekko przezroczysta: część PRZYKRYTĄ przez następną kartę odcinamy (--cut z cards.tsx = widoczna
+     wysokość), inaczej treść karty pod spodem przebijałaby jak duch przez kartę na wierzchu; ujemne odsunięcia
+     u góry i po bokach zostawiają obwódkę i cień karty */
+  .sv[data-live] .sf-b-card { clip-path: inset(-80px -80px calc(var(--h, 0px) - var(--cut, 99999px)) -80px); }
+  /* stos: każda następna karta przykleja się o zakładkę niżej (wysoka karta dopiero, gdy widać jej dół - --h z cards.tsx);
+     odstęp NAD kartami 2-4 (nie pod 1-3) - przednia karta zwalnia pozostałe po kolei */
+  .sv[data-live] .sf-b-track { display: block; padding-bottom: 8vh; }
+  .sv[data-live] .sf-b-card {
+    position: sticky; top: calc(72px + var(--i) * var(--sf-tab)); top: min(calc(72px + var(--i) * var(--sf-tab)), calc(100svh - var(--h, 0px) - 12px));
+    transform-origin: 50% 0; transform: scale(calc(1 - var(--dp, 0) * .03)); will-change: transform;
+  }
+  /* przyciemnienie przykrywanej karty na własnej warstwie: zmiana krycia nie rysuje od nowa całej karty (wydajność, 2026-10-05) */
+  .sv[data-live] .sf-b-card::after { will-change: opacity; }
+  .sv[data-live] .sf-b-card + .sf-b-card { margin-top: 14vh; }
+  @media (min-width: 1024px) {
+    .sv[data-live] .sf-b-card { top: calc(96px + var(--i) * var(--sf-tab)); top: min(calc(96px + var(--i) * var(--sf-tab)), calc(100svh - var(--h, 0px) - 12px)); }
+  }
+}

@@ -1,0 +1,40 @@
+import type { Metadata } from 'next';
+import { Catalog } from '../../../../(pl)/uslugi/_katalog/Catalog';
+import { buildCatalog } from '../../../../(pl)/uslugi/_katalog/model';
+import { i18nAlternates } from '@/lib/i18n/locale';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { breadcrumbSchema } from '@/lib/schemas';
+
+export const metadata: Metadata = {
+  title: 'Design - UI/UX design for your website and store',
+  description:
+    'See your website before it is built. You approve the layout, colors and mobile version up front, and click through the design like a finished site.',
+  // The page-level openGraph block REPLACES the root layout one (Next does not merge them), so it is given in full.
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    siteName: 'Avenly',
+    url: '/en/services/design/',
+    title: "See your site before it's built - Avenly UI/UX design",
+    description:
+      'A UI/UX design to approve before any code: a clickable preview of your website or store and a mobile version.',
+    images: [{ url: '/og-default.png', width: 1200, height: 630, alt: 'Avenly - interactive agency', type: 'image/png' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "See your site before it's built - Avenly UI/UX design",
+    description: 'A UI/UX design to approve before any code: a clickable preview of your website or store and a mobile version.',
+    images: ['/og-default.png'],
+  },
+  alternates: i18nAlternates('/uslugi/design', 'en'),
+};
+
+export default function DesignCategoryPageEn() {
+  const m = buildCatalog('en', 'design');
+  return (
+    <>
+      <JsonLd data={breadcrumbSchema(m.crumbs)} />
+      <Catalog m={m} />
+    </>
+  );
+}

@@ -1,0 +1,238 @@
+'use client';
+
+import { useCallback, useEffect, useRef, type CSSProperties } from 'react';
+import type { ModsCopy } from '@/lib/i18n/uslugi/system-crm-mods';
+import { Steps, setSteps } from '../../_usluga/parts';
+import { lin, seg, usePin, useReducedPref, useSeen } from '../../_usluga/shared';
+import { Empty, MOD_ICONS, ModCount, ModFrame, START, Spot, bloomOff, bloomTo, flag, pinProgress, put, wipe } from './mods-ui';
+import { offsetTo } from './scene';
+import type { SceneProps } from './types';
+import { Win } from './ui';
+
+// SEKCJA MODUŁÓW, propozycja 1 - „ROŚNIE” (przypięta). Nowe wykonanie tego, co spodobało się w rundzie 3: jedno okno
+// przykładowego systemu zaczyna od trzech ekranów i naprawdę rośnie o kolejne moduły. Bez latających kafli.
+// Pojawianie się = „rozejście” (właściciel 2026-10-05: żadnych lecących linii, szkieletów i odsłon przycięciem -
+// „animacja pojawiania płynna, tak jak się nebula rozchodzi”; wspólna klasa .cr-bloom z system-crm.css).
+//   Układ    okno podzielone włosowymi liniami na pola (jak pulpit sceny głównej), 3 × 3: pierwszy rząd to trzy ekrany
+//            na start, dwa kolejne rzędy to moduły, a DZIEWIĄTE POLE ZOSTAJE PUSTE („+ to, czego potrzebuje Twoja
+//            firma”). Telefon: dwie kolumny („Zlecenia” na całą szerokość), pięć rzędów.
+//   Start    nagłówek sekcji, pod nim okno z trzema ekranami (skala 1). Okno stoi przy górnej krawędzi kadru -
+//            pod nim jest miejsce, w które urośnie.
+//   Najazd   nagłówek odjeżdża w górę, okno podjeżdża na miejsce, wchodzi narrator i licznik „Włączone moduły 3 / 8”.
+//   Moduł    (pięć razy, jedno zdanie narratora na moduł) 1. gdy trzeba - okno rośnie o rząd: jego dolna krawędź
+//            zjeżdża (prawdziwy ruch), a nowy rząd wyłania się razem z oknem jako puste pola ze spokojnym znakiem
+//            wolnego miejsca (gwiazdka w rogu, punkty w pozostałych rogach); 2. ekran modułu ROZCHODZI SIĘ od gwiazdki
+//            miękką, nierówną plamą, a znak wolnego miejsca schodzi tym samym rozejściem; 3. licznik przeskakuje
+//            o jeden. Postój.
+//   Kamera   jeden spokojny ruch: gdy okno otwiera ostatni rząd, kamera odjeżdża tyle, żeby całe okno zostało
+//            w kadrze (wysokość rzędu jest dobrana z pomiaru tak, żeby pismo po odjeździe miało >= 12 px).
+//            Poza tym kadr stoi - rusza się tylko krawędź okna.
+//   Finał    dziewiąte pole zostaje puste: znak wolnego miejsca stoi dalej, a od gwiazdki rozchodzi się przerywany
+//            obrys ze zdaniem o miejscu na kolejny moduł.
+// Wszystko liczy `draw(p)` z usePin: pisze zmienne CSS i atrybuty wprost do DOM (tylko przy zmianie wartości).
+// Rośnie płyta okna i siatka pól razem (ta sama krawędź, --cy). Postęp rozejścia ma łagodny start i koniec (seg).
+// Bez JS / ograniczony ruch / bardzo niski ekran: zwykła sekcja - okno ze wszystkimi modułami, w każdym polu nazwa,
+// zdanie i mini-ekran, licznik 8 / 8, bez przypięcia.
+
+/** Długość drogi sceny [vh]. */
+const LEN = 320;
+/** Oś sceny p (0-1): najazd kamery, początek pierwszego modułu, finał (puste miejsce). */
+const CAM: [number, number] = [0.01, 0.1];
+const FIRST = 0.15;
+const MORE: [number, number] = [0.885, 0.955];
+/** Odcinki jednego modułu (ułamki jego kroku): okno otwiera rząd, ekran modułu się rozchodzi (--bloom), licznik;
+    reszta to postój. */
+const OPEN: [number, number] = [0, 0.3];
+const BLOOM: [number, number] = [0.2, 0.86];
+const COUNT: [number, number] = [0.56, 0.7];
+
+interface Geo {
+  /** Kadr (pole sceny), droga okna spod nagłówka na miejsce, najmniejsza skala kamery. */
+  vw: number; vh: number; ty0: number; floor: number;
+  /** Okno w układzie: szerokość, pełna wysokość, widoczna wysokość na starcie [0] i po module k [k + 1]. */
+  w: number; fullH: number; hs: number[];
+}
+interface Els { cells: HTMLElement[]; more: HTMLElement | null; steps: HTMLElement[] }
+
+const uniq = (v: number[]) => Array.from(new Set(v)).sort((a, b) => a - b);
+
+export const ModsRise = ({ t, x, headId }: SceneProps<ModsCopy>) => {
+  const g = t.grow;
+  const n = g.modules.length;
+  const late = Math.max(0, n - START);
+  /** Długość kroku jednego modułu na osi p. */
+  const step = (MORE[0] - 0.015 - FIRST) / Math.max(1, late);
+  const reduced = useReducedPref();
+  const ref = useRef<HTMLElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const headRef = useRef<HTMLDivElement>(null);
+  const portRef = useRef<HTMLDivElement>(null);
+  const camRef = useRef<HTMLDivElement>(null);
+  const sysRef = useRef<HTMLDivElement>(null);
+  const els = useRef<Els>({ cells: [], more: null, steps: [] });
+  const geo = useRef<Geo | null>(null);
+  const lastTf = useRef('');
+  useSeen(stageRef, 0.2);
+
+  /** Narrator: trzy ekrany na start, potem jedno zdanie o każdym kolejnym module, na końcu miejsce na następny. */
+  const steps = [x.say.start, ...g.modules.slice(START).map((m) => m.text), x.say.end];
+
+  const draw = useCallback((p: number) => {
+    const root = ref.current, cam = camRef.current, sys = sysRef.current, G = geo.current;
+    if (!root || !cam || !sys || !G) return;
+    const E = els.current;
+
+    // najazd kamery: nagłówek odjeżdża, okno podjeżdża na miejsce
+    const camP = seg(p, CAM[0], CAM[1]);
+    put(root, '--cam', camP.toFixed(4));
+    flag(root, 'data-far', camP > 0.5);
+
+    // okno: widoczna wysokość rośnie o rząd, gdy przychodzi pierwszy moduł nowego rzędu; ekrany modułów rozchodzą
+    // się po kolei od swoich gwiazdek
+    let hv = G.hs[0], count = 0;
+    for (let k = 0; k < late; k++) {
+      const b = FIRST + k * step;
+      hv += (G.hs[k + 1] - G.hs[k]) * seg(p, b + OPEN[0] * step, b + OPEN[1] * step);
+      const cell = E.cells[START + k];
+      if (cell) bloomTo(cell, seg(p, b + BLOOM[0] * step, b + BLOOM[1] * step));
+      count += seg(p, b + COUNT[0] * step, b + COUNT[1] * step);
+    }
+    const mo = seg(p, MORE[0], MORE[1]);
+    hv += (G.fullH - G.hs[late]) * mo;
+    put(sys, '--cy', `${Math.max(0, G.fullH - hv).toFixed(1)}px`);
+    put(root, '--cn', count.toFixed(3));
+    // puste miejsce: obrys i zdanie rozchodzą się od gwiazdki, znak wolnego miejsca zostaje
+    if (E.more) bloomTo(E.more, mo);
+
+    // kamera: okno stoi przy górze kadru; gdy przestaje się mieścić - odjazd (skala <= 1, nie mniej niż `floor`),
+    // a jeśli i to nie wystarcza (bardzo niski ekran) - jazda za rosnącą krawędzią
+    const tyHead = (1 - camP) * G.ty0;
+    const avail = Math.max(160, G.vh - tyHead);
+    const z = Math.max(Math.min(1, G.vw / G.w, avail / hv), G.floor);
+    const tx = Math.max(0, (G.vw - G.w * z) / 2);
+    const ty = tyHead + Math.min(0, avail - hv * z);
+    const tf = `translate3d(${tx.toFixed(1)}px, ${ty.toFixed(1)}px, 0) scale(${z.toFixed(4)})`;
+    if (tf !== lastTf.current) { lastTf.current = tf; cam.style.transform = tf; }
+
+    // narrator
+    const cut = (j: number) => (j < late ? FIRST + j * step : MORE[0] - 0.005);
+    let active = 0;
+    while (active <= late && p >= cut(active)) active++;
+    if (E.steps.length === late + 2) {
+      setSteps(E.steps, active, E.steps.map((_, j) => lin(p, j === 0 ? 0.02 : cut(j - 1), j <= late ? cut(j) : 0.99)));
+    }
+  }, [late, step]);
+
+  useEffect(() => {
+    const root = ref.current, stage = stageRef.current, head = headRef.current, port = portRef.current, cam = camRef.current, sys = sysRef.current;
+    if (!root || !stage || !head || !port || !cam || !sys) return;
+    const grid = sys.querySelector<HTMLElement>('.cr8-a-grid');
+    const cells = Array.from(sys.querySelectorAll<HTMLElement>('.cr8-a-cell'));
+    const E: Els = {
+      cells,
+      more: sys.querySelector<HTMLElement>('.cr8-a-more .cr8-empty'),
+      steps: Array.from(root.querySelectorAll<HTMLElement>('.cr8-a-narr .sv-step')),
+    };
+    els.current = E;
+
+    /** Scena stoi (ograniczony ruch, brak przypięcia): bez stylów pisanych przez scenę, wszystko w stanie końcowym. */
+    const reset = () => {
+      geo.current = null;
+      lastTf.current = '';
+      cam.style.transform = '';
+      wipe(root, ['--cam', '--cn', '--th'], ['data-far']);
+      wipe(sys, ['--cy']);
+      cells.forEach(bloomOff);
+      bloomOff(E.more);
+      E.steps.forEach((li) => wipe(li, ['--f'], ['data-on']));
+    };
+    if (reduced || !grid) { reset(); return; }
+
+    let raf = 0;
+    const measure = () => {
+      raf = 0;
+      // przypięcie włącza CSS (.sv[data-live], dostatecznie wysoki ekran) - bez niego zwykła sekcja
+      if (getComputedStyle(stage).position !== 'sticky') { reset(); return; }
+      const bar = parseFloat(getComputedStyle(grid).paddingTop) || 0;
+      const vw = port.clientWidth, vh = port.clientHeight;
+      // układ pól z ich położeń: liczba kolumn i rzędów
+      const pre = cells.map((c) => offsetTo(c, sys));
+      const narrow = uniq(pre.map((b) => Math.round(b.x))).length < 3;
+      const rows = uniq(pre.map((b) => Math.round(b.y))).length;
+      // najmniejsza skala kamery: pismo mini-ekranów (15,5 px, na telefonie 13,5 px) zostaje po odjeździe >= 12 px
+      const floor = narrow ? 0.88 : 0.78;
+      // wysokość rzędu: całe okno ma się zmieścić w kadrze przy najmniejszej skali
+      const th = Math.floor(Math.min(narrow ? 136 : 300, Math.max(narrow ? 100 : 150, (vh / floor - bar) / Math.max(1, rows))));
+      put(root, '--th', `${th}px`);
+      // widoczna wysokość okna po każdym module - z układu (bez przekształceń kamery): pole -> siatka -> system
+      const hs: number[] = [];
+      let h = 0;
+      cells.slice(0, n).forEach((c, i) => {
+        const b = offsetTo(c, sys);
+        h = Math.max(h, b.y + b.h);
+        if (i >= START - 1) hs.push(h);
+      });
+      if (hs.length !== late + 1) { reset(); return; }
+      geo.current = {
+        vw, vh, floor, hs,
+        w: sys.offsetWidth, fullH: sys.offsetHeight,
+        ty0: Math.max(0, head.offsetHeight + 28 - (port.offsetTop - head.offsetTop)),
+      };
+      // postęp sceny z położenia sekcji (po zmianie układu nie czekamy na następne zdarzenie przewijania)
+      draw(pinProgress(root));
+    };
+    // pomiar w klatce (nie w wywołaniu ResizeObserver - pomiar zmienia wysokość rzędu, czyli rozmiar okna)
+    const kick = () => { if (!raf) raf = requestAnimationFrame(measure); };
+    const ro = new ResizeObserver(kick);
+    [root, head, port, sys].forEach((el) => ro.observe(el));
+    kick();
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); };
+  }, [draw, late, n, reduced]);
+
+  usePin(ref, (p) => draw(p), !reduced);
+
+  return (
+    <section ref={ref} className="cr8-a" aria-labelledby={headId} style={{ '--len': LEN } as CSSProperties}>
+      <div ref={stageRef} className="cr8-a-stage">
+        <div className="container mx-auto px-6 cr8-a-in">
+          <div ref={headRef} className="cr8-head cr8-a-head">
+            <h2 id={headId} className="im-title sv-h2">{g.title} <span className="im-accent">{g.titleAccent}</span></h2>
+            <p className="im-lead cr-sec-lead">{g.lead}</p>
+          </div>
+          <ModCount label={g.count} n={n} className="cr8-a-hud" />
+          <div ref={portRef} className="cr8-a-port">
+            <div ref={camRef} className="cr8-a-cam">
+              <div className="cr8-a-rise">
+                <div ref={sysRef} className="cr8-a-sys">
+                  {/* płyta okna: rośnie od dołu (clip-path); siatka pól nad nią kończy się na tej samej krawędzi */}
+                  <Win app={t.app} className="cr8-a-win">{null}</Win>
+                  <ol className="cr8-a-grid">
+                    {g.modules.map((mod, i) => {
+                      const Icon = MOD_ICONS[i % MOD_ICONS.length];
+                      const built = i >= START;
+                      return (
+                        <li key={mod.name} className="cr8-a-cell">
+                          {/* moduł dochodzący: treść pola rozchodzi się od gwiazdki, znak wolnego miejsca schodzi */}
+                          <div className={built ? 'cr8-a-tile cr-bloom' : 'cr8-a-tile'} data-bloomed={built ? '' : undefined}>
+                            <h3 className="cr8-name"><Icon aria-hidden="true" />{mod.name}</h3>
+                            <p className="cr8-text">{mod.text}</p>
+                            <ModFrame i={i} t={t} x={x} size="s" />
+                          </div>
+                          {built && <Spot out />}
+                        </li>
+                      );
+                    })}
+                    <li className="cr8-a-cell cr8-a-more"><Empty text={g.more} /></li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="cr8-a-narr cr-narr" style={{ '--n': steps.length } as CSSProperties}>
+            <Steps items={steps} label={t.film.stepsAria} />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};

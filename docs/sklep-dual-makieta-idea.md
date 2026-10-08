@@ -1,5 +1,7 @@
 # Pomysł — Sklep dual-makieta (WooCommerce vs Headless)
 
+> **HISTORYCZNE (dopisek 2026-10-07):** pomysł dotyczył starej podstrony sklepu (`ShopClient.tsx`). Od 2026-09-28 nie obiecujemy WooCommerce ani „Headless Commerce” (PRODUCT.md, „Co obiecujemy w ofercie”), a podstrona sklepu jest przebudowywana od zera (`docs/podstrony/usluga-sklep-internetowy.md`). Nie wdrażać.
+
 **Data:** 2026-05-28
 **Status:** Pomysł do realizacji (nie zaczęte)
 

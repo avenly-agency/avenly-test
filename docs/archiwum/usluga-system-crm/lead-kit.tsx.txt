@@ -1,0 +1,151 @@
+'use client';
+
+import { useEffect, type CSSProperties, type ReactNode, type RefObject } from 'react';
+import { ClipboardList, Mail, Phone, type LucideIcon } from 'lucide-react';
+import type { LeadChannel, LeadCopy } from '@/lib/i18n/uslugi/system-crm-lead';
+import { Steps, setSteps } from '../../_usluga/parts';
+import { clamp01, lin, useSeen } from '../../_usluga/shared';
+import { SecHead } from './scene';
+
+// Wspólne części scen sekcji „Nic już nie ginie” - runda 4 (lead-*.tsx, style cr7- w lead.css):
+//   LeadPin   - powłoka sceny przypiętej: wysoka sekcja, w niej przyklejony ekran z trzema wierszami - nagłówek,
+//               pole sceny (reszta wysokości) i narrator (Steps ze szkieletu pod .cr-narr, jedno zdanie naraz),
+//   Reel      - bęben: napis zmienia się prawdziwym ruchem w pionie (położenie = zmienna CSS --rp; bez niej stoi
+//               ostatnia pozycja, czyli stan końcowy),
+//   useFit    - obiekt sceny zawsze mieści się w wysokości pola (skala <= 1, wyśrodkowany w pionie),
+//   narrate   - bieżące zdanie narratora i wypełnienie pasków z postępu,
+//   bloom / unbloom / useRise - „rozejście” (.cr-bloom / .cr-bloom-out z system-crm.css): jedyny sposób pojawiania
+//               się i podmiany rzeczy w tych scenach (decyzja właściciela 2026-10-05) - postęp z przewijania na
+//               elemencie, a dla okna sceny przypiętej jednorazowe rozejście przy wejściu,
+//   put / flag / mark / wipe - zapis do DOM tylko przy zmianie wartości i sprzątanie po scenie,
+//   pinProgress / useKick   - jedno dodatkowe przeliczenie sceny po montażu (pierwsze biegnie, zanim korzeń podstrony
+//               dostanie data-live, czyli jeszcze na układzie „bez JS”).
+// Sceny piszą zmienne CSS i atrybuty wprost do DOM - bez stanu Reacta w klatce.
+
+/** Kolejność kanałów = kolejność torów w wersji „Kanały”. */
+export const CHANNELS: LeadChannel[] = ['form', 'mail', 'phone'];
+export const CHANNEL_ICON: Record<LeadChannel, LucideIcon> = { form: ClipboardList, mail: Mail, phone: Phone };
+
+export const put = (el: HTMLElement, k: string, v: string) => { if (el.style.getPropertyValue(k) !== v) el.style.setProperty(k, v); };
+export const flag = (el: Element, k: string, on: boolean) => { if (el.hasAttribute(k) !== on) el.toggleAttribute(k, on); };
+export const mark = (el: Element, k: string, v: string) => { if (el.getAttribute(k) !== v) el.setAttribute(k, v); };
+/** Ograniczony ruch: scena zdejmuje to, co zapisała - zostaje stan końcowy z CSS. */
+export const wipe = (el: HTMLElement | null, keys: string[], attrs: string[] = []) => {
+  if (!el) return;
+  keys.forEach((k) => el.style.removeProperty(k));
+  attrs.forEach((a) => el.removeAttribute(a));
+};
+export const px = (v: number) => `${v.toFixed(1)}px`;
+
+/** ROZEJŚCIE (.cr-bloom / .cr-bloom-out z system-crm.css; właściciel 2026-10-05: wszystko pojawia się „tak jak się
+    nebula rozchodzi”, bez linii światła i przycięć prostą krawędzią). Pisze postęp 0-1 na elemencie i stawia
+    data-bloomed, gdy rozejście się skończy (maska zdjęta z tego, co weszło; to, co zeszło, schowane). */
+export const bloom = (el: HTMLElement, v: number) => {
+  put(el, '--bloom', v.toFixed(4));
+  flag(el, 'data-bloomed', v >= 1);
+};
+/** Sprzątanie po rozejściu (ograniczony ruch): zostaje stan końcowy z CSS. */
+export const unbloom = (el: HTMLElement | null) => wipe(el, ['--bloom'], ['data-bloomed']);
+
+/** Czas rozejścia okna sceny przypiętej przy wejściu (ms) - to samo w lead.css (.cr7-rise). */
+const RISE_MS = 1700;
+/** Wejście okna sceny przypiętej: rozejście odgrywa CSS (przejście --bloom, gdy pole sceny pojawi się na ekranie -
+    data-in), tutaj tylko zdejmujemy maskę po jego końcu. Ograniczony ruch: maska niepotrzebna od razu. */
+export const useRise = (viewRef: RefObject<HTMLElement | null>, on: boolean) => {
+  const seen = useSeen(viewRef, 0.2);
+  useEffect(() => {
+    const rise = viewRef.current?.querySelector<HTMLElement>('.cr7-rise');
+    if (!rise) return;
+    if (!on) { rise.setAttribute('data-bloomed', ''); return; }
+    if (!seen) { rise.removeAttribute('data-bloomed'); return; }
+    const id = window.setTimeout(() => rise.setAttribute('data-bloomed', ''), RISE_MS + 200);
+    return () => window.clearTimeout(id);
+  }, [viewRef, seen, on]);
+};
+
+/** Postęp przypiętej sekcji (0-1) z jej położenia - ten sam wzór co `usePin` w szkielecie. */
+export const pinProgress = (el: HTMLElement) => {
+  const r = el.getBoundingClientRect();
+  return clamp01(-r.top / Math.max(1, r.height - window.innerHeight));
+};
+
+/** Jedno dodatkowe przeliczenie dwie klatki po montażu. `run` musi być stabilne (useCallback). */
+export const useKick = (run: () => void, on: boolean) => {
+  useEffect(() => {
+    if (!on) return;
+    let id = requestAnimationFrame(() => { id = requestAnimationFrame(run); });
+    return () => cancelAnimationFrame(id);
+  }, [run, on]);
+};
+
+/** Zdania narratora w scenie (elementy listy ze szkieletu). */
+export const stepsOf = (root: HTMLElement) => Array.from(root.querySelectorAll<HTMLElement>('.cr7-narr .sv-step'));
+export const clearSteps = (list: HTMLElement[]) => list.forEach((li) => { li.removeAttribute('data-on'); li.style.removeProperty('--f'); });
+
+/** Narrator: `v` = postęp (dowolna jednostka), `cuts` = progi, od których zaczyna się kolejne zdanie (o jeden mniej
+    niż zdań), `end` = koniec paska ostatniego zdania. */
+export const narrate = (list: HTMLElement[], v: number, cuts: number[], end = 1) => {
+  if (!list.length) return;
+  let active = 0;
+  while (active < cuts.length && v >= cuts[active]) active++;
+  active = Math.min(active, list.length - 1);
+  setSteps(list, active, list.map((_, i) => {
+    const a = i === 0 ? 0 : cuts[i - 1] ?? end, b = cuts[i] ?? end;
+    return b > a ? lin(v, a, b) : v >= a ? 1 : 0;
+  }));
+};
+
+/** Bęben. Czytnik ekranu dostaje tylko ostatnią pozycję (stan po odegraniu sceny). */
+export const Reel = ({ items, className }: { items: string[]; className?: string }) => (
+  <span className={className ? `cr7-reel ${className}` : 'cr7-reel'}>
+    <span className="cr7-reel-in" style={{ '--to': items.length - 1 } as CSSProperties}>
+      {items.map((it, i) => <span key={i} aria-hidden={i < items.length - 1 ? true : undefined}>{it}</span>)}
+    </span>
+  </span>
+);
+
+/** Pisze na obiekcie --fit (skala, nie mniej niż `min` - pismo zostaje czytelne) i --fy (przesunięcie w pionie),
+    tak żeby mieścił się w polu `view`. */
+export const useFit = (viewRef: RefObject<HTMLElement | null>, objRef: RefObject<HTMLElement | null>, on: boolean, min = 0.88) => {
+  useEffect(() => {
+    const view = viewRef.current, obj = objRef.current;
+    if (!view || !obj) return;
+    if (!on) { wipe(obj, ['--fit', '--fy']); return; }
+    const fit = () => {
+      const vh = view.clientHeight, oh = obj.offsetHeight;
+      if (!vh || !oh) return;
+      const s = Math.min(1, Math.max(min, vh / oh));
+      put(obj, '--fit', s.toFixed(4));
+      put(obj, '--fy', px(Math.max(0, (vh - oh * s) / 2)));
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(view); ro.observe(obj);
+    return () => ro.disconnect();
+  }, [viewRef, objRef, on, min]);
+};
+
+/** Scena przypięta: nagłówek sekcji, pole sceny (`children`) i narrator w przyklejonym ekranie. `len` = droga w vh. */
+export const LeadPin = ({ rootRef, kind, len, headId, x, steps, stepsAria, children }: {
+  rootRef: RefObject<HTMLElement | null>;
+  /** Nazwa wersji (klasa cr7-pin--<kind>). */
+  kind: string;
+  len: number;
+  headId: string;
+  x: Pick<LeadCopy, 'title' | 'lead'>;
+  steps: string[];
+  stepsAria: string;
+  children: ReactNode;
+}) => (
+  <section ref={rootRef} className={`cr7-pin cr7-pin--${kind}`} style={{ '--len': len } as CSSProperties} aria-labelledby={headId}>
+    <div className="cr7-stage">
+      <div className="container mx-auto px-6 cr7-in">
+        <SecHead id={headId} title={x.title} lead={x.lead} />
+        {children}
+        <div className="cr-narr cr7-narr" style={{ '--n': steps.length } as CSSProperties}>
+          <Steps items={steps} label={stepsAria} />
+        </div>
+      </div>
+    </div>
+  </section>
+);

@@ -101,9 +101,13 @@ To NIE jest pillar 2000+ — to **tactical, czytelny, do końca przewijalny** po
    <blockquote>
      <strong>[Pytanie hook]</strong><br>
      [Krótki opis tego co user dostanie.] <br>
-     <a href="/kontakt">[CTA text]</a>
+     <a href="/kontakt">Bezpłatna konsultacja</a>
    </blockquote>
    ```
+   Tekst linku ZAWSZE „Bezpłatna konsultacja” (jedyne CTA serwisu, PRODUCT.md). Od modernizacji bloga (2026-09-29)
+   cytat renderuje się jako karta w czerni z niebieską krawędzią po lewej: `<strong>` = tytuł karty (w osobnej linii,
+   `<br>` po nim jest ukrywany), tekst = szary opis, link = biały przycisk (na telefonie na całą szerokość karty).
+   Trzymaj dokładnie ten układ: `<strong>` na początku, jeden `<a>` na końcu.
 
 ### CO NIE jest częścią konwencji (nie dodajemy domyślnie)
 
@@ -138,6 +142,8 @@ Wzorce z istniejących:
 - "Analiza [topic]..."
 - Zaczyna od czasownika ("Dowiedz się", "Analiza", "Sprawdź", "Poznaj") + value prop + opcjonalnie konkretna technologia
 
+Gdzie się pokazuje: zajawka pod tytułem na stronie wpisu (karta nagłówka), opis na kartach listy `/blog` i „Czytaj dalej”, opis SEO / Open Graph. Dlatego pisz ją jako pełne, samodzielne zdanie (bez „…”).
+
 ## Kategorie (z istniejącej listy)
 
 Wybierz 2 (pierwsza = główna, druga = pomocnicza):
@@ -146,13 +152,15 @@ Wybierz 2 (pierwsza = główna, druga = pomocnicza):
 - `Biznes` (post #1, #2, #3)
 - `Performance` (post #2)
 - `Strategia` (post #3)
-- `Development` (jeszcze nie użyte, ale w `BlogList.tsx` w filterze)
+- `Development` (jeszcze nie użyte)
 - `Design & UX` (jeszcze nie użyte)
 - `Marketing` (jeszcze nie użyte)
 - `News` (jeszcze nie użyte)
 - `Tech` (jeszcze nie użyte)
 
 NIE wymyślaj nowych kategorii — wybieraj z istniejących.
+
+Jak się pokazują (od 2026-09-29): pigułki filtra na `/blog` powstają same z kategorii wpisów (kolejność: najczęściej używane pierwsze), więc pierwsze użycie np. `Development` doda nową pigułkę. Na stronie nazwy są po polsku i w pisowni zdaniowej (`categoryLabel` w `components/sections/blog-teaser/data.ts`): `AI & Automatyzacja` → „AI i automatyzacja”, `Performance` → „Wydajność”, każde „&” → „i”. W danych (`posts.ts`) zostają nazwy z listy wyżej.
 
 ## Image (Unsplash)
 
@@ -167,6 +175,7 @@ Wzorce z istniejących:
 - Tech/workspace abstract (nie ludzie w garniturach)
 - Ciemne/blue toned (pasuje do brand)
 - Brak konkretnych logo / brand'ów
+- Poziome, z motywem na środku: okładka wpisu jest przycinana do 21:9 (komputer, tablet) i 4:3 (telefon), karty na liście do 16:10, a na dół okładki nachodzi karta z tytułem - ważny detal nie może leżeć przy dolnej krawędzi zdjęcia.
 
 ## SEO checklist (każdy post musi spełnić)
 
@@ -183,7 +192,7 @@ Wzorce z istniejących:
 
 ## HTML allowed w content
 
-Wszystko co renderuje `dangerouslySetInnerHTML` + Tailwind `prose` z [globals.css](../app/globals.css):
+Wszystko co renderuje `dangerouslySetInnerHTML` ze stylami `.bl-body` z [components/blog/blog.css](../components/blog/blog.css) (od 2026-09-29; dawne `.blog-content` / `prose` nie istnieją):
 
 - `<h2>`, `<h3>` (NIE h1 — to jest tytuł renderowany osobno)
 - `<p>`, `<strong>`, `<em>`, `<a>`

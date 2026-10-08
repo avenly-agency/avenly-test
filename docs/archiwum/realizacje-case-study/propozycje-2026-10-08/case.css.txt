@@ -1,0 +1,564 @@
+/* Case study (/realizacje/[slug], /en/work/[slug]) - FILM (2026-10-08; _rl/case.tsx). Klasy rl-cf-, korzeń .rl.rl-cf.
+   Język jak na liście realizacji (realizacje.css - stamtąd kadr w czarnym szkle, przyciski, wejścia tekstu, mgławica):
+   czerń luksusowa, ostre linie, kolor realizacji (--ac = "r g b") tylko w akcentach, bez rozmycia i tekstu z gradientem.
+   Przypięte sceny i stany „przed wejściem” tylko pod .rl[data-live] (JS działa) i przy prefers-reduced-motion:
+   no-preference - bez JS i przy ograniczonym ruchu to zwykła strona: nagłówek, kadr, karty jedna pod drugą. */
+
+.rl.rl-cf {
+  /* ile kadru wystaje zza dolnej krawędzi pierwszego ekranu; zakładka karty w stosie; górna krawędź pierwszej karty */
+  --cf-peek: clamp(96px, 17vh, 190px); --cf-step: 58px; --cf-st0: 96px;
+  padding-bottom: 0;
+}
+@supports (height: 1svh) { .rl.rl-cf { --cf-peek: clamp(96px, 17svh, 190px); } }
+@media (max-width: 1023.98px) {
+  .rl.rl-cf { --cf-peek: clamp(84px, 15vh, 150px); --cf-step: 50px; --cf-st0: 72px; }
+  @supports (height: 1svh) { .rl.rl-cf { --cf-peek: clamp(84px, 15svh, 150px); } }
+}
+
+/* ══ 1. FILM: plansza tytułowa → kadr → cała strona klienta ══ */
+.rl-cf-film { position: relative; padding: 112px 0 0; }
+@media (min-width: 1024px) { .rl-cf-film { padding-top: 148px; } }
+.rl-cf-in { container-type: inline-size; }
+.rl-cf-meta { margin: 0 0 18px; font-size: 15px; line-height: 1.3; color: #94a3b8; }
+.rl-cf-meta > span { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+/* nazwa jak plansza tytułowa: od 1024 px cała w jednej linijce na szerokość wrappera (--len = liczba znaków),
+   węziej łamie się na słowa (--len-s = najdłuższy kawałek; „Mcentrum / fizjoterapia” w miejscu <wbr>) */
+.rl .rl-cf-name { margin: 0; font-size: clamp(38px, 12vw, 96px); font-weight: 700; line-height: .98; letter-spacing: -.05em; color: #f8fafc; text-wrap: balance; overflow-wrap: anywhere; }
+@supports (width: 1cqi) {
+  .rl .rl-cf-name { overflow-wrap: normal; font-size: min(clamp(38px, 13vw, 96px), calc(100cqi / (var(--len-s, 10) * .58))); }
+  @media (min-width: 1024px) {
+    .rl .rl-cf-name { white-space: nowrap; font-size: min(clamp(56px, 9.4vw, 164px), calc(100cqi / (var(--len, 16) * .54)), 20vh); }
+  }
+}
+/* maska wejścia nazwy przycina tylko w pionie - długa nazwa nie traci końcówki */
+@supports (overflow: clip) { .rl-cf-name .rl-mask, .rl-cf-next-name .rl-mask { overflow-x: visible; overflow-y: clip; } }
+.rl .rl-cf-lead { margin: 28px 0 0; max-width: 40rem; text-wrap: pretty; }
+.rl-cf-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; margin-top: 30px; }
+.rl-cf-site svg { width: 16px; height: 16px; margin-left: 8px; transition: transform .45s var(--rl-ease); }
+@media (hover: hover) { .rl-cf-site:hover svg { transform: translate(2px, -2px); } }
+.rl-cf-domain { font-size: 14px; color: #94a3b8; }
+@media (max-width: 639.98px) { .rl .rl-cf-lead { margin-top: 22px; font-size: 16.5px; } .rl-cf-actions { margin-top: 24px; } }
+
+.rl-cf-grp { position: relative; margin-top: 56px; }
+.rl-cf-mini { display: none; }
+@media (max-width: 639.98px) { .rl-cf .rl-frame[data-size="case"] { --r: 14px; --rim: 8px; } }
+/* pod kadrem: etykieta, pasek postępu strony klienta (tylko w przypiętej scenie), link do strony */
+.rl-cf-rail { display: flex; align-items: center; gap: 18px; min-height: 44px; margin-top: 14px; }
+.rl-cf-rail-l { flex: none; margin: 0; font-size: 14.5px; font-weight: 600; line-height: 1.2; letter-spacing: 0; color: #e2e8f0; }
+.rl-cf-bar { display: none; flex: 1; min-width: 24px; height: 2px; background: rgba(255, 255, 255, .1); }
+.rl-cf-bar > b { display: block; height: 100%; background: rgb(var(--ac)); transform: scaleX(0); transform-origin: 0 50%; }
+.rl-cf-rail-hint { display: none; flex: none; margin: 0; font-size: 14px; line-height: 1.4; color: #94a3b8; }
+.rl-cf-rail .rl-card-site { flex: none; margin-left: auto; }
+
+@keyframes rl-cf-up { from { opacity: 0; transform: translate3d(0, 72px, 0); } }
+@keyframes rl-cf-vis { from { visibility: hidden; } to { visibility: visible; } }
+@media (prefers-reduced-motion: no-preference) {
+  /* kadr wchodzi po tekście (data-cards - useIntro); bezpiecznik 6,5 s tylko na wypadek zepsutego JS */
+  .rl:not([data-cards]) .rl-cf-fr-in { opacity: 0; animation: rl-show .8s ease 6.5s forwards; }
+  .rl[data-cards] .rl-cf-fr-in { animation: rl-cf-up 1.7s var(--rl-ease) both; }
+
+  /* --cf-d = droga sceny w px (case.tsx: wejście + droga strony klienta / 2,4 + oddech) */
+  .rl[data-live] .rl-cf-film { height: calc(100vh + var(--cf-d, 300vh)); padding: 0; }
+  @supports (height: 100svh) { .rl[data-live] .rl-cf-film { height: calc(100svh + var(--cf-d, 300vh)); } }
+  /* overflow: clip (nie hidden) - hidden zrobiłby ze sceny kontener przewijania i zepsuł oś przewijania (sda) */
+  .rl[data-live] .rl-cf-stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: clip; }
+  .rl[data-live] .rl-cf-box { display: flex; flex-direction: column; height: 100%; padding-top: var(--rl-pin-top); padding-bottom: var(--rl-pin-bot); }
+  .rl[data-live] .rl-cf-in { position: relative; display: flex; flex: 1; flex-direction: column; min-height: 0; }
+  /* plansza: tekst wyśrodkowany w pionie nad wystającym kadrem; sama warstwa nie łapie kliknięć (pod nią kadr) */
+  .rl[data-live] .rl-cf-plate { position: absolute; left: 0; right: 0; top: 0; z-index: 2; display: flex; flex-direction: column; justify-content: center; height: calc(100% - var(--cf-peek)); pointer-events: none; }
+  .rl[data-live] .rl-cf-plate a { pointer-events: auto; }
+  .rl[data-live] .rl-cf-title { transform-origin: 0 0; }
+  /* kompozycja końcowa (mała nazwa, kadr, pasek) wyśrodkowana w pionie; --tf = wysokość małej nazwy (case.tsx) */
+  .rl[data-live] .rl-cf-grp { margin: auto 0; padding-top: calc(var(--tf, 44px) + 22px); }
+  .rl[data-live] .rl-cf-fr { transform-origin: 50% 0; }
+  .rl[data-live] .rl-cf-film .rl-cf-rail { opacity: 0; }
+  .rl[data-live] .rl-cf-bar { display: block; }
+  @media (min-width: 1280px) { .rl[data-live] .rl-cf-rail-hint { display: block; } .rl[data-live] .rl-cf-rail .rl-card-site { margin-left: 0; } }
+  /* niski ekran: bez opisu na planszy (nazwa, link i kadr muszą się zmieścić); telefon: adres jest już w pasku kadru */
+  @media (max-height: 620px), (max-width: 639.98px) and (max-height: 720px) { .rl[data-live] .rl-cf-lead { display: none; } }
+  @media (max-width: 639.98px) { .rl[data-live] .rl-cf-domain { display: none; } }
+  /* niski laptop: scena bliżej krawędzi ekranu - okno kadru nie robi się wąską szczeliną */
+  @media (min-width: 1024px) and (max-height: 760px) { .rl.rl-cf[data-live] { --rl-pin-top: 92px; --rl-pin-bot: 24px; } }
+
+  /* Okno kadru: na całą szerokość wrappera i tak wysokie, jak pozwala ekran (szerokie okno „kinowe”), najwyżej 16:9
+     (telefon: pionowe, najwyżej ok. 4:5). 136 px = odstęp nad kadrem 22 + pasek adresu i rama 56 + pasek pod kadrem 58. */
+  @supports (height: 1cqi) {
+    .rl[data-live] .rl-cf-film .rl-frame-view { aspect-ratio: auto; min-height: 180px; height: min(calc(100svh - var(--rl-pin-top) - var(--rl-pin-bot) - var(--tf, 44px) - 136px), 56.25cqi); }
+    @media (max-width: 639.98px) {
+      .rl[data-live] .rl-cf-film .rl-frame-view { height: min(calc(100svh - var(--rl-pin-top) - var(--rl-pin-bot) - var(--tf, 44px) - 130px), 128cqi); }
+    }
+  }
+  /* bez jednostek kontenera: kadr 16:9, nie wyższy niż ekran */
+  @supports not (height: 1cqi) { .rl[data-live] .rl-cf-film .rl-frame { max-width: calc((100vh - 340px) * 1.7778 + 22px); } }
+
+  /* WLOT (propozycja, od 1024 px): tekst po lewej, kadr w głębi po prawej - kamera wlatuje w kadr */
+  @media (min-width: 1024px) {
+    .rl-cf[data-live][data-open="wlot"] .rl-cf-plate { width: 47%; height: 100%; }
+    .rl-cf[data-live][data-open="wlot"] .rl-cf-name { white-space: normal; font-size: clamp(44px, 5.6vw, 96px); }
+    @supports (width: 1cqi) { .rl-cf[data-live][data-open="wlot"] .rl-cf-name { font-size: min(clamp(44px, 5.6vw, 96px), calc(47cqi / (var(--len-s, 10) * .58)), 15vh); } }
+    .rl-cf[data-live][data-open="wlot"] .rl-cf-grp { perspective: 1700px; perspective-origin: 30% 40%; }
+    .rl-cf[data-live][data-open="wlot"] .rl-cf-fr { transform-origin: 0 0; }
+    .rl-cf[data-live][data-open="wlot"] .rl-cf-mini {
+      position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 12px; height: 46px; margin: 0; opacity: 0;
+      font-size: 24px; font-weight: 700; line-height: 1; letter-spacing: -.03em; color: #f8fafc; white-space: nowrap;
+    }
+    .rl-cf-mini .rl-card-num { font-size: 15px; letter-spacing: 0; }
+  }
+}
+
+/* Strona klienta w kadrze przesuwana przez CSS na osi przewijania sceny (dotyk, .rl[data-sda] - jak plansze listy):
+   zakres = faza strony w scenie (--cf-p0 / --cf-p1 z case.tsx). */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .rl[data-sda] .rl-cf-sda { view-timeline: --rlcf block; }
+    .rl[data-sda] .rl-cf-sda .rl-page { animation-timeline: --rlcf; animation-range: contain var(--cf-p0, 25%) contain var(--cf-p1, 95%); animation-timing-function: linear; }
+  }
+}
+
+/* ══ 2. HISTORIA ══ */
+.rl-cf-story { padding-top: 88px; }
+@media (min-width: 1024px) { .rl-cf-story { padding-top: 14vh; } }
+.rl-cf-no { flex: none; font-size: 15px; font-weight: 600; letter-spacing: 0; font-variant-numeric: tabular-nums; color: rgb(var(--ac)); color: color-mix(in srgb, rgb(var(--ac)) 72%, #fff); }
+.rl-cf-big { margin: 0; max-width: 34rem; font-size: clamp(20px, 1.9vw, 27px); font-weight: 600; line-height: 1.34; letter-spacing: -.02em; color: #f8fafc; text-wrap: pretty; }
+.rl-cf-p { margin: 20px 0 0; max-width: 36rem; font-size: 16.5px; line-height: 1.75; color: #cbd5e1; text-wrap: pretty; }
+
+/* Stos kart: czerń luksusowa z ostrym refleksem krawędzi u góry (jak karty „Dlaczego Avenly”) */
+.rl-cf-card { position: relative; border-radius: 26px; transform-origin: 50% 0; }
+.rl-cf-card + .rl-cf-card { margin-top: 20px; }
+.rl-cf-card-in {
+  position: relative; display: flex; flex-direction: column; overflow: hidden; overflow: clip; border-radius: inherit;
+  background: linear-gradient(180deg, #0a0a0c 0%, #050506 46%, #020203 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), inset 0 0 0 1px rgba(255, 255, 255, .07);
+}
+.rl-cf-tab { position: relative; z-index: 2; display: flex; flex: none; align-items: center; gap: 14px; height: var(--cf-step); margin: 0; padding: 0 22px; font-size: 16px; font-weight: 600; line-height: 1; letter-spacing: -.01em; color: #e2e8f0; }
+.rl-cf-card-b { position: relative; display: grid; flex: 1; gap: 26px; padding: 6px 22px 28px; }
+.rl-cf-card-tx { align-self: center; min-width: 0; }
+/* przykryta karta gaśnie (krycie pisze case.tsx) - zakładka zostaje czytelna */
+.rl-cf-shade { position: absolute; inset: 0; z-index: 3; border-radius: inherit; background: #000; opacity: 0; pointer-events: none; }
+
+/* świat karty: kadr w głębi, wychodzi za krawędź karty (01 pusty kadr z adresem klienta, 02 gotowa strona) */
+.rl-cf-world { position: relative; height: 230px; margin: 0 -22px -28px; }
+.rl-cf-world-in { position: absolute; inset: 0; perspective: 900px; perspective-origin: 50% 0; }
+.rl-cf .rl-cf-shot { position: absolute; left: 9%; top: 20px; width: 82%; transform: rotateX(15deg); transform-origin: 50% 0; }
+.rl-cf .rl-cf-shot--back { display: none; }
+.rl-cf-void { position: absolute; inset: 0; background: #070709; }
+.rl-cf-void::before { content: ''; position: absolute; inset: 14px; border-radius: max(2px, calc(var(--r) - 6px)); border: 1px dashed rgba(255, 255, 255, .16); }
+@media (min-width: 1024px) {
+  .rl-cf-tab { padding: 0 48px; }
+  .rl-cf-card-b { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); align-items: center; gap: 56px; padding: 22px 48px 56px; }
+  .rl-cf-card[data-flip] .rl-cf-card-b { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); }
+  .rl-cf-card[data-flip] .rl-cf-card-tx { order: 2; }
+  .rl-cf-card[data-solo] .rl-cf-card-b { grid-template-columns: minmax(0, 1fr); }
+  .rl-cf-world { align-self: stretch; height: auto; min-height: 400px; margin: 0; }
+  .rl-cf-world-in { perspective: 1500px; perspective-origin: 0 50%; }
+  .rl-cf .rl-cf-shot { left: 2%; top: 50%; width: 118%; transform: translate3d(0, -50%, 0) rotateY(-18deg) rotateX(3deg); transform-origin: 0 50%; }
+  .rl-cf .rl-cf-shot--back { display: block; left: 26%; width: 104%; transform: translate3d(0, -62%, -260px) rotateY(-18deg) rotateX(3deg); filter: brightness(.5); }
+  /* karta w lustrze: kadry po lewej, odchylone w drugą stronę */
+  .rl-cf-card[data-flip] .rl-cf-world-in { perspective-origin: 100% 50%; }
+  .rl-cf-card[data-flip] .rl-cf-shot { left: auto; right: 2%; transform: translate3d(0, -50%, 0) rotateY(18deg) rotateX(3deg); transform-origin: 100% 50%; }
+  .rl-cf-card[data-flip] .rl-cf-shot--back { right: 26%; transform: translate3d(0, -62%, -260px) rotateY(18deg) rotateX(3deg); }
+}
+
+/* Przyklejenie kart (data-stack = JS zmierzył wysokości): kolejna karta staje pod zakładką poprzedniej; karta wyższa
+   niż ekran przykleja się dopiero, gdy widać jej dół (--h z case.tsx) - nic nie zostaje ucięte. */
+.rl-cf-stack[data-stack] { padding-bottom: 4vh; }
+.rl-cf-stack[data-stack] .rl-cf-card { position: sticky; top: calc(var(--cf-st0) + var(--i, 0) * var(--cf-step)); top: min(calc(var(--cf-st0) + var(--i, 0) * var(--cf-step)), calc(100vh - var(--h, 0px) - 12px)); }
+@supports (height: 100svh) { .rl-cf-stack[data-stack] .rl-cf-card { top: min(calc(var(--cf-st0) + var(--i, 0) * var(--cf-step)), calc(100svh - var(--h, 0px) - 12px)); } }
+.rl-cf-stack[data-stack] .rl-cf-card + .rl-cf-card { margin-top: 12vh; }
+@media (prefers-reduced-motion: no-preference) {
+  .rl[data-live] .rl-cf-card { opacity: 0; transition: opacity 1.1s var(--rl-ease); }
+  .rl[data-live] .rl-cf-card[data-in] { opacity: 1; }
+}
+
+/* W skrócie: liczby na jednej linii (kreska w kolorze realizacji jak znacznik wymiaru), pod nimi zakres i technologia */
+.rl-cf-stats { display: grid; margin: 0; border-top: 1px solid var(--rl-line); }
+.rl-cf-stat { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 16px; min-width: 0; padding: 16px 0; border-bottom: 1px solid var(--rl-line); }
+.rl-cf-stat::before { content: ''; position: absolute; left: 0; top: -1px; width: 26px; height: 2px; background: rgb(var(--ac)); }
+.rl-cf-stat dd { flex: none; margin: 0; font-size: 24px; font-weight: 700; line-height: 1.05; letter-spacing: -.03em; color: #f8fafc; }
+.rl-cf-stat dt { font-size: 14px; line-height: 1.4; color: #94a3b8; text-wrap: balance; }
+@media (min-width: 640px) {
+  .rl-cf-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); border-bottom: 1px solid var(--rl-line); }
+  .rl-cf-stat { flex-direction: column-reverse; align-items: flex-start; justify-content: flex-end; gap: 10px; padding: 26px 24px 24px 0; border-bottom: 0; }
+  .rl-cf-stat + .rl-cf-stat { padding-left: 24px; border-left: 1px solid var(--rl-line); }
+  .rl-cf-stat + .rl-cf-stat::before { left: 24px; }
+  .rl-cf-stat dd { flex: initial; font-size: clamp(24px, 2.5vw, 38px); text-wrap: balance; }
+}
+.rl-cf-lists { display: grid; gap: 34px; margin-top: 36px; }
+@media (min-width: 768px) { .rl-cf-lists { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 64px; margin-top: 44px; } }
+/* nagłówek listy wyraźnie nad pozycjami: większy, grubszy, bielszy */
+.rl-cf-lh { margin: 0 0 12px; font-size: 19px; font-weight: 700; line-height: 1.2; letter-spacing: -.015em; color: #f8fafc; }
+.rl-cf-list { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--rl-line); }
+.rl-cf-list li { position: relative; padding: 13px 0 13px 22px; border-bottom: 1px solid var(--rl-line); font-size: 16px; line-height: 1.45; color: #e2e8f0; }
+.rl-cf-list li::before { content: ''; position: absolute; left: 1px; top: 50%; width: 8px; height: 1px; background: rgb(var(--ac)); }
+
+/* Rozdziały (propozycja): pierwotny układ w kolumnach - tytuł rozdziału stoi przyklejony po lewej, tekst płynie obok */
+.rl-cf-ch { display: grid; gap: 22px; padding: 52px 0; border-top: 1px solid var(--rl-line); }
+.rl-cf-ch:first-child { padding-top: 0; border-top: 0; }
+.rl-cf-ch-h { display: flex; flex-direction: column; gap: 12px; margin: 0; font-size: clamp(30px, 3.6vw, 54px); font-weight: 700; line-height: 1.02; letter-spacing: -.04em; color: #f8fafc; }
+.rl-cf-ch .rl-cf-big { max-width: 40rem; font-size: clamp(21px, 2.2vw, 32px); }
+.rl-cf-ch .rl-cf-p { max-width: 40rem; font-size: 17.5px; }
+.rl-cf-ch-shots { display: grid; gap: 28px; margin-top: 44px; }
+@media (min-width: 768px) { .rl-cf-ch-shots[data-n="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1024px) {
+  .rl-cf-ch { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: 64px; padding: 96px 0; }
+  .rl-cf-ch-head { position: sticky; top: 124px; align-self: start; }
+}
+
+/* Pytanie z jedynym CTA serwisu - na liniach, tekst przy lewej krawędzi wrappera, przycisk przy prawej */
+.rl-cf-ask { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 22px 32px; margin-top: 88px; padding: 36px 0; border-top: 1px solid var(--rl-line); border-bottom: 1px solid var(--rl-line); }
+@media (min-width: 1024px) { .rl-cf-ask { margin-top: 14vh; padding: 48px 0; } }
+.rl-cf-ask-t { margin: 0; max-width: 20ch; font-size: clamp(26px, 3.1vw, 46px); font-weight: 700; line-height: 1.08; letter-spacing: -.035em; color: #f8fafc; text-wrap: balance; }
+@media (max-width: 639.98px) { .rl-cf-ask .rl-cta { width: 100%; } }
+
+/* ══ 3. NASTĘPNA REALIZACJA: jej plansza i kadr wystający zza dolnej krawędzi (tak zaczyna się jej podstrona) ══ */
+.rl-cf-next { padding-top: 88px; overflow: hidden; overflow: clip; }
+@media (min-width: 1024px) { .rl-cf-next { padding-top: 15vh; } }
+.rl-cf-next-box { container-type: inline-size; }
+.rl-cf-next-label { margin: 0 0 20px; font-size: 15px; line-height: 1.3; color: #94a3b8; }
+.rl-cf-next-link { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 12px 24px; color: #f8fafc; text-decoration: none; -webkit-tap-highlight-color: transparent; }
+.rl-cf-next-link:focus-visible { outline: 2px solid #60a5fa; outline-offset: 6px; border-radius: 12px; }
+.rl-cf-next-meta { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: 15px; line-height: 1.3; color: #94a3b8; }
+.rl-cf-next-name { min-width: 0; font-size: clamp(34px, 11vw, 88px); font-weight: 700; line-height: .98; letter-spacing: -.05em; text-wrap: balance; overflow-wrap: anywhere; }
+.rl-cf-next-line { display: block; }
+.rl-cf-next-arrow { width: clamp(30px, 4.4vw, 60px); height: clamp(30px, 4.4vw, 60px); margin-bottom: .1em; }
+@supports (width: 1cqi) {
+  .rl-cf-next-name { overflow-wrap: normal; font-size: min(clamp(34px, 12vw, 88px), calc((100cqi - 60px) / (var(--len-s, 10) * .58))); }
+  @media (min-width: 1024px) {
+    .rl-cf-next-name { white-space: nowrap; font-size: min(clamp(56px, 9.4vw, 164px), calc((100cqi - 96px) / (var(--len, 16) * .54)), 20vh); }
+  }
+}
+@media (hover: hover) { .rl-cf-next-link:hover .rl-cf-next-arrow, .rl-cf-next:has(.rl-frame-hit:hover) .rl-cf-next-arrow { transform: translateX(8px); } }
+/* widać tylko górę kadru - reszta gaśnie w czerń końca strony (maska, nie nakładka z równą krawędzią) */
+.rl-cf-next-fr {
+  height: clamp(170px, 34vh, 360px); margin-top: 44px; overflow: hidden; overflow: clip;
+  -webkit-mask-image: linear-gradient(180deg, #000 38%, transparent 97%); mask-image: linear-gradient(180deg, #000 38%, transparent 97%);
+}
+@media (min-width: 1024px) { .rl-cf-next-fr { margin-top: 56px; } }
+@media (prefers-reduced-motion: no-preference) {
+  .rl[data-live] .rl-cf-next-label, .rl[data-live] .rl-cf-next-meta, .rl[data-live] .rl-cf-next-arrow { opacity: 0; transition: opacity 1s var(--rl-ease) .1s, transform .5s var(--rl-ease); }
+  .rl[data-live] .rl-cf-next-line { transform: translate3d(0, 108%, 0); transition: transform 1.3s cubic-bezier(.19, 1, .22, 1) .12s; }
+  .rl[data-live] .rl-cf-next[data-in] :is(.rl-cf-next-label, .rl-cf-next-meta, .rl-cf-next-arrow) { opacity: 1; }
+  .rl[data-live] .rl-cf-next[data-in] .rl-cf-next-arrow { transition-delay: .5s, 0s; }
+  .rl[data-live] .rl-cf-next[data-in] .rl-cf-next-line { transform: none; }
+}
+
+/* „Wlot” na wąskim ekranie: kadr leży pochylony w głąb i prostuje się, gdy wjeżdża (obrót pisze case.tsx) */
+@media (max-width: 1023.98px) and (prefers-reduced-motion: no-preference) {
+  .rl-cf[data-live][data-open="wlot"] .rl-cf-grp { perspective: 1200px; perspective-origin: 50% 0; }
+}
+
+/* ══ PROPOZYCJA „OBOK”: historia po jednej stronie, wysoki kadr przyklejony po drugiej na całą podstronę ══ */
+.rl-cf-ob { position: relative; }
+.rl-cf-ob-head { container-type: inline-size; padding: 112px 0 36px; }
+.rl .rl-cf-ob-name, .rl .rl-cf-nar-name { margin: 0; font-weight: 700; line-height: .98; letter-spacing: -.05em; color: #f8fafc; text-wrap: balance; overflow-wrap: anywhere; }
+.rl .rl-cf-ob-name { font-size: clamp(38px, 12vw, 84px); }
+@supports (width: 1cqi) { .rl .rl-cf-ob-name { overflow-wrap: normal; font-size: min(clamp(38px, 12vw, 84px), calc(100cqi / (var(--len-s, 10) * .58))); } }
+@supports (overflow: clip) { .rl-cf-ob-name .rl-mask, .rl-cf-nar-name .rl-mask { overflow-x: visible; overflow-y: clip; } }
+.rl-cf-ob-h { display: flex; align-items: baseline; gap: 14px; margin: 0 0 20px; font-size: clamp(26px, 2.6vw, 40px); font-weight: 700; line-height: 1.08; letter-spacing: -.035em; color: #f8fafc; }
+.rl-cf-ob-ch { padding: 36px 0; }
+/* wąska kolumna: liczby w wierszach, listy jedna pod drugą */
+.rl-cf-ob-ch .rl-cf-stats { grid-template-columns: minmax(0, 1fr); border-bottom: 0; }
+.rl-cf-ob-ch .rl-cf-stat { flex-direction: row; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--rl-line); }
+.rl-cf-ob-ch .rl-cf-stat + .rl-cf-stat { padding-left: 0; border-left: 0; }
+.rl-cf-ob-ch .rl-cf-stat + .rl-cf-stat::before { left: 0; }
+.rl-cf-ob-ch .rl-cf-stat dd { flex: none; font-size: 24px; }
+.rl-cf-ob-ch .rl-cf-lists { grid-template-columns: minmax(0, 1fr); gap: 30px; margin-top: 32px; }
+@media (min-width: 1024px) {
+  .rl[data-live] .rl-cf-ob-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); column-gap: 64px; }
+  .rl[data-live] .rl-cf-ob-head { grid-column: 1; display: flex; flex-direction: column; justify-content: center; min-height: 100vh; min-height: 100svh; padding: var(--rl-pin-top) 0 var(--rl-pin-bot); }
+  .rl[data-live] .rl-cf-ob-side { grid-column: 2; grid-row: 1 / span 4; }
+  .rl[data-live] .rl-cf-ob-stick { position: sticky; top: var(--rl-pin-top); }
+  /* okno kadru na całą wysokość ekranu: 114 px = pasek adresu i rama 56 + pasek pod kadrem 58 */
+  .rl[data-live] .rl-cf-ob .rl-frame-view { aspect-ratio: auto; min-height: 260px; height: calc(100vh - var(--rl-pin-top) - var(--rl-pin-bot) - 114px); }
+  @supports (height: 100svh) { .rl[data-live] .rl-cf-ob .rl-frame-view { height: calc(100svh - var(--rl-pin-top) - var(--rl-pin-bot) - 114px); } }
+  .rl[data-live] .rl-cf-ob .rl-cf-bar { display: block; }
+  .rl[data-live] .rl-cf-ob-ch { grid-column: 1; display: flex; flex-direction: column; justify-content: center; min-height: 80vh; padding: 0; }
+  .rl[data-live] .rl-cf-ob-ch:last-child { margin-bottom: 10vh; }
+}
+@media (max-width: 1023.98px) {
+  /* telefon i tablet: kadr przykleja się u góry ekranu, historia przewija się pod nim (pas gaśnie miękko, bez równej krawędzi) */
+  .rl[data-live] .rl-cf-ob-side { position: sticky; top: 0; z-index: 3; margin: 0 -24px; padding: 68px 24px 34px; background: linear-gradient(180deg, rgba(5, 5, 5, 0), #050505 40px, #050505 calc(100% - 34px), rgba(5, 5, 5, 0)); }
+  .rl[data-live] .rl-cf-ob .rl-frame-view { aspect-ratio: auto; min-height: 168px; height: 30vh; height: 30svh; }
+  .rl[data-live] .rl-cf-ob .rl-cf-rail { display: none; }
+  .rl[data-live] .rl-cf-ob-ch:last-child { padding-bottom: 18vh; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  /* rozdział przy linii czytania w pełnym świetle, pozostałe przygaszone (data-on z case.tsx) */
+  .rl[data-live] .rl-cf-ob-ch { opacity: .4; transition: opacity .7s var(--rl-ease); }
+  .rl[data-live] .rl-cf-ob-ch[data-on] { opacity: 1; }
+}
+
+/* ══ PROPOZYCJA „TAŚMA”: kamera jedzie w bok po pięciu planszach (przesunięcie toru pisze case.tsx) ══ */
+.rl-cf-ta { position: relative; padding-top: 112px; }
+.rl-cf-ta-track { display: grid; gap: 72px; }
+.rl-cf-ta-p { container-type: inline-size; min-width: 0; }
+.rl-cf-ta-tx { display: grid; gap: 28px; }
+.rl-cf-ta-pic, .rl-cf-ta-count { display: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .rl[data-live] .rl-cf-ta { height: calc(100vh + var(--cf-d, 400vh)); padding: 0; }
+  @supports (height: 100svh) { .rl[data-live] .rl-cf-ta { height: calc(100svh + var(--cf-d, 400vh)); } }
+  .rl[data-live] .rl-cf-ta-stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: clip; }
+  .rl[data-live] .rl-cf-ta-box { display: flex; flex-direction: column; height: 100%; padding-top: var(--rl-pin-top); padding-bottom: var(--rl-pin-bot); }
+  .rl[data-live] .rl-cf-ta-track { display: flex; flex: 1; align-items: center; gap: 64px; min-height: 0; }
+  .rl[data-live] .rl-cf-ta-p { flex: 0 0 100%; max-height: 100%; }
+  .rl[data-live] .rl-cf-ta .rl-cf-bar { display: block; }
+  /* licznik plansz z linią postępu (jak w sekcji Blog na stronie głównej) */
+  .rl[data-live] .rl-cf-ta-count { display: flex; flex: none; align-items: center; gap: 4px; height: 32px; margin: 12px 0 0; font-size: 14px; line-height: 1; font-variant-numeric: tabular-nums; color: #94a3b8; }
+  .rl-cf-ta-count b { font-weight: 600; color: #f8fafc; }
+  .rl-cf-ta-count i { flex: none; width: min(180px, 30vw); height: 2px; margin-left: 14px; background: rgba(255, 255, 255, .1); }
+  .rl-cf-ta-count em { display: block; height: 100%; background: rgb(var(--ac)); transform: scaleX(0); transform-origin: 0 50%; }
+  /* 158 px = pasek adresu i rama 56 + pasek pod kadrem 58 + licznik 44 */
+  @supports (height: 1cqi) {
+    .rl[data-live] .rl-cf-ta .rl-frame-view { aspect-ratio: auto; min-height: 180px; height: min(calc(100svh - var(--rl-pin-top) - var(--rl-pin-bot) - 158px), 56.25cqi); }
+    @media (max-width: 639.98px) { .rl[data-live] .rl-cf-ta .rl-frame-view { height: min(calc(100svh - var(--rl-pin-top) - var(--rl-pin-bot) - 152px), 128cqi); } }
+  }
+  @supports not (height: 1cqi) { .rl[data-live] .rl-cf-ta .rl-frame { max-width: calc((100vh - 360px) * 1.7778 + 22px); } }
+  @media (min-width: 1024px) {
+    .rl[data-live] .rl-cf-ta-tx { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); align-items: center; gap: 64px; }
+    .rl[data-live] .rl-cf-ta-pic { display: block; }
+  }
+  @media (max-width: 639.98px) {
+    /* telefon: plansza z tekstem musi zmieścić się na ekranie - pismo i odstępy z wysokości ekranu */
+    .rl[data-live] .rl-cf-ta .rl-cf-ob-h { margin-bottom: 12px; font-size: 24px; }
+    .rl[data-live] .rl-cf-ta .rl-cf-big { font-size: clamp(15px, 2.6vh, 19px); }
+    .rl[data-live] .rl-cf-ta .rl-cf-p { margin-top: 12px; font-size: clamp(13px, 2.2vh, 16px); line-height: 1.6; }
+    .rl[data-live] .rl-cf-ta .rl-cf-stat { padding: 10px 0; }
+    .rl[data-live] .rl-cf-ta .rl-cf-stat dd { font-size: 20px; }
+    .rl[data-live] .rl-cf-ta .rl-cf-lists { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 22px; }
+    .rl[data-live] .rl-cf-ta .rl-cf-lh { margin-bottom: 8px; font-size: 16px; }
+    .rl[data-live] .rl-cf-ta .rl-cf-list li { padding: 9px 0 9px 16px; font-size: 13.5px; }
+  }
+}
+
+/* ══ PROPOZYCJA „SEANS”: kadr jak ekran w kinie, pod nim narrator - jedno zdanie naraz (krycie pisze case.tsx) ══ */
+.rl-cf-se { position: relative; padding-top: 112px; }
+.rl-cf-se-fr { container-type: inline-size; }
+.rl-cf-nar { margin-top: 40px; }
+.rl-cf-nar-i + .rl-cf-nar-i { margin-top: 28px; }
+.rl-cf-nar-t { container-type: inline-size; }
+.rl .rl-cf-nar-name { font-size: clamp(32px, 10vw, 72px); }
+@supports (width: 1cqi) { .rl .rl-cf-nar-name { overflow-wrap: normal; font-size: min(clamp(32px, 10vw, 72px), calc(100cqi / (var(--len-s, 10) * .58))); } }
+.rl-cf-nar-t .rl-cf-lead { margin-top: 16px; }
+.rl-cf-nar-l { display: flex; align-items: baseline; gap: 12px; margin: 0 0 12px; font-size: 15.5px; font-weight: 600; line-height: 1.2; letter-spacing: 0; color: #e2e8f0; }
+.rl-cf-nar-s { margin: 0; max-width: 50rem; font-size: clamp(19px, 2vw, 29px); font-weight: 600; line-height: 1.34; letter-spacing: -.02em; color: #f8fafc; text-wrap: pretty; }
+.rl-cf-story--after { padding-top: 56px; }
+@media (prefers-reduced-motion: no-preference) {
+  /* scena bliżej krawędzi ekranu - więcej miejsca na ekran „kina” */
+  .rl.rl-cf[data-live][data-v="seans"] { --rl-pin-top: 76px; --rl-pin-bot: 20px; }
+  @media (min-width: 1024px) { .rl.rl-cf[data-live][data-v="seans"] { --rl-pin-top: 92px; --rl-pin-bot: 28px; } }
+  /* --cf-nar = wysokość pola narratora (mieści najdłuższe zdanie) */
+  .rl[data-live] .rl-cf-se { --cf-nar: clamp(200px, 37vh, 300px); height: calc(100vh + var(--cf-d, 500vh)); padding: 0; }
+  @supports (height: 100svh) { .rl[data-live] .rl-cf-se { --cf-nar: clamp(200px, 37svh, 300px); height: calc(100svh + var(--cf-d, 500vh)); } }
+  @media (min-width: 1024px) { .rl[data-live] .rl-cf-se { --cf-nar: clamp(200px, 23.5vh, 270px); } }
+  .rl[data-live] .rl-cf-se-stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: clip; }
+  .rl[data-live] .rl-cf-se-box { display: flex; flex-direction: column; justify-content: center; gap: 24px; height: 100%; padding-top: var(--rl-pin-top); padding-bottom: var(--rl-pin-bot); }
+  .rl[data-live] .rl-cf-se-fr { flex: none; }
+  .rl[data-live] .rl-cf-se-bar { display: block; margin-top: 12px; }
+  /* 94 px = pasek adresu i rama 56 + pasek postępu 14 + odstęp 24 */
+  @supports (height: 1cqi) {
+    .rl[data-live] .rl-cf-se .rl-frame-view { aspect-ratio: auto; min-height: 150px; height: min(calc(100svh - var(--rl-pin-top) - var(--rl-pin-bot) - var(--cf-nar) - 94px), 56.25cqi); }
+    @media (max-width: 639.98px) { .rl[data-live] .rl-cf-se .rl-frame-view { height: min(calc(100svh - var(--rl-pin-top) - var(--rl-pin-bot) - var(--cf-nar) - 88px), 100cqi); } }
+  }
+  @supports not (height: 1cqi) { .rl[data-live] .rl-cf-se .rl-frame { max-width: calc((100vh - 560px) * 1.7778 + 22px); } }
+  .rl[data-live] .rl-cf-nar { position: relative; flex: none; height: var(--cf-nar); margin: 0; }
+  .rl[data-live] .rl-cf-nar-i { position: absolute; inset: 0; display: flex; flex-direction: column; margin: 0; }
+  .rl[data-live] .rl-cf-nar-i + .rl-cf-nar-i { opacity: 0; }
+  @media (max-width: 639.98px) {
+    .rl[data-live] .rl-cf-nar-s { font-size: clamp(16px, 2.75vh, 21px); }
+    .rl[data-live] .rl-cf-nar-t .rl-cf-lead { margin-top: 12px; font-size: 15.5px; line-height: 1.55; }
+  }
+  @media (max-width: 639.98px) and (max-height: 700px) { .rl[data-live] .rl-cf-nar-t .rl-cf-lead { display: none; } }
+  /* niski, szeroki ekran: ekran „kina” po lewej, narrator po prawej (pod kadrem okno byłoby wąską szczeliną) */
+  @media (min-width: 1024px) and (max-height: 799.98px) {
+    .rl[data-live] .rl-cf-se { --cf-nar: calc(100vh - 120px); }
+    .rl[data-live] .rl-cf-se-box { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); align-items: center; gap: 0 56px; }
+    @supports (height: 1cqi) { .rl[data-live] .rl-cf-se .rl-frame-view { height: min(calc(100svh - var(--rl-pin-top) - var(--rl-pin-bot) - 70px), 62cqi); } }
+    .rl[data-live] .rl-cf-nar-i { justify-content: center; }
+    .rl[data-live] .rl-cf-nar-s { font-size: clamp(18px, 1.75vw, 24px); }
+    .rl .rl-cf-nar-name { font-size: clamp(32px, 4vw, 58px); }
+    @supports (width: 1cqi) { .rl .rl-cf-nar-name { font-size: min(clamp(32px, 4vw, 58px), calc(100cqi / (var(--len-s, 10) * .58))); } }
+  }
+}
+
+/* ════ DRUGA PIĄTKA PROPOZYCJI (case-more.tsx) ════ */
+/* liczby w wierszach - wąskie kolumny (Klasyczna: obok nagłówka, Droga: stacja 03) */
+:is(.rl-cf-stats--rows, .rl-cf-dr-tx .rl-cf-stats) { grid-template-columns: minmax(0, 1fr); border-bottom: 0; }
+:is(.rl-cf-stats--rows, .rl-cf-dr-tx .rl-cf-stats) .rl-cf-stat { flex-direction: row; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--rl-line); }
+:is(.rl-cf-stats--rows, .rl-cf-dr-tx .rl-cf-stats) .rl-cf-stat + .rl-cf-stat { padding-left: 0; border-left: 0; }
+:is(.rl-cf-stats--rows, .rl-cf-dr-tx .rl-cf-stats) .rl-cf-stat + .rl-cf-stat::before { left: 0; }
+:is(.rl-cf-stats--rows, .rl-cf-dr-tx .rl-cf-stats) .rl-cf-stat dd { flex: none; font-size: 24px; }
+
+/* ══ „KLASYCZNA”: układ dawnej wersji - nagłówek z liczbami obok, przyklejony kadr (style .rl-cs-live w realizacje.css),
+   punkt wyjścia i rozwiązanie w dwóch kolumnach, zakres obok technologii, galeria ══ */
+/* Runda 4 (właściciel: bez „niepotrzebnych rzeczy typu grupy w akademii”, punkt wyjścia i rozwiązanie „dziwnie
+   wyglądały”): bez liczb - obok nazwy stoi opis z linkiem; punkt wyjścia i rozwiązanie to dwie równe kolumny na jednej
+   linii (znacznik w kolorze realizacji, numer, tytuł, spokojne akapity), pod nimi w tych samych kolumnach zakres
+   i technologia. */
+.rl-cf-kl-hero { padding: 112px 0 64px; }
+.rl-cf-kl-top { display: grid; gap: 28px; align-items: end; }
+.rl-cf-kl-copy { container-type: inline-size; }
+.rl .rl-cf-kl-side .rl-cf-lead { margin-top: 0; }
+/* kadr „Strona na żywo” na całą szerokość wrappera, tak wysoki, jak pozwala ekran (najwyżej 16:9; telefon: wyższe okno) */
+.rl-cf-kl-fr { container-type: inline-size; }
+@supports (height: 1cqi) {
+  .rl-cs-live .rl-cf-kl-fr .rl-frame { max-width: none; }
+  .rl-cs-live .rl-cf-kl-fr .rl-frame .rl-frame-view { aspect-ratio: auto; min-height: 160px; height: min(calc(100svh - 236px), 56.25cqi); }
+  @media (max-width: 639.98px) { .rl-cs-live .rl-cf-kl-fr .rl-frame .rl-frame-view { height: min(calc(100svh - 230px), 110cqi); } }
+}
+.rl-cf-kl-pair { display: grid; border-top: 1px solid var(--rl-line); }
+.rl-cf-kl-part { position: relative; padding: 30px 0 44px; }
+.rl-cf-kl-part::before { content: ''; position: absolute; left: 0; top: -1px; width: 26px; height: 2px; background: rgb(var(--ac)); }
+.rl-cf-kl-part + .rl-cf-kl-part { border-top: 1px solid var(--rl-line); }
+.rl-cf-kl-no { margin: 0 0 10px; font-size: 15px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; color: rgb(var(--ac)); color: color-mix(in srgb, rgb(var(--ac)) 72%, #fff); }
+.rl-cf-kl-h { margin: 0 0 22px; font-size: clamp(26px, 2.4vw, 34px); font-weight: 700; line-height: 1.12; letter-spacing: -.03em; color: #f8fafc; }
+.rl-cf-kl-p { margin: 0; max-width: 35rem; font-size: 17px; line-height: 1.75; color: #cbd5e1; text-wrap: pretty; }
+.rl-cf-kl-p + .rl-cf-kl-p { margin-top: 16px; }
+.rl-cf-kl-h + .rl-cf-kl-p { color: #f1f5f9; }
+.rl-cf-kl-facts { padding-top: 44px; border-top: 1px solid var(--rl-line); }
+.rl-cf-kl-facts .rl-cf-lists { margin-top: 0; }
+.rl-cf-kl-gal { margin-top: 88px; }
+.rl-cf-kl-sub { margin: 0 0 24px; font-size: 22px; font-weight: 700; line-height: 1.2; letter-spacing: -.02em; color: #f8fafc; }
+.rl-cf-kl-gal .rl-cf-ch-shots { margin-top: 0; }
+@media (min-width: 1024px) {
+  .rl-cf-kl-hero { padding: 148px 0 88px; }
+  .rl-cf-kl-top { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 64px; }
+  .rl-cf-kl-pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rl-cf-kl-part { padding: 36px 56px 64px 0; }
+  .rl-cf-kl-part + .rl-cf-kl-part { padding: 36px 0 64px 56px; border-top: 0; border-left: 1px solid var(--rl-line); }
+  .rl-cf-kl-part + .rl-cf-kl-part::before { left: 56px; }
+  /* zakres pod punktem wyjścia, technologia pod rozwiązaniem - te same krawędzie kolumn */
+  .rl-cf-kl-facts { padding-top: 56px; }
+  .rl-cf-kl-facts .rl-cf-lists { gap: 112px; }
+  .rl-cf-kl-gal { margin-top: 120px; }
+}
+
+/* ══ „GŁĘBIA”: plansze Taśmy stoją jedna za drugą, kamera leci przez nie w głąb (skalę i krycie pisze case.tsx) ══ */
+@media (prefers-reduced-motion: no-preference) {
+  .rl[data-live] .rl-cf-ta[data-axis="z"] .rl-cf-ta-track { display: grid; align-items: center; gap: 0; }
+  .rl[data-live] .rl-cf-ta[data-axis="z"] .rl-cf-ta-p { grid-area: 1 / 1; transform-origin: 50% 50%; }
+  .rl[data-live] .rl-cf-ta[data-axis="z"] .rl-cf-ta-p + .rl-cf-ta-p { opacity: 0; }
+}
+
+/* ══ „REDAKCJA”: artykuł w magazynie - wielki tytuł, metryczka na liniach, tekst w szpaltach z inicjałem, wyimek ══ */
+.rl-cf-rd-head { padding-top: 112px; }
+.rl-cf-rd-title { container-type: inline-size; }
+.rl .rl-cf-rd-name { margin: 0; font-size: clamp(44px, 11vw, 148px); font-weight: 700; line-height: .95; letter-spacing: -.055em; color: #f8fafc; text-wrap: balance; overflow-wrap: anywhere; }
+@supports (width: 1cqi) { .rl .rl-cf-rd-name { overflow-wrap: normal; font-size: min(clamp(44px, 11vw, 148px), calc(100cqi / (var(--len-s, 10) * .58))); } }
+@supports (overflow: clip) { .rl-cf-rd-name .rl-mask { overflow-x: visible; overflow-y: clip; } }
+.rl-cf-rd-deck { margin: 28px 0 0; max-width: 46rem; font-size: clamp(19px, 1.9vw, 27px); font-weight: 500; line-height: 1.4; letter-spacing: -.015em; color: #e2e8f0; text-wrap: pretty; }
+.rl-cf-rd-by { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 24px; margin: 40px 0 0; border-top: 1px solid var(--rl-line); border-bottom: 1px solid var(--rl-line); }
+.rl-cf-rd-by > div { min-width: 0; padding: 16px 0; }
+.rl-cf-rd-by dt { font-size: 13.5px; line-height: 1.4; color: #94a3b8; }
+.rl-cf-rd-by dd { margin: 4px 0 0; font-size: 16px; font-weight: 600; line-height: 1.4; color: #f8fafc; overflow-wrap: anywhere; }
+.rl-cf-rd-a { color: inherit; text-decoration: underline; text-decoration-color: rgb(var(--ac)); text-decoration-thickness: 2px; text-underline-offset: 4px; }
+.rl-cf-rd-a:focus-visible { outline: 2px solid #60a5fa; outline-offset: 3px; border-radius: 4px; }
+.rl-cf-rd-hero { margin-top: 56px; }
+.rl-cf-rd-body { padding-top: 88px; }
+.rl-cf-rd-sec { display: grid; gap: 20px; }
+.rl-cf-rd-sec .rl-cf-ob-h { margin: 0; font-size: clamp(24px, 2.2vw, 32px); }
+.rl-cf-rd-p { margin: 0; font-size: 17.5px; line-height: 1.75; color: #cbd5e1; text-wrap: pretty; }
+.rl-cf-rd-first::first-letter { float: left; margin: .05em .1em 0 0; font-size: 4.4em; font-weight: 700; line-height: .8; color: #f8fafc; }
+.rl-cf-rd-quote { margin: 64px 0; padding: 40px 0; border-top: 1px solid var(--rl-line); border-bottom: 1px solid var(--rl-line); }
+.rl-cf-rd-quote p { margin: 0; font-size: clamp(25px, 3.5vw, 50px); font-weight: 700; line-height: 1.12; letter-spacing: -.035em; color: #f8fafc; text-wrap: balance; }
+.rl-cf-rd-quote p::before { content: ''; display: block; width: 44px; height: 3px; margin-bottom: 26px; background: rgb(var(--ac)); }
+.rl-cf-rd-shots { margin: 64px 0; }
+@media (min-width: 768px) { .rl-cf-rd-by { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 1024px) {
+  .rl-cf-rd-head { padding-top: 148px; }
+  .rl-cf-rd-hero { margin-top: 72px; }
+  .rl-cf-rd-body { padding-top: 120px; }
+  .rl-cf-rd-sec { grid-template-columns: minmax(0, 3fr) minmax(0, 9fr); align-items: start; gap: 56px; }
+  .rl-cf-rd-p { columns: 2; column-gap: 56px; }
+  .rl-cf-rd-quote, .rl-cf-rd-shots { margin: 96px 0; }
+  .rl-cf-rd-quote { padding: 56px 0; }
+}
+
+/* ══ „DROGA”: linia rysuje się w dół przez stacje (wypełnienie pisze case-more.tsx), stacja zapala się przy czole linii ══ */
+.rl-cf-dr-head { padding: 112px 0 64px; }
+.rl-cf-dr { position: relative; }
+.rl-cf-dr-line { position: absolute; left: 0; top: 6px; bottom: 0; width: 1px; background: rgba(255, 255, 255, .12); }
+.rl-cf-dr-line > b { display: block; width: 100%; height: 100%; background: rgb(var(--ac)); transform: scaleY(0); transform-origin: 50% 0; }
+.rl-cf-dr-st { position: relative; display: grid; gap: 28px; padding: 0 0 72px 30px; }
+.rl-cf-dr-st::before { content: ''; position: absolute; left: -4px; top: 12px; width: 9px; height: 9px; border-radius: 50%; background: #050505; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .45); transition: background-color .6s ease, box-shadow .6s ease; }
+.rl-cf-dr-st[data-on]::before { background: rgb(var(--ac)); box-shadow: 0 0 0 4px rgb(var(--ac) / .16); }
+.rl-cf-dr-tx .rl-cf-lists { grid-template-columns: minmax(0, 1fr); gap: 30px; margin-top: 32px; }
+.rl-cf-dr-end { padding-bottom: 0; }
+@media (min-width: 1024px) {
+  .rl-cf-dr-head { padding: 148px 0 12vh; }
+  .rl-cf-dr-head .rl-cf-kl-copy { max-width: 60rem; }
+  .rl-cf-dr-line { left: 50%; }
+  .rl-cf-dr-st { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: center; gap: 0 120px; padding: 0 0 14vh; }
+  .rl-cf-dr-st::before { left: calc(50% - 4px); top: 16px; }
+  .rl-cf-dr-st[data-flip] .rl-cf-dr-tx { order: 2; }
+  /* koniec drogi: nagłówek w lewej połowie, pod nim kadr na całą szerokość (linia kończy się na jego górnej krawędzi) */
+  .rl-cf-dr-end { grid-template-columns: minmax(0, 1fr); gap: 28px; padding: 0; }
+  .rl-cf-dr-end .rl-cf-ob-h { max-width: calc(50% - 60px); margin-bottom: 0; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .rl[data-live] .rl-cf-dr-st > * { opacity: .28; transform: translate3d(0, 18px, 0); transition: opacity 1s var(--rl-ease), transform 1.2s var(--rl-ease); }
+  .rl[data-live] .rl-cf-dr-st[data-on] > * { opacity: 1; transform: none; }
+}
+
+/* ══ „KROPKA”: kropka przy nazwie otwiera się jak przysłona na cały ekran (clip-path pisze case-more.tsx);
+   w oknie sama strona klienta, bez ramy ══ */
+.rl-cf-ko { position: relative; padding-top: 112px; }
+.rl-cf-ko-plate { position: relative; container-type: inline-size; }
+.rl-cf-ko-dot { display: inline-block; width: .17em; height: .17em; margin-left: .05em; border-radius: 50%; background: rgb(var(--ac)); }
+.rl-cf-ko-win { position: relative; max-width: 1280px; margin: 56px auto 0; padding: 0 24px; }
+.rl-cf-ko-bar { display: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .rl[data-live] .rl-cf-ko { height: calc(100vh + var(--cf-d, 400vh)); padding: 0; }
+  @supports (height: 100svh) { .rl[data-live] .rl-cf-ko { height: calc(100svh + var(--cf-d, 400vh)); } }
+  .rl[data-live] .rl-cf-ko-stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: clip; }
+  .rl[data-live] .rl-cf-ko-box { display: flex; flex-direction: column; justify-content: center; height: 100%; padding-top: var(--rl-pin-top); padding-bottom: var(--rl-pin-bot); }
+  /* przed pierwszym pomiarem okno zamknięte (inaczej strona klienta mignęłaby na cały ekran) */
+  .rl[data-live] .rl-cf-ko-win { position: absolute; inset: 0; z-index: 3; max-width: none; margin: 0; padding: 0; background: #050505; -webkit-clip-path: circle(0 at 50% 50%); clip-path: circle(0 at 50% 50%); }
+  /* okno (na początku wielkości kropki) pokazuje się dopiero, gdy nazwa wysunie się spod maski */
+  .rl[data-live]:not([data-go]) .rl-cf-ko-win { visibility: hidden; }
+  .rl[data-live][data-go] .rl-cf-ko-win { animation: rl-cf-vis 0s 1.7s both; }
+  /* kropka w kolorze realizacji staje się oknem: barwa schodzi (--tint z case-more.tsx) */
+  .rl[data-live] .rl-cf-ko-win::after { content: ''; position: absolute; inset: 0; z-index: 4; background: rgb(var(--ac)); opacity: var(--tint, 1); pointer-events: none; }
+  .rl[data-live] .rl-cf-ko-win .rl-frame { position: absolute; inset: 0; }
+  .rl[data-live] .rl-cf-ko-win .rl-frame::before, .rl[data-live] .rl-cf-ko-win .rl-frame-rim::before, .rl[data-live] .rl-cf-ko-win .rl-frame-view::after { display: none; }
+  .rl[data-live] .rl-cf-ko-win .rl-frame-rim { height: 100%; padding: 0; border-radius: 0; background: none; box-shadow: none; }
+  .rl[data-live] .rl-cf-ko-win .rl-frame-bar { display: none; }
+  .rl[data-live] .rl-cf-ko-win .rl-frame-win { height: 100%; }
+  .rl[data-live] .rl-cf-ko-win .rl-frame .rl-frame-view { height: 100%; aspect-ratio: auto; border-radius: 0; }
+  .rl[data-live] .rl-cf-ko-bar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 5; display: block; height: 3px; background: rgba(5, 5, 5, .5); }
+}
+
+/* ════ TELEFON - Klasyczna i wspólne zakończenie (runda 5, właściciel: „dostosuj do urządzeń mobilnych, żeby było
+   perfekcyjnie”). Liczone z kodu dla 390, 360 i 320 px - nazwy realizacji łamią się w dwie linie, nic nie wisi. ════ */
+@media (max-width: 639.98px) {
+  /* nagłówek: przycisk na całą szerokość, bez adresu obok (adres stoi w pasku kadru tuż niżej) */
+  .rl-cf-kl-hero { padding: 108px 0 48px; }
+  .rl-cf-kl-side .rl-cf-actions { margin-top: 22px; }
+  .rl-cf-kl-side .rl-cf-site { width: 100%; }
+  .rl-cf-kl-side .rl-cf-domain { display: none; }
+  /* „Strona na żywo”: sama etykieta (podpowiedź łamała się w dwie linie z wiszącym „do dołu.”) */
+  .rl-cf-kl-live .rl-cs-hint { display: none; }
+  .rl-cf-kl-live .rl-cs-live-head { margin-bottom: 12px; }
+  .rl-cf[data-v="klasyczna"] .rl-cf-story { padding-top: 64px; }
+  .rl-cf-kl-part { padding: 26px 0 36px; }
+  .rl-cf-kl-h { margin-bottom: 16px; }
+  .rl-cf-kl-p { font-size: 16.5px; line-height: 1.7; }
+  .rl-cf-kl-facts { padding-top: 36px; }
+  .rl-cf-kl-gal { margin-top: 72px; }
+  .rl-cf-kl-sub { margin-bottom: 18px; font-size: 20px; }
+  .rl-cf-kl-gal .rl-cf-ch-shots { gap: 20px; }
+  /* pytanie z przyciskiem i zapowiedź następnej realizacji: strzałka w wierszu z numerem, nazwa na całą szerokość
+     (obok strzałki długie nazwy łamały się w trzy linie), kadr wystaje na ok. połowę swojej wysokości */
+  .rl-cf-ask { margin-top: 72px; padding: 32px 0; }
+  .rl-cf-next { padding-top: 72px; }
+  .rl-cf-next-label { margin-bottom: 16px; }
+  .rl-cf-next-meta { grid-column: 1; }
+  .rl-cf-next-arrow { grid-column: 2; grid-row: 1; align-self: center; width: 24px; height: 24px; margin: 0; }
+  .rl-cf-next-name { grid-column: 1 / -1; }
+  @supports (width: 1cqi) { .rl-cf-next-name { font-size: min(clamp(34px, 12vw, 88px), calc(100cqi / (var(--len-s, 10) * .58))); } }
+  .rl-cf-next-fr { height: clamp(150px, 50vw, 240px); margin-top: 32px; }
+}
+/* najwęższe telefony: numer, rodzaj i rok w jednej linii */
+@media (max-width: 359.98px) {
+  .rl-cf-meta { font-size: 14px; }
+  .rl-cf-meta > span { gap: 8px; }
+}

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Avenly — Realizacje (8b „Kurtyna”) — referencja designu 1:1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;height:100%;background:#050505;color:#94a3b8;font-family:Inter,ui-sans-serif,system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden}
+a{color:inherit;text-decoration:none}*{box-sizing:border-box}
+[data-scroller]::-webkit-scrollbar{display:none}
+/* Kadr projektowy 1920×1080 skalowany do okna (w produkcji: 100svh, patrz README) */
+#fit{position:absolute;left:50%;top:50%;width:1920px;height:1080px;transform-origin:0 0}
+</style>
+</head>
+<body>
+<div id="fit">
+<section data-c="25" style="position:relative;width:1920px;height:1080px;background:#050505;overflow:hidden">
+  <!-- 1. Tło: shader „jedwab” (WebGL, 960×540 → 1920×1080) -->
+  <canvas data-gl width="960" height="540" style="position:absolute;inset:0;width:1920px;height:1080px;pointer-events:none"></canvas>
+  <!-- 2. Podłoga: przyciemnienie + linia horyzontu (y=825) -->
+  <div style="position:absolute;left:0;right:0;top:825px;bottom:0;background:linear-gradient(180deg,rgba(5,5,5,.55),rgba(5,5,5,.92) 60%);pointer-events:none"></div>
+  <div style="position:absolute;left:0;right:0;top:825px;height:1px;background:linear-gradient(90deg,transparent,rgba(165,180,252,.45) 30%,rgba(165,180,252,.45) 70%,transparent);pointer-events:none"></div>
+  <!-- 3. Filtr falowania odbicia -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="ripple25" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB"><feTurbulence data-turb type="fractalNoise" baseFrequency="0.006 0.04" numOctaves="2" seed="7" result="n"></feTurbulence><feDisplacementMap in="SourceGraphic" in2="n" scale="9" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap><feGaussianBlur stdDeviation="1"></feGaussianBlur></filter></svg>
+  <!-- 4. Odbicie: lustrzane kopie kadrów na płaszczyźnie 3D (rotateX 34°), maska zanikająca -->
+  <div data-rwrap style="position:absolute;left:0;top:826px;width:1920px;height:254px;overflow:hidden;pointer-events:none;filter:url(#ripple25);perspective:900px;mask-image:linear-gradient(180deg,rgba(0,0,0,.42),rgba(0,0,0,.12) 55%,transparent 100%);-webkit-mask-image:linear-gradient(180deg,rgba(0,0,0,.42),rgba(0,0,0,.12) 55%,transparent 100%)">
+    <div style="position:absolute;inset:0;transform:rotateX(34deg);transform-origin:50% 0">
+      <div data-refl="0" style="position:absolute;left:0;top:0;width:1200px;height:675px;padding:8px;border-radius:16px;transform-origin:0 0;will-change:transform;opacity:0"><img src="https://avenly.pl/portfolio/grawerstwo-kardys.webp" alt="" style="width:100%;height:100%;object-fit:cover;object-position:top;border-radius:10px;display:block"></div>
+      <div data-refl="1" style="position:absolute;left:0;top:0;width:1200px;height:675px;padding:8px;border-radius:16px;transform-origin:0 0;will-change:transform;opacity:0"><img src="https://avenly.pl/portfolio/mcentrumgabinet.webp" alt="" style="width:100%;height:100%;object-fit:cover;object-position:top;border-radius:10px;display:block"></div>
+      <div data-refl="2" style="position:absolute;left:0;top:0;width:1200px;height:675px;padding:8px;border-radius:16px;transform-origin:0 0;will-change:transform;opacity:0"><img src="https://avenly.pl/portfolio/klubsportowy.webp" alt="" style="width:100%;height:100%;object-fit:cover;object-position:top;border-radius:10px;display:block"></div>
+      <div data-refl="3" style="position:absolute;left:0;top:0;width:1200px;height:675px;padding:8px;border-radius:16px;transform-origin:0 0;will-change:transform;opacity:0"><img src="https://avenly.pl/portfolio/avenly-chatbot.webp" alt="" style="width:100%;height:100%;object-fit:cover;object-position:top;border-radius:10px;display:block"></div>
+    </div>
+  </div>
+  <!-- 5. Scena: kadry 1200×675 @ (360,130) -->
+  <div style="position:absolute;inset:0;pointer-events:none">
+    <div data-slab="0" style="position:absolute;left:0;top:0;width:1200px;height:675px;padding:8px;border-radius:16px;background:rgba(2,6,23,.85);border:1px solid #1e293b;border-top-color:rgba(255,255,255,.18);transform-origin:50% 50%;will-change:transform,opacity,filter,clip-path;transform:translate(360px,130px);opacity:0"><div style="position:relative;width:100%;height:100%;border-radius:10px;overflow:hidden;background:#0a0f1e"><img src="https://avenly.pl/portfolio/grawerstwo-kardys.webp" alt="Grawerstwo Józef Kardyś" style="width:100%;height:100%;object-fit:cover;object-position:top;display:block"><div data-sweep style="position:absolute;top:-20%;bottom:-20%;left:-30%;width:26%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);transform:skewX(-14deg);opacity:0;pointer-events:none"></div></div></div>
+    <div data-slab="1" style="position:absolute;left:0;top:0;width:1200px;height:675px;padding:8px;border-radius:16px;background:rgba(2,6,23,.85);border:1px solid #1e293b;border-top-color:rgba(255,255,255,.18);transform-origin:50% 50%;will-change:transform,opacity,filter,clip-path;transform:translate(360px,130px);opacity:0"><div style="position:relative;width:100%;height:100%;border-radius:10px;overflow:hidden;background:#0a0f1e"><img src="https://avenly.pl/portfolio/mcentrumgabinet.webp" alt="Gabinet Fizjoterapii Mcentrum" style="width:100%;height:100%;object-fit:cover;object-position:top;display:block"><div data-sweep style="position:absolute;top:-20%;bottom:-20%;left:-30%;width:26%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);transform:skewX(-14deg);opacity:0;pointer-events:none"></div></div></div>
+    <div data-slab="2" style="position:absolute;left:0;top:0;width:1200px;height:675px;padding:8px;border-radius:16px;background:rgba(2,6,23,.85);border:1px solid #1e293b;border-top-color:rgba(255,255,255,.18);transform-origin:50% 50%;will-change:transform,opacity,filter,clip-path;transform:translate(360px,130px);opacity:0"><div style="position:relative;width:100%;height:100%;border-radius:10px;overflow:hidden;background:#0a0f1e"><img src="https://avenly.pl/portfolio/klubsportowy.webp" alt="Klub Sportowy RKS" style="width:100%;height:100%;object-fit:cover;object-position:top;display:block"><div data-sweep style="position:absolute;top:-20%;bottom:-20%;left:-30%;width:26%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);transform:skewX(-14deg);opacity:0;pointer-events:none"></div></div></div>
+    <div data-slab="3" style="position:absolute;left:0;top:0;width:1200px;height:675px;padding:8px;border-radius:16px;background:rgba(2,6,23,.85);border:1px solid #1e293b;border-top-color:rgba(255,255,255,.18);transform-origin:50% 50%;will-change:transform,opacity,filter,clip-path;transform:translate(360px,130px);opacity:0"><div style="position:relative;width:100%;height:100%;border-radius:10px;overflow:hidden;background:#0a0f1e"><img src="https://avenly.pl/portfolio/avenly-chatbot.webp" alt="Wirtualny Asystent AI" style="width:100%;height:100%;object-fit:cover;object-position:top;display:block"><div data-sweep style="position:absolute;top:-20%;bottom:-20%;left:-30%;width:26%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);transform:skewX(-14deg);opacity:0;pointer-events:none"></div></div></div>
+  </div>
+  <!-- 6. Pułapka scrolla: natywny scroller trzymany na środku; wychylenie >24px = 1 gest -->
+  <div data-scroller style="position:absolute;inset:0;overflow-y:auto;scrollbar-width:none"><div style="height:1080px"></div><div style="height:1080px"></div><div style="height:1080px"></div></div>
+  <!-- 7. Chrome -->
+  <div style="position:absolute;left:56px;right:56px;top:40px;display:flex;justify-content:space-between;font:400 11px/1 'Geist Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#64748b;pointer-events:none"><span>Realizacje</span><span>Jeden scroll — jeden kadr</span></div>
+  <!-- 8. Indeks: hairline + wskaźnik + 4 pozycje (wyśrodkowane, gap 72) -->
+  <div style="position:absolute;left:0;right:0;top:940px;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.1) 20%,rgba(255,255,255,.1) 80%,transparent);pointer-events:none"><div data-ind style="position:absolute;top:0;height:1px;width:428px;background:#f1f5f9;left:0;will-change:transform"></div></div>
+  <div style="position:absolute;left:0;right:0;top:962px;display:flex;justify-content:center;gap:72px;z-index:20">
+    <a href="https://avenly.pl/realizacje/grawerstwo-kardys/" data-tab="0" style="display:flex;align-items:center;gap:16px;padding:6px 0;color:#475569;transition:color .6s;cursor:pointer"><div data-slot="0" style="position:relative;width:96px;height:54px;flex:none;border-radius:6px;overflow:hidden;background:#0a0f1e;box-shadow:0 0 0 1px rgba(255,255,255,.1)"><img data-thumb src="https://avenly.pl/portfolio/grawerstwo-kardys.webp" alt="" style="width:100%;height:100%;object-fit:cover;object-position:top;display:block;transition:opacity .5s"></div><div style="display:flex;flex-direction:column;gap:6px;min-width:0"><span style="font:400 10px/1 'Geist Mono',monospace;letter-spacing:.14em">01</span><span style="font:500 15px/1.2 Inter,sans-serif;letter-spacing:-.01em;white-space:nowrap">Grawerstwo Józef Kardyś</span></div></a>
+    <a href="https://avenly.pl/realizacje/mcentrumfizjoterapia/" data-tab="1" style="display:flex;align-items:center;gap:16px;padding:6px 0;color:#475569;transition:color .6s;cursor:pointer"><div data-slot="1" style="position:relative;width:96px;height:54px;flex:none;border-radius:6px;overflow:hidden;background:#0a0f1e;box-shadow:0 0 0 1px rgba(255,255,255,.1)"><img data-thumb src="https://avenly.pl/portfolio/mcentrumgabinet.webp" alt="" style="width:100%;height:100%;object-fit:cover;object-position:top;display:block;transition:opacity .5s"></div><div style="display:flex;flex-direction:column;gap:6px;min-width:0"><span style="font:400 10px/1 'Geist Mono',monospace;letter-spacing:.14em">02</span><span style="font:500 15px/1.2 Inter,sans-serif;letter-spacing:-.01em;white-space:nowrap">Gabinet Fizjoterapii Mcentrum</span></div></a>
+    <a href="https://avenly.pl/realizacje/klub-sportowy/" data-tab="2" style="display:flex;align-items:center;gap:16px;padding:6px 0;color:#475569;transition:color .6s;cursor:pointer"><div data-slot="2" style="position:relative;width:96px;height:54px;flex:none;border-radius:6px;overflow:hidden;background:#0a0f1e;box-shadow:0 0 0 1px rgba(255,255,255,.1)"><img data-thumb src="https://avenly.pl/portfolio/klubsportowy.webp" alt="" style="width:100%;height:100%;object-fit:cover;object-position:top;display:block;transition:opacity .5s"></div><div style="display:flex;flex-direction:column;gap:6px;min-width:0"><span style="font:400 10px/1 'Geist Mono',monospace;letter-spacing:.14em">03</span><span style="font:500 15px/1.2 Inter,sans-serif;letter-spacing:-.01em;white-space:nowrap">Klub Sportowy RKS</span></div></a>
+    <a href="https://avenly.pl/uslugi/automatyzacje-ai/chatboty-ai/" data-tab="3" style="display:flex;align-items:center;gap:16px;padding:6px 0;color:#475569;transition:color .6s;cursor:pointer"><div data-slot="3" style="position:relative;width:96px;height:54px;flex:none;border-radius:6px;overflow:hidden;background:#0a0f1e;box-shadow:0 0 0 1px rgba(255,255,255,.1)"><img data-thumb src="https://avenly.pl/portfolio/avenly-chatbot.webp" alt="" style="width:100%;height:100%;object-fit:cover;object-position:top;display:block;transition:opacity .5s"></div><div style="display:flex;flex-direction:column;gap:6px;min-width:0"><span style="font:400 10px/1 'Geist Mono',monospace;letter-spacing:.14em">04</span><span style="font:500 15px/1.2 Inter,sans-serif;letter-spacing:-.01em;white-space:nowrap">Wirtualny Asystent AI</span></div></a>
+  </div>
+</section>
+</div>
+<script>
+(() => {
+  const W = 1920, H = 1080, T = 1500, B = { x: 360, y: 130, w: 1200, h: 675 }, F = 825;   // F = linia lustra (podłoga)
+  const root = document.querySelector('[data-c="25"]'), q = s => [...root.querySelectorAll(s)], q1 = s => root.querySelector(s);
+  // skalowanie kadru do okna (prototyp)
+  const fit = () => { const k = Math.min(innerWidth / W, innerHeight / H); document.getElementById('fit').style.transform = `translate(${(innerWidth - W * k) / 2}px,${(innerHeight - H * k) / 2}px) scale(${k})`; };
+  fit(); addEventListener('resize', fit);
+
+  /* ---------- Shader tła „jedwab” ---------- */
+  const VERT = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
+  const FRAG = `precision mediump float;uniform vec2 u_res;uniform float u_time;uniform vec2 u_mouse;
+float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}
+float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=a*noise(p);p=p*2.03+vec2(1.7,9.2);a*=.5;}return v;}
+const vec3 deep=vec3(.02,.02,.03),body=vec3(.043,.075,.196),mid=vec3(.067,.169,.51),rim=vec3(.647,.706,.988);
+void main(){vec2 uv=gl_FragCoord.xy/u_res;vec2 p=uv*vec2(u_res.x/u_res.y,1.);float t=u_time*.045;
+ vec2 q=vec2(fbm(p*1.5+t),fbm(p*1.5-t*.7+3.1));float s=fbm(p*2.1+q*1.6+vec2(t*.3,-t*.2));
+ float band=smoothstep(.32,.78,s);
+ vec3 col=deep+body*band*.95+mid*pow(band,3.)*.5+rim*pow(band,10.)*.14;
+ float ml=exp(-length((uv-u_mouse)*vec2(1.6,1.))*2.6)*.16;col+=mid*ml;
+ col*=1.-.75*length((uv-vec2(.5,.62))*vec2(1.,1.3));
+ col+=(hash(gl_FragCoord.xy+fract(u_time))-.5)*.018;
+ gl_FragColor=vec4(col,1.);}`;
+  const mkGL = cv => {
+    const gl = cv.getContext('webgl', { alpha: false, antialias: false }); if (!gl) return null;
+    const sh = (t, s) => { const h = gl.createShader(t); gl.shaderSource(h, s); gl.compileShader(h); return h; };
+    const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, VERT)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, FRAG)); gl.linkProgram(pr); gl.useProgram(pr);
+    const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(pr, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    const uT = gl.getUniformLocation(pr, 'u_time'), uM = gl.getUniformLocation(pr, 'u_mouse'); gl.viewport(0, 0, cv.width, cv.height); gl.uniform2f(gl.getUniformLocation(pr, 'u_res'), cv.width, cv.height);
+    return { draw(t, m) { gl.uniform1f(uT, t / 1000); gl.uniform2f(uM, m.x, 1 - m.y); gl.drawArrays(gl.TRIANGLES, 0, 3); } };
+  };
+
+  /* ---------- Elementy ---------- */
+  const sc = q1('[data-scroller]'), slabs = q('[data-slab]'), tabs = q('[data-tab]'), thumbs = q('[data-thumb]'), refls = q('[data-refl]'), ind = q1('[data-ind]'), turb = q1('[data-turb]'), GL = mkGL(q1('[data-gl]'));
+  const RT = 826; // top data-rwrap
+  const m = { x: .5, y: .5, tx: .5, ty: .5 };
+  root.addEventListener('mousemove', e => { const r = root.getBoundingClientRect(); m.tx = (e.clientX - r.left) / r.width; m.ty = (e.clientY - r.top) / r.height; });
+  root.addEventListener('mouseleave', () => { m.tx = .5; m.ty = .5; });
+
+  /* ---------- Easingi (cubic-bezier jak w CSS) ---------- */
+  const bez = (x1, y1, x2, y2) => { const A = (a, b) => 1 - 3 * b + 3 * a, Bc = (a, b) => 3 * b - 6 * a, C = a => 3 * a, calc = (t, a, b) => ((A(a, b) * t + Bc(a, b)) * t + C(a)) * t, slope = (t, a, b) => 3 * A(a, b) * t * t + 2 * Bc(a, b) * t + C(a); return x => { if (x <= 0) return 0; if (x >= 1) return 1; let t = x; for (let i = 0; i < 6; i++) { const s = slope(t, x1, x2); if (Math.abs(s) < 1e-6) break; t -= (calc(t, x1, x2) - x) / s; } return calc(t, y1, y2); }; };
+  const IN = bez(.16, 1, .3, 1), OUT = bez(.7, 0, .84, 0), EO = x => 1 - Math.pow(1 - x, 3);
+  const ease = (raw, out) => out ? 1 - OUT(1 - raw) : IN(raw);
+
+  /* ---------- Stan / trigger ---------- */
+  let p = 0, idx = 0, anim = null, lockUntil = 0, cur = -1, sweptFor = -1, tabsPos = null, armed = false;
+  const go = (to, now) => { to = Math.max(0, Math.min(3, to)); if (to === idx || anim) return; anim = { from: idx, to, t0: now }; idx = to; lockUntil = now + T; };
+  const rearm = () => { sc.scrollTop = H; armed = true; };
+  sc.addEventListener('scroll', () => { if (!armed) return; const dy = sc.scrollTop - H, now = performance.now(); if (Math.abs(dy) < 24) return; if (now >= lockUntil) go(idx + (dy > 0 ? 1 : -1), now); armed = false; rearm(); });
+  requestAnimationFrame(rearm); setTimeout(rearm, 300);
+  root.addEventListener('wheel', e => { if (performance.now() < lockUntil) e.preventDefault(); }, { passive: false });
+  root.tabIndex = 0; root.addEventListener('keydown', e => { if (e.key === 'ArrowDown' || e.key === 'ArrowRight') go(idx + 1, performance.now()); if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') go(idx - 1, performance.now()); });
+  let ty = null; root.addEventListener('touchstart', e => ty = e.touches[0].clientY, { passive: true }); root.addEventListener('touchend', e => { if (ty === null) return; const dy = ty - e.changedTouches[0].clientY; ty = null; if (Math.abs(dy) > 40 && performance.now() >= lockUntil) go(idx + (dy > 0 ? 1 : -1), performance.now()); });
+  tabs.forEach(tb => tb.addEventListener('click', e => { e.preventDefault(); go(+tb.dataset.tab, performance.now()); }));
+  const measure = () => { const rr = root.getBoundingClientRect(), k = rr.width / W || 1; const t = tabs.map(el => { const b = el.getBoundingClientRect(); return { x: (b.left - rr.left) / k, w: b.width / k }; }); if (t[0] && t[0].w) tabsPos = t; };
+
+  /* ---------- Pętla ---------- */
+  const loop = t => {
+    if (document.hidden) { requestAnimationFrame(loop); return; }
+    m.x += (m.tx - m.x) * .05; m.y += (m.ty - m.y) * .05;
+    if (GL) GL.draw(t, m); if (turb) turb.setAttribute('baseFrequency', (.005 + .0015 * Math.sin(t / 2300)).toFixed(4) + ' ' + (.045 + .012 * Math.sin(t / 1700)).toFixed(4));
+    if (!tabsPos) measure();
+    if (anim) { const u = Math.min(1, (t - anim.t0) / T); p = anim.from + (anim.to - anim.from) * u; if (u >= 1) anim = null; } else p = idx;
+    let best = 0, bs = -1;
+    slabs.forEach((sl, i) => {
+      const d = p - i, out = d >= 0, raw = Math.min(1, Math.max(0, 1 - Math.abs(d) / .8)), s = ease(raw, out);
+      const ry = (m.x - .5) * 3 * s, rx = (.5 - m.y) * 2.5 * s;
+      let dy, op, blur, clip = 'none';
+      if (out) { dy = -16 * (1 - s); op = EO(raw); blur = (1 - s) * 3; }                                   // wychodzący: unosi się 16px, blednie, rozmycie
+      else { dy = 24 * (1 - s); op = raw > 0 ? 1 : 0; blur = 0; clip = 'inset(' + ((1 - s) * 100).toFixed(2) + '% 0 0 0 round 16px)'; }  // wchodzący: kurtyna od dołu + 24px w górę
+      const x = B.x, y = B.y + dy;
+      sl.style.transform = 'translate(' + x + 'px,' + y.toFixed(1) + 'px) perspective(1600px) rotateY(' + ry.toFixed(2) + 'deg) rotateX(' + rx.toFixed(2) + 'deg)';
+      sl.style.opacity = op.toFixed(3); sl.style.filter = blur > .05 ? 'blur(' + blur.toFixed(2) + 'px)' : ''; sl.style.clipPath = clip; sl.style.zIndex = out ? 1 : 2;
+      sl.style.boxShadow = '0 ' + ((50 * s) | 0) + 'px ' + ((110 * s) | 0) + 'px -40px rgba(0,0,0,.95),0 0 ' + ((80 * s) | 0) + 'px rgba(47,91,235,' + (s * .10).toFixed(2) + ')';
+      refls[i].style.transform = 'translate(' + x + 'px,' + (2 * F - y - RT).toFixed(1) + 'px) perspective(1600px) rotateY(' + ry.toFixed(2) + 'deg) scale(1,-1)';
+      refls[i].style.opacity = (op * s).toFixed(3);
+      thumbs[i].style.opacity = (.25 + .75 * (1 - s)).toFixed(3);
+      if (s > bs) { bs = s; best = i; }
+    });
+    if (tabsPos) { const a = tabsPos, lo = Math.max(0, Math.min(3, Math.floor(p))), hi = Math.min(3, lo + 1), f = Math.min(1, Math.max(0, p - lo)); const x = a[lo].x + (a[hi].x - a[lo].x) * f; ind.style.transform = 'translateX(' + x.toFixed(1) + 'px)'; ind.style.width = ((a[lo].w + (a[hi].w - a[lo].w) * f) | 0) + 'px'; }
+    if (best !== cur) { cur = best; tabs.forEach(tb => tb.style.color = +tb.dataset.tab === cur ? '#f1f5f9' : '#475569'); }
+    if (bs > .985 && sweptFor !== best) { sweptFor = best; slabs[best].querySelector('[data-sweep]').animate([{ left: '-30%', opacity: 0 }, { opacity: 1, offset: .25 }, { opacity: 1, offset: .75 }, { left: '110%', opacity: 0 }], { duration: 1800, easing: 'ease-in-out' }); }
+    if (bs < .5) sweptFor = -1;
+    requestAnimationFrame(loop);
+  };
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

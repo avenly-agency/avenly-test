@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && node scripts/flatten-rsc.mjs",
+    "build": "next build && node scripts/flatten-rsc.mjs && node scripts/copy-404.mjs",
+    "deploy": "npm run build && npx wrangler@4 pages deploy out --project-name=avenly-web --branch=main",
+    "deploy:preview": "npm run build && npx wrangler@4 pages deploy out --project-name=avenly-web --branch=preview",
     "start": "next start",
     "lint": "eslint"
   },

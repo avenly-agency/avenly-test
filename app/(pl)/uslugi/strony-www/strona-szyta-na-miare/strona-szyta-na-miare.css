@@ -1,0 +1,1230 @@
+/* Podstrona „Strona szyta na miarę” (/uslugi/strony-www/strona-szyta-na-miare i EN) - chat 9, praca równoległa, etap 3
+   (fala 2, POZIOM 3 hierarchii: pełne widowisko). Style tylko w tym pliku, prefiks sm-. Szkielet wspólny (korzeń, tło-
+   mgławica, wejście, nagłówek, kroki, zakończenie): app/(pl)/uslugi/_usluga/usluga.css (sv-). Wzorce pilota one-page
+   (kadr, film na usePin, rysunki, światy linii, zakres z pokazem) skopiowane z własnym prefiksem i dopasowane.
+     .sm-st  przykładowa strona firmy w kadrze (site.tsx) - trzy ekrany: pierwszy ekran / oferta / kontakt, w palecie
+             podstrony; pierwszy ekran = horyzont w czterech krajobrazach (data-hz: ridge / sea / orbit / peak),
+     .sm-fr  kadr (rama w czerni z kryciem, pasek adresu z nazwą aktu i etykietą „Przykładowa strona”, okno),
+     .sm-a   scena 1 „Film”: pierwszy ekran „Horyzont” + przypięta scena z kamerą,
+     .sm-g   scena 2 „Możliwości nie mają limitu”: Nić przez gwiazdy z kamerą jadącą za igłą,
+     .sm-b   scena 3 „Technologia liderów”: Deska (.sm-bd) / Światy (.sm-bw) / Kadry (.sm-bs),
+     .sm-d   scena 4 „Czuć każdy detal”: Kula z linii / Litery (.sm-dl) / Próbki (.sm-ds),
+     .sm-c   scena 5 „Od konceptu po wdrożenie”: zakres z terminem - Pokaz w kadrze / Oś (.sm-ca) / Plan (.sm-cg).
+   Przypięte sceny, maski i ruch tylko pod .sv[data-live] i przy prefers-reduced-motion: no-preference; zmienne ruchu
+   mają wartości domyślne = stan końcowy / spoczynkowy (bez JS i przy ograniczonym ruchu zwykła strona).
+   Tło = sama mgławica szkieletu (nić za kursorem i gwiazdy po kliknięciu usunięte na prośbę właściciela 2026-10-02 -
+   NIE wracać).
+   WYBORY WŁAŚCICIELA (2026-10-05): scena 1 = Horyzont („ale zrób ładniej to i daj kilka propozycji samego
+   horyzontu” - cztery krajobrazy w panelu), scena 2 = Nić („ale dopracuj to bardziej”), scena 3 = żadna z trzech
+   („zrób kilka innych”) - trzy nowe sceny w panelu. Sceny 4 i 5 czekają na wybór (po trzy propozycje).
+   Usunięte, NIE wracać bez prośby: Moodboard, Scena, Poziom wyżej, Warstwy (scena 1); Taśmy, Orbity (scena 2); Stos,
+   Panorama, Siatka (scena 3).
+   RZECZY POJAWIAJĄ SIĘ MIĘKKO: bez linii światła, która „leci” i podmienia jedno na drugie, i bez kurtyn o prostej
+   krawędzi (właściciel 2026-10-05 na podstronie CRM: „tak jak się nebula rozchodzi”) - maska „rozejście” z trzech
+   rozmytych plam (.sm-bloom, ekrany makiety .sm-st-s2 / .sm-st-s3).
+   TELEFON (runda 4, 2026-10-04): reguły telefonu stoją przy swoich sekcjach; dotyk zastępuje najechanie, sceny liczą
+   miejsce z wysokości nagłówka (--copy-h, --dh), paski jadące w bok gasną przy krawędzi.
+   Rundy 4 i 5 pisane z kodu, BEZ podglądu w przeglądarce (zasada pracy równoległej z 2026-10-04) - do sprawdzenia
+   na sygnał właściciela.
+   NAZWA USŁUGI od 2026-10-06: „Strona interaktywna” (adres, pliki i prefiks sm- bez zmian).
+   WYDAJNOŚĆ (2026-10-06, właściciel: „zoptymalizuj całą podstronę pod względem wydajności”; wcześniej przegląd
+   wszystkich podstron usług z 2026-10-05): zasada - przy przewijaniu przeglądarka ma PRZESUWAĆ I SKALOWAĆ GOTOWE
+   WARSTWY, a nie rysować od nowa. Dlatego: plany pierwszego ekranu makiety to osobne warstwy (grzbiety = osobne
+   rysunki SVG, will-change na czas ruchu), rysunek nici ma własną warstwę, maski schodzą, gdy są w pełni otwarte,
+   ekrany, których nie widać, nie są rysowane, a animacje sekcji dalekiej od ekranu stoją (data-idle). Komentarze
+   „wydajność” przy regułach. Zmieniając ruch, pilnuj tych reguł (nowy plan, który się skaluje = dopisać do listy
+   will-change w bloku filmu).
+   Notatki: docs/podstrony/usluga-strona-szyta-na-miare.md. */
+
+/* ══ PRZYKŁADOWA STRONA FIRMY W KADRZE (.sm-st) ═════════════════════════════════════════════════════════════
+   Makieta w JĘZYKU PODSTRONY (decyzja właściciela 2026-10-02, jak na podstronach firmowej i sklepu: „mniej pastelowe
+   i pasujące do całej strony, żeby nikt nie pomyślał, że to jest ta strona, tylko makieta”): czerń, biel, włosowe
+   linie i kolor podstrony jako światło. Od Avenly odróżnia ją szeryfowy krój nagłówków i etykieta „Przykładowa strona”.
+   NIE wracać do jasnej / pastelowej makiety (świt w winie i morelach, kremowy ekran oferty, nastroje Noc / Złoto).
+   Trzy UJĘCIA z kamerą (runda 3: „makiety i animacje motion daj bardziej cinematic”): najazd z głębią planów (--z),
+   wlot w słońce (--fly), jazda w bok wzdłuż kart (--mv). Opis ujęć: site.tsx.
+   RUNDA 5: cztery krajobrazy pierwszego ekranu (data-hz: ridge / sea / orbit / peak) i miękkie rozchodzenie się
+   ekranów 2 i 3 zamiast koła z linią na krawędzi (właściciel 2026-10-05: bez „linii, która leci i zmienia coś na coś”).
+   RUNDA 6 (właściciel 2026-10-05: „po usługach dodaj coś ciekawego jeszcze, jakąś sekcję cinematic, żeby ludzie
+   widzieli, plus trochę więcej tam dodaj”): czwarty ekran - REALIZACJE (.sm-st-s4, .sm-rz-*), lot kamery w głąb
+   kolumnady łuków do światła, które jest kształtem ekranu kontaktu; karty oferty z numerem, znakiem przejścia
+   i zdaniem opisu. Kolejność w opowieści: pierwszy ekran -> oferta -> realizacje -> kontakt. */
+.sm-st {
+  --c-bg: #070506; --c-card: #0e0a0c; --c-ink: #f8fafc; --c-soft: #cbd5e1; --c-mut: #94a3b8; --c-line: rgba(255, 255, 255, .16);
+  --c-acc: rgb(var(--sv-ac)); --c-sun: rgb(var(--sv-ac));
+  --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+  position: absolute; inset: 0; container-type: size; overflow: hidden; text-align: left; color: var(--c-ink); background: var(--c-bg);
+}
+.sm-st-in {
+  position: absolute; inset: 0; font-size: var(--sm-fs, min(1.3cqw, 2.35cqh)); line-height: 1.5; letter-spacing: 0;
+  /* słońce: środek w stanie „wzeszło” (--sX / --sY), promień (--sunR) i droga wschodu (--rise); środek kształtu
+     z kręgów na ekranie kontaktu (--oX / --oY). Wartości bazowe = krajobraz „Grzbiety”. */
+  --sX: 74%; --sY: calc(100% - 17em); --sunR: 15em; --rise: 27em; --oX: 71%; --oY: 53%;
+  /* punkt, od którego rozchodzi się ekran oferty: słońce; po otwarciu (--dusk > 0, ekran jest wtedy cały widoczny,
+     więc zmiany punktu nie widać) kształt kontaktu, na którym ekran się zbiega (--out) */
+  --sw: min(1, var(--dusk, 0) * 1000);
+  --iX: calc(var(--sX) * (1 - var(--sw)) + var(--oX) * var(--sw));
+  --iY: calc(var(--sY) * (1 - var(--sw)) + var(--oY) * var(--sw));
+  /* tor kart oferty jest szerszy niż okno: tyle kamera przejeżdża w bok (4 karty po 25em, 3 odstępy po 2em, marginesy) */
+  --pan: max(0em, calc(114.8em - 100cqw));
+}
+.sm-st p { margin: 0; }
+.sm-st svg { display: block; flex: none; }
+.sm-st em { font-style: italic; }
+/* każdy ekran to własny kontekst warstw (nawigacja ekranu 1 przebijała nad ekranem 2) */
+.sm-st-s { position: absolute; inset: 0; overflow: hidden; isolation: isolate; background: var(--c-bg); }
+.sm-l { position: absolute; inset: 0; }
+
+/* ── „ROZEJŚCIE”: ekran pojawia się miękką, nieregularną plamą od punktu - trzy rozmyte koła o różnych środkach
+   i tempach (suma warstw maski). --b 0-1 = postęp, --bx / --by = punkt. Ten sam język co na podstronie CRM
+   (.cr-bloom) - jedyny sposób podmiany ekranów makiety; NIE wracać do clip-path z ostrą krawędzią ani do linii
+   w kolorze podstrony na krawędzi koła. ── */
+.sm-st-s2, .sm-st-s3, .sm-st-s4 {
+  --bm:
+    radial-gradient(farthest-corner at var(--bx) var(--by), #000 calc(var(--b) * 150% - 36%), transparent calc(var(--b) * 150%)),
+    radial-gradient(farthest-corner at calc(var(--bx) - var(--b) * 16%) calc(var(--by) + var(--b) * 12%), #000 calc(var(--b) * 130% - 30%), transparent calc(var(--b) * 130%)),
+    radial-gradient(farthest-corner at calc(var(--bx) + var(--b) * 18%) calc(var(--by) - var(--b) * 10%), #000 calc(var(--b) * 138% - 26%), transparent calc(var(--b) * 138%));
+  -webkit-mask-image: var(--bm); mask-image: var(--bm);
+}
+.sm-st-s2 { --b: calc(var(--iris, 0) * (1 - var(--out, 0))); --bx: var(--iX); --by: var(--iY); }
+.sm-st-s3 { --b: var(--dusk, 0); --bx: var(--oX); --by: var(--oY); }
+/* ekran realizacji: ta maska tylko ZBIEGA go na kształcie kontaktu (--out; przy --out = 0 jest pełna); pojawia się
+   własną maską z obłoków na elemencie wewnątrz (.sm-rz-in). Poza swoim ujęciem nie jest rysowany (krycie 0). */
+.sm-st-s4 { background: none; --b: calc(1 - var(--out, 0)); --bx: var(--oX); --by: var(--oY); opacity: calc(min(1, var(--rz, 0) * 400) * min(1, (1 - var(--out, 0)) * 400)); }
+
+/* ── ekran 1: ujęcie otwierające - HORYZONT. Plany od najdalszego: gwiazdy, słońce z kręgami i smugą światła,
+   krajobraz (data-hz), typografia, pył przy obiektywie. KAMERA: każdy plan rośnie wokół środka słońca we własnym
+   tempie - przy najeździe (--z, 0-1) i przy wlocie w słońce (--fly; pisze tylko film - w pokazie zakresu --iris
+   otwiera ofertę bez lotu, inaczej ekran 1 stałby powiększony w planie strony); bliższe plany szybciej = głębia bez
+   rozmycia ── */
+.sm-st-s1 .sm-l { transform-origin: var(--sX) var(--sY); }
+.sm-l-sky b, .sm-l-sky i { position: absolute; inset: -4%; }
+.sm-l-sky b {
+  opacity: calc(1 - var(--m, 1) * .4);
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, .9) .09em, transparent .11em) 7% 14% / 31em 23em,
+    radial-gradient(circle, rgba(255, 255, 255, .7) .07em, transparent .09em) 61% 8% / 23em 17em,
+    radial-gradient(circle, rgba(255, 255, 255, .55) .06em, transparent .08em) 33% 31% / 17em 29em,
+    radial-gradient(circle, rgba(255, 255, 255, .8) .08em, transparent .1em) 88% 26% / 37em 19em;
+  -webkit-mask-image: linear-gradient(to bottom, #000 30%, transparent 82%); mask-image: linear-gradient(to bottom, #000 30%, transparent 82%);
+  transform: translate3d(calc(var(--px, 0) * -.3em), calc(var(--py, 0) * -.2em), 0) scale(calc(1 + var(--z, 0) * .025 + var(--fly, 0) * .2));
+}
+/* pył przy obiektywie: rzadkie, większe punkty - najszybszy plan */
+.sm-l-sky i {
+  opacity: .5;
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, .85) .14em, transparent .17em) 18% 62% / 53em 41em,
+    radial-gradient(circle, rgb(var(--sv-ac)) .12em, transparent .15em) 72% 18% / 47em 37em;
+  transform: translate3d(calc(var(--px, 0) * -1.5em), calc(var(--py, 0) * -1em), 0) scale(calc(1 + var(--z, 0) * .2 + var(--fly, 0) * 1.6));
+}
+/* gwiazdy z czterema promieniami (jak „klejnoty” nieba w hero strony głównej); migoczą powoli */
+.sm-hz-gem { position: absolute; left: var(--gx); top: var(--gy); width: 1.7em; height: 1.7em; margin: -.85em 0 0 -.85em; background: radial-gradient(circle, #fff 0 .09em, transparent .13em); opacity: calc(.9 - var(--m, 1) * .3); }
+.sm-hz-gem::before, .sm-hz-gem::after { content: ''; position: absolute; left: 50%; top: 50%; }
+.sm-hz-gem::before { width: 1.7em; height: 1px; margin: -.5px 0 0 -.85em; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .9) 50%, transparent); }
+.sm-hz-gem::after { width: 1px; height: 1.7em; margin: -.85em 0 0 -.5px; background: linear-gradient(180deg, transparent, rgba(255, 255, 255, .9) 50%, transparent); }
+@keyframes sm-hz-tw { from { scale: .55; } to { scale: 1; } }
+@keyframes sm-hz-drift { from { translate: -5em 0; } to { translate: 5em 0; } }
+@keyframes sm-hz-shim { from { transform: translateX(-.4em) scaleX(.93); } to { transform: translateX(.4em) scaleX(1.04); } }
+@media (prefers-reduced-motion: no-preference) {
+  /* opóźnienie ujemne: gwiazda jest od razu w środku swojego cyklu (dodatnie dawało skok wielkości, gdy mijało) */
+  .sm-hz-gem { animation: sm-hz-tw var(--gt, 5s) ease-in-out calc(var(--gd, 0s) * -1) infinite alternate; }
+  .sm-hz-cloud { animation: sm-hz-drift calc(44s + var(--k) * 15s) ease-in-out infinite alternate; }
+  .sm-hz-refl i { animation: sm-hz-shim calc(3.4s + var(--k) * .6s) ease-in-out calc(var(--k) * -.5s) infinite alternate; }
+}
+
+/* słońce: tarcza z delikatnym cieniowaniem (bez poświaty), trzy włosowe kręgi i ostra smuga światła */
+.sm-st-sunw {
+  position: absolute; left: var(--sX); top: var(--sY); width: calc(var(--sunR) * 2); height: calc(var(--sunR) * 2); margin: calc(var(--sunR) * -1) 0 0 calc(var(--sunR) * -1);
+  transform: translate3d(calc(var(--px, 0) * 1.6em), calc((1 - var(--sunm, var(--m, 1))) * var(--rise) + var(--py, 0) * 1em), 0) scale(calc(1 + var(--z, 0) * .07 + var(--fly, 0) * .3));
+}
+.sm-st-sun {
+  position: absolute; inset: 0; border-radius: 50%; background: var(--c-sun);
+  background: linear-gradient(180deg, color-mix(in oklab, var(--c-sun) 84%, #fff), var(--c-sun) 44%, color-mix(in oklab, var(--c-sun) 80%, #000));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .34);
+}
+.sm-st-halo { position: absolute; inset: calc(var(--sunR) * -.3); border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .3); opacity: var(--sunm, var(--m, 1)); }
+.sm-st-halo:nth-child(2) { inset: calc(var(--sunR) * -.74); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .17); }
+.sm-st-halo:nth-child(3) { inset: calc(var(--sunR) * -1.34); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08); }
+/* smuga światła: włosowa pozioma linia przez środek słońca (jak odblask w obiektywie, tylko ostra); gaśnie przed
+   kolumną tekstu po lewej */
+.sm-st-flare { position: absolute; left: 50%; top: 50%; width: 110em; height: 1px; margin-left: -55em; background: linear-gradient(90deg, transparent 24%, rgba(255, 255, 255, .3) 38%, #fff 50%, rgba(255, 255, 255, .3) 62%, transparent 76%); opacity: calc(var(--sunm, var(--m, 1)) * .8); }
+
+/* wspólne dla krajobrazów rysowanych w SVG (Grzbiety, Szczyt): wypełnienie zasłania słońce, krawędź = włosowa linia,
+   warstwice = ta sama krzywa niżej (--c 0-2: coraz słabsza), krawędź z gradientem łapie światło słońca */
+.sm-st-ridges path, .sm-hz-peak path { fill: none; stroke-width: 1px; vector-effect: non-scaling-stroke; }
+.sm-hz-peak > g { transform-box: view-box; transform-origin: 72% 30%; }
+.sm-st .sm-hz-fill { stroke: none; fill: var(--c-bg); }
+.sm-hz-edge { stroke: rgba(255, 255, 255, .22); }
+.sm-hz-cont { stroke: rgba(255, 255, 255, calc(.13 - var(--c, 0) * .035)); }
+.sm-st .sm-hz-rimline { stroke-width: 1.4px; }
+
+/* ── GRZBIETY (ridge): pięć planów; im bliżej, tym ciemniej i szybciej; smugi chmur przed tarczą ── */
+/* WYDAJNOŚĆ (2026-10-06): każdy plan to osobny rysunek SVG (site.tsx, data-k 0-4 od najdalszego) z własnym
+   przekształceniem - przeglądarka przesuwa gotową warstwę, zamiast co klatkę rysować krajobraz od nowa. Przesunięcia
+   w % własnego pudełka = dawne jednostki rysunku (x: 1 jedn. = .1%, y: 1 jedn. = .4167%), ruch bez zmian. */
+.sm-st-ridges { position: absolute; left: -5%; bottom: -1px; width: 110%; height: 20em; overflow: visible; transform-origin: 72% 30%; }
+.sm-st-ridges[data-k="0"] .sm-hz-fill { fill: #170e12; }
+.sm-st-ridges[data-k="1"] .sm-hz-fill { fill: #130b0f; }
+.sm-st-ridges[data-k="2"] .sm-hz-fill { fill: #0f090c; }
+.sm-st-ridges[data-k="3"] .sm-hz-fill { fill: #0b0709; }
+.sm-st-ridges[data-k="0"] { transform: translate3d(calc(var(--px, 0) * -.3%), 0, 0) scale(calc(1 + var(--z, 0) * .04 + var(--fly, 0) * .4)); }
+.sm-st-ridges[data-k="1"] { transform: translate3d(calc(var(--px, 0) * -.6%), calc(var(--z, 0) * .8333% + var(--fly, 0) * 8.333%), 0) scale(calc(1 + var(--z, 0) * .07 + var(--fly, 0) * .7)); }
+.sm-st-ridges[data-k="2"] { transform: translate3d(calc(var(--px, 0) * -1%), calc(var(--z, 0) * 2.0833% + var(--fly, 0) * 20.833%), 0) scale(calc(1 + var(--z, 0) * .11 + var(--fly, 0) * 1.1)); }
+.sm-st-ridges[data-k="3"] { transform: translate3d(calc(var(--px, 0) * -1.5%), calc(var(--z, 0) * 3.75% + var(--fly, 0) * 37.5%), 0) scale(calc(1 + var(--z, 0) * .16 + var(--fly, 0) * 1.7)); }
+.sm-st-ridges[data-k="4"] { transform: translate3d(calc(var(--px, 0) * -2.2%), calc(var(--z, 0) * 5.8333% + var(--fly, 0) * 58.333%), 0) scale(calc(1 + var(--z, 0) * .23 + var(--fly, 0) * 2.5)); }
+.sm-hz-cloud { position: absolute; left: calc(var(--sX) - 24em); top: calc(var(--sY) - 6.4em + var(--k) * 3.6em); width: calc(48em - var(--k) * 9em); height: 1px; margin-left: calc(var(--k) * 7em); background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .55) 28%, rgba(255, 255, 255, .55) 64%, transparent); opacity: calc(var(--sunm, var(--m, 1)) * .5); transform: translate3d(calc(var(--px, 0) * (var(--k) + 1) * .5em), calc((1 - var(--sunm, var(--m, 1))) * var(--rise) * .5), 0); }
+
+/* ── TAFLA (sea): płaski horyzont wody. Słońce wynurza się z linii horyzontu (--hzY), pod nim drabina odbicia
+   z ostrych pasów (krótsza, gdy słońce niżej), po tafli rzadkie włosowe linie fal; przy najeździe kamery tafla
+   rozsuwa się ku widzowi ── */
+.sm-st[data-hz="sea"] .sm-st-in { --sX: 72%; --hzY: calc(100% - 13em); --sY: calc(100% - 19em); --sunR: 13em; --rise: 19em; }
+.sm-hz-water { position: absolute; left: 0; right: 0; top: var(--hzY); bottom: -1px; background: var(--c-bg); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .42); transform-origin: var(--sX) 0; transform: scale(calc(1 + var(--z, 0) * .12 + var(--fly, 0) * 1.6)); }
+.sm-hz-refl { position: absolute; left: var(--sX); top: 0; width: 0; height: 100%; transform-origin: 0 0; transform: translateX(calc(var(--px, 0) * 1.6em)) scaleY(calc(.3 + .7 * var(--sunm, var(--m, 1)))); }
+.sm-hz-refl i { position: absolute; left: 0; top: calc(.7em + var(--k) * 1.15em + var(--k) * var(--k) * .09em); width: calc((1 - var(--k) * .095) * var(--sunR) * 1.7); height: calc(.22em + var(--k) * .02em); margin-left: calc((1 - var(--k) * .095) * var(--sunR) * -.85); border-radius: 1em; background: var(--c-sun); opacity: calc(.95 - var(--k) * .1); }
+.sm-hz-water b { position: absolute; left: 0; right: 0; top: calc(1.4em + var(--k) * 1.2em + var(--k) * var(--k) * .34em); height: 1px; opacity: calc(1 - var(--k) * .13); transform: translateX(calc(var(--px, 0) * (var(--k) + 1) * -3px));
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .17) 12%, rgba(255, 255, 255, .17) calc(var(--sX) - 17em), transparent calc(var(--sX) - 12em), transparent calc(var(--sX) + 12em), rgba(255, 255, 255, .17) calc(var(--sX) + 17em), rgba(255, 255, 255, .17) 90%, transparent); }
+
+/* ── ORBITA (orbit): krzywizna ogromnego globu. --pR = promień, --pX = środek w poziomie, --pTop = szczyt łuku,
+   --pDx / --pDrop = położenie słońca względem szczytu łuku (w bok / w dół po łuku: pDrop = pR - sqrt(pR² - pDx²)).
+   Łuk rysuje wewnętrzny cień koła (najgrubszy u szczytu), przy słońcu łuk w kolorze podstrony, nad nim linia
+   atmosfery, pod nim trzy łuki powierzchni ── */
+.sm-st[data-hz="orbit"] .sm-st-in { --pR: 95cqw; --pX: 44%; --pDx: 30cqw; --pDrop: 4.86cqw; --pTop: calc(100% - 13em); --sY: calc(100% - 15em + var(--pDrop)); --sunR: 8em; --rise: 13em; }
+.sm-hz-planet, .sm-hz-atmo { position: absolute; left: calc(var(--pX) - var(--pR)); top: var(--pTop); width: calc(var(--pR) * 2); height: calc(var(--pR) * 2); border-radius: 50%; transform-origin: calc(var(--pR) + var(--pDx)) var(--pDrop); transform: translate3d(calc(var(--px, 0) * -8px), 0, 0) scale(calc(1 + var(--z, 0) * .05 + var(--fly, 0) * .8)); }
+.sm-hz-planet { background: var(--c-bg); box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .7); }
+.sm-hz-atmo { margin: -.9em 0 0 0; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2); pointer-events: none; }
+.sm-hz-planet i { position: absolute; inset: 2.6em; border-radius: 50%; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .13); }
+.sm-hz-planet i:nth-child(2) { inset: 7em; opacity: .7; }
+.sm-hz-planet i:nth-child(3) { inset: 13em; opacity: .45; }
+.sm-hz-planet b { position: absolute; inset: 0; border-radius: 50%; box-shadow: inset 0 2px 0 var(--c-acc); opacity: var(--sunm, var(--m, 1));
+  -webkit-mask-image: radial-gradient(circle 22em at calc(var(--pR) + var(--pDx)) var(--pDrop), #000 18%, transparent); mask-image: radial-gradient(circle 22em at calc(var(--pR) + var(--pDx)) var(--pDrop), #000 18%, transparent); }
+
+/* ── SZCZYT (peak): jedna monumentalna góra rytowana poziomymi warstwicami, słońce za jej ramieniem ── */
+.sm-st[data-hz="peak"] .sm-st-in { --sY: calc(100% - 16.3em); --sunR: 11em; --rise: 17em; }
+.sm-hz-peak { position: absolute; left: -5%; bottom: -1px; width: 110%; height: 24em; overflow: visible; }
+.sm-hz-peak > g:nth-of-type(1) .sm-hz-fill { fill: #120b0e; }
+.sm-hz-peak > g:nth-of-type(1) { transform-origin: 72% 48%; transform: translate(calc(var(--px, 0) * -6px), calc(var(--fly, 0) * 20px)) scale(calc(1 + var(--z, 0) * .07 + var(--fly, 0) * .7)); }
+.sm-hz-peak > g:nth-of-type(2) { transform-origin: 72% 48%; transform: translate(calc(var(--px, 0) * -20px), calc(var(--z, 0) * 12px + var(--fly, 0) * 130px)) scale(calc(1 + var(--z, 0) * .2 + var(--fly, 0) * 2.3)); }
+
+.sm-l-type { transform: scale(calc(1 + var(--z, 0) * .035 + var(--fly, 0) * .5)); }
+
+.sm-st-nav { position: absolute; left: 0; right: 0; top: 0; z-index: 3; display: flex; align-items: center; justify-content: space-between; height: 5.4em; padding: 0 4.4em; }
+.sm-st-logo { display: inline-flex; align-items: center; gap: .6em; font: 500 1.3em/1 var(--serif); letter-spacing: -.01em; white-space: nowrap; }
+.sm-st-logo i { position: relative; width: .95em; height: .95em; border-radius: 50%; box-shadow: inset 0 0 0 .1em currentColor; }
+.sm-st-logo i::after { content: ''; position: absolute; inset: .32em; border-radius: 50%; background: var(--c-acc); }
+.sm-st-links { display: flex; align-items: center; gap: 2.2em; font-size: .95em; font-weight: 500; white-space: nowrap; color: var(--c-soft); }
+.sm-st-navbtn { padding: .6em 1.35em; border-radius: 99em; box-shadow: inset 0 0 0 1px var(--c-line); color: var(--c-ink); }
+.sm-st-hero { position: absolute; left: 4.4em; top: 49%; max-width: 52em; transform: translateY(-54%); }
+.sm-st-eyebrow { display: inline-flex; align-items: center; gap: .8em; font-size: .92em; font-weight: 500; letter-spacing: .02em; color: var(--c-soft); opacity: var(--h1, 1); }
+.sm-st-eyebrow i { width: 2.6em; height: 1px; background: var(--c-acc); }
+.sm-st .sm-st-h1 { margin-top: .2em; font: 500 7.4em/.94 var(--serif); letter-spacing: -.04em; }
+.sm-st-m { display: block; overflow: hidden; padding: .04em .08em .16em 0; margin-bottom: -.16em; }
+.sm-st-m > span { display: block; transform: translate3d(0, calc((1 - var(--h1, 1)) * 114%), 0); }
+.sm-st-m + .sm-st-m > span { transform: translate3d(0, calc((1 - clamp(0, var(--h1, 1) * 1.6 - .6, 1)) * 114%), 0); }
+.sm-st .sm-st-lead { margin-top: 1.25em; max-width: 25em; font-size: 1.15em; color: var(--c-soft); opacity: calc(var(--h1, 1) * 2 - 1); }
+.sm-st-actions { display: flex; align-items: center; gap: .9em; margin-top: 2em; opacity: calc(var(--h1, 1) * 2.4 - 1.4); }
+.sm-st-btn { display: inline-flex; align-items: center; gap: .5em; height: 3.3em; padding: 0 1.7em; border-radius: 99em; background: var(--c-ink); color: #0b0709; font-weight: 600; white-space: nowrap; }
+.sm-st-btn svg { width: 1.1em; height: 1.1em; }
+.sm-st-ghost { display: inline-flex; align-items: center; height: 3.3em; padding: 0 1.5em; border-radius: 99em; background: rgb(7 5 6 / .5); box-shadow: inset 0 0 0 1px var(--c-line); font-weight: 600; white-space: nowrap; }
+.sm-st .sm-st-foot { position: absolute; left: 4.4em; right: 4.4em; bottom: 2em; display: flex; align-items: center; gap: 1.2em; font-size: .85em; font-variant-numeric: tabular-nums; color: var(--c-mut); opacity: var(--h1, 1); }
+.sm-st-foot i { width: 5em; height: 1px; background: var(--c-line); }
+
+/* ── ekran 2: oferta. Rozchodzi się od słońca miękką plamą (--iris), a obraz dojeżdża z lekkiego zbliżenia. Potem
+   JAZDA W BOK (--mv): tor kart przesuwa się pod kamerą, karta w kadrze rośnie i jaśnieje (--f), grafika w kartach
+   jedzie wolniej niż ramka, obrysowany napis w tle najwolniej. Na końcu przycisk zapala się (--gp). Zamknięcie:
+   ta sama plama zbiega się na kształcie kontaktu (--out). ── */
+.sm-st-cam2 { position: absolute; inset: 0; transform-origin: var(--iX) var(--iY); transform: scale(calc(1.14 - min(1, var(--iris, 0) * 1.5) * .14 + var(--out, 0) * .4)); }
+.sm-st-mq { position: absolute; left: 0; top: 54%; white-space: nowrap; font: italic 500 19em/1 var(--serif); letter-spacing: -.04em; color: transparent; -webkit-text-stroke: 1px rgba(255, 255, 255, .08); transform: translate3d(calc(3em - var(--mv, 1) * 20em), -50%, 0); }
+.sm-st-works { position: absolute; left: 4.4em; right: 0; top: 6.2em; bottom: 2.2em; display: flex; flex-direction: column; justify-content: center; }
+.sm-st-whead { display: flex; align-items: flex-end; justify-content: space-between; gap: 2em; padding-right: 4.4em; }
+.sm-st-s2 .sm-st-eyebrow { opacity: 1; color: var(--c-acc); color: color-mix(in oklab, var(--c-acc) 70%, #fff); }
+.sm-st .sm-st-h2 { margin-top: .1em; font: 500 4.4em/1.02 var(--serif); letter-spacing: -.035em; }
+.sm-st-track { display: flex; gap: 2em; width: max-content; margin-top: 1.8em; transform: translate3d(calc(var(--mv, 1) * -1 * var(--pan)), 0, 0); }
+.sm-st-card {
+  /* --f: 1 = karta w kadrze kamery, 0 = poza nim (miejsce kadru przesuwa się po torze razem z --mv) */
+  --o: calc(var(--k) - var(--mv, 1) * 3);
+  --f: clamp(0, calc(1.15 - max(var(--o), -1 * var(--o)) * .75), 1);
+  flex: 0 0 25em; min-width: 0; opacity: calc(.42 + .58 * var(--f));
+  transform-origin: 50% 100%; transform: translate3d(0, calc(var(--py, 0) * (var(--k) - 1.5) * .4em), 0) scale(calc(.9 + .1 * var(--f)));
+}
+.sm-st-card-art { position: relative; display: block; aspect-ratio: 5 / 4; overflow: hidden; border-radius: 1.2em; background: var(--c-card); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), inset 0 0 0 1px rgba(255, 255, 255, .08); }
+/* grafika karty leży na szerszej płycie i jedzie wolniej niż ramka (paralaksa w oknie karty) */
+.sm-st-card-art > span { position: absolute; inset: 0 -12%; display: block; transform: translate3d(calc(var(--o) * 2.4em), 0, 0); }
+.sm-st-card-art i { position: absolute; display: block; }
+.sm-st-card-art[data-v="0"] i:nth-child(1) { left: 22%; bottom: 22%; width: 34%; aspect-ratio: 1; border-radius: 50%; background: var(--c-sun); }
+.sm-st-card-art[data-v="0"] i:nth-child(2) { left: -10%; right: -10%; bottom: -40%; height: 72%; border-radius: 50%; background: var(--c-bg); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .3); }
+.sm-st-card-art[data-v="1"] i:nth-child(1) { left: 31%; bottom: -1px; width: 38%; height: 76%; border-radius: 99em 99em 0 0; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .5); }
+.sm-st-card-art[data-v="1"] i:nth-child(2) { left: 50%; bottom: 30%; width: 10%; aspect-ratio: 1; margin-left: -5%; border-radius: 50%; background: var(--c-sun); }
+.sm-st-card-art[data-v="2"] i:nth-child(1) { left: 50%; top: 50%; width: 54%; aspect-ratio: 1; margin: -27% 0 0 -27%; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .34); }
+.sm-st-card-art[data-v="2"] i:nth-child(2) { left: 50%; top: 50%; width: 30%; aspect-ratio: 1; margin: -15% 0 0 -15%; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--c-acc); }
+.sm-st-card-art[data-v="2"] i:nth-child(3) { left: 50%; top: 50%; width: 10%; aspect-ratio: 1; margin: -5% 0 0 -5%; border-radius: 50%; background: var(--c-ink); }
+.sm-st-card-art[data-v="3"] i:nth-child(1) { right: 20%; top: 18%; width: 18%; aspect-ratio: 1; border-radius: 50%; background: var(--c-ink); }
+.sm-st-card-art[data-v="3"] i:nth-child(2) { left: -8%; right: 30%; bottom: -44%; height: 82%; border-radius: 50%; background: var(--c-bg); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .3); }
+.sm-st-card-art[data-v="3"] i:nth-child(3) { left: 34%; right: -12%; bottom: -56%; height: 82%; border-radius: 50%; background: var(--c-card); box-shadow: inset 0 0 0 1px var(--c-acc); }
+.sm-st-card-cap { display: flex; align-items: baseline; justify-content: space-between; gap: 1em; margin-top: .8em; white-space: nowrap; }
+.sm-st-card-cap b { font: 500 1.5em/1.2 var(--serif); letter-spacing: -.01em; }
+.sm-st-card-cap span { font-size: .86em; color: var(--c-mut); }
+/* runda 6 („trochę więcej tam dodaj”): numer karty, znak przejścia (jaśnieje, gdy karta jest w kadrze kamery)
+   i zdanie pod nazwą usługi */
+.sm-st-card-n { position: absolute; left: 1.1em; top: .95em; font: 500 1.15em/1 var(--serif); font-variant-numeric: tabular-nums; color: var(--c-soft); }
+.sm-st-card-go { position: absolute; right: .9em; top: .8em; display: grid; place-items: center; width: 2.5em; height: 2.5em; border-radius: 50%; background: rgb(7 5 6 / .5); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, calc(.14 + .4 * var(--f))); opacity: calc(.4 + .6 * var(--f)); }
+.sm-st-card-go svg { width: 1.05em; height: 1.05em; }
+.sm-st-card-d { display: block; margin-top: .3em; font-size: .9em; color: var(--c-mut); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: calc(.3 + .7 * var(--f)); }
+/* tor pod kartami: wypełnia się razem z jazdą kamery, punkty zapalają się, gdy karta wchodzi w kadr */
+.sm-st-rail { position: relative; height: 1px; margin: 1.9em 4.4em 0 0; background: var(--c-line); }
+.sm-st-rail i { position: absolute; inset: 0; background: var(--c-acc); transform-origin: 0 50%; transform: scaleX(var(--mv, 1)); }
+.sm-st-rail b { position: absolute; top: 50%; left: calc(var(--k) / 3 * 100%); width: .7em; height: .7em; margin: -.35em 0 0 -.35em; border-radius: 50%; background: var(--c-bg); box-shadow: inset 0 0 0 1px var(--c-acc); }
+.sm-st-rail b::after { content: ''; position: absolute; inset: 0; border-radius: 50%; background: var(--c-acc); opacity: clamp(0, calc((var(--mv, 1) * 3 - var(--k) + .06) * 30), 1); }
+.sm-st-rail em { position: absolute; top: 50%; left: calc(var(--mv, 1) * 100%); width: 1.1em; height: 1.1em; margin: -.55em 0 0 -.55em; border-radius: 50%; background: var(--c-ink); box-shadow: 0 0 0 .22em var(--c-bg), 0 0 0 .3em var(--c-acc); }
+.sm-st-case { position: relative; flex: none; display: inline-flex; align-items: center; gap: .5em; height: 3.1em; margin-bottom: .5em; padding: 0 1.5em; border-radius: 99em; box-shadow: inset 0 0 0 1px var(--c-line); font-weight: 600; white-space: nowrap; transform: scale(calc(1 + clamp(0, calc((var(--gp, 1) - .5) * 4), 1) * .06)); }
+.sm-st-case svg { width: 1.1em; height: 1.1em; }
+.sm-st-case-f { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: .5em; border-radius: inherit; background: var(--c-ink); color: #0b0709; opacity: clamp(0, calc(var(--gp, 1) * 2.4 - .5), 1); }
+
+/* ── ekran 3: kontakt. Pojawia się miękką plamą od kształtu z kręgów: w filmie odsłania go zbiegający się ekran
+   oferty (--out), w pokazie zakresu własne rozejście (--dusk). Kamera dojeżdża z lekkiego zbliżenia (--o3) i robi
+   krótki najazd, gdy kursor dotyka kształtu (--glow); kształt odpowiada falą. ── */
+.sm-st-cam3 { position: absolute; inset: 0; transform-origin: var(--oX) var(--oY); transform: scale(calc(1 + (1 - var(--o3, 1)) * .12 + var(--glow, 0) * .035)); }
+.sm-st-end { position: absolute; left: 4.4em; top: 52%; max-width: 34em; transform: translateY(-50%); }
+.sm-st-end .sm-st-h1 { margin: 0; }
+.sm-st .sm-st-q { margin-top: 1.5em; max-width: 21em; font-size: 1.25em; line-height: 1.5; color: var(--c-soft); }
+.sm-st .sm-st-qby { margin-top: .9em; font-size: .9em; color: var(--c-mut); }
+.sm-st-end .sm-st-btn { margin-top: 2.2em; transform: translate3d(calc(var(--px, 0) * .5em), calc(var(--py, 0) * .4em), 0); }
+.sm-st-orb { position: absolute; left: var(--oX); top: var(--oY); width: 28em; height: 28em; margin: -14em 0 0 -14em; transform: translate3d(calc(var(--px, 0) * 1.8em), calc(var(--py, 0) * 1.3em), 0); }
+.sm-st-orb > * { position: absolute; border-radius: 50%; }
+.sm-st-orb > .sm-st-flare { border-radius: 0; opacity: .7; width: 80em; margin-left: -40em; }
+.sm-st-orb b { inset: 6em; background: var(--c-sun); background: linear-gradient(180deg, color-mix(in oklab, var(--c-sun) 84%, #fff), var(--c-sun) 44%, color-mix(in oklab, var(--c-sun) 80%, #000)); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .3); transform: scale(calc(1 + var(--glow, 0) * .1 - var(--k, 0) * .07)); }
+.sm-st-orb-r { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .34); }
+.sm-st-orb-r:nth-child(1) { inset: 2.6em; }
+.sm-st-orb-r:nth-child(2) { inset: -2em; opacity: .55; }
+.sm-st-orb-r:nth-child(3) { inset: -9em; opacity: .28; }
+.sm-st-orb-w { inset: 6em; box-shadow: inset 0 0 0 .1em var(--c-acc); transform: scale(calc(1 + var(--rip1, 0) * 3)); opacity: calc(min(var(--rip1, 0) * 9, 1) * (1 - var(--rip1, 0))); }
+.sm-st-orb-w + .sm-st-orb-w { box-shadow: inset 0 0 0 .08em var(--c-ink); transform: scale(calc(1 + var(--rip2, 0) * 2.3)); opacity: calc(min(var(--rip2, 0) * 9, 1) * (1 - var(--rip2, 0))); }
+.sm-st-cur { position: absolute; left: var(--oX); top: var(--oY); z-index: 4; opacity: var(--co, 0); transform-origin: 0 0; transform: translate3d(calc((1 - var(--cur, 1)) * 15em + 3.4em), calc((1 - var(--cur, 1)) * 11em + 4.2em), 0) scale(calc(1 - var(--k, 0) * .16)); pointer-events: none; }
+.sm-st-cur svg { width: 2.1em; height: 2.1em; fill: #fff; stroke: #0b0709; stroke-width: 1.4px; }
+
+/* ── ekran REALIZACJI (w opowieści między ofertą a kontaktem; runda 6, właściciel 2026-10-05: „po usługach dodaj coś
+   ciekawego jeszcze, jakąś sekcję cinematic”): LOT W GŁĄB. Kolumnada łuków z włosowych linii prowadzi do światła;
+   kamera (--fc, w krokach realizacji; pisze film) leci przez nią z postojem przy każdej realizacji.
+   GŁĘBIA BEZ PRZEKSZTAŁCEŃ: każdy łuk ma odległość od kamery --gd (1 = płaszczyzna ostrości) i wielkość pisma 1 / --gd,
+   a wymiary w em - więc maleje z odległością, a linie zostają włosowe (1 px) i ostre. Łuk bliższy niż płaszczyzna
+   ostrości rośnie i gaśnie (kamera przez niego przelatuje). Środek zbiegu = środek kształtu ekranu kontaktu
+   (--oX / --oY), a światło na końcu kolumnady to TEN SAM kształt (.sm-st-orb) w odległości --dl: przy --fc = 3,4 ma
+   --dl = 1, czyli leży dokładnie na kształcie ekranu kontaktu pod spodem - wtedy ekran zbiega się na nim (--out).
+   Zmiana wymiarów łuku (--rw pół szerokości, --rh od środka do posadzki, --gt od środka do szczytu) = poprawić kąty
+   torów posadzki (--al / --ar: atan2(--rh, ∓--rw)).
+   POJAWIANIE SIĘ: kilka obłoków jeden po drugim od prawej (kierunek jazdy kamery wzdłuż oferty), rosną, dryfują
+   i zlewają się (--rz 0-1) - nie jedna plama i nie jedna krawędź (decyzja właściciela z podstrony CRM, 2026-10-05). ── */
+.sm-rz-in {
+  position: absolute; inset: 0; background: var(--c-bg);
+  --ra: var(--rz, 0);
+  --q0: clamp(0, var(--ra) * 2.5, 1);
+  --q1: clamp(0, (var(--ra) - .1) * 2.4, 1);
+  --q2: clamp(0, (var(--ra) - .22) * 2.6, 1);
+  --q3: clamp(0, (var(--ra) - .33) * 2.3, 1);
+  --q4: clamp(0, (var(--ra) - .45) * 2.5, 1);
+  --q5: clamp(0, (var(--ra) - .56) * 2.6, 1);
+  /* ostatnia warstwa domyka całość dopiero przy --ra > .9 (obłoki kryją wtedy już cały ekran) - bezpiecznik */
+  --pm:
+    radial-gradient(ellipse calc(var(--q0) * 92cqmax) calc(var(--q0) * 70cqmax) at calc(102% - var(--ra) * 6%) 24%, #000 52%, transparent),
+    radial-gradient(ellipse calc(var(--q1) * 80cqmax) calc(var(--q1) * 88cqmax) at calc(84% - var(--ra) * 5%) 78%, #000 50%, transparent),
+    radial-gradient(ellipse calc(var(--q2) * 96cqmax) calc(var(--q2) * 66cqmax) at calc(63% - var(--ra) * 7%) 30%, #000 54%, transparent),
+    radial-gradient(ellipse calc(var(--q3) * 78cqmax) calc(var(--q3) * 90cqmax) at calc(45% - var(--ra) * 4%) 72%, #000 50%, transparent),
+    radial-gradient(ellipse calc(var(--q4) * 94cqmax) calc(var(--q4) * 72cqmax) at calc(26% - var(--ra) * 6%) 26%, #000 52%, transparent),
+    radial-gradient(ellipse calc(var(--q5) * 86cqmax) calc(var(--q5) * 92cqmax) at calc(8% - var(--ra) * 4%) 74%, #000 50%, transparent),
+    linear-gradient(to left, #000 calc((var(--ra) - .9) * 1500%), transparent calc((var(--ra) - .9) * 1500% + 30%));
+  -webkit-mask-image: var(--pm); mask-image: var(--pm);
+}
+.sm-rz-cam { position: absolute; inset: 0; }
+/* kolumnada dojeżdża z prawej razem z obłokami (nawigacja i tekst stoją - nawigacja jest ta sama co na ekranie
+   oferty pod spodem, przesunięta dwoiłaby się na miękkiej krawędzi obłoków) */
+.sm-rz-hall {
+  position: absolute; inset: 0; transform: translate3d(calc((1 - var(--rz, 0)) * 3em), 0, 0);
+  --rw: 12; --rh: 14; --gt: 19; --al: 130.6deg; --ac: 90deg; --ar: 49.4deg;
+  /* dolot do światła: kolumnada gaśnie, zostaje sam kształt (to, co za chwilę jest na ekranie kontaktu) */
+  --end: clamp(0, (var(--fc, 0) - 2.8) * 1.8, 1);
+}
+/* tory posadzki zbiegają się w środku zbiegu; z kursorem obracają się razem z łukami (kąt liczony z paralaksy) */
+@supports (transform: rotate(atan2(1, 1))) {
+  .sm-rz-hall {
+    --al: atan2(calc(var(--rh) + var(--py, 0) * 1.3), calc(var(--px, 0) * 1.8 - var(--rw)));
+    --ac: atan2(calc(var(--rh) + var(--py, 0) * 1.3), calc(var(--px, 0) * 1.8));
+    --ar: atan2(calc(var(--rh) + var(--py, 0) * 1.3), calc(var(--px, 0) * 1.8 + var(--rw)));
+  }
+}
+.sm-rz-rail { position: absolute; left: var(--oX); top: var(--oY); width: 110em; height: 1px; transform-origin: 0 50%; background: linear-gradient(90deg, transparent 5%, rgba(255, 255, 255, .24) 20%, rgba(255, 255, 255, .07)); opacity: calc(1 - var(--end)); }
+.sm-rz-rail--l { transform: rotate(var(--al)); }
+.sm-rz-rail--c { transform: rotate(var(--ac)); opacity: calc((1 - var(--end)) * .45); }
+.sm-rz-rail--r { transform: rotate(var(--ar)); }
+.sm-rz-gate {
+  --go: calc(var(--k) * .5 - var(--fc, 0));
+  --gd: max(.2, 1 + var(--go) * .9);
+  position: absolute; left: var(--oX); top: var(--oY); font-size: calc(1em / var(--gd));
+  width: calc(var(--rw) * 2em); height: calc((var(--gt) + var(--rh)) * 1em); margin: calc(var(--gt) * -1em) 0 0 calc(var(--rw) * -1em);
+  border-radius: calc(var(--rw) * 1em) calc(var(--rw) * 1em) 0 0; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .26);
+  opacity: calc(clamp(0, (var(--gd) - .55) * 4, 1) * clamp(0, 1.3 - var(--gd) * .24, 1) * (1 - var(--end)));
+  transform: translate3d(calc(var(--px, 0) * 1.8em), calc(var(--py, 0) * 1.3em), 0);
+}
+/* łuk realizacji: jaśniejszy, z drugą linią w kolorze podstrony, punktem w zworniku i numerem przy podstawie */
+.sm-rz-gate[data-p] { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .62); }
+.sm-rz-gate[data-p]::before { content: ''; position: absolute; inset: .8em .8em 0; border-radius: calc(var(--rw) * 1em - .8em) calc(var(--rw) * 1em - .8em) 0 0; box-shadow: inset 0 0 0 1px var(--c-acc); opacity: .6; }
+.sm-rz-gate[data-p]::after { content: ''; position: absolute; left: 50%; top: -.28em; width: .56em; height: .56em; margin-left: -.28em; border-radius: 50%; background: var(--c-acc); }
+.sm-rz-gate b { position: absolute; right: calc(100% + .8em); bottom: 0; font: 500 1.7em/1 var(--serif); letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: var(--c-soft); white-space: nowrap; }
+/* światło na końcu kolumnady = kształt ekranu kontaktu widziany z daleka; kręgi wokół niego wychodzą przy dolocie */
+.sm-rz-far { position: absolute; inset: 0; --dl: max(.2, 1 + (3.4 - var(--fc, 0)) * .9); --rf: clamp(0, (var(--fc, 0) - 2.5) * 1.4, 1); font-size: calc(1em / var(--dl)); }
+.sm-rz-far .sm-st-orb-r:nth-child(1) { opacity: var(--rf); }
+.sm-rz-far .sm-st-orb-r:nth-child(2) { opacity: calc(var(--rf) * .55); }
+.sm-rz-far .sm-st-orb-r:nth-child(3) { opacity: calc(var(--rf) * .28); }
+.sm-rz-far .sm-st-orb > .sm-st-flare { opacity: calc(.3 + var(--rf) * .4); }
+/* pył: dwa plany punktów rozsuwają się od środka zbiegu, bliższy szybciej (lot) */
+.sm-rz-dust { position: absolute; inset: 0; opacity: calc(1 - var(--end, 0)); --end: clamp(0, (var(--fc, 0) - 2.8) * 1.8, 1); }
+.sm-rz-dust i, .sm-rz-dust b { position: absolute; inset: -30%; transform-origin: calc((30% + var(--oX)) / 1.6) calc((30% + var(--oY)) / 1.6); }
+.sm-rz-dust i {
+  opacity: .45; transform: scale(calc(1 + var(--fc, 0) * .12));
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, .8) .08em, transparent .1em) 12% 20% / 19em 15em,
+    radial-gradient(circle, rgba(255, 255, 255, .5) .06em, transparent .08em) 60% 70% / 13em 17em;
+}
+.sm-rz-dust b {
+  opacity: .5; transform: scale(calc(1 + var(--fc, 0) * .34));
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, .85) .1em, transparent .13em) 30% 40% / 37em 29em,
+    radial-gradient(circle, rgb(var(--sv-ac)) .09em, transparent .12em) 80% 15% / 31em 23em;
+}
+/* tekst: jedno miejsce, jedna realizacja naraz (--tf = 1, gdy kamera stoi przy jej łuku); gaśnie przed dolotem */
+.sm-rz-copy { position: absolute; left: 4.4em; bottom: 4.2em; z-index: 2; width: 27em; opacity: calc(1 - clamp(0, (var(--fc, 0) - 2.45) * 1.6, 1)); transform: translate3d(calc(var(--px, 0) * -.5em), calc(var(--py, 0) * -.35em), 0); }
+.sm-st-s4 .sm-st-eyebrow { opacity: 1; color: var(--c-acc); color: color-mix(in oklab, var(--c-acc) 70%, #fff); }
+.sm-rz-titles { display: grid; margin-top: .2em; }
+.sm-rz-t { grid-area: 1 / 1; --to: calc(var(--k) - var(--fc, 0)); --tf: clamp(0, 1 - max(var(--to), -1 * var(--to)) * 2.4, 1); opacity: var(--tf); transform: translate3d(0, calc(var(--to) * 1.8em), 0); }
+.sm-st .sm-rz-meta { display: flex; gap: 1.3em; margin-top: .55em; font-size: .92em; font-variant-numeric: tabular-nums; color: var(--c-mut); }
+.sm-rz-meta span + span { color: var(--c-soft); }
+.sm-st .sm-rz-lead { margin-top: 1.1em; max-width: 24em; font-size: 1.05em; color: var(--c-soft); }
+.sm-rz-copy .sm-st-ghost { gap: .5em; margin-top: 1.5em; }
+.sm-rz-copy .sm-st-ghost svg { width: 1.1em; height: 1.1em; }
+.sm-rz-bar { position: relative; display: block; width: 12em; height: 1px; margin-top: 1.7em; background: var(--c-line); }
+.sm-rz-bar i { position: absolute; inset: 0; background: var(--c-acc); transform-origin: 0 50%; transform: scaleX(clamp(0, var(--fc, 0) / 2, 1)); }
+
+/* wąskie, PIONOWE okno (film na telefonie): jedna kolumna, mniejszy nagłówek, karty oferty na wysokość kciuka.
+   Wąskie okno POZIOME (kadr w pokazie zakresu na telefonie) zostaje przy układzie szerokim - to miniatura strony
+   w przeglądarce, układ telefonu w niskim pudełku miał pismo wielkości 6 px i pustą prawą połowę.
+   Ruchy kamery są tu łagodniejsze dla warstwy z tekstem i ekranu kontaktu: przy pełnej skali wypychały nawigację
+   makiety za górną krawędź okna (środek skali leży nisko, przy słońcu / kształcie). */
+@container (max-width: 430px) and (orientation: portrait) {
+  .sm-st-in { font-size: var(--sm-fs-n, min(3.5cqw, 2.5cqh)); --sX: 66%; --sY: calc(100% - 12.5em); --sunR: 11em; --rise: 20em; --oX: 62%; --oY: 73%; --pan: max(0em, calc(78.6em - 100cqw)); }
+  .sm-st[data-hz="sea"] .sm-st-in { --sX: 64%; --hzY: calc(100% - 11em); --sY: calc(100% - 16em); --sunR: 10em; --rise: 15em; }
+  .sm-st[data-hz="orbit"] .sm-st-in { --sX: 66%; --pR: 130cqw; --pX: 40%; --pDx: 26cqw; --pDrop: 2.63cqw; --pTop: calc(100% - 11em); --sY: calc(100% - 13em + var(--pDrop)); --sunR: 6.5em; --rise: 11em; }
+  .sm-st[data-hz="peak"] .sm-st-in { --sX: 68%; --sY: calc(100% - 15em); --sunR: 8.5em; --rise: 14em; }
+  .sm-st-ridges { height: 15em; }
+  .sm-hz-peak { height: 19em; }
+  .sm-hz-cloud { width: calc(30em - var(--k) * 6em); left: calc(var(--sX) - 15em); margin-left: calc(var(--k) * 4em); }
+  .sm-l-type { transform: scale(calc(1 + var(--z, 0) * .015 + var(--fly, 0) * .5)); }
+  .sm-st-cam3 { transform: scale(calc(1 + (1 - var(--o3, 1)) * .1 + var(--glow, 0) * .012)); }
+  /* na telefonie kształtu dotyka palec, nie kursor */
+  .sm-st-cur svg { display: none; }
+  .sm-st-cur::before { content: ''; display: block; width: 2.8em; height: 2.8em; margin: -1.4em 0 0 -1.4em; border-radius: 50%; background: rgba(255, 255, 255, .2); box-shadow: inset 0 0 0 .14em #fff; }
+  .sm-st-nav { height: 4.6em; padding: 0 1.5em; }
+  .sm-st-navlink { display: none; }
+  .sm-st-hero { left: 1.5em; right: 1.5em; top: 33%; }
+  .sm-st .sm-st-h1 { font-size: 3.7em; }
+  .sm-st .sm-st-lead { font-size: 1.05em; max-width: 19em; }
+  .sm-st-ghost { display: none; }
+  .sm-st .sm-st-foot { left: 1.5em; right: 1.5em; bottom: 1.3em; }
+  .sm-st-mq { font-size: 10em; }
+  .sm-st-works { left: 1.5em; top: 5em; bottom: 1.5em; }
+  .sm-st-whead { display: block; padding-right: 1.5em; }
+  .sm-st .sm-st-h2 { font-size: 2.8em; }
+  .sm-st-case { margin: 1em 0 0; }
+  .sm-st-track { gap: 1.2em; margin-top: 1.4em; }
+  /* karta prawie na szerokość okna, następna wystaje z prawej (zmiana szerokości = poprawić --pan wyżej:
+     4 karty + 3 odstępy + marginesy 2 x 1.5em) */
+  .sm-st-card { flex: 0 0 18em; }
+  .sm-st-card-art { aspect-ratio: 5 / 5.6; }
+  .sm-st-rail { margin: 1.6em 1.5em 0 0; }
+  .sm-st-end { left: 1.5em; right: 1.5em; top: 28%; }
+  .sm-st .sm-st-q { font-size: 1.05em; max-width: 18em; }
+  .sm-st-orb { width: 20em; height: 20em; margin: -10em 0 0 -10em; }
+  .sm-st-orb b, .sm-st-orb-w { inset: 4.4em; }
+  .sm-st-orb-r:nth-child(1) { inset: 2em; }
+  .sm-st-orb-r:nth-child(2) { inset: -1.4em; }
+  .sm-st-orb-r:nth-child(3) { inset: -6em; }
+  .sm-st-card-n { left: .9em; top: .8em; }
+  .sm-st-card-d { display: none; }
+  /* realizacje: tekst u góry (jak na ekranie kontaktu), kolumnada niżej; łuk węższy, wysoki (stałe kąty torów:
+     atan2(7, ∓7.5) - na dotyku nie ma kursora, więc nie trzeba ich liczyć z paralaksy) */
+  .sm-rz-hall { --rw: 7.5; --rh: 7; --gt: 15; --al: 137deg; --ac: 90deg; --ar: 43deg; }
+  .sm-rz-gate[data-p]::before { inset: .6em .6em 0; border-radius: calc(var(--rw) * 1em - .6em) calc(var(--rw) * 1em - .6em) 0 0; }
+  .sm-rz-gate b { right: calc(100% + .6em); font-size: 1.4em; }
+  .sm-rz-copy { left: 1.5em; right: 1.5em; top: 5.4em; bottom: auto; width: auto; }
+  .sm-st .sm-rz-lead { display: none; }
+  .sm-rz-bar { width: 9em; margin-top: 1.2em; }
+}
+
+/* wydajność (2026-10-06): sekcja daleko od ekranu (data-idle, CustomWebsite.tsx) zatrzymuje swoje animacje CSS -
+   migotanie gwiazd, dryf chmur, „oddychanie” gwiazd nici, pokazy zakresu. Wracają, gdy sekcja zbliża się do ekranu. */
+.sm > section[data-idle] *, .sm > section[data-idle] *::before, .sm > section[data-idle] *::after { animation-play-state: paused !important; }
+
+/* fala po kliknięciu / stuknięciu odwiedzającego w kadrze (film.tsx dokłada .sm-rp; do sześciu naraz) */
+.sm-rp { position: absolute; z-index: 5; width: 0; height: 0; pointer-events: none; }
+.sm-rp i { position: absolute; left: -130px; top: -130px; width: 260px; height: 260px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .92); animation: sm-rp 1.7s cubic-bezier(.16, 1, .3, 1) both; }
+.sm-rp i + i { box-shadow: inset 0 0 0 1.5px rgb(var(--sv-ac) / .95); animation-delay: .14s; }
+@keyframes sm-rp { from { transform: scale(.04); opacity: 1; } 60% { opacity: .5; } to { transform: scale(1); opacity: 0; } }
+
+/* ══ KADR (.sm-fr) - rama, pasek z adresem, okno. Czysta czerń z kryciem (decyzje właściciela z pilota: „czarny, ale
+   z opacity”, bez bliku w rogu, bez szarego odcienia), ostry refleks u góry, kolor podstrony od dołu. W pasku nazwa
+   aktu i etykieta „Przykładowa strona” (makieta ma być czytelna jako makieta). ══ */
+.sm-fr-rim {
+  position: relative; display: flex; flex-direction: column; padding: 8px; border-radius: 26px;
+  background: radial-gradient(90% 40% at 50% 112%, rgb(var(--sv-ac) / .2), transparent 65%), linear-gradient(160deg, rgba(0, 0, 0, .52), rgba(0, 0, 0, .64));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18), inset 0 -1px 0 rgba(0, 0, 0, .55), inset 1px 0 0 rgba(255, 255, 255, .06), inset -1px 0 0 rgba(255, 255, 255, .035),
+    inset 0 0 18px rgba(0, 0, 0, .3), 0 0 0 1px rgba(255, 255, 255, .07), 0 50px 90px -50px rgba(0, 0, 0, .95), 0 18px 34px -18px rgba(0, 0, 0, .8);
+}
+.sm-fr-bar { position: relative; display: flex; align-items: center; gap: 14px; height: 30px; padding: 0 8px 8px; font-size: 12.5px; line-height: 1; color: #94a3b8; white-space: nowrap; }
+.sm-fr-url { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.sm-fr-url > i { width: 6px; height: 6px; border-radius: 50%; background: rgb(var(--sv-ac)); }
+.sm-fr-state { display: grid; margin-left: auto; justify-items: end; }
+.sm-fr-state b { grid-area: 1 / 1; font-weight: 500; color: #e2e8f0; }
+.sm-fr-state b:not([data-s="0"]) { display: none; }
+.sm-fr-tag { padding-left: 14px; border-left: 1px solid rgba(255, 255, 255, .14); }
+.sm-fr-port { position: relative; }
+.sm-fr-view { position: relative; aspect-ratio: 3 / 4; overflow: hidden; border-radius: 18px; background: #070506; box-shadow: 0 0 0 1px rgba(0, 0, 0, .5), 0 0 0 2px rgba(255, 255, 255, .06); }
+@media (min-width: 768px) { .sm-fr-view { aspect-ratio: 16 / 10; } }
+.sm-fr-view::after { content: ''; position: absolute; inset: 0; z-index: 6; border-radius: inherit; pointer-events: none; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08); }
+/* telefon: etykieta „Przykładowa strona” zostaje na pasku (makieta ma być podpisana także tutaj); znika dopiero
+   poniżej 375 px, gdzie nie mieści się obok adresu i nazwy aktu */
+@media (max-width: 479.98px) { .sm-fr-bar { gap: 10px; } .sm-fr-tag { padding-left: 10px; } }
+@media (max-width: 374.98px) { .sm-fr-tag { display: none; } }
+
+/* ══ SCENA 1 - FILM: pierwszy ekran „HORYZONT” (wybór właściciela 2026-10-05) + przypięta scena z kamerą ══════════
+   Pierwszy ekran: pod nagłówkiem, na CAŁĄ szerokość ekranu, stoi krajobraz ze strony w kadrze - słońce tuż przed
+   wschodem. To ten sam kadr co w filmie, tylko powiększony do szerokości okna (--bleed = szerokość okna / szerokość
+   kadru, mierzy film.tsx). RUNDA 5 („zrób ładniej”): krajobraz nie jest już prostokątnym pasem z kreską u góry -
+   jego niebo ROZPUSZCZA SIĘ w niebie podstrony (maska gaśnie ku górze), więc słońce i horyzont stoją wprost
+   w mgławicy, a na komputerze słońce wschodzi wyżej, obok nagłówka. Przy przewijaniu kamera odjeżdża, wokół
+   krajobrazu zamyka się kadr przeglądarki, słońce wstaje i wysuwa się nagłówek strony.
+   Usunięte, NIE wracać bez prośby: „Moodboard” i „Scena” (właściciel wybrał Horyzont), „Poziom wyżej” (porównanie
+   z firmową), „Warstwy”. */
+.sm-a { position: relative; z-index: 1; }
+.sm-a-in { display: grid; gap: 44px; padding-top: 138px; }
+.sm-a .sv-title { max-width: 12.5ch; margin-bottom: 24px; font-size: clamp(40px, 11.2vw, 58px); line-height: .96; }
+.sm-a .sv-lead { max-width: 33rem; }
+.sm-a-cam { position: relative; min-width: 0; }
+.sm-a-frame { position: relative; }
+.sm-a-hint, .sm-a-tag { display: none; }
+@media (max-width: 350px) { .sm-a .sv-title { font-size: 36px; } }
+@media (min-width: 640px) and (max-width: 1023.98px) { .sm-a .sv-title { font-size: clamp(58px, 9vw, 84px); } }
+@media (min-width: 1024px) {
+  .sm-a .sv-title { font-size: clamp(56px, 6.3vw, 104px); }
+  .sm-a .sv-lead { font-size: 19px; }
+}
+
+/* zaproszenie do zabawy w kadrze po trzecim akcie („Twoja kolej”) */
+.sm-a-hint { position: absolute; left: 50%; bottom: 16px; z-index: 7; margin: 0; padding: 9px 16px; border-radius: 99px; background: rgba(5, 5, 5, .86); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), 0 0 0 1px rgba(255, 255, 255, .1); font-size: 13.5px; line-height: 1.2; color: #f8fafc; white-space: nowrap; pointer-events: none; }
+.sm-a-hint-t { display: none; }
+@media (pointer: coarse) { .sm-a-hint-m { display: none; } .sm-a-hint-t { display: inline; } }
+
+/* WEJŚCIE PIERWSZEGO EKRANU - „WSCHÓD” (2026-10-06, właściciel: „jak się wchodzi, to jak nebula się pojawia, to laguje
+   ta nebula, plus weź reveal jakoś ładniej hero zrób, bo jest taki zwykły i tani”). Dotąd cały kadr wjeżdżał jednym
+   ruchem (krycie + 36 px w górę). Teraz krajobraz SKŁADA SIĘ z planów po tym, jak mgławica się rozejdzie: niebo z pyłem
+   jaśnieje, grzbiety podnoszą się od najdalszego do najbliższego (bliższe z dalszej drogi - głębia), słońce wstaje zza
+   nich, kręgi wokół niego rozchodzą się, krawędź najdalszego grzbietu łapie światło, gwiazdy zapalają się po kolei,
+   na końcu podpis makiety. Ruchy tylko dojeżdżają i siadają (bez odbicia).
+   WYDAJNOŚĆ WEJŚCIA: (1) przed startem (data-on + --in) kadr ma visibility: hidden - sam krycie 0 nie wystarczało:
+   kadr z maską i migoczącymi gwiazdami był składany w każdej klatce, choć niewidoczny, dokładnie wtedy, gdy mgławica
+   się odsłania; (2) wejście to wyłącznie animacje CSS krycia i przesunięcia (translate / scale jako osobne właściwości,
+   więc nie kłócą się z przekształceniami sterowanymi przewijaniem) - liczy je karta graficzna, bez JS. */
+@keyframes sm-late { from { opacity: 0; visibility: hidden; } }
+@keyframes sm-in-o { from { opacity: 0; } }
+@keyframes sm-in-rise { from { opacity: 0; translate: 0 var(--ry, 30%); } }
+@keyframes sm-in-halo { from { opacity: 0; scale: .8; } }
+@media (prefers-reduced-motion: no-preference) {
+  /* przypięta scena: 600vh drogi (odjazd kamery, nastrój, ruch, głębia, gest) - dłuższa niż na one-page (poziom 3);
+     do rundy 5 było 430vh, ujęcie „Głębia” (lot przez realizacje) dołożyło 170vh. Progi osi: film.tsx */
+  .sv[data-live] .sm-a { height: 700vh; height: calc(100svh + 600vh); --m: calc(.5 + .5 * var(--mf, 1)); --h1: var(--hf, 1); }
+  .sv[data-live] .sm-a-stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: clip; }
+  .sv[data-live] .sm-a-in { position: relative; display: block; height: 100%; padding-top: 0; }
+  /* nagłówek gaśnie i odpływa w górę przy odjeździe kamery (--cam 0-1); kursor przechodzi przez niego do kadru */
+  .sv[data-live] .sm-a-copy { position: absolute; left: 24px; right: 24px; top: 124px; z-index: 2; pointer-events: none; }
+  .sv[data-live] .sm-a-copy .sv-cta { pointer-events: auto; }
+  .sv[data-live] .sm-a[data-deep] .sm-a-copy .sv-cta { pointer-events: none; }
+  .sv[data-live] .sm-a-copy .sv-head { opacity: calc(1 - var(--cam, 0) * 2.6); transform-origin: 0 0; transform: translate3d(0, calc(var(--cam, 0) * -70px), 0) scale(calc(1 - var(--cam, 0) * .08)); }
+  /* kadr: w spoczynku (--r = 1) powiększony do szerokości okna i wysunięty pod dolną krawędź ekranu; przy
+     przewijaniu wraca do swojej wielkości. --land = wysokość krajobrazu na ekranie (od dołu): na telefonie zaczyna
+     się pod linią dowodów (--land-k: 1 = cała wysokość nagłówka, mierzona w film.tsx jako --copy-h), na komputerze
+     wyżej, obok nagłówka. W spoczynku (data-still) bez will-change - kadr rastrowany w rzeczywistej skali. */
+  .sv[data-live] .sm-a-cam { position: absolute; left: 16px; right: 16px; top: 84px; bottom: 142px; }
+  .sv[data-live] .sm-a-frame {
+    --r: calc(1 - var(--cam, 0));
+    --land: calc(max(210px, 100svh - var(--copy-h, 420px) * var(--land-k, 1) - var(--land-off, 160px)) / var(--bleed, 1.1));
+    display: flex; flex-direction: column; height: 100%; transform-origin: 50% 100%; will-change: transform;
+    transform: translate3d(0, calc(var(--r) * var(--drop, 154px)), 0) scale(calc(1 + var(--r) * (var(--bleed, 1.1) * 1.03 - 1)));
+  }
+  /* niebo krajobrazu rozpuszcza się w niebie podstrony: od górnej granicy krajobrazu (--cut) kadr jest przezroczysty
+     i nabiera pełnego krycia na pierwszych 22% wysokości krajobrazu (słońce i horyzont są już w pełni kryjące). Maska znika, gdy kadr stoi już w pełnej wielkości (data-full) */
+  .sv[data-live] .sm-a:not([data-full]) .sm-a-frame {
+    --cut: calc(var(--r) * (100% - var(--land)));
+    -webkit-mask-image: linear-gradient(to bottom, transparent var(--cut), #000 calc(var(--cut) + var(--r) * var(--land) * .22));
+    mask-image: linear-gradient(to bottom, transparent var(--cut), #000 calc(var(--cut) + var(--r) * var(--land) * .22));
+  }
+  .sv[data-live] .sm-a[data-still] .sm-a-frame { will-change: auto; }
+  /* po najeździe kamery kadr już się nie skaluje - bez will-change jest rastrowany w skali 1 (ostrzej i taniej) */
+  .sv[data-live] .sm-a[data-full] .sm-a-frame { will-change: auto; }
+  /* wydajność (2026-10-05, atrybuty data-v1..4 z film.tsx): ekran makiety, którego nie widać (maska zamknięta albo
+     w całości zasłonięty przez ekran nad nim), nie jest rysowany; przy w pełni otwartej masce maska schodzi.
+     Obraz bez zmian. Tylko film (.sm-a) - kopia makiety w zakresie zostaje bez zmian. */
+  .sv[data-live] .sm-a[data-v1="0"] .sm-st-s1,
+  .sv[data-live] .sm-a[data-v2="0"] .sm-st-s2,
+  .sv[data-live] .sm-a[data-v3="0"] .sm-st-s3,
+  .sv[data-live] .sm-a[data-v4="0"] .sm-st-s4 { visibility: hidden; }
+  .sv[data-live] .sm-a[data-v2="2"] .sm-st-s2,
+  .sv[data-live] .sm-a[data-v3="2"] .sm-st-s3,
+  .sv[data-live] .sm-a[data-v4="2"] .sm-st-s4 { -webkit-mask-image: none; mask-image: none; }
+  /* WYDAJNOŚĆ (2026-10-06, właściciel: „zoptymalizuj całą podstronę pod względem wydajności”):
+     (1) ekran realizacji ma dwie maski - wewnętrzna (obłoki, .sm-rz-in) jest potrzebna tylko, gdy ekran nadchodzi
+         (--rz < 1; data-m4 z film.tsx). Dotąd zostawała na cały lot kamery, a jej zawartość zmienia się wtedy w każdej
+         klatce, więc przeglądarka co klatkę składała cały ekran przez maskę;
+     (2) plany, które przy przewijaniu tylko ROSNĄ albo gasną (tekst pierwszego ekranu, gwiazdy, słońce, grzbiety,
+         ekrany oferty i kontaktu, pył kolumnady, nagłówek podstrony), dostają własne warstwy na czas ruchu
+         (will-change): przeglądarka skaluje gotowy obraz, zamiast rysować go od nowa w każdej klatce. W spoczynku
+         (data-still) will-change schodzi z planów pierwszego ekranu - wtedy są rysowane na ostro w skali krajobrazu
+         na cały ekran, a po ruszeniu ta ostra wersja jest już tylko pomniejszana. Obraz i ruch bez zmian. */
+  .sv[data-live] .sm-a[data-m4="0"] .sm-rz-in { -webkit-mask-image: none; mask-image: none; }
+  .sv[data-live] .sm-a:not([data-still]) :is(.sm-l-type, .sm-l-sky b, .sm-l-sky i, .sm-st-sunw, .sm-st-ridges, .sm-hz-water, .sm-hz-planet, .sm-hz-atmo, .sm-hz-peak > g),
+  .sv[data-live] .sm-a :is(.sm-st-cam2, .sm-st-cam3, .sm-rz-dust i, .sm-rz-dust b) { will-change: transform; }
+  .sv[data-live] .sm-a:not([data-still]) .sm-st-s1 :is(.sm-st-lead, .sm-st-actions, .sm-st-foot) { will-change: opacity; }
+  .sv[data-live] .sm-a:not([data-still]) .sm-a-copy .sv-head { will-change: transform, opacity; }
+  /* wejście „Wschód” (opis przy @keyframes sm-late): --in = ile po data-on rusza krajobraz - mgławica jest wtedy już
+     prawie rozłożona (odsłona tła trwa 3 s i zwalnia pod koniec) */
+  .sv[data-live] .sm-a { --in: 450ms; }
+  .sv[data-live]:not([data-on]) .sm-a-frame.sv-late { visibility: hidden; }
+  .sv[data-on] .sm-a-frame.sv-late { animation: sm-late .9s ease var(--in) both; }
+  .sv[data-on] .sm-a .sm-l-sky { animation: sm-in-o 2s ease var(--in) backwards; }
+  .sv[data-on] .sm-a .sm-st-ridges { --ry: 24%; animation: sm-in-rise 1.9s var(--sv-ease) var(--in) backwards; }
+  .sv[data-on] .sm-a .sm-st-ridges[data-k="1"] { --ry: 32%; animation-duration: 2s; animation-delay: calc(var(--in) + 110ms); }
+  .sv[data-on] .sm-a .sm-st-ridges[data-k="2"] { --ry: 42%; animation-duration: 2.1s; animation-delay: calc(var(--in) + 220ms); }
+  .sv[data-on] .sm-a .sm-st-ridges[data-k="3"] { --ry: 54%; animation-duration: 2.2s; animation-delay: calc(var(--in) + 330ms); }
+  .sv[data-on] .sm-a .sm-st-ridges[data-k="4"] { --ry: 68%; animation-duration: 2.3s; animation-delay: calc(var(--in) + 440ms); }
+  /* pozostałe krajobrazy (Tafla, Orbita, Szczyt - czekają na wybór): cały plan podnosi się jednym ruchem */
+  .sv[data-on] .sm-a :is(.sm-hz-water, .sm-hz-planet, .sm-hz-atmo, .sm-hz-peak) { --ry: 3.2em; animation: sm-in-rise 2.1s var(--sv-ease) calc(var(--in) + 120ms) backwards; }
+  .sv[data-on] .sm-a .sm-st-sunw { --ry: 5em; animation: sm-in-rise 2.6s cubic-bezier(.22, 1, .36, 1) calc(var(--in) + 260ms) backwards; }
+  .sv[data-on] .sm-a .sm-st-halo { animation: sm-in-halo 2.2s var(--sv-ease) calc(var(--in) + 700ms) backwards; }
+  .sv[data-on] .sm-a .sm-st-halo:nth-child(2) { animation-delay: calc(var(--in) + 860ms); }
+  .sv[data-on] .sm-a .sm-st-halo:nth-child(3) { animation-delay: calc(var(--in) + 1020ms); }
+  .sv[data-on] .sm-a .sm-st-s1 .sm-st-flare { animation: sm-in-o 2s ease calc(var(--in) + 1s) backwards; }
+  .sv[data-on] .sm-a .sm-hz-rimline { animation: sm-in-o 1.8s ease calc(var(--in) + 1.1s) backwards; }
+  .sv[data-on] .sm-a .sm-hz-gem { animation: sm-hz-tw var(--gt, 5s) ease-in-out calc(var(--gd, 0s) * -1) infinite alternate, sm-in-o 1.4s ease calc(var(--in) + 500ms + var(--gd, 0s) * .4) backwards; }
+  .sv[data-on] .sm-a .sm-hz-cloud { animation: sm-hz-drift calc(44s + var(--k) * 15s) ease-in-out infinite alternate, sm-in-o 2.2s ease calc(var(--in) + 1.3s) backwards; }
+  .sv[data-on] .sm-a-tag { --ry: 10px; animation: sm-in-rise 1.1s var(--sv-ease) calc(var(--in) + 1.7s) backwards; }
+  .sv[data-live] .sm-a .sm-fr-rim { flex: 1; min-height: 0; }
+  .sv[data-live] .sm-a .sm-fr-port { flex: 1; min-height: 0; }
+  .sv[data-live] .sm-a .sm-fr-view { position: absolute; inset: 0; aspect-ratio: auto; touch-action: pan-y; }
+  /* podpis makiety w lewym dolnym rogu krajobrazu (pasek adresu kadru jest wtedy poza ekranem); gaśnie przy odjeździe */
+  .sv[data-live] .sm-a-tag { display: inline-flex; align-items: center; gap: 8px; position: absolute; left: 5%; bottom: 30px; z-index: 8; padding: 7px 12px; border-radius: 99px; background: rgba(5, 5, 5, .86); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), 0 0 0 1px rgba(255, 255, 255, .1); font-size: 12px; line-height: 1; color: #cbd5e1; white-space: nowrap; opacity: calc(var(--r) * 3 - 2); pointer-events: none; }
+  .sv[data-live] .sm-a-tag i { width: 6px; height: 6px; border-radius: 50%; background: rgb(var(--sv-ac)); }
+  .sv[data-live] .sm-a-steps { position: absolute; left: 24px; right: 24px; bottom: 34px; padding-right: 56px; opacity: calc(var(--cam, 0) * 2.4 - 1.2); }
+  /* nazwa ujęcia w pasku adresu (data-state 0-3 z film.tsx: nastrój / ruch / głębia / gest) */
+  .sv[data-live] .sm-fr-state b { display: block; transition: opacity .5s ease, transform .7s var(--sv-ease); }
+  .sv[data-live] .sm-a:not([data-state="0"]) .sm-fr-state b[data-s="0"],
+  .sv[data-live] .sm-a:not([data-state="1"]) .sm-fr-state b[data-s="1"],
+  .sv[data-live] .sm-a:not([data-state="2"]) .sm-fr-state b[data-s="2"],
+  .sv[data-live] .sm-a:not([data-state="3"]) .sm-fr-state b[data-s="3"] { opacity: 0; transform: translateY(7px); }
+  /* „Twoja kolej” po trzecim akcie */
+  .sv[data-live] .sm-a-hint { display: block; opacity: 0; transform: translate3d(-50%, 10px, 0); transition: opacity .6s ease, transform .8s var(--sv-ease); }
+  .sv[data-live] .sm-a[data-play] .sm-a-hint { opacity: 1; transform: translate3d(-50%, 0, 0); }
+}
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  .sv[data-live] .sm-a-copy { top: 128px; }
+  .sv[data-live] .sm-a-cam { left: 24px; right: 24px; top: 92px; bottom: 128px; }
+  .sv[data-live] .sm-a-steps { bottom: 40px; padding-right: 0; }
+  /* krajobraz zaczyna się w połowie wysokości nagłówka: tekst stoi po lewej, słońce wschodzi po prawej obok niego
+     (na szerokim ekranie słońce stoi w spoczynku wyżej niż na telefonie - jest na nie miejsce obok tekstu) */
+  .sv[data-live] .sm-a { --land-k: .5; --land-off: 128px; --drop: 140px; --m: calc(.62 + .38 * var(--mf, 1)); }
+}
+
+/* Zmienne ruchu strony w kadrze jako liczby (przejścia i animacje w pokazie zakresu; wartości początkowe = stan
+   „pierwszy ekran w pełnym świetle”). W filmie pisze je film.tsx. */
+@property --m { syntax: '<number>'; inherits: true; initial-value: 1; }
+@property --iris { syntax: '<number>'; inherits: true; initial-value: 0; }
+@property --mv { syntax: '<number>'; inherits: true; initial-value: 1; }
+@property --gp { syntax: '<number>'; inherits: true; initial-value: 1; }
+@property --dusk { syntax: '<number>'; inherits: true; initial-value: 0; }
+@property --out { syntax: '<number>'; inherits: true; initial-value: 0; }
+@property --rz { syntax: '<number>'; inherits: true; initial-value: 0; }
+
+/* ══ SCENA 2 - „MOŻLIWOŚCI NIE MAJĄ LIMITU”: NIĆ prowadzi przez gwiazdy z funkcjami (stars.tsx) ════════════════
+   Wybór właściciela 2026-10-05 („wybieram nić, ale dopracuj to bardziej”; Taśmy i Orbity usunięte).
+   Komputer: scena przypięta, gwiazdy rozrzucone po niebie (--x / --y w % pola), nić = krzywa z pomiaru gwiazd,
+   rysuje się z przewijaniem (--t 0-1, --len = długość w px). KAMERA jedzie za igłą: pole nieba ma przekształcenie
+   z JS (--cx / --cy / --cs; punkt odniesienia w lewym górnym rogu pola) - plan ogólny, najazd, jazda od gwiazdy do
+   gwiazdy, odjazd; --zoom (0-1) gasi nagłówek na czas jazdy. Telefon / tablet: gwiazdy jedna pod drugą lekkim
+   zygzakiem (ścieg), nić rysuje się razem z przewijaniem. Bez JS / ograniczony ruch: lista. */
+.sm-g { position: relative; z-index: 1; padding: 104px 0 0; }
+.sm-g .sv-h2 { margin: 0 0 18px; font-size: clamp(36px, 4.6vw, 64px); line-height: 1; letter-spacing: -.045em; }
+.sm .sm-g-lead { margin: 0; max-width: 34rem; font-size: 17px; text-wrap: pretty; }
+.sm-g-sky { position: relative; margin-top: 40px; }
+.sm-g-svg { display: none; position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.sm-g-svg path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.sm-g-route { stroke: rgba(255, 255, 255, .15); stroke-width: 1px; stroke-dasharray: 2 7; }
+.sm-g-thread { stroke: rgb(var(--sv-ac)); stroke: color-mix(in oklab, rgb(var(--sv-ac)) 72%, #fff); stroke-width: 1.5px; stroke-dasharray: calc(var(--len, 0) * 1px) calc(var(--len, 0) * 1px); stroke-dashoffset: calc(var(--len, 0) * (1 - var(--t, 1)) * 1px); }
+/* jasne czoło nici: biały odcinek 80 px tuż za igłą (wzór kreski: odcinek + przerwa dłuższa niż cała nić) */
+.sm-g-tip { stroke: #fff; stroke-width: 2px; stroke-dasharray: 80px calc(var(--len, 0) * 1px + 200px); stroke-dashoffset: calc(80px - var(--len, 0) * var(--t, 1) * 1px); opacity: calc(min(1, var(--t, 1) * 30) * min(1, (1 - var(--t, 1)) * 12)); }
+.sm-g-needle { opacity: calc(min(1, var(--t, 1) * 60) * min(1, (1 - var(--t, 1)) * 60)); }
+/* czoło nici = czteroramienna gwiazda (jak „klejnoty” nieba w hero): biała, pod nią mniejsza, obrócona, w kolorze
+   podstrony. Do 2026-10-05 krzyżyk z punktem - właściciel: „kursor na końcu zmień na gwiazdę” (wyglądał jak celownik) */
+.sm-g-svg .sm-g-needle path { fill: #fff; stroke: none; }
+.sm-g-svg .sm-g-needle .sm-g-needle-b { fill: rgb(var(--sv-ac)); fill: color-mix(in oklab, rgb(var(--sv-ac)) 82%, #fff); }
+.sm-g-svg path.sm-g-pulse { stroke: #fff; stroke-width: 2.6px; stroke-dasharray: .03 1; }
+.sm-g-list { list-style: none; margin: 0; padding: 0; }
+.sm-g-star { position: relative; display: flex; align-items: center; gap: 12px; width: max-content; max-width: calc(100% - 40px); min-height: 56px; font-size: 16.5px; line-height: 1.25; font-weight: 500; color: #f8fafc; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.sm-g-star:nth-child(even) { margin-left: 36px; }
+.sm-g-gem { position: relative; flex: none; width: 26px; height: 26px; background: radial-gradient(circle, #fff 0 2px, transparent 2.6px); }
+.sm-g-gem::before, .sm-g-gem::after { content: ''; position: absolute; left: 50%; top: 50%; }
+.sm-g-gem::before { width: 26px; height: 1px; margin: -.5px 0 0 -13px; background: linear-gradient(90deg, transparent, rgb(var(--sv-ac)) 30%, #fff 50%, rgb(var(--sv-ac)) 70%, transparent); }
+.sm-g-gem::after { width: 1px; height: 26px; margin: -13px 0 0 -.5px; background: linear-gradient(180deg, transparent, rgb(var(--sv-ac)) 30%, #fff 50%, rgb(var(--sv-ac)) 70%, transparent); }
+.sm-g-star--more span { color: rgb(var(--sv-ac)); color: color-mix(in oklab, rgb(var(--sv-ac)) 58%, #fff); }
+.sm-g-count { display: none; }
+@media (max-width: 639.98px) { .sm-g-star { font-size: 16px; min-height: 54px; } }
+@keyframes sm-g-breathe { from { scale: .9; } to { scale: 1.08; } }
+@media (prefers-reduced-motion: no-preference) {
+  /* wydajność (2026-10-06): rysunek nici ma własną warstwę (translateZ) - nić zmienia się w każdej klatce przewijania,
+     a dotąd przerysowywała razem ze sobą całe pole nieba z napisami gwiazd. Bez will-change: po zbliżeniu kamery
+     warstwa jest rysowana na ostro w nowej skali */
+  .sv[data-live] .sm-g[data-ready] .sm-g-svg { display: block; transform: translateZ(0); }
+  /* gwiazda: zgaszona (mała, przygaszona) -> zapalona (pełna, powoli „oddycha”) -> bieżąca (większa, nazwa w pełnej
+     bieli); przejścia łagodne, nic nie wskakuje */
+  .sv[data-live] .sm-g-gem { transition: transform .9s var(--sv-ease), opacity .7s ease; }
+  .sv[data-live] .sm-g-star span { transition: color .7s ease, opacity .7s ease, transform .9s var(--sv-ease); transform-origin: 0 50%; }
+  .sv[data-live] .sm-g-star[data-left] span { transform-origin: 100% 50%; }
+  .sv[data-live] .sm-g-star:not([data-on]) .sm-g-gem { transform: scale(.42); opacity: .5; }
+  .sv[data-live] .sm-g-star:not([data-on]) span { opacity: .42; }
+  .sv[data-live] .sm-g-star[data-on]:not([data-cur]) span { opacity: .82; }
+  .sv[data-live] .sm-g-star[data-on] .sm-g-gem { animation: sm-g-breathe 3.6s ease-in-out calc(var(--i) * -.47s) infinite alternate; }
+  .sv[data-live] .sm-g-star[data-cur] .sm-g-gem { transform: scale(1.34) rotate(45deg); }
+  .sv[data-live] .sm-g-star[data-cur] span { transform: scale(1.06); }
+  @media (hover: hover) { .sv[data-live] .sm-g-star[data-on]:hover .sm-g-gem { transform: scale(1.34) rotate(45deg); } .sv[data-live] .sm-g-star[data-on]:hover span { opacity: 1; } }
+}
+@media (min-width: 1024px) {
+  .sm-g { padding-top: 150px; }
+  .sm .sm-g-lead { font-size: 18px; }
+  .sm-g-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 32px; }
+  .sm-g-star:nth-child(even) { margin-left: 0; }
+}
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  /* przypięta scena: 260vh drogi (plan ogólny, najazd, jazda za igłą, odjazd) */
+  .sv[data-live] .sm-g { height: 360vh; height: calc(100svh + 260vh); padding-top: 0; }
+  .sv[data-live] .sm-g-stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: clip; }
+  .sv[data-live] .sm-g-in { position: relative; height: 100%; }
+  /* nagłówek gaśnie na czas jazdy kamery (gwiazdy przejeżdżają wtedy pod jego miejscem) i wraca przy odjeździe */
+  .sv[data-live] .sm-g .sm-g-head { position: absolute; left: 24px; top: 128px; z-index: 2; max-width: 34rem; pointer-events: none; opacity: calc(1 - var(--zoom, 0) * 1.7); transform: translate3d(0, calc(var(--zoom, 0) * -26px), 0); }
+  /* pole nieba: bez will-change - po zatrzymaniu kamery przeglądarka rysuje napisy na ostro w nowej skali */
+  .sv[data-live] .sm-g-sky { position: absolute; left: 24px; right: 24px; top: 104px; bottom: 44px; margin: 0; transform-origin: 0 0; transform: translate3d(var(--cx, 0px), var(--cy, 0px), 0) scale(var(--cs, 1)); }
+  /* pył gwiazd w polu nieba: rośnie i jedzie razem z kamerą, więc daje głębię względem nieruchomej mgławicy */
+  .sv[data-live] .sm-g-sky::before { content: ''; position: absolute; inset: -6%; pointer-events: none; opacity: calc(.28 + var(--zoom, 0) * .34);
+    background: radial-gradient(circle, rgba(255, 255, 255, .7) .7px, transparent 1.2px) 11px 17px / 97px 83px, radial-gradient(circle, rgb(var(--sv-ac) / .8) .8px, transparent 1.3px) 43px 61px / 151px 127px, radial-gradient(circle, rgba(255, 255, 255, .5) .6px, transparent 1px) 71px 29px / 67px 113px; }
+  .sv[data-live] .sm-g-list { display: block; position: absolute; inset: 0; }
+  .sv[data-live] .sm-g-star { position: absolute; left: calc(var(--x) * 1% - 13px); top: calc(var(--y) * 1% - 13px); min-height: 0; max-width: none; margin: 0; font-size: 16px; white-space: nowrap; }
+  .sv[data-live] .sm-g-star[data-left] { left: auto; right: calc(100% - var(--x) * 1% - 13px); flex-direction: row-reverse; }
+  /* licznik funkcji z linią postępu (lewy dolny róg sceny) */
+  .sv[data-live] .sm-g-count { display: flex; align-items: center; gap: 14px; position: absolute; left: 24px; bottom: 40px; z-index: 2; margin: 0; font-size: 14px; line-height: 1; font-variant-numeric: tabular-nums; color: #94a3b8; pointer-events: none; }
+  .sv[data-live] .sm-g-count b { min-width: 2.2em; font-size: 22px; font-weight: 600; letter-spacing: -.03em; color: #f8fafc; }
+  .sv[data-live] .sm-g-count span { margin-left: -8px; }
+  .sv[data-live] .sm-g-count i { position: relative; width: 148px; height: 1px; background: rgba(255, 255, 255, .18); }
+  .sv[data-live] .sm-g-count i::after { content: ''; position: absolute; inset: 0; background: rgb(var(--sv-ac)); transform-origin: 0 50%; transform: scaleX(var(--t, 0)); }
+}
+@media (min-width: 1024px) and (max-width: 1279.98px) and (prefers-reduced-motion: no-preference) {
+  .sv[data-live] .sm-g .sm-g-head { max-width: 26rem; }
+  .sv[data-live] .sm-g-star { font-size: 14px; gap: 8px; }
+}
+
+/* ══ SCENA 3 - „TECHNOLOGIA LIDERÓW” (tech.tsx, drawings.tsx, depth.tsx) ════════════════════════════════════════
+   RUNDA 5 (2026-10-05): właściciel o Stosie / Panoramie / Siatce - „zrób kilka innych, bo te mi się nie podobają”.
+   Karty stosu i ich układy są USUNIĘTE (NIE wracać bez prośby). Trzy nowe sceny tych samych trzech treści:
+     .sm-bd  „Deska”  - przypięta: jedna duża czarna deska, trzy rysunki powstają na niej po kolei,
+     .sm-bw  „Światy” - przypięta: cały ekran jest światem linii (wprost na mgławicy), duży tekst rozdziału po lewej,
+     .sm-bs  „Kadry”  - bez przypięcia: trzy pasy od krawędzi do krawędzi ekranu ze światami linii.
+   Wspólne: numer z hasłem (.sm-b-meta), tytuł, opis, światy linii na płótnie (.sm-b-gl - depth.tsx rysuje na
+   gospodarzu z data-dh, światło przy elemencie data-df), rysunki w języku Oferty (.sm-b-svg), miękkie rozejście
+   (.sm-bloom) i odcinki postępu (.sm-b-ticks). */
+.sm-b { position: relative; z-index: 1; padding: 104px 0 0; }
+.sm-b .sv-h2 { margin: 0 0 18px; font-size: clamp(36px, 4.6vw, 64px); line-height: 1; letter-spacing: -.045em; }
+.sm .sm-b-lead { margin: 0 0 36px; max-width: 38rem; font-size: 17px; text-wrap: pretty; }
+.sm-b-meta { display: flex; align-items: center; gap: 14px; margin: 0 0 14px; font-size: 14px; line-height: 1; white-space: nowrap; }
+.sm-b-n { font-variant-numeric: tabular-nums; }
+.sm-b-n b { font-weight: 600; color: rgb(var(--sv-ac)); color: color-mix(in oklab, rgb(var(--sv-ac)) 72%, #fff); }
+.sm-b-n i { font-style: normal; font-weight: 500; font-size: 12.5px; color: #7d8899; }
+.sm-b-tag { padding-left: 14px; border-left: 1px solid rgba(255, 255, 255, .14); font-weight: 500; line-height: 1.3; color: #e2e8f0; }
+.sm-b-t { margin: 0 0 12px; font-size: clamp(27px, 7.4vw, 38px); line-height: 1.03; font-weight: 600; letter-spacing: -.04em; color: #f8fafc; text-wrap: balance; }
+.sm-b-d { margin: 0; max-width: 28rem; font-size: 16px; line-height: 1.6; color: #94a3b8; text-wrap: pretty; }
+.sm-b-ticks { display: none; }
+/* świat linii: płótno na całym gospodarzu; pojawia się, gdy narysuje pierwszą klatkę ([data-ready]) */
+.sm-b-gl { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; }
+.sm-b-gl canvas { display: block; width: 100%; height: 100%; opacity: 0; transition: opacity 1.4s ease; }
+.sm-b-gl[data-ready] canvas { opacity: 1; }
+/* „rozejście”: miękka, nieregularna plama od punktu (--bx / --by) - trzy rozmyte koła o różnych środkach i tempach;
+   --b 0-1 pisze tech.tsx. Bez JS i przy ograniczonym ruchu --b = 1 (całość widoczna). Ten sam język co ekrany
+   makiety (.sm-st-s2) i podstrona CRM - zamiast linii światła i kurtyn. */
+.sm-bloom, .sm-bd-fig > .sm-b-gl {
+  --bm:
+    radial-gradient(farthest-corner at var(--bx, 50%) var(--by, 50%), #000 calc(var(--b, 1) * 150% - 36%), transparent calc(var(--b, 1) * 150%)),
+    radial-gradient(farthest-corner at calc(var(--bx, 50%) - var(--b, 1) * 16%) calc(var(--by, 50%) + var(--b, 1) * 12%), #000 calc(var(--b, 1) * 130% - 30%), transparent calc(var(--b, 1) * 130%)),
+    radial-gradient(farthest-corner at calc(var(--bx, 50%) + var(--b, 1) * 18%) calc(var(--by, 50%) - var(--b, 1) * 10%), #000 calc(var(--b, 1) * 138% - 26%), transparent calc(var(--b, 1) * 138%));
+  -webkit-mask-image: var(--bm); mask-image: var(--bm);
+}
+
+/* ── rysunek (język rysunków Oferty; drawings.tsx) ── */
+.sm-b-svg { display: block; width: 100%; height: auto; max-height: 34vh; margin: 0 auto; overflow: visible; }
+.sm-b-svg path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.sm-b-k-main { stroke: rgba(255, 255, 255, .78); stroke-width: 1.4px; }
+/* płytka (okno strony, telefon, kartka): ciemne wypełnienie zasłania świat linii za rysunkiem */
+.sm-b-svg path.sm-b-k-panel { fill: rgba(4, 4, 6, .9); stroke: rgba(255, 255, 255, .8); stroke-width: 1.4px; }
+.sm-b-svg path.sm-b-k-pad { fill: rgba(4, 4, 6, .9); }
+.sm-b-k-soft { stroke: rgba(255, 255, 255, .3); stroke-width: 1.1px; }
+.sm-b-k-acc { stroke: rgb(var(--sv-ac)); stroke-width: 1.6px; }
+.sm-b-k-dash { stroke: rgba(255, 255, 255, .34); stroke-width: 1.1px; stroke-dasharray: 3 4; stroke-linecap: butt; }
+.sm-b-k-bar { stroke: rgba(255, 255, 255, .2); stroke-width: 4px; }
+.sm-b-k-barHi { stroke: rgba(255, 255, 255, .5); stroke-width: 5px; }
+.sm-b-k-barXL { stroke: rgba(255, 255, 255, .88); stroke-width: 8px; }
+.sm-b-svg path.sm-b-k-accFill { fill: rgb(var(--sv-ac) / .15); }
+.sm-b-svg path.sm-b-k-dot { fill: rgb(var(--sv-ac)); }
+.sm-b-pulse { fill: #fff; stroke: rgb(var(--sv-ac) / .5); stroke-width: 5px; paint-order: stroke; }
+.sm-b-k-track { stroke: rgba(255, 255, 255, .12); stroke-width: 6px; }
+.sm-b-k-arc { stroke: rgb(var(--sv-ac)); stroke-width: 6px; }
+.sm-b-k-ticks, .sm-b-svg .sm-x-ticks { stroke: rgba(255, 255, 255, .28); stroke-width: 5px; stroke-linecap: butt; stroke-dasharray: .3 1.7; }
+.sm-b-svg .sm-x-ticks { stroke: rgb(var(--sv-ac)); }
+/* SCENKI (drawings.tsx, WAAPI): dodatki scenki są niewidoczne, dopóki scenka ich nie pokaże; punkty odniesienia
+   przekształceń: data-o="c" środek kształtu, "l" lewa krawędź */
+.sm-b-svg .sm-x, .sv[data-live] .sm-b-svg .sm-x { opacity: 0; }
+.sm-b-svg [data-o="c"] { transform-box: fill-box; transform-origin: 50% 50%; }
+.sm-b-svg [data-o="l"] { transform-box: fill-box; transform-origin: 0 50%; }
+.sm-b-svg .sm-x-ring { fill: none; stroke: rgb(var(--sv-ac)); stroke-width: 1.6px; }
+.sm-b-svg path.sm-x-fill { fill: rgb(var(--sv-ac) / .6); }
+.sm-b-svg path.sm-x-solid, .sm-b-svg .sm-x-badge { fill: rgb(var(--sv-ac)); }
+.sm-b-svg .sm-x-dot { fill: #fff; stroke: rgb(var(--sv-ac)); stroke-width: 2.4px; }
+.sm-b-svg .sm-x-comet { stroke: rgb(var(--sv-ac)); stroke: color-mix(in oklab, rgb(var(--sv-ac)) 40%, #fff); stroke-width: 2.6px; stroke-dasharray: .2 1; stroke-dashoffset: .2; }
+.sm-b-svg .sm-x-guide { stroke: rgb(var(--sv-ac)); stroke-width: 1.6px; }
+.sm-b-svg .sm-x-type { stroke: rgba(255, 255, 255, .72); stroke-width: 4px; }
+.sm-b-svg .sm-x-check { stroke: #fff; stroke-width: 2.1px; }
+@media (prefers-reduced-motion: reduce) { .sm-b-pulse { display: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  /* rysunek rysuje się razem z przewijaniem (--d 0-1 na gospodarzu, --i = kolejność linii, --n = liczba linii) */
+  .sv[data-live] .sm-b-svg path { opacity: clamp(0, calc((var(--d, 1) * (var(--n) + 7) - var(--i)) * 3), 1); }
+  .sv[data-live] .sm-b-svg path[pathLength] { stroke-dasharray: 1 1; stroke-dashoffset: calc(1 - clamp(0, (var(--d, 1) * (var(--n) + 7) - var(--i)) / 7, 1)); }
+  .sv[data-live] .sm-b-pulse { opacity: clamp(0, calc((var(--d, 1) - .93) * 16), 1); }
+  /* wyjątki od kreskowania „rysowania”: podziałka z kresek i światło biegnące po ścieżce mają własny wzór */
+  .sv[data-live] .sm-b-svg path.sm-b-k-ticks[pathLength], .sv[data-live] .sm-b-svg path.sm-x-ticks[pathLength] { stroke-dasharray: .3 1.7; stroke-dashoffset: 0; }
+  .sv[data-live] .sm-b-svg path.sm-x-comet[pathLength] { stroke-dasharray: .2 1; stroke-dashoffset: .2; }
+  /* odcinki postępu sceny (Deska, Światy) */
+  .sv[data-live] .sm-b-ticks { display: flex; gap: 8px; }
+  .sv[data-live] .sm-b-ticks i { position: relative; flex: 0 1 76px; height: 2px; border-radius: 2px; overflow: hidden; background: rgba(255, 255, 255, .14); }
+  .sv[data-live] .sm-b-ticks i::after { content: ''; position: absolute; inset: 0; background: rgb(var(--sv-ac)); transform-origin: 0 50%; transform: scaleX(var(--f, 0)); }
+}
+
+/* ── „DESKA” (.sm-bd): jedna duża czarna deska, na której trzy rysunki powstają po kolei. Bez JS / ograniczony ruch:
+   tekst trzech pozycji i trzy rysunki, każdy na własnej czarnej płycie, jedno pod drugim. ── */
+.sm-bd-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 34px; }
+.sm-bd-board { display: grid; gap: 16px; margin-top: 40px; }
+.sm-bd-fig {
+  position: relative; isolation: isolate; margin: 0; padding: 26px 20px 22px; border-radius: 24px;
+  background: linear-gradient(160deg, rgb(10 10 12 / .82), rgb(5 5 6 / .86) 42%, rgb(2 2 3 / .9));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .17), inset 0 -1px 0 rgba(0, 0, 0, .6), inset 1px 0 0 rgba(255, 255, 255, .06), inset -1px 0 0 rgba(255, 255, 255, .035), 0 0 0 1px rgba(255, 255, 255, .07);
+}
+.sm-bd-art { position: relative; }
+.sm-bd-fig figcaption { position: relative; margin-top: 16px; font-size: 14px; line-height: 1.5; color: #cbd5e1; text-align: center; text-wrap: balance; }
+@media (prefers-reduced-motion: no-preference) {
+  /* przypięta scena: 300vh drogi (trzy rozdziały). Telefon / tablet: nagłówek, deska, pod nią jeden tekst naraz */
+  .sv[data-live] .sm-bd { height: 400vh; height: calc(100svh + 300vh); padding-top: 0; }
+  .sv[data-live] .sm-bd-stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: clip; }
+  .sv[data-live] .sm-bd-in { display: flex; flex-direction: column; justify-content: center; gap: 18px; height: 100%; padding-top: 76px; padding-bottom: 96px; }
+  .sv[data-live] .sm-bd-copy { display: contents; }
+  .sv[data-live] .sm-bd .sv-h2 { margin: 0; font-size: clamp(28px, 7.4vw, 36px); }
+  .sv[data-live] .sm-bd .sm-b-lead { display: none; }
+  .sv[data-live] .sm-bd-board {
+    order: 1; position: relative; flex: none; display: block; height: min(40svh, calc(100svh - 500px)); min-height: 200px; margin: 0; overflow: hidden; border-radius: 22px;
+    background: linear-gradient(160deg, rgb(10 10 12 / .82), rgb(5 5 6 / .86) 42%, rgb(2 2 3 / .9));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .17), inset 0 -1px 0 rgba(0, 0, 0, .6), inset 1px 0 0 rgba(255, 255, 255, .06), inset -1px 0 0 rgba(255, 255, 255, .035), 0 0 0 1px rgba(255, 255, 255, .07), 0 40px 80px -50px rgba(0, 0, 0, .95);
+  }
+  .sv[data-live] .sm-bd-fig { position: absolute; inset: 0; display: flex; flex-direction: column; padding: 14px 14px 12px; border-radius: 0; background: none; box-shadow: none; --bx: 50%; --by: 46%; }
+  /* wydajność (2026-10-05, atrybuty z tech.tsx): niewidoczny rysunek (d = b = 0) nie jest rysowany ani składany,
+     a przy w pełni otwartej plamie (b = 1) maska płótna schodzi - obraz bez zmian */
+  .sv[data-live] .sm-bd-fig[data-off] { visibility: hidden; }
+  .sv[data-live] .sm-bd-fig[data-clear] > .sm-b-gl { -webkit-mask-image: none; mask-image: none; }
+  /* rysunek dojeżdża z lekkiego zbliżenia, gdy powstaje */
+  .sv[data-live] .sm-bd-art { flex: 1; min-height: 0; transform: scale(calc(1.07 - var(--d, 1) * .07)); }
+  .sv[data-live] .sm-bd-art .sm-b-svg { width: 100%; height: 100%; max-height: none; }
+  .sv[data-live] .sm-bd-fig figcaption { flex: none; margin-top: 8px; font-size: 13px; opacity: clamp(0, calc(var(--d, 1) * 3 - 2), 1); }
+  /* jeden tekst naraz: pozycje leżą w tej samej komórce, widać bieżącą */
+  .sv[data-live] .sm-bd-list { order: 2; gap: 0; }
+  .sv[data-live] .sm-bd-item { grid-area: 1 / 1; opacity: 0; transform: translate3d(0, 12px, 0); transition: opacity .45s ease, transform .7s var(--sv-ease); }
+  .sv[data-live] .sm-bd-item[data-on] { opacity: 1; transform: none; transition-delay: .14s; }
+  .sv[data-live] .sm-bd .sm-b-ticks { order: 3; }
+  @media (max-width: 1023.98px) and (max-height: 720px) {
+    .sv[data-live] .sm-bd-in { gap: 14px; padding-top: 64px; padding-bottom: 70px; }
+    .sv[data-live] .sm-bd .sm-b-t { font-size: 25px; margin-bottom: 8px; }
+    .sv[data-live] .sm-bd .sm-b-d { font-size: 15px; line-height: 1.5; }
+    .sv[data-live] .sm-bd-fig figcaption { display: none; }
+  }
+}
+@media (min-width: 1024px) {
+  .sm-bd-board { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 52px; }
+  .sm-bd-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 32px; }
+}
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  /* komputer: tekst po lewej (nagłówek, opis, bieżąca pozycja, postęp), deska po prawej */
+  .sv[data-live] .sm-bd-in { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 0 64px; align-items: center; padding-top: 96px; padding-bottom: 56px; }
+  .sv[data-live] .sm-bd-copy { display: flex; flex-direction: column; min-width: 0; }
+  .sv[data-live] .sm-bd .sv-h2 { margin: 0 0 18px; font-size: clamp(36px, 4.2vw, 60px); }
+  .sv[data-live] .sm-bd .sm-b-lead { display: block; margin: 0 0 46px; }
+  .sv[data-live] .sm-bd-list { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .sv[data-live] .sm-bd .sm-b-t { margin-bottom: 16px; font-size: clamp(30px, 3vw, 46px); letter-spacing: -.045em; }
+  .sv[data-live] .sm-bd .sm-b-d { font-size: 17px; }
+  .sv[data-live] .sm-bd .sm-b-ticks { margin-top: 38px; }
+  .sv[data-live] .sm-bd-board { height: min(70svh, 640px); border-radius: 28px; }
+  .sv[data-live] .sm-bd-fig { padding: 36px 44px 28px; }
+  .sv[data-live] .sm-bd-fig figcaption { margin-top: 18px; font-size: 15px; }
+}
+
+/* ── „ŚWIATY” (.sm-bw): cały ekran jest światem linii bieżącego rozdziału (płótna wprost na mgławicy podstrony, bez
+   kart), tekst po lewej; kolejny świat rozchodzi się miękką plamą (.sm-bloom), poprzedni tak samo się zbiega.
+   Bez JS / ograniczony ruch: nagłówek i trzy pozycje jedna pod drugą, bez światów. ── */
+.sm-bw-worlds { display: none; }
+.sm-bw-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 40px; }
+.sm-bw-t { margin: 0 0 14px; font-size: clamp(32px, 8.8vw, 46px); line-height: 1; font-weight: 600; letter-spacing: -.045em; color: #f8fafc; text-wrap: balance; }
+@media (prefers-reduced-motion: no-preference) {
+  .sv[data-live] .sm-bw { height: 420vh; height: calc(100svh + 320vh); padding-top: 0; }
+  .sv[data-live] .sm-bw-stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: clip; }
+  .sv[data-live] .sm-bw-worlds { display: block; position: absolute; inset: 0; pointer-events: none; }
+  /* telefon / tablet: tekst u góry, światło świata w dolnej połowie ekranu */
+  .sv[data-live] .sm-bw-world { position: absolute; inset: 0; --bx: 58%; --by: 70%; }
+  .sv[data-live] .sm-bw-focus { position: absolute; left: 0; right: 0; top: 48%; bottom: 2%; }
+  .sv[data-live] .sm-bw-in { position: relative; display: flex; flex-direction: column; height: 100%; padding-top: 84px; padding-bottom: 40px; }
+  .sv[data-live] .sm-bw .sv-h2 { margin: 0; font-size: clamp(24px, 6.4vw, 30px); }
+  .sv[data-live] .sm-bw .sm-b-lead { display: none; }
+  .sv[data-live] .sm-bw-list { gap: 0; margin-top: 30px; }
+  .sv[data-live] .sm-bw-item { grid-area: 1 / 1; opacity: 0; transform: translate3d(0, 16px, 0); transition: opacity .5s ease, transform .8s var(--sv-ease); }
+  .sv[data-live] .sm-bw-item[data-on] { opacity: 1; transform: none; transition-delay: .16s; }
+  .sv[data-live] .sm-bw .sm-b-ticks { margin-top: auto; padding-right: 72px; }
+}
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  /* komputer: nagłówek u góry po lewej, tekst rozdziału w połowie wysokości, światło świata po prawej */
+  .sv[data-live] .sm-bw-world { --bx: 72%; --by: 52%; }
+  .sv[data-live] .sm-bw-focus { left: 42%; right: 0; top: 12%; bottom: 12%; }
+  .sv[data-live] .sm-bw-in { padding-top: 120px; padding-bottom: 48px; }
+  .sv[data-live] .sm-bw .sv-h2 { margin: 0 0 14px; font-size: clamp(30px, 3vw, 44px); }
+  .sv[data-live] .sm-bw .sm-b-lead { display: block; margin: 0; max-width: 32rem; font-size: 16.5px; }
+  .sv[data-live] .sm-bw-list { margin: auto 0; max-width: 38rem; }
+  .sv[data-live] .sm-bw .sm-b-meta { margin-bottom: 20px; font-size: 15px; }
+  .sv[data-live] .sm-bw-t { margin-bottom: 20px; font-size: clamp(46px, 5.2vw, 84px); line-height: .98; }
+  .sv[data-live] .sm-bw .sm-b-d { max-width: 31rem; font-size: 18px; }
+  .sv[data-live] .sm-bw .sm-b-ticks { margin-top: 0; padding-right: 0; }
+}
+
+/* ── „KADRY” (.sm-bs): trzy pasy od krawędzi do krawędzi ekranu (czerń z kryciem, włosowe linie u góry i u dołu
+   gasnące ku bokom), w każdym żyje jego świat linii; tekst przy lewej krawędzi treści. Świat „wschodzi”, a tekst
+   dojeżdża na miejsce, gdy pas wjeżdża w okno (--d z tech.tsx). ── */
+.sm-bs-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 18px; }
+.sm-bs-strip { position: relative; isolation: isolate; display: flex; min-height: 440px; background: linear-gradient(180deg, rgb(6 6 8 / .8), rgb(3 3 4 / .9)); }
+.sm-bs-strip::before, .sm-bs-strip::after { content: ''; position: absolute; left: 0; right: 0; z-index: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .24) 12%, rgba(255, 255, 255, .24) 88%, transparent); pointer-events: none; }
+.sm-bs-strip::before { top: 0; }
+.sm-bs-strip::after { bottom: 0; opacity: .5; }
+/* telefon: tekst u góry pasa, światło świata w jego dolnej części */
+.sm-bs-focus { position: absolute; left: 0; right: 0; top: 46%; bottom: 0; pointer-events: none; }
+.sm-bs-in { position: relative; z-index: 1; width: 100%; padding-top: 30px; padding-bottom: 34px; }
+.sm-bs-t { margin: 0 0 14px; font-size: clamp(32px, 8.8vw, 46px); line-height: 1; font-weight: 600; letter-spacing: -.045em; color: #f8fafc; text-wrap: balance; }
+@media (min-width: 1024px) {
+  .sm-bs-list { gap: 28px; margin-top: 20px; }
+  .sm-bs-strip { min-height: 0; height: clamp(340px, 56vh, 560px); }
+  .sm-bs-focus { left: 40%; top: 0; }
+  .sm-bs-in { display: flex; flex-direction: column; justify-content: flex-end; padding-top: 44px; padding-bottom: 50px; }
+  .sm-bs .sm-b-meta { margin-bottom: 20px; font-size: 15px; }
+  .sm-bs-t { margin-bottom: 18px; max-width: 12em; font-size: clamp(42px, 4.8vw, 76px); line-height: .98; }
+  .sm-bs .sm-b-d { max-width: 31rem; font-size: 17.5px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sv[data-live] .sm-bs-in > * { opacity: calc(.12 + .88 * var(--d, 1)); transform: translate3d(0, calc((1 - var(--d, 1)) * 28px), 0); }
+  .sv[data-live] .sm-bs-in > :nth-child(2) { transform: translate3d(0, calc((1 - var(--d, 1)) * 44px), 0); }
+  .sv[data-live] .sm-bs-in > :nth-child(3) { transform: translate3d(0, calc((1 - var(--d, 1)) * 60px), 0); }
+}
+
+/* ══ SCENA 4 - „CZUĆ KAŻDY DETAL”: kształt z włosowych linii odpowiada na gesty (detail.tsx) ══════════════════
+   Trzecia przypięta scena podstrony (230vh). Komputer: tekst przy lewej krawędzi, kształt po prawej (wychodzi za
+   krawędź ekranu), podpisy trzech gestów u dołu. Telefon: tekst u góry, kształt pośrodku, podpis gestu u dołu.
+   Bez JS / ograniczony ruch: tekst, nieruchomy kształt, lista gestów. */
+/* .sm-d = kula (scena przypięta); .sm-d2 = Litery i Próbki (zwykłe sekcje - nie dziedziczą wysokości przypiętej sceny) */
+.sm-d, .sm-d2 { position: relative; z-index: 1; padding: 104px 0 0; }
+:is(.sm-d, .sm-d2) .sv-h2 { margin: 0 0 18px; font-size: clamp(36px, 4.6vw, 64px); line-height: 1; letter-spacing: -.045em; }
+.sm .sm-d-lead { margin: 0; max-width: 31rem; font-size: 17px; text-wrap: pretty; }
+.sm-d-fig { position: relative; height: min(96vw, 52vh); margin: 28px -24px 20px; }
+.sm-d-fig canvas { display: block; width: 100%; height: 100%; touch-action: pan-y; }
+@media (min-width: 1024px) {
+  .sm-d, .sm-d2 { padding-top: 150px; }
+  .sm .sm-d-lead { font-size: 18px; }
+  .sm-d-in { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 0 56px; align-items: center; }
+  .sm-d-fig { height: 68vh; margin: 0; }
+  .sm-d-steps { grid-column: 1 / -1; margin-top: 28px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sv[data-live] .sm-d { height: 330vh; height: calc(100svh + 230vh); padding-top: 0; }
+  .sv[data-live] .sm-d-stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: clip; }
+  .sv[data-live] .sm-d-in { position: relative; display: block; height: 100%; }
+  .sv[data-live] .sm-d-head { position: absolute; left: 24px; right: 24px; top: 96px; z-index: 2; pointer-events: none; }
+  /* telefon / tablet: kształt zaczyna się tuż pod opisem (--dh = wysokość nagłówka z opisem, mierzy detail.tsx);
+     sama kula ma w polu margines, więc pole może zachodzić na ostatnie 24 px opisu */
+  .sv[data-live] .sm-d-fig { position: absolute; left: 0; right: 0; top: 30%; top: max(30%, calc(72px + var(--dh, 170px))); bottom: 150px; height: auto; margin: 0; cursor: pointer; }
+  .sv[data-live] .sm-d-steps { position: absolute; left: 24px; right: 24px; bottom: 34px; padding-right: 56px; }
+}
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  .sv[data-live] .sm-d-head { top: 50%; right: auto; max-width: 31rem; transform: translateY(-62%); }
+  .sv[data-live] .sm-d-fig { left: 34%; right: -8vw; top: 84px; bottom: 132px; }
+  .sv[data-live] .sm-d-steps { bottom: 40px; padding-right: 0; }
+}
+
+/* ══ SCENA 5 - ZAKRES Z POKAZEM W KADRZE: „Od konceptu po wdrożenie.” (scope.tsx; wzorzec pilota) ══════════════
+   Lista etapów z terminem na linii wymiarowej (te same miejsca na każdej podstronie usługi), obok przyklejony kadr ze
+   stroną klienta - aktywny punkt listy przełącza pokaz (data-demo 0-5 na .sm-c-stick). */
+.sm-c { position: relative; z-index: 1; padding: 104px 0 0; }
+.sm-c-in { display: grid; grid-template-columns: minmax(0, 1fr); gap: 36px; }
+.sm-c .sv-h2 { margin-bottom: 34px; font-size: clamp(36px, 4.6vw, 64px); line-height: 1; letter-spacing: -.045em; }
+/* termin na linii wymiarowej (motyw wymiaru z rysunków Oferty) */
+.sm-term { display: grid; gap: 10px; max-width: 30rem; }
+.sm-term-l { font-size: 14.5px; line-height: 1.3; color: #94a3b8; }
+.sm-term-dim { display: flex; align-items: center; gap: 16px; }
+.sm-term-dim i { position: relative; flex: 1; min-width: 18px; height: 1px; background: rgba(255, 255, 255, .32); }
+.sm-term-dim i::before { content: ''; position: absolute; top: -6px; width: 1px; height: 13px; background: rgb(var(--sv-ac)); }
+.sm-term-dim i:first-child::before { left: 0; }
+.sm-term-dim i:last-child::before { right: 0; }
+.sm-term-dim b { font-size: clamp(28px, 3.1vw, 42px); line-height: 1; font-weight: 600; letter-spacing: -.04em; white-space: nowrap; color: #f8fafc; }
+.sm-c-items { list-style: none; margin: 40px 0 0; padding: 0; }
+.sm-c-item { position: relative; display: grid; grid-template-columns: 44px minmax(0, 1fr); align-content: center; gap: 8px 0; padding: 28px 0 30px; }
+.sm-c-item::before, .sm-c-item::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 1px; background: rgba(255, 255, 255, .14); }
+.sm-c-item::after { background: rgb(var(--sv-ac)); transform-origin: 0 50%; transform: scaleX(0); transition: transform .9s var(--sv-ease); }
+.sm-c-n { grid-row: 1 / span 2; padding-top: 8px; font-size: 13.5px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; color: rgb(var(--sv-ac)); color: color-mix(in oklab, rgb(var(--sv-ac)) 72%, #fff); }
+.sm-c-t { font-size: clamp(24px, 2.6vw, 36px); line-height: 1.1; font-weight: 600; letter-spacing: -.035em; color: #f8fafc; }
+.sm-c-d { grid-column: 2; max-width: 27rem; font-size: 16.5px; line-height: 1.6; color: #94a3b8; text-wrap: pretty; }
+.sm-c-stick { position: relative; }
+.sm-c-frame { position: relative; display: flex; flex-direction: column; width: 100%; }
+.sm-c .sm-fr-rim { flex: 1; min-height: 0; }
+.sm-c-lock { width: 12px; height: 12px; color: #94a3b8; transition: color .5s ease; }
+.sm-c-live { display: inline-flex; align-items: center; gap: 7px; margin-left: auto; font-weight: 500; color: #e2e8f0; opacity: 0; transition: opacity .6s ease; }
+.sm-c-live i { width: 6px; height: 6px; border-radius: 50%; background: rgb(var(--sv-ac)); }
+/* dodatki pokazu (w spoczynku niewidoczne) */
+.sm-c-map, .sm-c-ok, .sm-c-cur, .sm-c-chips, .sm-c-checks { position: absolute; z-index: 5; opacity: 0; pointer-events: none; }
+.sm-c-map { inset: 0; }
+.sm-c-map i { position: absolute; top: 50%; width: 2.6%; height: 1px; background: rgb(var(--sv-ac)); }
+.sm-c-map i::before, .sm-c-map i::after { content: ''; position: absolute; top: -2.5px; width: 6px; height: 6px; border-radius: 50%; background: rgb(var(--sv-ac)); }
+.sm-c-map i::before { left: -3px; } .sm-c-map i::after { right: -3px; }
+/* cztery ekrany po 22% szerokości (skala .22 w planie niżej), między nimi trzy łączniki */
+.sm-c-map i:nth-child(1) { left: 24.1%; } .sm-c-map i:nth-child(2) { left: 48.7%; } .sm-c-map i:nth-child(3) { left: 73.3%; }
+.sm-c-ok, .sm-c-chips b, .sm-c-checks b { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 15px 0 8px; border-radius: 99px; background: rgba(5, 5, 5, .9); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), 0 0 0 1px rgba(255, 255, 255, .14); font-size: 13.5px; font-weight: 600; line-height: 1; color: #f8fafc; white-space: nowrap; }
+.sm-c-ok { right: 4.5%; top: 17%; transform: translateY(10px); }
+:is(.sm-c-ok, .sm-c-checks b) i { display: grid; place-items: center; width: 21px; height: 21px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .42); }
+:is(.sm-c-ok, .sm-c-checks b) svg { width: 12px; height: 12px; stroke-width: 3; opacity: 0; }
+.sm-c-cur { right: calc(4.5% + 6px); top: calc(17% + 20px); }
+.sm-c-cur svg { display: block; width: 24px; height: 24px; fill: #fff; stroke: #050505; stroke-width: 1.4px; }
+.sm-c-chips { left: 4.5%; bottom: 7%; display: flex; flex-wrap: wrap; gap: 8px; opacity: 1; }
+.sm-c-chips b { opacity: 0; transform: translateY(12px); }
+.sm-c-chips b i { width: 7px; height: 7px; margin-left: 5px; border-radius: 50%; background: rgb(var(--sv-ac)); }
+.sm-c-checks { right: 4.5%; bottom: 7%; display: grid; justify-items: end; gap: 8px; opacity: 1; }
+.sm-c-checks b { opacity: 0; transform: translateY(12px); }
+@keyframes sm-ok { to { background: rgb(var(--sv-ac)); box-shadow: none; } }
+@keyframes sm-ok-c { to { opacity: 1; } }
+@keyframes sm-c-cur { 0% { opacity: 0; transform: translate3d(-180px, 120px, 0); } 14% { opacity: 1; } 56% { transform: translate3d(0, 0, 0); } 63% { transform: translate3d(0, 0, 0) scale(.82); } 72%, 100% { opacity: 1; transform: translate3d(0, 0, 0); } }
+@keyframes sm-mv { from { --mv: 0; } to { --mv: 1; } }
+@keyframes sm-gp { from { --gp: 0; } to { --gp: 1; } }
+@keyframes sm-dawn { from { --m: .1; } to { --m: 1; } }
+@keyframes sm-type { 0% { clip-path: inset(0 100% 0 0); } 42%, 100% { clip-path: inset(0 0 0 0); } }
+@keyframes sm-live { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: no-preference) {
+  /* aktywny punkt listy: pełna jasność, jego linia rysuje się w kolorze podstrony */
+  .sv[data-live] .sm-c-item > span { opacity: .34; transition: opacity .6s ease; }
+  .sv[data-live] .sm-c-item[data-on] > span { opacity: 1; }
+  .sv[data-live] .sm-c-item[data-on]::after { transform: none; }
+  /* pokaz w kadrze */
+  .sv[data-live] .sm-c-frame { transition: --iris .9s ease, --dusk .9s ease, --rz .9s ease; }
+  .sv[data-live] .sm-c .sm-st-s { transition: transform 1.2s var(--sv-ease), border-radius 1.2s var(--sv-ease); }
+  /* wydajność (2026-10-06): ekrany oferty, realizacji i kontaktu w tej kopii makiety są potrzebne tylko w planie strony
+     (0) i w pokazie ruchu (2); poza nimi mają zamknięte maski, więc nie są rysowane ani składane (visibility). Po
+     wyjściu z pokazu znikają dopiero po powrocie na miejsce (opóźnienie 1,3 s). */
+  .sv[data-live] .sm-c :is(.sm-st-s2, .sm-st-s3, .sm-st-s4) { visibility: hidden; transition: transform 1.2s var(--sv-ease), border-radius 1.2s var(--sv-ease), visibility 0s linear 1.3s; }
+  .sv[data-live] .sm-c-stick[data-demo="0"] :is(.sm-st-s2, .sm-st-s3, .sm-st-s4),
+  .sv[data-live] .sm-c-stick[data-demo="2"] .sm-st-s2 { visibility: visible; transition: transform 1.2s var(--sv-ease), border-radius 1.2s var(--sv-ease), visibility 0s; }
+  /* 0 - plan strony: cztery ekrany obok siebie (pierwszy ekran, oferta, realizacje, kontakt) */
+  .sv[data-live] .sm-c-stick[data-demo="0"] .sm-c-frame { --iris: 1; --dusk: 1; --rz: 1; }
+  .sv[data-live] .sm-c-stick[data-demo="0"] .sm-st-s1 { transform: translate3d(-36.9%, 0, 0) scale(.22); border-radius: 4em; }
+  .sv[data-live] .sm-c-stick[data-demo="0"] .sm-st-s2 { transform: translate3d(-12.3%, 0, 0) scale(.22); border-radius: 4em; }
+  .sv[data-live] .sm-c-stick[data-demo="0"] .sm-st-s4 { transform: translate3d(12.3%, 0, 0) scale(.22); border-radius: 4em; }
+  .sv[data-live] .sm-c-stick[data-demo="0"] .sm-st-s3 { transform: translate3d(36.9%, 0, 0) scale(.22); border-radius: 4em; }
+  .sv[data-live] .sm-c-stick[data-demo="0"] .sm-c-map { opacity: 1; transition: opacity .6s ease .9s; }
+  /* 1 - akceptacja projektu */
+  .sv[data-live] .sm-c-stick[data-demo="1"] .sm-c-ok { opacity: 1; transform: none; transition: opacity .6s ease .3s, transform .8s var(--sv-ease) .3s; }
+  .sv[data-live] .sm-c-stick[data-demo="1"] .sm-c-ok i { animation: sm-ok .45s ease 2.2s forwards; }
+  .sv[data-live] .sm-c-stick[data-demo="1"] .sm-c-ok svg { animation: sm-ok-c .3s ease 2.3s forwards; }
+  .sv[data-live] .sm-c-stick[data-demo="1"] .sm-c-cur { animation: sm-c-cur 2.8s var(--sv-ease) .5s both; }
+  /* 2 - ruch strony */
+  .sv[data-live] .sm-c-stick[data-demo="2"] .sm-c-frame { --iris: 1; animation: sm-mv 2.4s linear .5s both, sm-gp 1.7s var(--sv-draw) 2.7s both; }
+  /* 3 - integracje */
+  .sv[data-live] .sm-c-stick[data-demo="3"] .sm-c-chips b { opacity: 1; transform: none; transition: opacity .6s ease calc(.3s + var(--ci) * .4s), transform .8s var(--sv-ease) calc(.3s + var(--ci) * .4s); }
+  /* 4 - testy: znaki zaliczenia zapalają się po kolei (bez linii przeglądu jadącej przez stronę - właściciel
+     2026-10-05: bez „linii, która leci”) */
+  .sv[data-live] .sm-c-stick[data-demo="4"] .sm-c-checks b { opacity: 1; transform: none; transition: opacity .6s ease calc(.9s + var(--ci) * .8s), transform .8s var(--sv-ease) calc(.9s + var(--ci) * .8s); }
+  .sv[data-live] .sm-c-stick[data-demo="4"] .sm-c-checks b i { animation: sm-ok .45s ease calc(1.7s + var(--ci) * .8s) forwards; }
+  .sv[data-live] .sm-c-stick[data-demo="4"] .sm-c-checks b svg { animation: sm-ok-c .3s ease calc(1.8s + var(--ci) * .8s) forwards; }
+  /* 5 - start: świt na stronie, domena, kłódka, „Strona działa” */
+  .sv[data-live] .sm-c-stick[data-demo="5"] .sm-c-frame { animation: sm-dawn 2.6s ease both; }
+  .sv[data-live] .sm-c-stick[data-demo="5"] .sm-c-lock { color: rgb(var(--sv-ac)); }
+  .sv[data-live] .sm-c-stick[data-demo="5"] .sm-c-domain { color: #f8fafc; animation: sm-type 3.4s steps(14, end) infinite; }
+  .sv[data-live] .sm-c-stick[data-demo="5"] .sm-c-live { opacity: 1; transition-delay: 1.6s; }
+  .sv[data-live] .sm-c-stick[data-demo="5"] .sm-c-live i { animation: sm-live 1.6s ease-in-out infinite; }
+}
+/* telefon / tablet: kadr przyklejony u góry, lista przewija się pod nim. Z JS: to, co wjedzie pod kadr, gaśnie
+   ([data-gone] ze scope.tsx) - bez czarnego pasa za kadrem. Bez JS / ograniczony ruch: pas w kolorze tła. */
+@media (max-width: 1023.98px) {
+  .sm-c-stick { position: sticky; top: 0; z-index: 2; order: -1; height: 46vh; height: 46svh; margin: 0 -24px; padding: 70px 24px 14px; background: linear-gradient(180deg, #050505 0, #050505 86%, rgba(5, 5, 5, 0)); }
+  .sm-c .sv-h2 .im-accent { display: block; }
+  .sm-c::before { content: ''; position: absolute; inset: -60px 0 -80px; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(5, 5, 5, 0), rgba(5, 5, 5, .62) 110px, rgba(5, 5, 5, .62) calc(100% - 140px), rgba(5, 5, 5, 0)); }
+  .sm-c-list > .sv-h2, .sm-c-list > .sm-term, .sm-c-item { transition: opacity .28s ease; }
+  .sm-c-list > [data-gone], .sm-c-item[data-gone] { opacity: 0; }
+  @media (prefers-reduced-motion: no-preference) { .sv[data-live] .sm-c-stick { background: none; } }
+  .sm-c-frame { height: 100%; }
+  .sm-c .sm-fr-port { flex: 1; min-height: 0; }
+  .sm-c .sm-fr-view { position: absolute; inset: 0; aspect-ratio: auto; }
+  .sm-c-ok, .sm-c-chips b, .sm-c-checks b { height: 30px; padding: 0 12px 0 6px; font-size: 12.5px; }
+}
+@media (min-width: 1024px) {
+  .sm-c { padding-top: 150px; }
+  .sm-c-in { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 72px; align-items: start; }
+  .sm-c-item { min-height: 30vh; padding: 0; }
+  .sm-c-items { margin-top: 56px; }
+  .sm-c-stick { position: sticky; top: 13vh; height: 74vh; }
+  .sm-c-frame { height: 100%; }
+  .sm-c .sm-fr-port { flex: 1; min-height: 0; }
+  .sm-c .sm-fr-view { position: absolute; inset: 0; aspect-ratio: auto; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════════════════════════════════════
+   POZOSTAŁE PROPOZYCJE SEKCJI 4 I 5 (runda 2, 2026-10-02 - czekają na wybór właściciela; po wyborze style
+   odrzuconych wersji do usunięcia).
+   ══════════════════════════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* ── „Czuć każdy detal” - LITERY (detail-alt.tsx, Letters): nagłówek jest obiektem - litery unoszą się pod kursorem,
+   falują przy przewijaniu, kliknięcie puszcza falę (--k = wpływ gestu na literę: kolor) ── */
+/* 15,6vw: „Czuć każdy” mieści się w jednej linii od 320 px wzwyż (przy sztywnych 62 px łamało się na trzy linie poniżej 375 px) */
+.sm-dl-title { position: relative; margin: 0; font-size: clamp(48px, 15.6vw, 250px); line-height: .92; letter-spacing: -.055em; cursor: default; -webkit-user-select: none; user-select: none; touch-action: pan-y; }
+.sm-dl-w { display: inline-block; margin-right: .2em; white-space: nowrap; }
+.sm-dl-c { display: inline-block; color: #f8fafc; color: color-mix(in oklab, rgb(var(--sv-ac)) calc(var(--k, 0) * 100%), #f8fafc); will-change: transform; }
+.sm-dl-w[data-accent] .sm-dl-c { color: rgb(var(--sv-ac)); color: color-mix(in oklab, #fff calc(var(--k, 0) * 100%), rgb(var(--sv-ac))); }
+.sm-dl-foot { display: grid; gap: 28px; margin-top: 40px; }
+.sm-dl-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.sm-dl-list li, .sm-ds-cap { display: flex; align-items: flex-start; gap: 12px; margin: 0; font-size: 15.5px; line-height: 1.5; color: #e2e8f0; text-wrap: pretty; }
+.sm-dl-list li > span, .sm-ds-cap > span { flex: none; display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; border: 1px solid rgb(var(--sv-ac) / .6); color: rgb(var(--sv-ac)); color: color-mix(in oklab, rgb(var(--sv-ac)) 70%, #fff); font-size: 12px; font-weight: 600; line-height: 1; }
+@media (min-width: 1024px) {
+  .sm-dl-foot { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: 56px; margin-top: 56px; align-items: start; }
+  .sm-dl-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 32px; }
+}
+
+/* ── „Czuć każdy detal” - PRÓBKI (detail-alt.tsx, Specimen): trzy żywe próbki interfejsu, po jednej na gest ── */
+.sm-ds-head { max-width: 40rem; }
+.sm-ds-grid { list-style: none; margin: 40px 0 0; padding: 0; display: grid; gap: 30px 20px; }
+.sm-ds-tile { position: relative; display: block; height: clamp(250px, 68vw, 340px); overflow: hidden; border-radius: 24px; background: linear-gradient(160deg, rgb(10 10 12 / .82), rgb(5 5 6 / .86) 42%, rgb(2 2 3 / .9)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .17), inset 0 0 0 1px rgba(255, 255, 255, .05), 0 0 0 1px rgba(255, 255, 255, .07); }
+.sm-ds-cap { margin-top: 16px; }
+.sm-ds-tile > * , .sm-ds-tile u, .sm-ds-tile em { text-decoration: none; font-style: normal; }
+/* 1 - przewinięcie: mała strona jedzie razem z przewijaniem (--sp 0-1), pasek postępu u góry */
+.sm-ds-bar { position: absolute; left: 0; right: 0; top: 0; z-index: 2; height: 2px; background: rgba(255, 255, 255, .1); }
+.sm-ds-bar i { display: block; height: 100%; background: rgb(var(--sv-ac)); transform-origin: 0 50%; transform: scaleX(var(--sp, .4)); }
+.sm-ds-page { position: absolute; left: 12%; right: 12%; top: 34px; display: grid; gap: 13px; transform: translate3d(0, calc(var(--sp, .4) * -58%), 0); will-change: transform; }
+.sm-ds-h { display: block; width: 64%; height: 14px; border-radius: 7px; background: rgba(255, 255, 255, .88); }
+.sm-ds-h + .sm-ds-h { width: 42%; margin-top: -4px; }
+.sm-ds-l { display: block; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, .22); }
+.sm-ds-l + .sm-ds-l { width: 78%; margin-top: -4px; }
+.sm-ds-img { position: relative; display: block; height: 104px; margin: 6px 0; overflow: hidden; border-radius: 12px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .28); }
+.sm-ds-img em { position: absolute; right: 16%; top: 50%; width: 46px; height: 46px; margin-top: -23px; border-radius: 50%; background: rgb(var(--sv-ac)); transform: translate3d(0, calc((var(--sp, .4) - .5) * -90px), 0); }
+/* 2 - najazd: przycisk wychodzi kursorowi naprzeciw (--mx / --my -1..1) */
+.sm-ds-tile[data-k="1"] { display: grid; place-items: center; }
+.sm-ds-btn { display: inline-flex; transform: translate3d(calc(var(--mx, 0) * 26px), calc(var(--my, 0) * 18px), 0); transition: transform 1s var(--sv-ease); }
+.sm-ds-tile[data-near] .sm-ds-btn { transition-duration: .3s; }
+.sm-ds-btn > span { display: inline-flex; align-items: center; gap: 10px; height: 56px; padding: 0 28px; border-radius: 99px; background: #fff; color: #0b0709; font-size: 15.5px; font-weight: 700; line-height: 1; white-space: nowrap; box-shadow: 0 0 0 0 rgb(var(--sv-ac) / 0); transition: box-shadow .5s ease, scale .5s var(--sv-ease); }
+.sm-ds-tile[data-near] .sm-ds-btn > span { scale: 1.05; box-shadow: 0 0 0 1.5px rgb(var(--sv-ac)), 0 0 0 8px rgb(var(--sv-ac) / .16); }
+.sm-ds-btn svg { width: 17px; height: 17px; transform: translate3d(calc(var(--mx, 0) * 5px), calc(var(--my, 0) * 4px), 0); transition: transform .6s var(--sv-ease); }
+.sm-ds-tile[data-k="1"]:active .sm-ds-btn > span { scale: .97; }
+.sm-ds-tile[data-k="1"] { touch-action: pan-y; -webkit-tap-highlight-color: transparent; }
+/* telefon (bez kursora): próbka gra sama - punkt dotyku podchodzi do przycisku, a ten wychodzi mu naprzeciw;
+   dotknięcie kafla przejmuje sterowanie (data-near z detail-alt.tsx), pokaz wraca po puszczeniu */
+.sm-ds-finger { display: none; }
+@keyframes sm-ds-finger {
+  0% { transform: translate3d(128px, 104px, 0) scale(.8); opacity: 0; }
+  12% { opacity: 1; }
+  40%, 64% { transform: translate3d(74px, 50px, 0) scale(1); opacity: 1; }
+  86% { opacity: 1; }
+  100% { transform: translate3d(-124px, 96px, 0) scale(.8); opacity: 0; }
+}
+@keyframes sm-ds-lean { 0%, 16% { transform: translate3d(0, 0, 0); } 40%, 64% { transform: translate3d(20px, 13px, 0); } 88%, 100% { transform: translate3d(0, 0, 0); } }
+@keyframes sm-ds-ring {
+  0%, 24% { scale: 1; box-shadow: 0 0 0 0 rgb(var(--sv-ac) / 0), 0 0 0 0 rgb(var(--sv-ac) / 0); }
+  40%, 64% { scale: 1.05; box-shadow: 0 0 0 1.5px rgb(var(--sv-ac)), 0 0 0 8px rgb(var(--sv-ac) / .16); }
+  82%, 100% { scale: 1; box-shadow: 0 0 0 0 rgb(var(--sv-ac) / 0), 0 0 0 0 rgb(var(--sv-ac) / 0); }
+}
+@media (hover: none) and (prefers-reduced-motion: no-preference) {
+  .sv[data-live] .sm-ds-finger { display: block; position: absolute; left: 50%; top: 50%; z-index: 2; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; background: rgba(255, 255, 255, .16); box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .9); pointer-events: none; animation: sm-ds-finger 5.2s var(--sv-ease) infinite; transition: opacity .3s ease; }
+  .sv[data-live] .sm-ds-tile[data-near] .sm-ds-finger { opacity: 0; animation: none; }
+  .sv[data-live] .sm-ds-tile[data-k="1"]:not([data-near]) .sm-ds-btn { animation: sm-ds-lean 5.2s var(--sv-ease) infinite; }
+  .sv[data-live] .sm-ds-tile[data-k="1"]:not([data-near]) .sm-ds-btn > span { animation: sm-ds-ring 5.2s ease infinite; }
+}
+/* 3 - przejście: karta płynnie przechodzi w drugi stan (kliknięcie albo sama co 3,2 s) */
+.sm-ds-tile[data-k="2"] { cursor: pointer; }
+.sm-ds-morph { position: absolute; inset: 22px; display: block; }
+.sm-ds-thumb { position: absolute; left: 0; top: 0; width: 40%; height: 48%; overflow: hidden; border-radius: 14px; background: #0e0a0c; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .28); transition: width 1.1s var(--sv-ease), height 1.1s var(--sv-ease), border-radius 1.1s var(--sv-ease); }
+.sm-ds-thumb em { position: absolute; left: 50%; top: 56%; width: 44%; aspect-ratio: 1; border-radius: 50%; background: rgb(var(--sv-ac)); translate: -50% -50%; transition: top 1.1s var(--sv-ease), width 1.1s var(--sv-ease); }
+.sm-ds-txt { position: absolute; left: 47%; top: 4%; right: 0; display: grid; gap: 11px; transition: left 1.1s var(--sv-ease), top 1.1s var(--sv-ease), right 1.1s var(--sv-ease); }
+.sm-ds-txt b { font: 500 22px/1.15 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif; color: #f8fafc; white-space: nowrap; }
+.sm-ds-go { position: absolute; right: 0; bottom: 0; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: #fff; color: #0b0709; transition: rotate 1.1s var(--sv-ease), background-color .6s ease, color .6s ease; }
+.sm-ds-go svg { width: 18px; height: 18px; }
+.sm-ds-tile[data-open] .sm-ds-thumb { width: 100%; height: 100%; border-radius: 16px; }
+.sm-ds-tile[data-open] .sm-ds-thumb em { top: 38%; width: 30%; }
+.sm-ds-tile[data-open] .sm-ds-txt { left: 7%; top: 66%; right: 24%; }
+.sm-ds-tile[data-open] .sm-ds-go { rotate: 135deg; background: rgb(var(--sv-ac)); color: #fff; }
+@media (min-width: 1024px) {
+  .sm-ds-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 52px; }
+  .sm-ds-tile { height: clamp(280px, 26vw, 400px); }
+}
+
+/* ── „Zakres” - OŚ (scope-alt.tsx, ScopeAxis): scena przypięta, linia wymiarowa jako oś czasu przez cały ekran, etapy
+   jadą wzdłuż niej w bok (--x), etap przy znaczniku w pełnym świetle. Bez JS / ograniczony ruch: lista. ── */
+.sm-ca-axis { display: none; }
+.sm-ca-track { list-style: none; margin: 40px 0 0; padding: 0; }
+.sm-ca-item { display: grid; gap: 8px; padding: 24px 0 26px; border-top: 1px solid rgba(255, 255, 255, .14); }
+.sm-ca-n { font-size: 13.5px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; color: rgb(var(--sv-ac)); color: color-mix(in oklab, rgb(var(--sv-ac)) 72%, #fff); }
+@media (prefers-reduced-motion: no-preference) {
+  .sv[data-live] .sm-ca { height: 340vh; height: calc(100svh + 240vh); padding-top: 0; }
+  .sv[data-live] .sm-ca-stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: clip; }
+  .sv[data-live] .sm-ca-in { display: flex; flex-direction: column; justify-content: center; height: 100%; padding-top: 64px; }
+  .sv[data-live] .sm-ca .sv-h2 { margin-bottom: 26px; }
+  .sv[data-live] .sm-ca-axis { display: block; position: relative; height: 1px; margin: 44px -50vw 0; background: rgba(255, 255, 255, .2); }
+  .sv[data-live] .sm-ca-axis i { position: absolute; left: 0; top: 0; width: 50vw; height: 1px; background: rgb(var(--sv-ac)); }
+  .sv[data-live] .sm-ca-axis::after { content: ''; position: absolute; left: 50vw; top: -8px; width: 1px; height: 17px; background: rgb(var(--sv-ac)); }
+  .sv[data-live] .sm-ca-track { display: flex; margin: 0; transform: translate3d(var(--x, 0px), 0, 0); will-change: transform; }
+  .sv[data-live] .sm-ca-item { position: relative; flex: 0 0 min(430px, 82%); align-content: start; gap: 10px; padding: 34px 44px 0 0; border: 0; opacity: .32; transition: opacity .6s ease; }
+  .sv[data-live] .sm-ca-item::before { content: ''; position: absolute; left: 0; top: -6px; width: 1px; height: 13px; background: rgba(255, 255, 255, .45); }
+  .sv[data-live] .sm-ca-item[data-on] { opacity: 1; }
+  .sv[data-live] .sm-ca-n { font-size: clamp(54px, 6vw, 92px); letter-spacing: -.05em; color: rgba(248, 250, 252, .2); transition: color .6s ease; }
+  .sv[data-live] .sm-ca-item[data-on] .sm-ca-n { color: rgb(var(--sv-ac)); }
+  /* telefon / tablet: etap przy znaczniku w pełnej szerokości tekstu, następny wystaje z prawej; etapy odjeżdżające
+     za lewą krawędź ekranu gasną, zamiast ucinać słowa w pół */
+  @media (max-width: 1023.98px) {
+    .sv[data-live] .sm-ca-stage { -webkit-mask-image: linear-gradient(90deg, transparent, #000 22px, #000 calc(100% - 22px), transparent); mask-image: linear-gradient(90deg, transparent, #000 22px, #000 calc(100% - 22px), transparent); }
+    .sv[data-live] .sm-ca-item { flex-basis: min(430px, 84%); padding-right: 28px; }
+    .sv[data-live] .sm-ca-item:not([data-on]) { opacity: .22; }
+  }
+}
+
+/* ── „Zakres” - PLAN (scope-alt.tsx, ScopeGrid): sześć etapów naraz w siatce, linie rysują się po kolei przy wejściu ── */
+.sm-cg-list { list-style: none; margin: 44px 0 0; padding: 0; display: grid; gap: 0 32px; }
+.sm-cg-item { position: relative; display: grid; align-content: start; gap: 10px; padding: 26px 0 34px; }
+.sm-cg-item::before, .sm-cg-item::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 1px; background: rgba(255, 255, 255, .16); }
+.sm-cg-item::after { right: auto; width: 44px; background: rgb(var(--sv-ac)); }
+.sm-cg-n { font-size: 13.5px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; color: rgb(var(--sv-ac)); color: color-mix(in oklab, rgb(var(--sv-ac)) 72%, #fff); }
+.sm-cg .sm-c-t { font-size: clamp(22px, 2vw, 28px); }
+.sm-cg .sm-c-d, .sm-ca .sm-c-d { grid-column: auto; }
+@media (min-width: 640px) { .sm-cg-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .sm-cg-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 48px; margin-top: 60px; } .sm-cg-item { padding-bottom: 48px; } }
+@media (prefers-reduced-motion: no-preference) {
+  .sv[data-live] .sm-cg-in:not([data-in]) .sm-cg-item > span { opacity: 0; transform: translateY(16px); }
+  .sv[data-live] .sm-cg-in:not([data-in]) .sm-cg-item::before, .sv[data-live] .sm-cg-in:not([data-in]) .sm-cg-item::after { transform: scaleX(0); }
+  .sv[data-live] .sm-cg-item::before, .sv[data-live] .sm-cg-item::after { transform-origin: 0 50%; transition: transform 1.1s var(--sv-draw) calc(var(--i) * 110ms); }
+  .sv[data-live] .sm-cg-in[data-in] .sm-cg-item > span { transition: opacity .9s ease calc(var(--i) * 110ms + 300ms), transform 1s var(--sv-ease) calc(var(--i) * 110ms + 300ms); }
+}

@@ -1,0 +1,355 @@
+/* ── BLOG (/blog, /blog/[slug], tylko PL) ─────────────────────────────────────────────────────────────────────────
+   Wersja z czerwca 2026 zmodernizowana do języka strony głównej - układ „WIERNA” (wybory właściciela 2026-09-29:
+   „czerwiec 2026 wybieram i z tego trzeba modernizować do aktualnego designu strony”, potem „wierna” z propozycji
+   Przy krawędzi / Wierna / Okładka). Kompozycja czerwca zostaje 1:1: wyśrodkowany nagłówek na tle z liniami,
+   pigułki kategorii + sortowanie + wyszukiwarka, najnowszy wpis jako karta pół na pół z białym przyciskiem
+   „Czytaj artykuł”, siatka kart; wpis: powrót, kategorie, tytuł, autor / data / czas, okładka, treść.
+   Wygląd w języku strony głównej: czerń luksusowa (#050505, karty z ostrym refleksem krawędzi u góry), zdjęcia
+   w ramce z włosową obwódką, jeden kolor marki (--brand / --brand-hi), Inter w pisowni zdaniowej, etykieta „Gwiazda”,
+   nagłówek .im-title / .im-accent / .im-lead. Bez gradientowego tekstu, rozmytych kul, szkła (backdrop-filter),
+   pigułek z wersalikami i efektów najechania na kartach treści (reagują strzałki, przyciski, pigułki).
+   Wejście: animacje CSS przy załadowaniu (działają bez JS), brak ruchu przy prefers-reduced-motion. */
+
+.bl {
+  --bl-ease: cubic-bezier(.16, 1, .3, 1);
+  --bl-card: linear-gradient(180deg, #0b0b0d 0%, #060607 46%, #030304 100%);
+  --bl-edge: inset 0 1px 0 rgba(255, 255, 255, .1), inset 0 0 0 1px rgba(255, 255, 255, .07);
+  position: relative; background: #050505; color: #f8fafc; overflow-x: clip;
+  padding: 128px 0 120px;
+}
+@media (min-width: 768px) { .bl { padding: 164px 0 152px; } }
+.bl-in { position: relative; z-index: 1; }
+
+/* ── Tło nagłówka: linie (BlogBackdrop.tsx) na całej szerokości, wygaszone za wyśrodkowanym tekstem i ku dołowi
+   (gasną przed paskiem kategorii). ── */
+.bl {
+  --bl-my: linear-gradient(180deg, #000 0%, #000 42%, transparent 100%);
+  --bl-mx: radial-gradient(ellipse 58% 30% at 50% 36%, rgba(0, 0, 0, .1) 0%, rgba(0, 0, 0, .25) 55%, #000 100%);
+}
+.bl-bg {
+  position: absolute; top: 0; left: 0; right: 0; height: 600px; pointer-events: none;
+  opacity: 0; transition: opacity 1.6s ease;
+  -webkit-mask-image: var(--bl-mx), var(--bl-my); mask-image: var(--bl-mx), var(--bl-my);
+  -webkit-mask-composite: source-in; mask-composite: intersect;
+}
+.bl-bg[data-ready] { opacity: 1; }
+.bl-bg canvas { display: block; width: 100%; height: 100%; }
+@media (min-width: 1024px) {
+  .bl-bg { height: 640px; }
+  .bl {
+    --bl-my: linear-gradient(180deg, #000 0%, #000 34%, transparent 86%);
+    --bl-mx: radial-gradient(ellipse 40% 34% at 50% 42%, transparent 0%, rgba(0, 0, 0, .15) 55%, #000 100%);
+  }
+}
+
+/* ── Nagłówek listy ── */
+.bl-head { max-width: 52rem; margin: 0 auto 44px; text-align: center; }
+.bl-head .im-title { margin-bottom: 20px; font-size: clamp(40px, 6.2vw, 76px); line-height: 1.02; }
+.bl-head .im-lead { margin: 0 auto; max-width: 40rem; text-wrap: balance; }
+@media (min-width: 1024px) { .bl-head { margin-bottom: 64px; } }
+@media (max-width: 479px) {
+  .bl-head { margin-bottom: 36px; }
+  .bl-head .im-title { margin-bottom: 16px; }
+  .bl-head .im-lead { font-size: 16px; line-height: 1.6; }
+}
+
+/* ── Pasek: kategorie (pigułki) + sortowanie + wyszukiwarka. Obok siebie dopiero od 1280 px (na 1024 wyszukiwarka
+   spychała ostatnią pigułkę do drugiego rzędu); niżej pigułki nad narzędziami. ── */
+.bl-bar { display: flex; flex-direction: column; gap: 16px; margin-bottom: 32px; }
+@media (min-width: 1024px) { .bl-bar { margin-bottom: 40px; } }
+@media (min-width: 1280px) {
+  .bl-bar { flex-direction: row; align-items: center; justify-content: space-between; gap: 32px; }
+}
+.bl-cats {
+  display: flex; gap: 8px; min-width: 0; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none;
+  margin: 0 -24px; padding: 2px 24px;
+}
+.bl-cats::-webkit-scrollbar { display: none; }
+@media (min-width: 1024px) { .bl-cats { flex-wrap: wrap; overflow: visible; margin: 0; padding: 2px; } }
+
+.bl-cat {
+  flex: none; display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px;
+  border-radius: 999px; border: 1px solid rgba(255, 255, 255, .1); background: #080809; color: #cbd5e1;
+  font: inherit; font-size: 14.5px; font-weight: 500; line-height: 1; white-space: nowrap; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; transition: background-color .4s ease, color .4s ease, border-color .4s ease;
+}
+.bl-cat[aria-pressed="true"] { background: #f8fafc; border-color: #f8fafc; color: #050505; }
+.bl-cat:focus-visible { outline: 2px solid var(--brand-hi); outline-offset: 3px; }
+
+.bl-tools { display: flex; gap: 10px; min-width: 0; }
+@media (min-width: 1280px) { .bl-tools { flex: none; } }
+.bl-sort {
+  flex: none; display: inline-flex; align-items: center; gap: 8px; height: 48px; padding: 0 16px;
+  border-radius: 12px; border: 1px solid rgba(255, 255, 255, .1); background: #040405; color: #cbd5e1;
+  font: inherit; font-size: 14.5px; font-weight: 500; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: color .35s ease, border-color .35s ease;
+}
+.bl-sort svg { width: 16px; height: 16px; flex: none; }
+.bl-sort:focus-visible { outline: 2px solid var(--brand-hi); outline-offset: 3px; }
+/* Najmniejsze telefony (< 360 px): sortowanie jako sama ikona (nazwa w aria-label), żeby wyszukiwarka miała miejsce. */
+@media (max-width: 359px) {
+  .bl-sort { width: 48px; padding: 0; justify-content: center; }
+  .bl-sort-t { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
+.bl-search { position: relative; flex: 1; min-width: 0; }
+@media (min-width: 1280px) { .bl-search { flex: none; width: 280px; } }
+.bl-search svg { position: absolute; left: 15px; top: 50%; width: 17px; height: 17px; transform: translateY(-50%); color: #7d8899; pointer-events: none; }
+.bl-search-in {
+  display: block; width: 100%; height: 48px; padding: 0 16px 0 44px;
+  border-radius: 12px; border: 1px solid rgba(255, 255, 255, .1); background: #040405; color: #f8fafc;
+  font: inherit; font-size: 16px; line-height: 1.4; outline: none; -webkit-appearance: none; appearance: none;
+  transition: border-color .3s ease, box-shadow .3s ease;
+}
+.bl-search-in::placeholder { color: #7d8899; opacity: 1; }
+.bl-search-in:focus { border-color: var(--brand-hi); box-shadow: 0 0 0 3px rgb(var(--brand-rgb) / .22); }
+.bl-search-in::-webkit-search-cancel-button { -webkit-appearance: none; }
+
+@media (hover: hover) {
+  .bl-cat:not([aria-pressed="true"]):hover { border-color: rgba(255, 255, 255, .24); color: #fff; }
+  .bl-sort:hover { color: #fff; border-color: rgba(255, 255, 255, .22); }
+  .bl-search-in:hover:not(:focus) { border-color: rgba(255, 255, 255, .2); }
+}
+
+/* ── Wspólne: meta, link rozciągnięty na kartę, „Czytaj” ze strzałką, zdjęcie w ramce ── */
+.bl-meta { margin: 0; overflow: hidden; font-size: 13.5px; line-height: 1.4; color: #94a3b8; }
+/* Pozycje z kropką przed każdą; lista przesunięta w lewo o szerokość kropki i przycięta (overflow rodzica), więc
+   kropka na początku każdej linii jest ukryta - przy zawijaniu nie ma kropek na końcu ani początku wiersza. */
+.bl-mi { display: flex; flex-wrap: wrap; align-items: center; row-gap: 4px; margin-left: -17px; }
+.bl-mi > * { display: inline-flex; align-items: center; }
+.bl-mi > *::before { content: ''; flex: none; width: 3px; height: 3px; margin: 0 7px; border-radius: 50%; background: rgba(148, 163, 184, .6); }
+.bl-link { color: inherit; text-decoration: none; outline: none; -webkit-tap-highlight-color: transparent; }
+.bl-link::after { content: ''; position: absolute; inset: 0; z-index: 2; border-radius: inherit; }
+.bl-read { display: inline-flex; align-items: center; gap: 8px; color: #e2e8f0; font-size: 14.5px; font-weight: 500; transition: color .4s ease, background-color .35s ease; }
+.bl-arrow { width: 16px; height: 16px; flex: none; color: var(--brand); transition: transform .5s var(--bl-ease); }
+.bl-img { object-fit: cover; filter: saturate(.9) brightness(.94); }
+.bl-feat-media, .bl-card-media, .bl-post-cover-in { position: relative; overflow: hidden; background: #0c0c0f; }
+.bl-feat-media::after, .bl-card-media::after, .bl-post-cover-in::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08), inset 0 1px 0 rgba(255, 255, 255, .14);
+}
+.bl-author { color: #e2e8f0; font-weight: 500; }
+
+/* ── Karta wyróżniona (najnowszy wpis): pół na pół, „Czytaj artykuł” jako biały przycisk (jak w czerwcu) ── */
+.bl-list { display: grid; gap: 20px; }
+@media (min-width: 768px) { .bl-list { gap: 24px; } }
+.bl-feat {
+  position: relative; display: grid; padding: 8px; border-radius: 28px; background: var(--bl-card); box-shadow: var(--bl-edge);
+}
+.bl-feat:has(.bl-link:focus-visible), .bl-card:has(.bl-link:focus-visible) { outline: 2px solid var(--brand-hi); outline-offset: 4px; }
+.bl-feat-media { border-radius: 20px; aspect-ratio: 16 / 10; }
+.bl-feat-body { display: flex; flex-direction: column; gap: 16px; min-width: 0; padding: 22px 14px 14px; }
+.bl-feat-top { display: flex; flex-direction: column; gap: 12px; }
+.bl-kicker { display: inline-flex; align-items: center; gap: 10px; margin: 0; font-size: 14.5px; font-weight: 500; line-height: 1.2; color: #e2e8f0; }
+.bl-kicker svg { width: 9px; height: 9px; flex: none; fill: var(--brand); }
+.bl-feat-title { margin: 0; font-size: clamp(26px, 2.7vw, 36px); line-height: 1.12; font-weight: 700; letter-spacing: -.028em; color: #f8fafc; text-wrap: balance; }
+.bl-feat-ex { margin: 0; font-size: 16.5px; line-height: 1.65; color: #94a3b8; text-wrap: pretty; }
+.bl-feat-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: auto; padding-top: 4px; font-size: 14.5px; }
+.bl-feat .bl-read {
+  height: 46px; padding: 0 20px; border-radius: 999px; background: #fff; color: #020617; font-weight: 700;
+  box-shadow: inset 0 -1px 0 rgba(2, 6, 23, .12);
+}
+.bl-feat .bl-read .bl-arrow { color: #020617; }
+@media (max-width: 479px) { .bl-feat-title { font-size: clamp(24px, 6.8vw, 28px); } }
+/* Tablet: karta nadal jedna pod drugą, ale zdjęcie niższe (16:10 na 768 px zajmowało pół ekranu). */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .bl-feat-media { aspect-ratio: 2 / 1; }
+  .bl-feat-body { padding: 26px 22px 20px; }
+}
+@media (min-width: 1024px) {
+  .bl-feat { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .bl-feat-media { aspect-ratio: auto; min-height: 440px; }
+  .bl-feat-body { justify-content: center; gap: 20px; padding: 44px 44px 36px 48px; }
+  .bl-feat-foot { margin-top: 12px; }
+}
+
+/* ── Siatka pozostałych wpisów (1 / 2 / 3 kolumny, jak w czerwcu) ── */
+.bl-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 20px; }
+.bl-grid > li { min-width: 0; }
+@media (min-width: 768px) { .bl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; } }
+@media (min-width: 1024px) { .bl-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.bl-card {
+  position: relative; display: flex; flex-direction: column; height: 100%; padding: 8px; border-radius: 24px;
+  background: var(--bl-card); box-shadow: var(--bl-edge);
+}
+.bl-card-media { flex: none; border-radius: 16px; aspect-ratio: 16 / 10; }
+.bl-card-body { display: flex; flex-direction: column; flex: 1; gap: 12px; min-width: 0; padding: 20px 16px 14px; }
+.bl-card-title { margin: 0; font-size: 20px; line-height: 1.3; font-weight: 600; letter-spacing: -.012em; color: #f8fafc; text-wrap: balance; }
+.bl-card-ex {
+  margin: 0; font-size: 15px; line-height: 1.6; color: #94a3b8;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.bl-card-foot {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: auto; padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, .07);
+}
+.bl-mins { font-size: 13.5px; color: #94a3b8; }
+
+.bl-feat:active, .bl-card:active { opacity: .88; }
+@media (hover: hover) {
+  .bl-feat:hover .bl-arrow, .bl-card:hover .bl-arrow { transform: translateX(3px); }
+  .bl-feat:hover .bl-read { background: #eef3fb; }
+  .bl-card:hover .bl-read { color: #fff; }
+}
+
+/* ── Brak wyników ── */
+.bl-empty { padding: 72px 24px; border-radius: 24px; background: var(--bl-card); box-shadow: var(--bl-edge); text-align: center; }
+.bl-empty-title { margin: 0 0 8px; font-size: 22px; font-weight: 600; letter-spacing: -.012em; color: #f8fafc; }
+.bl-empty-text { margin: 0; font-size: 16px; line-height: 1.6; color: #94a3b8; }
+.bl-clear {
+  display: inline-flex; align-items: center; height: 44px; margin-top: 20px; padding: 0 18px; border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, .14); background: none; color: #e2e8f0; font: inherit; font-size: 14.5px; font-weight: 500;
+  cursor: pointer; transition: border-color .35s ease, color .35s ease;
+}
+.bl-clear:focus-visible { outline: 2px solid var(--brand-hi); outline-offset: 3px; }
+@media (hover: hover) { .bl-clear:hover { color: #fff; border-color: rgba(255, 255, 255, .3); } }
+
+/* ── Wpis (/blog/[slug]) - „Okładka” + „Nagłówek na liniach” (wybór właściciela 2026-09-29: „połącz okładkę
+   z nagłówek na liniach”) ──────────────────────────────────────────────────────────────────────────────────────
+   Na liniach bloga (BlogBackdrop - widoczne nad okładką i obok niej): powrót na środku, duże zdjęcie w ramce (4:3 na
+   telefonie, 21:9 od 768 px), na nie nachodzi karta w czerni luksusowej z wyśrodkowanym nagłówkiem jak na liście
+   (etykieta z kategoriami z liniami i gwiazdkami po obu stronach, tytuł, zajawka, autor · data · czas). Niżej treść
+   ~46rem na środku, cytat-CTA i „Czytaj dalej” z kartami pozostałych wpisów. */
+.bl-post { --bl-mx: linear-gradient(#000, #000); } /* linie na całą szerokość - środek zasłania okładka */
+.bl-post-wrap { display: flex; flex-direction: column; }
+.bl-post-wrap > * { min-width: 0; max-width: 100%; }
+.bl-back {
+  align-self: center;
+  display: inline-flex; align-items: center; gap: 8px; margin: 0 0 20px; padding: 12px 0;
+  color: #94a3b8; font-size: 14.5px; font-weight: 500; line-height: 1.4; text-decoration: none;
+  -webkit-tap-highlight-color: transparent; transition: color .35s ease;
+}
+.bl-back svg { width: 16px; height: 16px; transition: transform .5s var(--bl-ease); }
+.bl-back:focus-visible { outline: 2px solid var(--brand-hi); outline-offset: 4px; border-radius: 6px; }
+
+.bl-post-cover { margin: 0; padding: 8px; border-radius: 28px; background: var(--bl-card); box-shadow: var(--bl-edge); }
+.bl-post-cover-in { aspect-ratio: 4 / 3; border-radius: 20px; }
+
+.bl-post-head {
+  position: relative; z-index: 1; width: 100%; max-width: 58rem; margin: -40px auto 0;
+  padding: 24px 20px 24px; border-radius: 24px; background: var(--bl-card); text-align: center;
+  box-shadow: var(--bl-edge), 0 30px 60px -20px rgba(0, 0, 0, .8);
+}
+.bl-post-head .im-label { margin-bottom: 18px; }
+/* Etykieta jak na liście: linie i gwiazdki po obu stronach (SectionLabel align="start" + odkryte elementy). */
+.bl-post-head .sl--start .sl-line:not(.sl-line--r), .bl-post-head .sl--start .sl-star--r { display: block; }
+.bl-post-title {
+  margin: 0 0 18px; font-weight: 700; font-size: clamp(32px, 4.6vw, 56px); line-height: 1.07; letter-spacing: -.032em;
+  color: #f8fafc; text-wrap: balance;
+}
+.bl-post-lead { margin: 0 auto 24px; max-width: 44rem; font-size: 19px; line-height: 1.6; color: #94a3b8; text-wrap: balance; }
+/* Meta na środku: przycinanie kropki na początku linii (.bl-mi) nie działa przy centrowaniu - pierwsza pozycja bez
+   kropki, a na wąskim telefonie czas czytania w osobnej linii bez kropki. */
+.bl-post-meta { margin: 0; overflow: hidden; font-size: 14.5px; line-height: 1.4; color: #94a3b8; }
+.bl-post-meta .bl-mi { justify-content: center; margin-left: 0; row-gap: 6px; }
+.bl-post-meta .bl-mi > :first-child::before { display: none; }
+
+.bl-post-main { margin-top: 48px; }
+.bl-post .bl-body { margin-inline: auto; }
+
+@media (min-width: 480px) {
+  .bl-post-head { width: calc(100% - 24px); margin-top: -56px; padding: 28px 28px 26px; }
+}
+@media (min-width: 768px) {
+  .bl-post-cover-in { aspect-ratio: 21 / 9; }
+  .bl-post-head { width: calc(100% - 96px); margin-top: -128px; padding: 44px 56px 40px; border-radius: 28px; }
+  .bl-post-main { margin-top: 72px; }
+}
+@media (hover: hover) {
+  .bl-back:hover { color: #fff; }
+  .bl-back:hover svg { transform: translateX(-3px); }
+}
+/* Telefon: tytuł 28-34 px (32 px dawało 6 linii na 320 px); etykieta bez linii (z liniami była szersza niż ekran),
+   zostają gwiazdki. */
+@media (max-width: 479px) {
+  .bl-post-title { margin-bottom: 14px; font-size: clamp(28px, 7.6vw, 34px); line-height: 1.1; }
+  .bl-post-lead { margin-bottom: 20px; font-size: 17px; }
+  .bl-post-head .sl--start .sl-line:not(.sl-line--r), .bl-post-head .sl .sl-line--r { display: none; }
+}
+@media (max-width: 399px) {
+  .bl-post-meta .bl-mi > :last-child { flex-basis: 100%; justify-content: center; }
+  .bl-post-meta .bl-mi > :last-child::before { display: none; }
+}
+
+/* ── Czytaj dalej (pod wpisem) ── */
+.bl-more { margin-top: 96px; }
+@media (min-width: 768px) { .bl-more { margin-top: 128px; } }
+.bl-more-head {
+  display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 32px;
+  margin-bottom: 32px; padding-top: 56px; border-top: 1px solid rgba(255, 255, 255, .07);
+}
+.bl-more-head .im-label { margin-bottom: 14px; }
+.bl-more-title { margin: 0; font-size: clamp(30px, 3.6vw, 44px); line-height: 1.08; font-weight: 700; letter-spacing: -.03em; color: #f8fafc; }
+.bl-all { display: inline-flex; align-items: center; gap: 10px; padding: 11px 0; color: #e2e8f0; font-size: 15px; font-weight: 500; text-decoration: none; -webkit-tap-highlight-color: transparent; transition: color .4s ease; }
+.bl-all-text { text-decoration: underline 1px rgba(255, 255, 255, .26); text-underline-offset: 6px; transition: text-decoration-color .4s ease; }
+.bl-all:focus-visible { outline: 2px solid var(--brand-hi); outline-offset: 4px; border-radius: 6px; }
+@media (min-width: 1024px) {
+  .bl-more .bl-grid:has(> li:nth-child(2):last-child) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bl-more .bl-grid:has(> li:nth-child(2):last-child) .bl-card-media { aspect-ratio: 2 / 1; }
+}
+@media (hover: hover) {
+  .bl-all:hover { color: #fff; }
+  .bl-all:hover .bl-all-text { text-decoration-color: #f8fafc; }
+  .bl-all:hover .bl-arrow { transform: translateX(3px); }
+}
+
+/* ── Treść wpisu (HTML z app/data/posts.ts) ── */
+.bl-body { max-width: 46rem; font-size: 18px; line-height: 1.75; color: #cbd5e1; }
+.bl-body > :first-child { margin-top: 0; }
+.bl-body h2 {
+  margin: 56px 0 16px; font-size: clamp(26px, 3vw, 32px); line-height: 1.2; font-weight: 700; letter-spacing: -.022em;
+  color: #f8fafc; text-wrap: balance;
+}
+.bl-body h3 { margin: 40px 0 12px; font-size: 21px; line-height: 1.3; font-weight: 600; letter-spacing: -.012em; color: #f8fafc; text-wrap: balance; }
+.bl-body p { margin: 0 0 22px; text-wrap: pretty; }
+.bl-body strong { font-weight: 600; color: #f8fafc; }
+.bl-body a {
+  color: var(--brand-hi); text-decoration: underline 1px rgb(var(--brand-rgb) / .5); text-underline-offset: 4px;
+  transition: color .3s ease, text-decoration-color .3s ease;
+}
+.bl-body ul, .bl-body ol { display: grid; gap: 12px; margin: 0 0 26px; padding: 0; list-style: none; }
+.bl-body li { position: relative; padding-left: 30px; font-size: 17px; line-height: 1.7; }
+.bl-body ul > li::before { content: ''; position: absolute; left: 2px; top: .85em; width: 14px; height: 1px; background: var(--brand); }
+.bl-body ol { counter-reset: bl-n; }
+.bl-body ol > li { counter-increment: bl-n; }
+.bl-body ol > li::before {
+  content: counter(bl-n) "."; position: absolute; left: 0; top: 0; color: var(--brand-hi); font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+/* Cytat na końcu wpisu = CTA: karta w czerni luksusowej z niebieską krawędzią po lewej (jak w czerwcu),
+   <strong> = tytuł, link = biały przycisk „Bezpłatna konsultacja”. */
+.bl-body blockquote {
+  margin: 56px 0 0; padding: 28px 26px 28px; border-radius: 4px 24px 24px 4px;
+  background: var(--bl-card); box-shadow: inset 2px 0 0 var(--brand), var(--bl-edge);
+  font-size: 16.5px; line-height: 1.65; color: #94a3b8;
+}
+@media (min-width: 768px) { .bl-body blockquote { padding: 34px 36px 36px; } }
+.bl-body blockquote strong { display: block; margin-bottom: 10px; font-size: 22px; line-height: 1.3; font-weight: 600; letter-spacing: -.015em; color: #f8fafc; text-wrap: balance; }
+.bl-body blockquote strong + br { display: none; }
+.bl-body blockquote a {
+  display: inline-flex; align-items: center; height: 50px; margin-top: 20px; padding: 0 24px; border-radius: 14px;
+  background: #fff; color: #020617; font-size: 15.5px; font-weight: 700; text-decoration: none;
+  box-shadow: inset 0 -1px 0 rgba(2, 6, 23, .12); transition: background-color .35s ease;
+}
+.bl-body blockquote a:focus-visible { outline: 2px solid var(--brand-hi); outline-offset: 3px; }
+@media (hover: hover) {
+  .bl-body a:hover { color: #fff; text-decoration-color: #fff; }
+  .bl-body blockquote a:hover { background: #eef3fb; color: #020617; }
+}
+/* Telefon: tekst 17 px, śródtytuły mniejsze, cytat-CTA z mniejszym wcięciem i przyciskiem na całą szerokość. */
+@media (max-width: 479px) {
+  .bl-body { font-size: 17px; line-height: 1.72; }
+  .bl-body h2 { margin-top: 44px; font-size: 24px; }
+  .bl-body h3 { margin-top: 32px; font-size: 19px; }
+  .bl-body li { padding-left: 26px; font-size: 16px; }
+  .bl-body blockquote { margin-top: 44px; padding: 24px 20px 22px; font-size: 16px; }
+  .bl-body blockquote strong { font-size: 20px; }
+  .bl-body blockquote a { display: flex; justify-content: center; width: 100%; }
+}
+
+/* ── Wejście ── */
+@keyframes bl-rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  .bl-rise { animation: bl-rise .9s var(--bl-ease) both; animation-delay: calc(var(--d, 0) * 90ms + 60ms); }
+  .bl-enter { animation: bl-rise .9s var(--bl-ease) both; animation-delay: calc(var(--d, 0) * 90ms + 380ms); }
+  .bl-list[data-again] .bl-enter { animation-duration: .7s; animation-delay: calc(var(--d, 0) * 70ms); }
+}

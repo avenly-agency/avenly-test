@@ -1,0 +1,166 @@
+/* Podstrona „Chatboty AI” - sekcja WIEDZA, propozycja „W środku” (chat 13, runda 3; wiedza-srodek.tsx).
+   Prefiks ch-ki-. Części wspólne (przypięty ekran, narrator, plany gwiazd, odpowiedź, podpis źródła, węzeł człowieka,
+   jedno miejsce rozmowy): wiedza.css; gwiazda asystenta, dymki, słowa po kolei, obwódka .ch-lit: chatboty.css.
+   Opowieść kamery: dokumenty firmy wypełniają ekran -> zbiegają się w gwiazdę -> gwiazda jest autorem odpowiedzi
+   w rozmowie -> pytanie spoza wiedzy: kamera nurkuje w gwiazdę, przegląd dokumentów -> wyjście i przekazanie
+   człowiekowi. Trzy warstwy w .ch-k-scene to punkty 0 x 0 przesuwane do PUNKTU GWIAZDY (--sx / --sy [px]):
+     .ch-ki-spokes - promienie od kart do środka (bez skali: włosowe linie zostają włosowe),
+     .ch-ki-docs   - gromada pięciu dokumentów, scale(--mz),
+     .ch-ki-talk   - rozmowa, scale(--cz): gwiazda w punkcie 0 x 0, kolumna rozmowy na bliższym planie
+                     (.ch-ki-near, drugi raz scale(--cz)) - przy najeździe wylatuje za krawędź ekranu.
+   Zmienne ze sceny (na .ch-ki-pin): --p postęp, --b budowa gromady przy wjeździe, --mz skala gromady, --do krycie
+   gromady, --sp krycie promieni, --ss / --so skala i krycie gwiazdy (skrapla się z dokumentów), --cz skala rozmowy,
+   --sx / --sy punkt gwiazdy, --cam głębokość kamery (plany gwiazd), --dim przygaszenie kart, --sc przegląd kart
+   (0 - liczba kart); atrybut data-hot na karcie = właśnie sprawdzana.
+   Całość żyje tylko w przypiętej scenie (.sv[data-live], ruch bez ograniczeń, ekran wyższy niż 520 px) - bez tego
+   scena jest wyłączona (wiedza.css) i zostaje lista pytań z odpowiedziami.
+   Bez rozmyć, poświat i masek; kolor podstrony tylko w liniach, impulsie i gwieździe; przegląd dokumentów w bieli. */
+
+@keyframes ch-ki-drop { 0% { transform: translateY(-20px); opacity: 1; } 88% { opacity: 1; } 100% { transform: translateY(100%); opacity: 0; } }
+
+@media (prefers-reduced-motion: no-preference) and (min-height: 521px) {
+  .sv[data-live] .ch-ki { --kh: 100vh; }
+  @supports (height: 100svh) { .sv[data-live] .ch-ki { --kh: 100svh; } }
+  /* 340vh zamiast 300vh: nurkowanie kamery w gwiazdę i wyjście z niej dostają więcej przewijania (spokojniej) */
+  .sv[data-live] .ch-ki-pin { height: 440vh; height: calc(100svh + 340vh); }
+
+  /* plany gwiazd na cały ekran (scena jest wyśrodkowana); oddalają się i przybliżają razem z kamerą */
+  .sv[data-live] .ch-ki .ch-k-scene > .ch-k-pl { left: -4%; }
+  .sv[data-live] .ch-ki .ch-k-pl[data-depth="far"] .ch-k-pl-in { transform: scale(calc(1 + var(--cam, 0) * .1)); }
+  .sv[data-live] .ch-ki .ch-k-pl[data-depth="near"] .ch-k-pl-in { transform: scale(calc(1 + var(--cam, 0) * .6)); }
+
+  .sv[data-live] :is(.ch-ki-spokes, .ch-ki-docs, .ch-ki-talk, .ch-ki-near) { position: absolute; left: 0; top: 0; width: 0; height: 0; pointer-events: none; }
+
+  /* ── promienie: długość i kąt z pomiaru (--l, --a), skracają się razem z gromadą; widać je, gdy gromada jest mała ── */
+  .sv[data-live] .ch-ki-spokes { transform: translate(calc(var(--sx, 0) * 1px), calc(var(--sy, 0) * 1px)); opacity: var(--sp, 0); }
+  .sv[data-live] .ch-ki-spoke {
+    position: absolute; left: 0; top: 0; width: calc(var(--l, 0) * 1px); height: 1px; transform-origin: 0 50%;
+    transform: rotate(calc(var(--a, 0) * 1deg)) scaleX(var(--mz, 1));
+    background: linear-gradient(90deg, rgb(var(--sv-ac) / .75), rgba(255, 255, 255, .16));
+  }
+
+  /* ── dokumenty: karty z czarnego szkła wokół punktu gwiazdy. Wjazd: każda karta z 1,18 i z zera krycia (--b, --i).
+        Przy zbieganiu karta dokręca własny obrót i trzyma własną głębię (--pz): gromada nie maleje jak płaski obraz ── */
+  .sv[data-live] .ch-ki-docs {
+    --cw: min(24vw, 340px, 42vh);
+    transform-origin: 0 0; transform: translate(calc(var(--sx, 0) * 1px), calc(var(--sy, 0) * 1px)) scale(var(--mz, 1));
+    opacity: var(--do, 1);
+  }
+  .sv[data-live] .ch-ki-card {
+    --in: clamp(0, var(--b, 1) * 2.4 - var(--i) * .35, 1);
+    --k: calc(var(--in) * var(--in) * (3 - 2 * var(--in)));
+    --away: calc(1 - var(--mz, 1));
+    position: absolute; left: calc(var(--xw) * 1vw); top: calc(var(--yw) * 1vh); width: var(--cw); opacity: var(--k);
+    transform:
+      translate(-50%, -50%)
+      translate(calc(var(--xw) * 1vw * var(--pz) * var(--away)), calc(var(--yw) * 1vh * var(--pz) * var(--away)))
+      rotate(calc(var(--r) * (1 + var(--away) * 2.5) * 1deg))
+      scale(calc(1.18 - var(--k) * .18));
+  }
+  .sv[data-live] .ch-ki-sheet {
+    --lit-a: .5;
+    position: relative; display: grid; align-content: start; gap: .5em; padding: 1.25em 1.35em 1.4em; border-radius: 1em;
+    background: rgba(4, 4, 5, .9); box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0);
+    font-size: clamp(13.5px, calc(var(--cw) * .047), 22px); line-height: 1.35; color: #cbd5e1;
+    transition: box-shadow .35s ease;
+  }
+  /* przygaszenie: gaśnie treść i obwódka, powierzchnia zostaje czarna (karty w stosie nie prześwitują przez siebie) */
+  .sv[data-live] .ch-ki-sheet::before { opacity: calc(1 - var(--dim, 0) * .5); }
+  .sv[data-live] .ch-ki-sheet > * { opacity: calc(1 - var(--dim, 0) * .5); transition: opacity .35s ease; }
+  .sv[data-live] .ch-ki-sheet > b { margin-bottom: .2em; font-size: 1.14em; font-weight: 600; letter-spacing: -.01em; color: #f8fafc; }
+  .sv[data-live] .ch-ki-lines { position: relative; display: grid; gap: .3em; padding: .2em 0; transition: opacity .35s ease, color .35s ease; }
+  .sv[data-live] .ch-ki-sheet > i { height: 1px; margin-top: .55em; background: rgba(255, 255, 255, .14); }
+  .sv[data-live] .ch-ki-sheet > i:nth-of-type(2) { width: 82%; }
+  .sv[data-live] .ch-ki-sheet > i:nth-of-type(3) { width: 64%; }
+  .sv[data-live] .ch-ki-sheet > i:nth-of-type(4) { width: 74%; }
+  /* przegląd: sprawdzana karta wraca do pełnego światła, krawędź w BIELI (nie w kolorze podstrony - nic nie pasuje),
+     po jej dwóch linijkach przechodzi biała linia (--t = postęp w tej karcie, z przewijania) */
+  .sv[data-live] .ch-ki-card[data-hot] { --dim: 0; z-index: 9; }
+  .sv[data-live] .ch-ki-card[data-hot] .ch-ki-sheet { box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .95); }
+  .sv[data-live] .ch-ki-card[data-hot] .ch-ki-lines { color: #f8fafc; }
+  .sv[data-live] .ch-ki-scan {
+    --t: clamp(0, var(--sc, 0) - var(--i), 1);
+    position: absolute; inset: 0; border-right: 2px solid #fff; opacity: 0; transform: translateX(calc((var(--t) - 1) * 100%));
+  }
+  .sv[data-live] .ch-ki-card[data-hot] .ch-ki-scan { opacity: 1; }
+
+  /* ── rozmowa: gwiazda (punkt 0 x 0) jest autorem odpowiedzi. Kolumna po prawej: nad odpowiedzią pytanie klienta,
+        pod nią podpis źródła; pierwsza linijka odpowiedzi stoi na wysokości gwiazdy.
+        --kx odstęp kolumny od gwiazdy, --af pismo odpowiedzi (od niego liczona szerokość kolumny i miejsce linii) ── */
+  .sv[data-live] .ch-ki-talk {
+    --kx: clamp(56px, 5vw, 128px); --af: clamp(20px, min(2.1vw, 3.6vh), 34px);
+    z-index: 2; transform-origin: 0 0;
+    transform: translate(calc(var(--sx, 0) * 1px), calc(var(--sy, 0) * 1px)) scale(var(--cz, 1));
+  }
+  .sv[data-live] .ch-ki-core { position: absolute; left: -110px; top: -110px; display: grid; place-items: center; width: 220px; height: 220px; }
+  .sv[data-live] .ch-ki-core .ch-spark { width: 44px; height: 44px; opacity: var(--so, 1); transform: scale(var(--ss, 1)); }
+  .sv[data-live] .ch-ki-near { transform-origin: 0 0; transform: scale(var(--cz, 1)); }
+  .sv[data-live] .ch-ki-col { position: absolute; left: var(--kx); top: calc(var(--af) * -.68); width: min(calc(var(--af) * 20.5), 60vw); }
+  .sv[data-live] .ch-ki-meta { position: absolute; left: 0; bottom: calc(100% + 92px); width: max-content; max-width: 100%; }
+  .sv[data-live] .ch-ki-col .ch-k-turn { position: relative; }
+  .sv[data-live] .ch-ki-col .ch-k-turn > .ch-msg { position: absolute; left: 0; right: 0; bottom: calc(100% + 20px); }
+  .sv[data-live] .ch-ki-col .ch-bub { font-size: clamp(16px, calc(var(--af) * .6), 19px); }
+  .sv[data-live] .ch-ki-col .ch-k-ans { max-width: none; font-size: var(--af); }
+  .sv[data-live] .ch-ki-col .ch-k-src { font-size: 15.5px; }
+  .sv[data-live] .ch-ki-reply { --rg: 14px; display: grid; gap: var(--rg); min-width: 0; }
+  .sv[data-live] .ch-ki-reply[data-hand] { --rg: 30px; }
+  .sv[data-live] :is(.ch-ki-say, .ch-ki-foot) { position: relative; min-width: 0; }
+
+  /* linia od gwiazdy do podpisu: pion pod gwiazdą (rysuje się raz, impuls biegnie raz), potem kreska do tekstu;
+     11 px = środek pierwszej linijki podpisu. Przy przekazaniu linia kończy się na węźle człowieka (promień 18 px). */
+  .sv[data-live] :is(.ch-ki-rail, .ch-ki-drop) { position: absolute; top: calc(var(--af) * .68 + 34px); bottom: calc((var(--rg) + 11px) * -1); }
+  .sv[data-live] .ch-ki-reply[data-hand] :is(.ch-ki-rail, .ch-ki-drop) { bottom: calc((var(--rg) - 7px) * -1); }
+  .sv[data-live] .ch-ki-rail { left: calc(var(--kx) * -1); width: 1px; background: rgb(var(--sv-ac) / .8); transform-origin: 50% 0; transform: scaleY(0); }
+  .sv[data-live] .ch-ki-reply[data-on] .ch-ki-rail { transform: none; transition: transform .7s var(--sv-ease); }
+  .sv[data-live] .ch-ki-drop { left: calc(var(--kx) * -1 - 1px); width: 3px; overflow: hidden; }
+  .sv[data-live] .ch-ki-drop::before {
+    content: ''; position: absolute; inset: 0; opacity: 0;
+    background: linear-gradient(rgb(var(--sv-ac)), rgb(var(--sv-ac))) no-repeat 0 0 / 100% 18px;
+  }
+  .sv[data-live] .ch-ki-reply[data-on] .ch-ki-drop::before { animation: ch-ki-drop 1.15s cubic-bezier(.5, 0, .3, 1) .1s both; }
+  .sv[data-live] .ch-ki-foot::before {
+    content: ''; position: absolute; left: calc(var(--kx) * -1); top: 11px; width: calc(var(--kx) - 14px); height: 1px;
+    background: rgb(var(--sv-ac) / .8); transform-origin: 0 50%; transform: scaleX(0);
+  }
+  .sv[data-live] .ch-ki-reply[data-on] .ch-ki-foot::before { transform: none; transition: transform .5s var(--sv-ease) .6s; }
+  .sv[data-live] .ch-ki-reply[data-hand] .ch-ki-foot::before { left: calc(26px - var(--kx)); width: max(0px, calc(var(--kx) - 40px)); }
+  /* człowiek: węzeł na końcu linii, pojawia się i zapala, gdy dobiegnie do niego impuls */
+  .sv[data-live] .ch-ki-team { left: calc(var(--kx) * -1); top: 11px; }
+  .sv[data-live] .ch-ki-team:not([data-on]) { opacity: 0; transition: none; }
+  .sv[data-live] .ch-ki-team[data-on] { transition: opacity .5s ease .75s, color .5s ease 1.05s; }
+  .sv[data-live] .ch-ki-team[data-on] :is(i, svg) { transition-delay: 1.05s; }
+
+  /* ── telefon i tablet: dokumenty jako luźny stos schodzący kaskadą (nazwa każdej karty zostaje odsłonięta),
+        między 100 px a ok. 58% wysokości; rozmowa w kolumnie obok gwiazdy przy lewej krawędzi.
+        Liczby stosu (100 px, 250 px, krok 40-60 px) powtarza readGeo w wiedza-srodek.tsx ── */
+  @media (max-width: 1023.98px) {
+    .sv[data-live] .ch-ki-docs { --cw: min(62vw, 250px); --st: clamp(40px, calc((var(--kh) * .58 - 250px) / 4), 60px); }
+    .sv[data-live] .ch-ki-card {
+      left: calc(var(--xt) * 1vw); top: calc(100px - var(--kh) / 2 + var(--i) * var(--st));
+      transform: translate(-50%, 0) rotate(calc(var(--r) * (1 + var(--away) * 2.5) * 1deg)) scale(calc(1.18 - var(--k) * .18));
+    }
+    .sv[data-live] .ch-ki-sheet { padding: 14px 16px 16px; background: rgba(4, 4, 5, .96); font-size: 15px; }
+    .sv[data-live] .ch-ki-sheet > i:nth-of-type(n + 3) { display: none; }
+    .sv[data-live] .ch-ki-talk { --kx: 36px; --af: clamp(18px, 2.7vw, 24px); }
+    .sv[data-live] .ch-ki-col { width: min(30rem, calc(100vw - 104px)); }
+    .sv[data-live] .ch-ki-meta { display: none; }
+    .sv[data-live] .ch-ki-col .ch-k-turn > .ch-msg { bottom: calc(100% + 14px); }
+    .sv[data-live] .ch-ki-reply[data-hand] { --rg: 26px; }
+    .sv[data-live] .ch-ki-team { max-width: 4.6em; gap: 6px; }
+  }
+  @media (min-width: 640px) and (max-width: 1023.98px) {
+    .sv[data-live] .ch-ki-docs { --cw: min(44vw, 330px); }
+    .sv[data-live] .ch-ki-sheet { font-size: 16.5px; }
+  }
+  /* niski albo bardzo wąski telefon: mniejsze pismo odpowiedzi, żeby podpis i człowiek zmieściły się nad narratorem;
+     na niskim zostaje sam znak człowieka (podpis źródła obok mówi, komu przekazano rozmowę) */
+  @media (max-width: 1023.98px) and (max-height: 640px), (max-width: 359.98px) {
+    .sv[data-live] .ch-ki-talk { --af: 16.5px; }
+  }
+  @media (max-width: 1023.98px) and (max-height: 640px) {
+    .sv[data-live] .ch-ki-team { gap: 0; font-size: 0; }
+  }
+  @media (min-width: 2560px) {
+    .sv[data-live] .ch-ki-docs { --cw: min(24vw, 460px, 42vh); }
+  }
+}

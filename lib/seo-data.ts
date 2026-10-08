@@ -54,8 +54,10 @@ export const SOCIAL = {
 
 export const GOOGLE_BUSINESS = {
   profileUrl: 'https://share.google/YgHXGeqFgrSX4FEGs',
-  reviewsCount: 2, // TODO: aktualizuj liczbę wraz ze wzrostem opinii Google
-  ratingValue: 5.0, // TODO: aktualizuj średnią ocenę
+  // Dane archiwalne: od 2026-09-28 ocena NIE jest pokazywana ani wysyłana w JSON-LD (decyzja właściciela:
+  // "5,0 na Google" = słaby social proof). Zostają na wypadek powrotu do tematu przy większej liczbie opinii.
+  reviewsCount: 2,
+  ratingValue: 5.0,
 } as const;
 
 /** Lista zwracana jako `sameAs` w Organization schema - autorytatywne profile firmy w sieci. */

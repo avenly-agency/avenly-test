@@ -187,18 +187,18 @@ const THEMES: Record<ServiceColor, ServiceTheme> = {
 export function getServiceTheme(pathname: string | null): ServiceTheme {
   if (!pathname) return THEMES.blue;
 
-  // Sklep amber
-  if (pathname.includes('/strony-www/sklep')) return THEMES.amber;
+  // Sklep amber (PL + EN slug)
+  if (pathname.includes('/strony-www/sklep') || pathname.includes('/websites/online-store')) return THEMES.amber;
   // Aplikacje webowe sky
-  if (pathname.includes('/strony-www/system-crm')) return THEMES.sky;
+  if (pathname.includes('/strony-www/system-crm') || pathname.includes('/websites/crm-system')) return THEMES.sky;
   // Strona szyta na miarę rose
-  if (pathname.includes('/strony-www/strona-szyta-na-miare')) return THEMES.rose;
+  if (pathname.includes('/strony-www/strona-szyta-na-miare') || pathname.includes('/websites/custom-website')) return THEMES.rose;
   // Strona firmowa emerald
-  if (pathname.includes('/strony-www/strona-firmowa')) return THEMES.emerald;
+  if (pathname.includes('/strony-www/strona-firmowa') || pathname.includes('/websites/company-website')) return THEMES.emerald;
   // One-page blue (default match dla strony-www, pasuje też do dziedziczonych default)
-  if (pathname.includes('/strony-www/one-page')) return THEMES.blue;
+  if (pathname.includes('/strony-www/one-page') || pathname.includes('/websites/one-page')) return THEMES.blue;
   // Chatboty AI orange
-  if (pathname.includes('/automatyzacje-ai/chatboty-ai')) return THEMES.orange;
+  if (pathname.includes('/automatyzacje-ai/chatboty-ai') || pathname.includes('/ai-automation/ai-chatbots')) return THEMES.orange;
 
   // Default - blue (homepage, /uslugi/, /o-nas, /realizacje, /blog, etc.)
   return THEMES.blue;

@@ -1,0 +1,254 @@
+'use client';
+
+import { useCallback, useEffect, useRef, type CSSProperties } from 'react';
+import { Plus } from 'lucide-react';
+import type { ModsCopy } from '@/lib/i18n/uslugi/system-crm-mods';
+import { Steps, setSteps } from '../../_usluga/parts';
+import { lin, seg, usePin, useReducedPref, useSeen } from '../../_usluga/shared';
+import { Empty, MOD_ICONS, ModCount, ModFrame, START, Spot, bloomOff, bloomTo, flag, pinProgress, put, wipe } from './mods-ui';
+import type { SceneProps } from './types';
+import { Win } from './ui';
+
+// SEKCJA MODUŁÓW, propozycja 2 - „MENU ROŚNIE” (przypięta). To samo zdanie („trzy ekrany to początek, system rośnie”)
+// pokazane tak, jak rośnie prawdziwa aplikacja: w menu przybywa pozycji, a za każdą stoi cały, duży ekran.
+// Jedno okno w skali 1 przez całą scenę (kamera nie odjeżdża - pismo jest zawsze duże), jedno miejsce akcji naraz.
+// Pojawianie się = „rozejście” (właściciel 2026-10-05: żadnych lecących linii, szkieletów i odsłon przycięciem -
+// „animacja pojawiania płynna, tak jak się nebula rozchodzi”; wspólna klasa .cr-bloom z system-crm.css).
+//   Okno     po lewej menu systemu z licznikiem „Włączone moduły 3 / 8”, po prawej widok. Telefon: menu to pasek
+//            u góry okna, widok pod nim.
+//   Start    w menu trzy pozycje (biała płytka obejmuje wszystkie trzy), w widoku trzy ekrany na start obok siebie.
+//   Najazd   nagłówek sekcji odjeżdża w górę, okno wjeżdża spod niego na cały kadr, wchodzi narrator.
+//   Moduł    (pięć razy, jedno zdanie narratora na moduł) 1. w menu pojawia się nowa pozycja - rozchodzi się od swojej
+//            ikony - a biała płytka zjeżdża na nią (prawdziwy ruch); 2. widok przejeżdża o jedną stronę - prawdziwy
+//            ruch, w kierunku menu (komputer: w pionie, telefon: w bok) - na PUSTE miejsce ze spokojnym znakiem
+//            wolnego miejsca (gwiazdka w rogu, punkty w pozostałych rogach); 3. duży ekran modułu ROZCHODZI SIĘ
+//            od gwiazdki miękką, nierówną plamą, a znak wolnego miejsca schodzi tym samym rozejściem; 4. licznik
+//            przeskakuje o jeden. Postój.
+//   Finał    w menu pojawia się ostatnia pozycja „Twój kolejny moduł”, widok przejeżdża na następne miejsce - i to
+//            miejsce ZOSTAJE PUSTE: znak wolnego miejsca stoi dalej, a od gwiazdki rozchodzi się przerywany obrys
+//            ze zdaniem „+ to, czego potrzebuje Twoja firma”. Każdy moduł zaczynał jako takie puste miejsce.
+// Wszystko liczy `draw(p)` z usePin (zmienne CSS i atrybuty wprost do DOM, tylko przy zmianie wartości). Pomiar:
+// wysokość nagłówka i wolne miejsce nad oknem (start okna pod nagłówkiem), położenia pozycji paska menu (telefon).
+// Postęp rozejścia ma łagodny start i koniec (seg).
+// Bez JS / ograniczony ruch / bardzo niski ekran: zwykła sekcja - okno z pełnym menu i wszystkimi widokami jeden pod
+// drugim (nazwa, zdanie, ekran), licznik 8 / 8, bez przypięcia.
+
+/** Długość drogi sceny [vh]. */
+const LEN = 330;
+/** Oś sceny p (0-1): najazd kamery, początek pierwszego kroku, koniec ostatniego (kroków jest: moduły + puste miejsce). */
+const CAM: [number, number] = [0.01, 0.1];
+const FIRST = 0.14;
+const END = 0.955;
+/** Odcinki jednego kroku (ułamki): pozycja menu (rozejście), biała płytka, przejazd widoku, rozejście ekranu modułu,
+    licznik; w ostatnim kroku zamiast ekranu - rozejście zdania pustego miejsca. Reszta to postój. */
+const ITEM: [number, number] = [0, 0.22];
+const PLATE: [number, number] = [0.04, 0.26];
+const TRAVEL: [number, number] = [0.1, 0.4];
+const BLOOM: [number, number] = [0.36, 0.9];
+const COUNT: [number, number] = [0.64, 0.78];
+const EMPTY: [number, number] = [0.4, 0.86];
+/** Odstęp bieżącej pozycji od lewej krawędzi paska menu (telefon) - jak padding paska w mods.css. */
+const RAIL_PAD = 14;
+
+interface Els { items: HTMLElement[]; pages: HTMLElement[]; empty: HTMLElement | null; steps: HTMLElement[] }
+
+export const ModsMenu = ({ t, x, headId }: SceneProps<ModsCopy>) => {
+  const g = t.grow;
+  const n = g.modules.length;
+  const late = Math.max(0, n - START);
+  /** Długość jednego kroku na osi p. */
+  const step = (END - FIRST) / (late + 1);
+  const reduced = useReducedPref();
+  const ref = useRef<HTMLElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const headRef = useRef<HTMLDivElement>(null);
+  const objRef = useRef<HTMLDivElement>(null);
+  const riseRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const railRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLOListElement>(null);
+  const els = useRef<Els>({ items: [], pages: [], empty: null, steps: [] });
+  /** Pasek menu (telefon): lewe krawędzie pozycji i największe przesunięcie paska. Brak (null) = scena nie jest
+      przypięta (przed pomiarem, bardzo niski ekran) - wtedy `draw` niczego nie pisze i zostaje stan końcowy z CSS. */
+  const rail = useRef<{ left: number[]; max: number } | null>(null);
+  useSeen(stageRef, 0.2);
+
+  /** Narrator: trzy ekrany na start, potem jedno zdanie o każdym kolejnym module, na końcu miejsce na następny. */
+  const steps = [x.say.start, ...g.modules.slice(START).map((m) => m.text), x.say.end];
+
+  const draw = useCallback((p: number) => {
+    const root = ref.current, body = bodyRef.current, menu = menuRef.current, R = rail.current;
+    if (!root || !body || !menu || !R) return;
+    const E = els.current;
+
+    // najazd kamery: nagłówek odjeżdża, okno wjeżdża na kadr
+    const camP = seg(p, CAM[0], CAM[1]);
+    put(root, '--cam', camP.toFixed(4));
+    flag(root, 'data-far', camP > 0.5);
+
+    // kroki: pozycja menu -> płytka -> przejazd widoku -> rozejście ekranu modułu (ostatni krok: puste miejsce)
+    let pg = 0, c0 = 0, c1 = START, count = 0, cur = -1;
+    for (let j = 0; j <= late; j++) {
+      const b = FIRST + j * step;
+      pg += seg(p, b + TRAVEL[0] * step, b + TRAVEL[1] * step);
+      // płytka: z zakresu trzech pozycji startowych zjeżdża na jedną, potem po jednej pozycji w dół
+      const mv = seg(p, b + PLATE[0] * step, b + PLATE[1] * step);
+      c0 += (j === 0 ? START : 1) * mv;
+      c1 += mv;
+      if (mv > 0.5) cur = j;
+      // nowa pozycja menu rozchodzi się od swojej ikony
+      const item = E.items[START + j];
+      if (item) bloomTo(item, seg(p, b + ITEM[0] * step, b + ITEM[1] * step));
+      if (j < late) {
+        // ekran modułu rozchodzi się od gwiazdki, gdy widok stoi już na jego miejscu
+        const page = E.pages[j + 1];
+        if (page) bloomTo(page, seg(p, b + BLOOM[0] * step, b + BLOOM[1] * step));
+        count += seg(p, b + COUNT[0] * step, b + COUNT[1] * step);
+      } else if (E.empty) {
+        bloomTo(E.empty, seg(p, b + EMPTY[0] * step, b + EMPTY[1] * step));
+      }
+    }
+    put(body, '--pg', pg.toFixed(4));
+    put(body, '--c0', c0.toFixed(4));
+    put(body, '--c1', c1.toFixed(4));
+    put(root, '--cn', count.toFixed(3));
+    E.items.forEach((li, i) => flag(li, 'data-cur', cur < 0 ? i < START : i === START + cur));
+    // telefon: pasek menu jedzie tak, żeby bieżąca pozycja stała przy lewej krawędzi (ruch = przejście CSS)
+    const at = cur < 0 ? 0 : START + cur;
+    put(menu, '--rx', `${-Math.round(Math.min(R.max, Math.max(0, (R.left[at] ?? 0) - RAIL_PAD)))}px`);
+
+    // narrator
+    const cut = (j: number) => FIRST + j * step;
+    let active = 0;
+    while (active <= late && p >= cut(active)) active++;
+    if (E.steps.length === late + 2) {
+      setSteps(E.steps, active, E.steps.map((_, j) => lin(p, j === 0 ? 0.02 : cut(j - 1), j <= late ? cut(j) : 0.99)));
+    }
+  }, [late, step]);
+
+  useEffect(() => {
+    const root = ref.current, stage = stageRef.current, head = headRef.current, obj = objRef.current, rise = riseRef.current;
+    const body = bodyRef.current, railEl = railRef.current, menu = menuRef.current;
+    if (!root || !stage || !head || !obj || !rise || !body || !railEl || !menu) return;
+    const pages = Array.from(body.querySelectorAll<HTMLElement>('.cr8-b-page'));
+    const E: Els = {
+      pages,
+      items: Array.from(menu.querySelectorAll<HTMLElement>('.cr8-b-item')),
+      empty: body.querySelector<HTMLElement>('.cr8-b-page--more .cr8-empty'),
+      steps: Array.from(root.querySelectorAll<HTMLElement>('.cr8-b-narr .sv-step')),
+    };
+    els.current = E;
+
+    /** Scena stoi (ograniczony ruch, brak przypięcia): bez stylów pisanych przez scenę, wszystko w stanie końcowym. */
+    const reset = () => {
+      rail.current = null;
+      wipe(root, ['--cam', '--cn', '--head-h', '--slack'], ['data-far']);
+      wipe(body, ['--pg', '--c0', '--c1']);
+      wipe(menu, ['--rx']);
+      E.items.forEach((li) => { li.removeAttribute('data-cur'); bloomOff(li); });
+      pages.forEach(bloomOff);
+      bloomOff(E.empty);
+      E.steps.forEach((li) => wipe(li, ['--f'], ['data-on']));
+    };
+    if (reduced) { reset(); return; }
+
+    let raf = 0;
+    const measure = () => {
+      raf = 0;
+      // przypięcie włącza CSS (.sv[data-live], dostatecznie wysoki ekran) - bez niego zwykła sekcja
+      if (getComputedStyle(stage).position !== 'sticky') { reset(); return; }
+      // okno startuje tuż pod nagłówkiem: jego wysokość i wolne miejsce nad wyśrodkowanym oknem zna tylko pomiar
+      put(root, '--head-h', `${head.offsetHeight}px`);
+      put(root, '--slack', `${Math.max(0, (obj.clientHeight - rise.offsetHeight) / 2).toFixed(1)}px`);
+      rail.current = { left: E.items.map((li) => li.offsetLeft), max: Math.max(0, menu.scrollWidth - railEl.clientWidth) };
+      draw(pinProgress(root));
+    };
+    const kick = () => { if (!raf) raf = requestAnimationFrame(measure); };
+    const ro = new ResizeObserver(kick);
+    [root, head, obj, rise, menu].forEach((el) => ro.observe(el));
+    document.fonts?.ready.then(kick).catch(() => {});
+    kick();
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); };
+  }, [draw, reduced]);
+
+  usePin(ref, (p) => draw(p), !reduced);
+
+  return (
+    <section ref={ref} className="cr8-b" aria-labelledby={headId} style={{ '--len': LEN } as CSSProperties}>
+      <div ref={stageRef} className="cr8-b-stage">
+        <div className="container mx-auto px-6 cr8-b-in">
+          <div ref={headRef} className="cr8-head cr8-b-head">
+            <h2 id={headId} className="im-title sv-h2">{g.title} <span className="im-accent">{g.titleAccent}</span></h2>
+            <p className="im-lead cr-sec-lead">{g.lead}</p>
+          </div>
+          <div ref={objRef} className="cr8-b-obj">
+            <div ref={riseRef} className="cr8-b-rise">
+              <Win app={t.app} className="cr8-b-win">
+                <div ref={bodyRef} className="cr8-b-body" style={{ '--nn': n + 1 } as CSSProperties}>
+                  <div className="cr8-b-side">
+                    <ModCount label={g.count} n={n} />
+                    {/* menu to ilustracja - nazwy modułów są nagłówkami widoków obok */}
+                    <div ref={railRef} className="cr8-b-rail" aria-hidden="true">
+                      <ol ref={menuRef} className="cr8-b-menu">
+                        <li className="cr8-b-plate" />
+                        {g.modules.map((mod, i) => {
+                          const Icon = MOD_ICONS[i % MOD_ICONS.length];
+                          const added = i >= START;
+                          return (
+                            <li key={mod.name} className={added ? 'cr8-b-item cr-bloom' : 'cr8-b-item'} data-bloomed={added ? '' : undefined}>
+                              <Icon />
+                              <span>{mod.name}</span>
+                              <i className="cr8-b-pip" />
+                            </li>
+                          );
+                        })}
+                        <li className="cr8-b-item cr8-b-item--more cr-bloom" data-bloomed=""><Plus /><span>{x.menu.next}</span></li>
+                      </ol>
+                    </div>
+                  </div>
+                  <ol className="cr8-b-pages">
+                    <li className="cr8-b-page" style={{ '--i': 0 } as CSSProperties}>
+                      <div className="cr8-b-trio">
+                        {g.modules.slice(0, START).map((mod, i) => {
+                          const Icon = MOD_ICONS[i % MOD_ICONS.length];
+                          return (
+                            <div key={mod.name} className="cr8-b-col">
+                              <h3 className="cr8-name"><Icon aria-hidden="true" />{mod.name}</h3>
+                              <p className="cr8-text">{mod.text}</p>
+                              <ModFrame i={i} t={t} x={x} size="m" />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </li>
+                    {g.modules.slice(START).map((mod, k) => {
+                      const i = START + k;
+                      const Icon = MOD_ICONS[i % MOD_ICONS.length];
+                      return (
+                        <li key={mod.name} className="cr8-b-page cr8-b-page--mod" style={{ '--i': k + 1 } as CSSProperties}>
+                          {/* arkusz modułu rozchodzi się od gwiazdki, znak wolnego miejsca schodzi dopełnieniem */}
+                          <div className="cr8-b-sheet cr-bloom" data-bloomed="">
+                            <h3 className="cr8-name"><Icon aria-hidden="true" />{mod.name}</h3>
+                            <p className="cr8-text">{mod.text}</p>
+                            <ModFrame i={i} t={t} x={x} size="l" />
+                          </div>
+                          <Spot out />
+                        </li>
+                      );
+                    })}
+                    <li className="cr8-b-page cr8-b-page--more" style={{ '--i': late + 1 } as CSSProperties}>
+                      <Empty text={g.more} />
+                    </li>
+                  </ol>
+                </div>
+              </Win>
+            </div>
+          </div>
+          <div className="cr8-b-narr cr-narr" style={{ '--n': steps.length } as CSSProperties}>
+            <Steps items={steps} label={t.film.stepsAria} />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};

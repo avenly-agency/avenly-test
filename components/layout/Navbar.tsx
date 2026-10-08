@@ -7,19 +7,39 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useLenis } from 'lenis/react'
 import { cn } from '@/lib/utils'
+import { localeFromPathname, localizeHref, switchLocalePath, type Locale } from '@/lib/i18n/locale'
 // 1. DODANO IMPORTY GSAP
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
-// --- DANE NAWIGACJI ---
-const NAV_LINKS = [
-    { title: 'Usługi', href: '/uslugi' },
-    { title: 'Proces', href: '#proces' },
-    { title: 'O nas', href: '/o-nas' },
-    { title: 'Realizacje', href: '/realizacje' },
-    { title: 'Blog', href: '/blog' },
-    { title: 'Kontakt', href: '/kontakt' },
-]
+// --- DANE NAWIGACJI (per locale; EN bez Bloga - blog jest PL-only w v1) ---
+const NAV_DATA: Record<Locale, { links: { title: string; href: string }[]; cta: string; menuOpen: string; menuClose: string }> = {
+    pl: {
+        links: [
+            { title: 'Usługi', href: '/uslugi' },
+            { title: 'Proces', href: '#proces' },
+            { title: 'O nas', href: '/o-nas' },
+            { title: 'Realizacje', href: '/realizacje' },
+            { title: 'Blog', href: '/blog' },
+            { title: 'Kontakt', href: '/kontakt' },
+        ],
+        cta: 'Darmowa Wycena',
+        menuOpen: 'Otwórz menu',
+        menuClose: 'Zamknij menu',
+    },
+    en: {
+        links: [
+            { title: 'Services', href: '/uslugi' },
+            { title: 'Process', href: '#proces' },
+            { title: 'About us', href: '/o-nas' },
+            { title: 'Work', href: '/realizacje' },
+            { title: 'Contact', href: '/kontakt' },
+        ],
+        cta: 'Free quote',
+        menuOpen: 'Open menu',
+        menuClose: 'Close menu',
+    },
+}
 
 // --- SOCIAL MEDIA LINKI ---
 const SOCIAL_LINKS = [
@@ -77,7 +97,8 @@ type NavTheme = {
 
 const NAV_THEMES: Record<string, NavTheme> = {
     default: {
-        shell: 'bg-slate-950/80 border-slate-800/50',
+        // Neutralne tło jak na podstronach (slate-950 dawał granatowy pas nad sekcjami w kolorach realizacji)
+        shell: 'bg-[#050505]/80 border-white/[0.06]',
         dot: 'text-blue-500', dotHex: '#3b82f6', underline: 'bg-blue-500', glow: 'bg-blue-400/20',
         hamburgerHover: 'hover:text-blue-400', mobileDot: 'text-blue-500',
         mobileLinkHover: 'hover:text-blue-500', blob: 'bg-blue-900/20',
@@ -130,12 +151,12 @@ const NAV_THEMES: Record<string, NavTheme> = {
 // KOLEJNOŚĆ CHECKÓW WAŻNA (sklep matchuje też "sklep-internetowy")
 const getNavbarTheme = (pathname: string | null): NavTheme => {
     if (!pathname) return NAV_THEMES.default
-    if (pathname.includes('/strony-www/sklep')) return NAV_THEMES.amber
-    if (pathname.includes('/strony-www/system-crm')) return NAV_THEMES.sky
-    if (pathname.includes('/strony-www/strona-szyta-na-miare')) return NAV_THEMES.rose
-    if (pathname.includes('/strony-www/one-page')) return NAV_THEMES.blue
-    if (pathname.includes('/strony-www/strona-firmowa')) return NAV_THEMES.emerald
-    if (pathname.includes('/automatyzacje-ai/chatboty-ai')) return NAV_THEMES.orange
+    if (pathname.includes('/strony-www/sklep') || pathname.includes('/websites/online-store')) return NAV_THEMES.amber
+    if (pathname.includes('/strony-www/system-crm') || pathname.includes('/websites/crm-system')) return NAV_THEMES.sky
+    if (pathname.includes('/strony-www/strona-szyta-na-miare') || pathname.includes('/websites/custom-website')) return NAV_THEMES.rose
+    if (pathname.includes('/strony-www/one-page') || pathname.includes('/websites/one-page')) return NAV_THEMES.blue
+    if (pathname.includes('/strony-www/strona-firmowa') || pathname.includes('/websites/company-website')) return NAV_THEMES.emerald
+    if (pathname.includes('/automatyzacje-ai/chatboty-ai') || pathname.includes('/ai-automation/ai-chatbots')) return NAV_THEMES.orange
     return NAV_THEMES.default
 }
 export const Navbar = () => {
@@ -146,7 +167,10 @@ export const Navbar = () => {
     const pathname = usePathname()
     const router = useRouter()
     const lenis = useLenis()
-    const isHome = pathname === '/'
+    const locale = localeFromPathname(pathname)
+    const nav = NAV_DATA[locale]
+    const homeHref = locale === 'en' ? '/en/' : '/'
+    const isHome = pathname === '/' || pathname === '/en'
 
     const lastScrollY = useRef(0)
     const scrollDownAccumulator = useRef(0)
@@ -205,9 +229,9 @@ export const Navbar = () => {
                 });
             }
         } else {
-            // Jesteśmy na innej podstronie -> Przekierowanie z parametrem
+            // Jesteśmy na innej podstronie -> Przekierowanie z parametrem (homepage danego języka)
             const targetId = href.replace('#', '')
-            router.push(`/?target=${targetId}`)
+            router.push(`${homeHref}?target=${targetId}`)
         }
     }
 
@@ -271,10 +295,10 @@ export const Navbar = () => {
     return (
         <>
             <nav className={navbarClasses}>
-                <div className="container mx-auto px-6 flex items-center justify-between">
+                <div className="container mx-auto px-6 flex items-center justify-between relative">
                     {/* LOGO */}
                     <Link
-                        href="/"
+                        href={homeHref}
                         className="text-xl font-bold tracking-tighter text-white z-50 hover:opacity-80 transition-opacity cursor-pointer flex items-center gap-1 relative flex-shrink-0"
                         onClick={e => {
                             setIsMobileMenuOpen(false)
@@ -294,34 +318,57 @@ export const Navbar = () => {
                         </motion.span>
                     </Link>
 
-                    {/* DESKTOP MENU */}
-                    <div className="hidden lg:flex items-center gap-5 xl:gap-10">
-                        {NAV_LINKS.map(item => (
+                    {/* DESKTOP MENU - linki DOKŁADNIE w osi strony (absolute + translate; kontener jest
+                        wyśrodkowany, więc 50% kontenera = 50% strony), niezależnie od szerokości logo/CTA */}
+                    <div className="hidden lg:flex items-center gap-5 xl:gap-10 absolute left-1/2 -translate-x-1/2">
+                        {nav.links.map(item => {
+                            const href = localizeHref(item.href, locale)
+                            return (
                             <a
                                 key={item.title}
-                                href={item.href}
-                                onClick={e => handleLinkClick(e, item.href)}
+                                href={href}
+                                onClick={e => handleLinkClick(e, href)}
                                 className="relative text-sm font-medium text-slate-400 transition-all duration-300 hover:text-white cursor-pointer group whitespace-nowrap">
                                 {item.title}
                                 <span className={cn('absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl -z-10', navTheme.glow)}></span>
                                 <span className={cn('absolute -bottom-1 left-1/2 w-0 h-[1px] group-hover:w-1/2 group-hover:-translate-x-1/2 transition-all duration-300', navTheme.underline)}></span>
                             </a>
-                        ))}
+                            )
+                        })}
 
-                        {/* PRZYCISK WYCENY */}
-                        <a
-                            href="#kontakt"
-                            onClick={e => handleLinkClick(e, '#kontakt')}
-                            className="px-5 py-2.5 bg-white text-slate-950 text-sm font-bold rounded-lg hover:bg-slate-200 transition-all duration-300 cursor-pointer hover:scale-105 active:scale-95 shadow-[0_0_15px_-5px_rgba(255,255,255,0.4)] whitespace-nowrap">
-                            Darmowa Wycena
-                        </a>
                     </div>
 
-                    {/* MOBILE HAMBURGER */}
+                    {/* PRAWA STRONA (desktop): język obok przycisku */}
+                    <div className="hidden lg:flex items-center gap-5">
+                        {/* TOGGLE JĘZYKA - pełny reload (nawigacja między root layoutami pl/en) */}
+                        <a
+                            href={switchLocalePath(pathname)}
+                            aria-label={locale === 'pl' ? 'Switch to English' : 'Przełącz na polski'}
+                            className="text-sm font-semibold text-slate-400 hover:text-white transition-colors cursor-pointer whitespace-nowrap tracking-wide">
+                            {locale === 'pl' ? 'EN' : 'PL'}
+                        </a>
+
+                        {/* PRZYCISK WYCENY - prosto na /kontakt (formularz); dawna sekcja CTA #kontakt na stronie głównej usunięta 2026-09-27 */}
+                        <Link
+                            href={localizeHref('/kontakt', locale)}
+                            onClick={e => handleLinkClick(e, '/kontakt')}
+                            className="px-5 py-2.5 bg-white text-slate-950 text-sm font-bold rounded-lg hover:bg-slate-200 transition-all duration-300 cursor-pointer hover:scale-105 active:scale-95 shadow-[0_0_15px_-5px_rgba(255,255,255,0.4)] whitespace-nowrap">
+                            {nav.cta}
+                        </Link>
+                    </div>
+
+                    {/* MOBILE: język obok hamburgera (jak na desktopie - obok przycisku) */}
+                    <div className="lg:hidden flex items-center gap-2 z-50 relative">
+                    <a
+                        href={switchLocalePath(pathname)}
+                        aria-label={locale === 'pl' ? 'Switch to English' : 'Przełącz na polski'}
+                        className="text-[11px] font-semibold tracking-[0.14em] text-slate-300 px-3 py-2 rounded-full border border-white/15 bg-white/[0.03] hover:border-white/40 hover:text-white transition-colors cursor-pointer">
+                        {locale === 'pl' ? 'EN' : 'PL'}
+                    </a>
                     <button
-                        className={cn('lg:hidden text-white z-50 relative cursor-pointer transition-colors p-2 active:scale-90', navTheme.hamburgerHover)}
+                        className={cn('text-white cursor-pointer transition-colors p-2 active:scale-90', navTheme.hamburgerHover)}
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                        aria-label={isMobileMenuOpen ? 'Zamknij menu' : 'Otwórz menu'}>
+                        aria-label={isMobileMenuOpen ? nav.menuClose : nav.menuOpen}>
                         <div className="relative w-6 h-6 flex flex-col justify-center items-center gap-[5px]">
                             <motion.span
                                 animate={isMobileMenuOpen ? { rotate: 45, y: 7 } : { rotate: 0, y: 0 }}
@@ -337,6 +384,7 @@ export const Navbar = () => {
                             />
                         </div>
                     </button>
+                    </div>
                 </div>
             </nav>
 
@@ -363,19 +411,22 @@ export const Navbar = () => {
                                 animate="open"
                                 exit="initial"
                                 className="flex flex-col gap-2 flex-1 justify-center">
-                                {NAV_LINKS.map((link, index) => (
+                                {nav.links.map((link, index) => {
+                                    const href = localizeHref(link.href, locale)
+                                    return (
                                     <div key={index} className="overflow-hidden">
                                         <motion.div variants={mobileLinkVars}>
                                             <a
-                                                href={link.href}
-                                                onClick={e => handleLinkClick(e, link.href)}
+                                                href={href}
+                                                onClick={e => handleLinkClick(e, href)}
                                                 className={cn('text-5xl font-bold text-white tracking-tight transition-colors block py-2 cursor-pointer', navTheme.mobileLinkHover)}>
                                                 {link.title}
                                                 <span className={cn('text-6xl leading-none', navTheme.mobileDot)}>.</span>
                                             </a>
                                         </motion.div>
                                     </div>
-                                ))}
+                                    )
+                                })}
                             </motion.div>
 
                             {/* SOCIAL MEDIA */}
@@ -385,6 +436,16 @@ export const Navbar = () => {
                                 exit={{ opacity: 0, transition: { duration: 0.2 } }}
                                 className="border-t border-white/10 pt-8 mt-8 shrink-0">
                                 <div className="flex flex-col gap-6">
+                                    {/* TOGGLE JĘZYKA (mobile) */}
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-slate-400 text-sm uppercase tracking-widest">{locale === 'pl' ? 'Język' : 'Language'}</span>
+                                        <a
+                                            href={switchLocalePath(pathname)}
+                                            aria-label={locale === 'pl' ? 'Switch to English' : 'Przełącz na polski'}
+                                            className="px-4 py-2 bg-white/5 rounded-full text-white text-sm font-semibold tracking-wide hover:bg-white/10 transition-colors cursor-pointer">
+                                            {locale === 'pl' ? 'English' : 'Polski'}
+                                        </a>
+                                    </div>
                                     <div className="flex justify-between items-center">
                                         <span className="text-slate-400 text-sm uppercase tracking-widest">Social Media</span>
                                         <div className="flex gap-4">
@@ -402,12 +463,12 @@ export const Navbar = () => {
                                         </div>
                                     </div>
 
-                                    <a href="#kontakt" onClick={e => handleLinkClick(e, '#kontakt')} className="w-full block">
+                                    <Link href={localizeHref('/kontakt', locale)} onClick={e => handleLinkClick(e, '/kontakt')} className="w-full block">
                                         <button className={cn('w-full py-4 bg-white text-black text-lg font-bold rounded-xl hover:text-white transition-all flex items-center justify-center gap-2 group cursor-pointer active:scale-95', navTheme.ctaHover)}>
-                                            Darmowa Wycena
+                                            {nav.cta}
                                             <ArrowRight className="group-hover:translate-x-1 transition-transform" />
                                         </button>
-                                    </a>
+                                    </Link>
                                 </div>
                             </motion.div>
                         </div>

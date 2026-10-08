@@ -103,9 +103,9 @@ Jeśli temat jest oczywisty (np. "WordPress vs Next.js") — pomijaj research, l
 
 Pokaż user'owi krótko:
 - **Title** (60-90 znaków, z keywordem, najlepiej pytanie)
-- **Excerpt** (140-160 znaków, zaczyna od czasownika: "Dowiedz się", "Sprawdź", "Poznaj", "Analiza")
+- **Excerpt** (140-160 znaków, zaczyna od czasownika: "Dowiedz się", "Sprawdź", "Poznaj", "Analiza"; pokazuje się pod tytułem wpisu, na kartach i w opisie SEO - pełne zdanie)
 - **Slug** (long-tail myślnikami, bez polskich znaków)
-- **Kategorie** (2 z istniejącej listy: `AI & Automatyzacja`, `Biznes`, `Performance`, `Strategia`, `Development`, `Design & UX`, `Marketing`, `News`, `Tech`)
+- **Kategorie** (2 z istniejącej listy: `AI & Automatyzacja`, `Biznes`, `Performance`, `Strategia`, `Development`, `Design & UX`, `Marketing`, `News`, `Tech`; na `/blog` każda użyta kategoria = pigułka filtra, na stronie po polsku: „AI i automatyzacja”, „Wydajność”, „&” → „i”)
 - **Struktura sekcji:** dokładnie 2× h2 + 2-3× h3 (mapuj jak w istniejących postach)
 - **Gdzie pójdzie lista** (1× ul lub ol, 3-4 elementy z `<strong>:</strong>` pattern)
 
@@ -136,7 +136,7 @@ Napisz content **dokładnie w formacie istniejących postów**:
       <blockquote>
         <strong>[Pytanie hook]</strong><br>
         [1-2 zdania co user dostanie.] <br>
-        <a href="/kontakt">[CTA text]</a>
+        <a href="/kontakt">Bezpłatna konsultacja</a>
       </blockquote>
 ```
 
@@ -179,6 +179,8 @@ Format: `https://images.unsplash.com/photo-XXXXXXX?q=80&w=1000&auto=format&fit=c
 
 **WAŻNE: NIE wymyślaj URL'i.** Zaproponuj user'owi 2-3 search queries (np. "tech workspace dark", "AI abstract") + powiedz że ma wybrać na unsplash.com i wkleić finalny URL.
 
+Zdjęcie poziome z motywem na środku: okładka wpisu jest przycinana do 21:9 (komputer) i 4:3 (telefon), na dół okładki nachodzi karta z tytułem, na liście karty 16:10.
+
 Tymczasowo użyj URL'a placeholderowego (np. tego samego co post #1: `photo-1677442136019-21780ecad995`) — z zaznaczeniem że user ma podmienić.
 
 ### 7. Update backlogu
@@ -198,7 +200,7 @@ Pokaż krótko:
    - Image: [URL — placeholder, podmień gdy chcesz]
 
 🚀 Deploy:
-   npm run build  →  upload out/ na Hostinger  →  Cloudflare Purge
+   npm run deploy  (build + wysyłka na Cloudflare Pages; purge cache niepotrzebny)
 ```
 
 Jeśli user prosi → uruchom `npm run build` żeby zweryfikować że nowa ścieżka się generuje.
@@ -229,6 +231,7 @@ Jeśli user prosi → uruchom `npm run build` żeby zweryfikować że nowa ście
 - "Chcesz sprawdzić, jak konsultant AI sprawdzi się w Twojej branży?" → /kontakt
 - "Twoja strona ładuje się zbyt wolno?" → /kontakt
 - "Zbudujmy Twoją cyfrową przewagę." → /kontakt
+- Tekst samego linku w CTA: ZAWSZE „Bezpłatna konsultacja” (jedyne CTA serwisu, PRODUCT.md). Na stronie wpisu cytat to karta z niebieską krawędzią po lewej: `<strong>` = tytuł karty, link = biały przycisk - trzymaj układ `<strong>…</strong><br>` opis `<br>` `<a>`.
 
 ## Jeśli coś nie jest jasne — pytaj user'a
 

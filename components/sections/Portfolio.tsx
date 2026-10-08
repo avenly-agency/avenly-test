@@ -5,12 +5,16 @@ import { motion, useScroll, useTransform, useSpring, MotionValue, useReducedMoti
 import { ArrowUpRight, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { projects as allProjects } from '@/app/data/projects';
+import { projectsByLocale } from '@/lib/i18n/projects';
+import type { Locale } from '@/lib/i18n/locale';
+import { localizeHref } from '@/lib/i18n/locale';
+import type { PortfolioDict } from '@/lib/i18n/home/portfolio';
 
-// 1. ZMIANA: Ograniczamy do 4 projektów, aby pasowało do Twojej prośby
-const displayedProjects = allProjects.slice(0, 4);
+export const Portfolio = ({ t, locale = 'pl' }: { t: PortfolioDict; locale?: Locale }) => {
+  // Dane projektów per locale (badge kategorii + opis na hover tłumaczone w
+  // lib/i18n/projects.ts). Ograniczamy do 4 projektów na homepage.
+  const displayedProjects = projectsByLocale[locale].slice(0, 4);
 
-export const Portfolio = () => {
   const targetRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null); 
   const mobileContainerRef = useRef<HTMLDivElement>(null);
@@ -77,7 +81,7 @@ export const Portfolio = () => {
             // 2. ZMIANA: Wysokość sekcji (scroll distance). 
             // 300vh jest optymalne dla 4 projektów (nie za szybko, nie za wolno)
             className="relative h-dvh md:h-[300vh]"
-            aria-label="Portfolio Realizacji"
+            aria-label={t.sectionAriaLabel}
         >
         
             <style jsx global>{`
@@ -154,16 +158,16 @@ export const Portfolio = () => {
                             <div className="shrink-0 w-[450px] h-[550px] flex flex-col justify-center p-12">
                                 <div className="flex items-center gap-4 mb-8">
                                     <span className="w-12 h-[2px] bg-blue-500" aria-hidden="true"></span>
-                                    <span className="text-blue-500 font-mono text-sm tracking-widest uppercase">Portfolio</span>
+                                    <span className="text-blue-500 font-mono text-sm tracking-widest uppercase">{t.introEyebrow}</span>
                                 </div>
                                 <h2 className="text-7xl font-bold text-white tracking-tighter leading-[0.9] mb-8">
-                                Wybrane <br />
+                                {t.headingLine1} <br />
                                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">
-                                    Realizacje
+                                    {t.headingLine2Accent}
                                 </span>
                                 </h2>
                                 <p className="text-slate-400 text-lg max-w-xs leading-relaxed">
-                                Zobacz, co dostają nasi klienci. Od stron WWW po chatboty AI.
+                                {t.introDesc}
                                 </p>
                             </div>
                         </FocusCard>
@@ -172,7 +176,7 @@ export const Portfolio = () => {
                         {displayedProjects.map((project, i) => (
                             <FocusCard key={project.id} index={i + 1} total={totalSlides} progress={smoothProgress} reduceMotion={shouldReduceMotion}>
                                 <RevealCard delay={i * 0.2} reduceMotion={shouldReduceMotion}>
-                                    <Card project={project} />
+                                    <Card project={project} t={t} locale={locale} />
                                 </RevealCard>
                             </FocusCard>
                         ))}
@@ -189,23 +193,23 @@ export const Portfolio = () => {
                                     )}
                                     <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 to-indigo-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true"></div>
                                     <div className="text-center p-8 relative z-10 flex flex-col items-center">
-                                        <h3 className="text-3xl font-bold text-white mb-2 group-hover:scale-105 transition-transform duration-500">Twój projekt?</h3>
+                                        <h3 className="text-3xl font-bold text-white mb-2 group-hover:scale-105 transition-transform duration-500">{t.ctaTitle}</h3>
                                         <div className="h-[1px] w-12 bg-blue-500/50 mx-auto my-6 group-hover:w-24 transition-all" aria-hidden="true"></div>
-                                        <p className="text-slate-400 text-sm mb-8">Dołącz do liderów rynku i wyskaluj swój biznes.</p>
-                                        
-                                        <Link 
-                                            href="/kontakt"
+                                        <p className="text-slate-400 text-sm mb-8">{t.ctaDesc}</p>
+
+                                        <Link
+                                            href={localizeHref('/kontakt', locale)}
                                             className="w-full px-8 py-4 bg-white text-black font-bold rounded-xl hover:bg-blue-50 hover:scale-[1.02] transition-all shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] flex items-center justify-center gap-2 group/btn cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none mb-3"
                                         >
-                                            Rozpocznij
+                                            {t.ctaPrimaryDesktop}
                                             <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" aria-hidden="true" />
                                         </Link>
 
-                                        <Link 
-                                            href="/realizacje" 
+                                        <Link
+                                            href={localizeHref('/realizacje', locale)}
                                             className="w-full px-6 py-3 rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-300 flex items-center justify-center gap-2 group/link cursor-pointer"
                                         >
-                                            <span className="font-medium text-sm">Wszystkie realizacje</span>
+                                            <span className="font-medium text-sm">{t.ctaSecondary}</span>
                                             <ArrowUpRight className="w-4 h-4 transition-transform duration-300 group-hover/link:-translate-y-0.5 group-hover/link:translate-x-0.5" />
                                         </Link>
 
@@ -219,12 +223,12 @@ export const Portfolio = () => {
                     <div className="md:hidden absolute inset-0 w-full h-full flex flex-col justify-center relative z-10">
                          <div className="container mx-auto px-6 mb-4">
                             <h2 className="text-5xl font-bold text-white tracking-tighter leading-none mb-2">
-                            Wybrane <br />
+                            {t.headingLine1} <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">
-                                Realizacje
+                                {t.headingLine2Accent}
                             </span>
                             </h2>
-                            <p className="text-slate-400 text-xs">Przesuń, aby zobaczyć.</p>
+                            <p className="text-slate-400 text-xs">{t.mobileHint}</p>
                          </div>
 
                         {/* 👇 FIX DLA MOBILE SCROLLA TUTAJ 👇 */}
@@ -236,27 +240,27 @@ export const Portfolio = () => {
                         >
                             {displayedProjects.map((project) => (
                                 <div key={project.id} className="snap-center shrink-0">
-                                    <Card project={project} isMobile={true} />
+                                    <Card project={project} isMobile={true} t={t} locale={locale} />
                                 </div>
                             ))}
                             
                             {/* KARTA CTA - MOBILE */}
                             <div className="snap-center shrink-0 h-[400px] w-[300px] flex items-center justify-center rounded-3xl border border-white/10 bg-white/[0.02]">
                                 <div className="text-center p-6 flex flex-col items-center w-full">
-                                    <h3 className="text-xl font-bold text-white mb-4">Twój projekt?</h3>
+                                    <h3 className="text-xl font-bold text-white mb-4">{t.ctaTitle}</h3>
 
                                     <Link
-                                        href="/kontakt"
+                                        href={localizeHref('/kontakt', locale)}
                                         className="w-full px-6 py-3 bg-white text-black text-sm font-bold rounded-lg hover:bg-blue-50 transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none mb-3 flex items-center justify-center"
                                     >
-                                        Działajmy
+                                        {t.ctaPrimaryMobile}
                                     </Link>
 
                                     <Link
-                                        href="/realizacje"
+                                        href={localizeHref('/realizacje', locale)}
                                         className="w-full px-6 py-3 rounded-lg border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
                                     >
-                                        Wszystkie realizacje
+                                        {t.ctaSecondary}
                                         <ArrowUpRight className="w-4 h-4" />
                                     </Link>
                                 </div>
@@ -359,10 +363,10 @@ const FocusCard = ({ children, index, total, progress, reduceMotion }: { childre
     );
 };
 
-const Card = ({ project, isMobile = false }: { project: any, isMobile?: boolean }) => {
+const Card = ({ project, isMobile = false, t, locale = 'pl' }: { project: any, isMobile?: boolean, t: PortfolioDict, locale?: Locale }) => {
   const isExternal = !project.hasCaseStudy;
   const isOpenChat = !!project.openChat;
-  const href = isExternal ? (project.externalLink || '#') : `/realizacje/${project.slug}`;
+  const href = isExternal ? (project.externalLink || '#') : localizeHref(`/realizacje/${project.slug}`, locale);
   const target = isExternal ? "_blank" : "_self";
 
   const handleChatOpen = (e: React.MouseEvent) => {
@@ -423,7 +427,7 @@ const Card = ({ project, isMobile = false }: { project: any, isMobile?: boolean 
                             onClick={handleChatOpen}
                             className="px-6 py-3 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none bg-white/10 text-white hover:bg-white/20 border border-white/10"
                         >
-                            Przetestuj Online
+                            {t.cardTestChat}
                         </button>
                     ) : (
                         <Link href={href} target={target}>
@@ -434,7 +438,7 @@ const Card = ({ project, isMobile = false }: { project: any, isMobile?: boolean 
                                     : "bg-white text-black hover:bg-blue-50"
                                 }`
                             }>
-                                {isExternal ? "Zobacz online" : "Zobacz realizację"}
+                                {isExternal ? t.cardViewOnline : t.cardViewCaseStudy}
                             </button>
                         </Link>
                     )}
@@ -445,7 +449,7 @@ const Card = ({ project, isMobile = false }: { project: any, isMobile?: boolean 
                             target="_blank"
                             rel="noopener noreferrer"
                             className="p-3 rounded-lg border border-white/20 bg-white/5 hover:bg-white/10 transition-colors text-white backdrop-blur-sm cursor-pointer block hover:scale-105 active:scale-95"
-                            aria-label="Zobacz stronę na żywo"
+                            aria-label={t.cardLiveAriaLabel}
                         >
                             <ArrowUpRight className="w-4 h-4" />
                         </a>
@@ -459,14 +463,14 @@ const Card = ({ project, isMobile = false }: { project: any, isMobile?: boolean 
         <button
           onClick={handleChatOpen}
           className="absolute inset-0 z-0 focus:outline-none cursor-pointer"
-          aria-label="Otwórz asystenta AI Avenly"
+          aria-label={t.cardChatAriaLabel}
         />
       ) : (
         <Link
           href={href}
           target={target}
           className="absolute inset-0 z-0 focus:outline-none"
-          aria-label={`Zobacz projekt ${project.title}`}
+          aria-label={`${t.cardProjectAriaPrefix} ${project.title}`}
         />
       )}
 
@@ -581,100 +585,123 @@ const LiquidGlassBackground = () => {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const gl = canvas.getContext('webgl', { antialias: false, premultipliedAlpha: false });
-    if (!gl) return;
 
-    const compile = (type: number, src: string) => {
-      const s = gl.createShader(type);
-      if (!s) return null;
-      gl.shaderSource(s, src);
-      gl.compileShader(s);
-      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
-        console.error('LiquidGlass shader compile error:', gl.getShaderInfoLog(s));
-        gl.deleteShader(s);
-        return null;
-      }
-      return s;
-    };
+    let cleanup: (() => void) | undefined;
 
-    const vs = compile(gl.VERTEX_SHADER, LIQUID_GLASS_VS);
-    const fs = compile(gl.FRAGMENT_SHADER, LIQUID_GLASS_FS);
-    if (!vs || !fs) return;
+    const setup = (): (() => void) | undefined => {
+      const gl = canvas.getContext('webgl', { antialias: false, premultipliedAlpha: false });
+      if (!gl) return;
 
-    const program = gl.createProgram();
-    if (!program) return;
-    gl.attachShader(program, vs);
-    gl.attachShader(program, fs);
-    gl.linkProgram(program);
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      console.error('LiquidGlass program link error:', gl.getProgramInfoLog(program));
-      return;
-    }
-    gl.useProgram(program);
-
-    const buf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(
-      gl.ARRAY_BUFFER,
-      new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]),
-      gl.STATIC_DRAW,
-    );
-    const aPos = gl.getAttribLocation(program, 'a_position');
-    gl.enableVertexAttribArray(aPos);
-    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
-
-    const uTime = gl.getUniformLocation(program, 'u_time');
-    const uRes = gl.getUniformLocation(program, 'u_resolution');
-
-    const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const w = canvas.clientWidth * dpr;
-      const h = canvas.clientHeight * dpr;
-      if (canvas.width !== w || canvas.height !== h) {
-        canvas.width = w;
-        canvas.height = h;
-        gl.viewport(0, 0, w, h);
-      }
-    };
-    resize();
-    const ro = new ResizeObserver(resize);
-    ro.observe(canvas);
-
-    const t0 = performance.now();
-    const draw = () => {
-      if (!runningRef.current) return;
-      const t = (performance.now() - t0) / 1000;
-      if (uTime) gl.uniform1f(uTime, t);
-      if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
-      gl.drawArrays(gl.TRIANGLES, 0, 6);
-      rafRef.current = requestAnimationFrame(draw);
-    };
-    draw();
-
-    // Pauza gdy karta poza viewport (Portfolio jest sticky 300vh - często ma ją "za ekranem")
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !runningRef.current) {
-          runningRef.current = true;
-          draw();
-        } else if (!entry.isIntersecting && runningRef.current) {
-          runningRef.current = false;
-          cancelAnimationFrame(rafRef.current);
+      const compile = (type: number, src: string) => {
+        const s = gl.createShader(type);
+        if (!s) return null;
+        gl.shaderSource(s, src);
+        gl.compileShader(s);
+        if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+          console.error('LiquidGlass shader compile error:', gl.getShaderInfoLog(s));
+          gl.deleteShader(s);
+          return null;
         }
+        return s;
+      };
+
+      const vs = compile(gl.VERTEX_SHADER, LIQUID_GLASS_VS);
+      const fs = compile(gl.FRAGMENT_SHADER, LIQUID_GLASS_FS);
+      if (!vs || !fs) return;
+
+      const program = gl.createProgram();
+      if (!program) return;
+      gl.attachShader(program, vs);
+      gl.attachShader(program, fs);
+      gl.linkProgram(program);
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        console.error('LiquidGlass program link error:', gl.getProgramInfoLog(program));
+        return;
+      }
+      gl.useProgram(program);
+
+      const buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(
+        gl.ARRAY_BUFFER,
+        new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]),
+        gl.STATIC_DRAW,
+      );
+      const aPos = gl.getAttribLocation(program, 'a_position');
+      gl.enableVertexAttribArray(aPos);
+      gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+      const uTime = gl.getUniformLocation(program, 'u_time');
+      const uRes = gl.getUniformLocation(program, 'u_resolution');
+
+      const resize = () => {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const w = canvas.clientWidth * dpr;
+        const h = canvas.clientHeight * dpr;
+        if (canvas.width !== w || canvas.height !== h) {
+          canvas.width = w;
+          canvas.height = h;
+          gl.viewport(0, 0, w, h);
+        }
+      };
+      resize();
+      const ro = new ResizeObserver(resize);
+      ro.observe(canvas);
+
+      const t0 = performance.now();
+      const draw = () => {
+        if (!runningRef.current) return;
+        const t = (performance.now() - t0) / 1000;
+        if (uTime) gl.uniform1f(uTime, t);
+        if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+        rafRef.current = requestAnimationFrame(draw);
+      };
+      runningRef.current = true;
+      draw();
+
+      // Pauza gdy karta poza viewport (Portfolio jest sticky 300vh - często ma ją "za ekranem")
+      const io = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting && !runningRef.current) {
+            runningRef.current = true;
+            draw();
+          } else if (!entry.isIntersecting && runningRef.current) {
+            runningRef.current = false;
+            cancelAnimationFrame(rafRef.current);
+          }
+        },
+        { rootMargin: '200px' },
+      );
+      io.observe(canvas);
+
+      return () => {
+        runningRef.current = false;
+        cancelAnimationFrame(rafRef.current);
+        ro.disconnect();
+        io.disconnect();
+        gl.deleteProgram(program);
+        gl.deleteShader(vs);
+        gl.deleteShader(fs);
+        gl.deleteBuffer(buf);
+      };
+    };
+
+    // Lazy init: setup WebGL (context + kompilacja) dopiero gdy karta CTA zbliża się
+    // do viewportu - nie na mount (kompilacja odpalała się w oknie intro Hero).
+    const warmIo = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        warmIo.disconnect();
+        cleanup = setup();
       },
-      { rootMargin: '200px' },
+      { rootMargin: '600px 0px' },
     );
-    io.observe(canvas);
+    warmIo.observe(canvas);
 
     return () => {
-      runningRef.current = false;
-      cancelAnimationFrame(rafRef.current);
-      ro.disconnect();
-      io.disconnect();
-      gl.deleteProgram(program);
-      gl.deleteShader(vs);
-      gl.deleteShader(fs);
-      gl.deleteBuffer(buf);
+      warmIo.disconnect();
+      if (cleanup) cleanup();
     };
   }, []);
 
@@ -766,109 +793,132 @@ const PortfolioFlowBackground = () => {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const gl = canvas.getContext('webgl', { antialias: false, premultipliedAlpha: false });
-    if (!gl) return;
 
-    const compile = (type: number, src: string) => {
-      const s = gl.createShader(type);
-      if (!s) return null;
-      gl.shaderSource(s, src);
-      gl.compileShader(s);
-      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
-        console.error('PortfolioFlow shader compile error:', gl.getShaderInfoLog(s));
-        gl.deleteShader(s);
-        return null;
+    let cleanup: (() => void) | undefined;
+
+    const setup = (): (() => void) | undefined => {
+      const gl = canvas.getContext('webgl', { antialias: false, premultipliedAlpha: false });
+      if (!gl) return;
+
+      const compile = (type: number, src: string) => {
+        const s = gl.createShader(type);
+        if (!s) return null;
+        gl.shaderSource(s, src);
+        gl.compileShader(s);
+        if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+          console.error('PortfolioFlow shader compile error:', gl.getShaderInfoLog(s));
+          gl.deleteShader(s);
+          return null;
+        }
+        return s;
+      };
+
+      const vs = compile(gl.VERTEX_SHADER, PORTFOLIO_FLOW_VS);
+      const fs = compile(gl.FRAGMENT_SHADER, PORTFOLIO_FLOW_FS);
+      if (!vs || !fs) return;
+
+      const program = gl.createProgram();
+      if (!program) return;
+      gl.attachShader(program, vs);
+      gl.attachShader(program, fs);
+      gl.linkProgram(program);
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        console.error('PortfolioFlow program link error:', gl.getProgramInfoLog(program));
+        return;
       }
-      return s;
+      gl.useProgram(program);
+
+      const buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(
+        gl.ARRAY_BUFFER,
+        new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]),
+        gl.STATIC_DRAW,
+      );
+      const aPos = gl.getAttribLocation(program, 'a_position');
+      gl.enableVertexAttribArray(aPos);
+      gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+      const uTime = gl.getUniformLocation(program, 'u_time');
+      const uRes = gl.getUniformLocation(program, 'u_resolution');
+
+      // DPR clamp 1.0 - bardzo diffuse shader, native res nie potrzebny.
+      const resize = () => {
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.0);
+        const w = canvas.clientWidth * dpr;
+        const h = canvas.clientHeight * dpr;
+        if (canvas.width !== w || canvas.height !== h) {
+          canvas.width = w;
+          canvas.height = h;
+          gl.viewport(0, 0, w, h);
+        }
+      };
+      resize();
+      const ro = new ResizeObserver(resize);
+      ro.observe(canvas);
+
+      // 30fps throttle - bardzo wolna animacja (t * 0.06)
+      const FRAME_INTERVAL = 1000 / 30;
+      const t0 = performance.now();
+      let lastDrawTime = 0;
+      const draw = (now?: number) => {
+        if (!runningRef.current) return;
+        const ts = now ?? performance.now();
+        if (ts - lastDrawTime >= FRAME_INTERVAL) {
+          lastDrawTime = ts;
+          const t = (ts - t0) / 1000;
+          if (uTime) gl.uniform1f(uTime, t);
+          if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
+          gl.drawArrays(gl.TRIANGLES, 0, 6);
+        }
+        rafRef.current = requestAnimationFrame(draw);
+      };
+      runningRef.current = true;
+      draw();
+
+      // IO pause - sticky 300vh często ma canvas poza viewport
+      const io = new IntersectionObserver(
+        ([entry]) => {
+          const visible = entry.isIntersecting;
+          requestAnimationFrame(() => {
+            if (visible && !runningRef.current) {
+              runningRef.current = true; draw();
+            } else if (!visible && runningRef.current) {
+              runningRef.current = false; cancelAnimationFrame(rafRef.current);
+            }
+          });
+        },
+        { rootMargin: '200px' },
+      );
+      io.observe(canvas);
+
+      return () => {
+        runningRef.current = false;
+        cancelAnimationFrame(rafRef.current);
+        ro.disconnect();
+        io.disconnect();
+        gl.deleteProgram(program);
+        gl.deleteShader(vs);
+        gl.deleteShader(fs);
+        gl.deleteBuffer(buf);
+      };
     };
 
-    const vs = compile(gl.VERTEX_SHADER, PORTFOLIO_FLOW_VS);
-    const fs = compile(gl.FRAGMENT_SHADER, PORTFOLIO_FLOW_FS);
-    if (!vs || !fs) return;
-
-    const program = gl.createProgram();
-    if (!program) return;
-    gl.attachShader(program, vs);
-    gl.attachShader(program, fs);
-    gl.linkProgram(program);
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      console.error('PortfolioFlow program link error:', gl.getProgramInfoLog(program));
-      return;
-    }
-    gl.useProgram(program);
-
-    const buf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(
-      gl.ARRAY_BUFFER,
-      new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]),
-      gl.STATIC_DRAW,
-    );
-    const aPos = gl.getAttribLocation(program, 'a_position');
-    gl.enableVertexAttribArray(aPos);
-    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
-
-    const uTime = gl.getUniformLocation(program, 'u_time');
-    const uRes = gl.getUniformLocation(program, 'u_resolution');
-
-    // DPR clamp 1.0 - bardzo diffuse shader, native res nie potrzebny.
-    const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 1.0);
-      const w = canvas.clientWidth * dpr;
-      const h = canvas.clientHeight * dpr;
-      if (canvas.width !== w || canvas.height !== h) {
-        canvas.width = w;
-        canvas.height = h;
-        gl.viewport(0, 0, w, h);
-      }
-    };
-    resize();
-    const ro = new ResizeObserver(resize);
-    ro.observe(canvas);
-
-    // 30fps throttle - bardzo wolna animacja (t * 0.06)
-    const FRAME_INTERVAL = 1000 / 30;
-    const t0 = performance.now();
-    let lastDrawTime = 0;
-    const draw = (now?: number) => {
-      if (!runningRef.current) return;
-      const ts = now ?? performance.now();
-      if (ts - lastDrawTime >= FRAME_INTERVAL) {
-        lastDrawTime = ts;
-        const t = (ts - t0) / 1000;
-        if (uTime) gl.uniform1f(uTime, t);
-        if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
-        gl.drawArrays(gl.TRIANGLES, 0, 6);
-      }
-      rafRef.current = requestAnimationFrame(draw);
-    };
-    draw();
-
-    // IO pause - sticky 300vh często ma canvas poza viewport
-    const io = new IntersectionObserver(
+    // Lazy init: setup WebGL (context + kompilacja) dopiero gdy sekcja Portfolio zbliża
+    // się do viewportu - nie na mount (kompilacja odpalała się w oknie intro Hero).
+    const warmIo = new IntersectionObserver(
       ([entry]) => {
-        const visible = entry.isIntersecting;
-        requestAnimationFrame(() => {
-          if (visible && !runningRef.current) {
-            runningRef.current = true; draw();
-          } else if (!visible && runningRef.current) {
-            runningRef.current = false; cancelAnimationFrame(rafRef.current);
-          }
-        });
+        if (!entry.isIntersecting) return;
+        warmIo.disconnect();
+        cleanup = setup();
       },
-      { rootMargin: '200px' },
+      { rootMargin: '600px 0px' },
     );
-    io.observe(canvas);
+    warmIo.observe(canvas);
 
     return () => {
-      runningRef.current = false;
-      cancelAnimationFrame(rafRef.current);
-      ro.disconnect();
-      io.disconnect();
-      gl.deleteProgram(program);
-      gl.deleteShader(vs);
-      gl.deleteShader(fs);
-      gl.deleteBuffer(buf);
+      warmIo.disconnect();
+      if (cleanup) cleanup();
     };
   }, []);
 

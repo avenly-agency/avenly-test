@@ -1,49 +1,52 @@
-'use client';
+import {
+  Gauge, Smartphone, CreditCard, MessageCircle, CalendarCheck, LayoutDashboard, ShieldCheck, MapPin,
+  type LucideIcon,
+} from 'lucide-react';
+import type { TechStackDict } from '@/lib/i18n/home/tech-stack';
 
-import { Zap, ShieldCheck, Smartphone, Gauge, Server, Bot, Cloud } from 'lucide-react';
+// Pasek pod hero (2026-09-24, nowa odsłona; wariant "Ikony w szkle" wybrany przez właściciela
+// z 7 propozycji). Style .ts-* w app/globals.css: spokojny rząd konkretów zwykłym Inter,
+// przy każdej pozycji okrągła plakietka z ikoną w granatowym szkle (język bąbla czatu),
+// gwiazdki-separatory jak "klejnoty" nieba w hero.
+// Pętla bez szwu: 4 identyczne kopie, animacja o -50% toru = dokładnie 2 kopie. Czytnik ekranu
+// czyta tylko pierwszą kopię (reszta aria-hidden).
 
-const metrics = [
-  { text: "Błyskawiczne Ładowanie", icon: Zap }, // ZMIANA: Bardziej ogólne
-  { text: "Konsultant AI", icon: Bot },          // ZMIANA: Bardziej "premium" nazwa
-  { text: "Cloudflare Security", icon: Cloud },  // ZMIANA: Dodano Cloudflare
-  { text: "PageSpeed SEO 100", icon: Gauge },
-  { text: "Mobile First Design", icon: Smartphone },
-  { text: "Bezpieczeństwo SSL", icon: ShieldCheck },
-  { text: "Uptime 99.9%", icon: Server },
-];
+/** Ikony pozycji - KOLEJNOŚĆ jak `items` w słowniku (PageSpeed, telefon, płatności, asystent AI
+    - ten sam dymek co bąbel czatu, rezerwacje, panel, hosting, lokalne SEO). */
+const ITEM_ICONS: LucideIcon[] = [Gauge, Smartphone, CreditCard, MessageCircle, CalendarCheck, LayoutDashboard, ShieldCheck, MapPin];
 
-export const TechStack = () => {
-  return (
-    <section className="w-full bg-[#050505] border-y border-white/5 py-12 overflow-hidden relative z-10">
-      
-      {/* Cień/Gradient na bokach (Fade Effect) */}
-      <div className="absolute top-0 left-0 w-24 md:w-40 h-full bg-gradient-to-r from-[#050505] to-transparent z-20 pointer-events-none"></div>
-      <div className="absolute top-0 right-0 w-24 md:w-40 h-full bg-gradient-to-l from-[#050505] to-transparent z-20 pointer-events-none"></div>
+/** Czteroramienna gwiazdka - separator (ten sam motyw co jasne gwiazdy nieba w hero). */
+const Star = () => (
+  <svg className="ts-star" viewBox="0 0 10 10" aria-hidden="true" focusable="false">
+    <path d="M5 0C5.35 3.3 6.7 4.65 10 5C6.7 5.35 5.35 6.7 5 10C4.65 6.7 3.3 5.35 0 5C3.3 4.65 4.65 3.3 5 0Z" fill="currentColor" />
+  </svg>
+);
 
-      <div className="flex items-center">
-         {/* Kontener Marquee */}
-         <div className="flex gap-16 animate-scroll whitespace-nowrap pl-16">
-            {/* x3 dla płynności pętli (translateX(-50%) wymaga minimum 2×; 3× daje bufor na różne szerokości viewportu) */}
-            {[...metrics, ...metrics, ...metrics].map((item, index) => (
-              <div 
-                key={index}
-                className="flex items-center gap-4 group cursor-default opacity-60 hover:opacity-100 transition-all duration-300 hover:scale-105"
-              >
-                {/* Ikona z efektem Glow */}
-                <div className="text-blue-500 transition-colors drop-shadow-[0_0_8px_rgba(59,130,246,0)] group-hover:drop-shadow-[0_0_15px_rgba(59,130,246,0.5)] group-hover:text-blue-400">
-                   <item.icon size={28} strokeWidth={2} />
-                </div>
-                
-                {/* Tekst */}
-                <span className="text-lg md:text-xl font-bold text-slate-500 uppercase tracking-tight group-hover:text-white transition-colors">
-                  {item.text}
-                </span>
+const COPIES = [0, 1, 2, 3];
 
-              </div>
-            ))}
-         </div>
+export const TechStack = ({ t }: { t: TechStackDict }) => (
+  <section className="ts" aria-label={t.label}>
+    <div className="ts-viewport">
+      <div className="ts-track">
+        {COPIES.map((copy) => (
+          <ul key={copy} className={copy ? 'ts-group ts-dup' : 'ts-group'} aria-hidden={copy ? true : undefined}>
+            {t.items.map((text, i) => {
+              const Icon = ITEM_ICONS[i];
+              return (
+                <li key={text} className="ts-item">
+                  {Icon && (
+                    <span className="ts-ico" aria-hidden="true">
+                      <Icon strokeWidth={1.7} />
+                    </span>
+                  )}
+                  {text}
+                  <Star />
+                </li>
+              );
+            })}
+          </ul>
+        ))}
       </div>
-
-    </section>
-  );
-};
+    </div>
+  </section>
+);

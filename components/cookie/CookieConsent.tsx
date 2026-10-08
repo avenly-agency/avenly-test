@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Cookie, Settings2, X } from 'lucide-react';
 import {
   COOKIE_CATEGORIES,
@@ -13,12 +14,17 @@ import {
   type ConsentState,
   type CookieCategory,
 } from '@/lib/cookie-consent';
+import { localeFromPathname } from '@/lib/i18n/locale';
+import { cookieDict } from '@/lib/i18n/cookie';
 
 export function CookieConsent() {
   const [visible, setVisible] = useState(false);
   const [settings, setSettings] = useState(false);
   const [hasExisting, setHasExisting] = useState(false);
   const [prefs, setPrefs] = useState<ConsentState>(() => CONSENT_PRESETS.denied());
+
+  const locale = localeFromPathname(usePathname());
+  const t = cookieDict[locale];
 
   useEffect(() => {
     const existing = readConsent();
@@ -69,13 +75,13 @@ export function CookieConsent() {
         <motion.div
           key="cookie-consent"
           role="dialog"
-          aria-label="Zgoda na pliki cookies"
+          aria-label={t.dialogAriaLabel}
           aria-modal={settings}
           initial={{ opacity: 0, y: 24, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 24, scale: 0.98 }}
           transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed z-[120] inset-x-3 bottom-3 sm:inset-x-auto sm:left-6 sm:bottom-6 sm:w-[24rem] max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto no-scrollbar overscroll-contain rounded-2xl border border-white/12 bg-[#0a0a0a]/95 backdrop-blur-xl shadow-[0_24px_70px_-20px_rgba(0,0,0,0.85)]"
+          className="fixed z-[120] inset-x-3 bottom-3 sm:inset-x-auto sm:left-6 sm:bottom-6 sm:w-[24rem] lg:w-[19.5rem] 2xl:w-[24rem] max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto no-scrollbar overscroll-contain rounded-2xl border border-white/12 bg-[#0a0a0a]/95 backdrop-blur-xl shadow-[0_24px_70px_-20px_rgba(0,0,0,0.85)]"
         >
           {/* Akcent brandowy */}
           <div
@@ -88,7 +94,7 @@ export function CookieConsent() {
               <button
                 type="button"
                 onClick={dismiss}
-                aria-label="Zamknij"
+                aria-label={t.closeAriaLabel}
                 className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors cursor-pointer"
               >
                 <X size={18} />
@@ -100,17 +106,17 @@ export function CookieConsent() {
                 <Cookie size={20} />
               </div>
               <h2 className="text-white font-bold text-base sm:text-lg leading-tight">
-                Szanujemy Twoją prywatność
+                {t.title}
               </h2>
             </div>
 
             <p className="text-slate-400 text-sm leading-relaxed mb-4">
-              Używamy plików cookies, aby strona działała poprawnie, a za Twoją zgodą - również
-              do analityki i marketingu. Szczegóły znajdziesz w{' '}
+              {t.descriptionBefore}{' '}
+              {/* Polityka prywatności ma tylko wersję PL - href zawsze /polityka-prywatnosci */}
               <Link href="/polityka-prywatnosci" className="text-blue-400 hover:underline">
-                Polityce prywatności
+                {t.privacyLinkText}
               </Link>
-              .
+              {t.descriptionAfter}
             </p>
 
             {/* Granularne ustawienia */}
@@ -125,24 +131,27 @@ export function CookieConsent() {
                   className="overflow-hidden"
                 >
                   <div className="space-y-2 mb-4 pt-1">
-                    {COOKIE_CATEGORIES.map((cat) => (
-                      <div
-                        key={cat.key}
-                        className="flex items-start justify-between gap-3 rounded-xl bg-white/[0.03] border border-white/5 p-3"
-                      >
-                        <div>
-                          <div className="text-white text-sm font-semibold">{cat.title}</div>
-                          <div className="text-slate-500 text-xs leading-relaxed mt-0.5">{cat.desc}</div>
+                    {COOKIE_CATEGORIES.map((cat) => {
+                      const ct = t.categories[cat.key];
+                      return (
+                        <div
+                          key={cat.key}
+                          className="flex items-start justify-between gap-3 rounded-xl bg-white/[0.03] border border-white/5 p-3"
+                        >
+                          <div>
+                            <div className="text-white text-sm font-semibold">{ct.title}</div>
+                            <div className="text-slate-500 text-xs leading-relaxed mt-0.5">{ct.desc}</div>
+                          </div>
+                          {cat.required ? (
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 shrink-0 mt-1 whitespace-nowrap">
+                              {t.alwaysActive}
+                            </span>
+                          ) : (
+                            <Toggle on={prefs[cat.key]} onClick={() => toggle(cat.key)} label={ct.title} />
+                          )}
                         </div>
-                        {cat.required ? (
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 shrink-0 mt-1 whitespace-nowrap">
-                            Zawsze aktywne
-                          </span>
-                        ) : (
-                          <Toggle on={prefs[cat.key]} onClick={() => toggle(cat.key)} label={cat.title} />
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </motion.div>
               )}
@@ -156,14 +165,14 @@ export function CookieConsent() {
                   onClick={rejectAll}
                   className="flex-1 px-4 py-2.5 rounded-xl border border-white/15 text-white text-sm font-bold hover:bg-white/5 transition-colors cursor-pointer"
                 >
-                  Odrzuć wszystkie
+                  {t.rejectAll}
                 </button>
                 <button
                   type="button"
                   onClick={acceptAll}
                   className="flex-1 px-4 py-2.5 rounded-xl bg-white text-black text-sm font-bold hover:bg-blue-50 transition-colors cursor-pointer"
                 >
-                  Akceptuj wszystkie
+                  {t.acceptAll}
                 </button>
               </div>
 
@@ -173,7 +182,7 @@ export function CookieConsent() {
                   onClick={saveChoice}
                   className="px-4 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-500 transition-colors cursor-pointer"
                 >
-                  Zapisz wybór
+                  {t.saveChoice}
                 </button>
               ) : (
                 <button
@@ -181,7 +190,7 @@ export function CookieConsent() {
                   onClick={() => setSettings(true)}
                   className="inline-flex items-center justify-center gap-2 px-4 py-2 text-slate-400 hover:text-white text-sm font-medium transition-colors cursor-pointer"
                 >
-                  <Settings2 size={15} /> Dostosuj ustawienia
+                  <Settings2 size={15} /> {t.customize}
                 </button>
               )}
             </div>

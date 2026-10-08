@@ -1,0 +1,163 @@
+/* Podstrona „Chatboty AI” - sekcja WIEDZA, wersja „WARSTWY” (wiedza-warstwy.tsx, runda 3). Prefiks ch-kl-.
+   Wspólne części (lista, przypięty ekran, narrator, plany gwiazd, węzły, miejsce rozmowy): wiedza.css i chatboty.css.
+   Bez JS / ograniczony ruch / niski ekran sekcja jest zwykłym blokiem (wspólne reguły) - WSZYSTKIE style sceny
+   stoją niżej, w zapytaniu przypiętych scen i pod .sv[data-live].
+
+   Stos (.ch-kl-rig) = punkt 0 x 0 na osi; BEZ perspektywy i preserve-3d. Każda płyta stoi w 2D na osi
+   (top = (i - 2) * --gs) i sama ma obrót rotateX(--rx) rotateZ(--rz) - wygląda jak prawdziwy stos w rzucie
+   równoległym, a każde położenie jest znane w 2D. Kolejność malowania: płyta 4 pierwsza, 0 na wierzchu.
+   --w bok płyty · --gs odstęp płyt na ekranie · --rx pochylenie kamery · --rz obrót (wolna orbita z --p).
+   Treść płyty leży w jej płaszczyźnie: nazwa i dwie linijki przy BLIŻSZEJ krawędzi, do prawej - to pas, którego
+   nie zasłania płyta wyżej (wysokość pasa = --gs / cos(--rx) * cos(--rz)) i który leży na prawo od osi; włosowe
+   „wiersze” w dalszym lewym rogu widać na górnej płycie i w czasie budowy.
+   Zmienne ze sceny (na .ch-kl-pin): --p postęp, --b budowa stosu, --ax oś, --st gwiazda, --tm człowiek,
+   --talk kamera odsuwa się przed rozmową (telefon), --py / --po / --pt sonda (położenie w --gs, krycie, ogon),
+   --tr / --to ślad sondy na osi, --any którakolwiek płyta wysunięta, --up stos unosi się przed przekazaniem;
+   na płytach: --o wysunięcie (krawędź w kolorze podstrony + marker), --k błysk mijanej płyty.
+   Wysunięcie = ruch W PŁASZCZYŹNIE płyty (po obrotach), jak szuflada: pas z treścią zostaje odsłonięty.
+   Bez rozmyć i poświat: szkło = czerń z kryciem, krawędzie = ostre linie. */
+
+@media (prefers-reduced-motion: no-preference) and (min-height: 521px) {
+  .sv[data-live] .ch-kl-pin { --sh: 100vh; height: 380vh; height: calc(100svh + 280vh); }
+  @supports (height: 100svh) { .sv[data-live] .ch-kl-pin { --sh: 100svh; } }
+
+  /* ── stos ── */
+  .sv[data-live] .ch-kl-rig {
+    --w: min(38vw, 60vh); --gs: min(9.2vh, calc(var(--w) * .158)); --rx: 58deg; --cs: 56px;
+    --rz: calc(-38deg + var(--p, 0) * 14deg);
+    --sx: calc(var(--w) * -.3); --sy: 0px; --grow: 0;
+    position: absolute; left: 72%; top: max(52%, calc(96px + 2 * var(--gs) + var(--w) * .372)); width: 0; height: 0;
+    transform: translate3d(0, calc(var(--up, 0) * -5vh), 0);
+  }
+  .sv[data-live] .ch-kl-sky {
+    position: absolute; left: calc(var(--w) * -.5); top: calc(-2 * var(--gs) - var(--w) * .3);
+    width: var(--w); height: calc(4 * var(--gs) + var(--w) * .6); pointer-events: none;
+  }
+
+  /* płyta: budowa od dołu stosu (--bl odcinek budowy dla płyty --i, --drop = miękkie lądowanie z ~70vh nad stosem
+     z lekkim dokręceniem), potem wysunięcie w płaszczyźnie (--o); pozostałe płyty przygasają, gdy któraś jest wysunięta */
+  .sv[data-live] .ch-kl-plate {
+    --bl: clamp(0, var(--b, 1) * 1.9 - (4 - var(--i)) * .2, 1);
+    --bi: calc(1 - var(--bl));
+    --drop: calc(var(--bi) * var(--bi) * var(--bi));
+    --lit-a: .5;
+    position: absolute; left: 0; top: calc((var(--i) - 2) * var(--gs)); width: var(--w); height: var(--w);
+    z-index: calc(5 - var(--i)); overflow: hidden; border-radius: 22px;
+    background: rgba(4, 4, 5, .9); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .09);
+    opacity: calc(min(1, var(--bl) * 3) * (1 - .66 * (var(--any, 0) - var(--o, 0))));
+    transform:
+      translate(-50%, -50%)
+      translate3d(0, calc(var(--drop) * -70vh), 0)
+      rotateX(var(--rx)) rotateZ(calc(var(--rz) + var(--drop) * 26deg))
+      translate(calc(var(--o, 0) * var(--sx)), calc(var(--o, 0) * var(--sy)))
+      scale(calc(1 + var(--o, 0) * var(--grow)));
+  }
+  /* krawędzie stanu: biały błysk mijanej płyty (--k) i krawędź płyty z odpowiedzią w kolorze podstrony (--o) */
+  .sv[data-live] .ch-kl-edge { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; }
+  .sv[data-live] .ch-kl-edge::before,
+  .sv[data-live] .ch-kl-edge::after { content: ''; position: absolute; inset: 0; border-radius: inherit; }
+  .sv[data-live] .ch-kl-edge::before { border: 1.5px solid #fff; opacity: calc(var(--k, 0) * .85); }
+  .sv[data-live] .ch-kl-edge::after { border: 2px solid rgb(var(--sv-ac)); opacity: min(1, calc(var(--o, 0) * 2.2)); }
+
+  /* treść płyty: włosowe wiersze w dalszym rogu, nazwa i linijki przy bliższej krawędzi (do prawej) */
+  .sv[data-live] .ch-kl-rows { position: absolute; left: 8%; top: 9%; width: 50%; display: grid; gap: calc(var(--w) * .062); }
+  .sv[data-live] .ch-kl-rows i { display: block; height: 1.5px; background: rgba(255, 255, 255, .15); }
+  .sv[data-live] .ch-kl-rows i:nth-child(2) { width: 82%; }
+  .sv[data-live] .ch-kl-rows i:nth-child(3) { width: 64%; }
+  .sv[data-live] .ch-kl-rows i:nth-child(4) { width: 74%; }
+  .sv[data-live] .ch-kl-doc {
+    position: absolute; right: 4%; bottom: 4%; display: flex; flex-direction: column; align-items: flex-end;
+    gap: calc(var(--w) * .006); text-align: right; white-space: nowrap;
+  }
+  .sv[data-live] .ch-kl-doc b {
+    margin-bottom: calc(var(--w) * .006); font-size: calc(var(--w) * .05); font-weight: 600; line-height: 1.15; letter-spacing: -.01em;
+    color: #e2e8f0; color: color-mix(in srgb, #fff calc(var(--o, 0) * 100%), #e2e8f0);
+  }
+  .sv[data-live] .ch-kl-ln {
+    font-size: calc(var(--w) * .037); line-height: 1.3;
+    color: #94a3b8; color: color-mix(in srgb, #f8fafc calc(var(--o, 0) * 100%), #94a3b8);
+  }
+  /* zakreślenie markerem: ostry, półprzezroczysty pas pod dolną częścią linijki, przeciągany od lewej */
+  .sv[data-live] .ch-kl-ln > span { position: relative; display: inline-block; padding: 0 .2em; isolation: isolate; }
+  .sv[data-live] .ch-kl-ln > span::before {
+    content: ''; position: absolute; left: 0; right: 0; bottom: .1em; height: 55%; z-index: -1;
+    background: rgb(var(--sv-ac) / .5); transform-origin: 0 50%;
+    transform: scaleX(clamp(0, var(--o, 0) * 2.4 - .5 - var(--j, 0) * .5, 1));
+  }
+
+  /* ── oś: włosowa linia od gwiazdy do człowieka, kreski na wysokości płyt, ślad sondy, sonda ── */
+  .sv[data-live] .ch-kl-axis,
+  .sv[data-live] .ch-kl-trail {
+    position: absolute; left: 0; top: calc(-3.35 * var(--gs)); width: 1px; height: calc(6.8 * var(--gs)); margin-left: -.5px;
+    transform-origin: 50% 0; pointer-events: none;
+  }
+  .sv[data-live] .ch-kl-axis { z-index: 7; background: rgba(255, 255, 255, .2); transform: scaleY(var(--ax, 1)); }
+  .sv[data-live] .ch-kl-trail { z-index: 8; background: rgb(var(--sv-ac)); opacity: var(--to, 0); transform: scaleY(var(--tr, 0)); }
+  .sv[data-live] .ch-kl-tick {
+    position: absolute; left: 0; top: calc((var(--i) - 2) * var(--gs)); z-index: 8; width: 13px; height: 1px; margin: -.5px 0 0 -6.5px;
+    background: rgba(255, 255, 255, .42); opacity: var(--ax, 1);
+  }
+  .sv[data-live] .ch-kl-probe {
+    position: absolute; left: 0; top: 0; z-index: 9; width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-radius: 50%;
+    background: rgb(var(--sv-ac)); box-shadow: 0 0 0 3px rgb(var(--sv-ac) / .24); opacity: var(--po, 0);
+    transform: translate3d(0, calc(var(--py, 0) * var(--gs)), 0);
+  }
+  .sv[data-live] .ch-kl-probe::before {
+    content: ''; position: absolute; left: 4px; bottom: 100%; width: 1px; height: 46px;
+    background: linear-gradient(to top, rgb(var(--sv-ac)), rgb(var(--sv-ac) / 0));
+    transform-origin: 50% 100%; transform: scaleY(var(--pt, 0));
+  }
+  .sv[data-live] .ch-kl-core { left: 0; top: calc(-3.35 * var(--gs)); z-index: 10; }
+  .sv[data-live] .ch-kl-core .ch-spark { transform: scale(var(--st, 1)); }
+  .sv[data-live] .ch-kl-team { left: 0; top: calc(3.45 * var(--gs)); z-index: 10; opacity: var(--tm, 1); }
+
+  /* ── jedno miejsce rozmowy: lewa kolumna kontenera ── */
+  .sv[data-live] .ch-kl .ch-kl-side { display: grid; gap: 22px; align-content: start; position: absolute; left: 24px; top: 24%; width: min(28rem, 33%); }
+
+  /* niski ekran komputera: rozmowa wyżej i mniejszym pismem, żeby nie weszła na zdanie narratora */
+  @media (min-width: 1024px) and (max-height: 700px) {
+    .sv[data-live] .ch-kl .ch-kl-side { top: 120px; gap: 14px; }
+    .sv[data-live] .ch-kl-side .ch-k-ans { font-size: clamp(18px, 1.6vw, 21px); }
+  }
+
+  /* ── telefon i tablet: stos u góry (pod nawigacją), rozmowa pod nim, narrator na dole ──
+     Rozmowa ma stałe miejsce liczone od dołu ekranu (355 px: narrator + pytanie + odpowiedź do 4 linii + podpis),
+     a stos dostaje resztę: --win = wysokość ekranu - 449 px (82 px od góry + 12 px odstępu + 355 px).
+     Bok płyty i odstęp są dobrane tak, żeby gwiazda, pięć płyt i człowiek zmieściły się w --win (trzy warunki
+     w min(): same płyty · gwiazda nad płytami · gwiazda + oś + człowiek z podpisem); kamera patrzy
+     bardziej z boku (66 stopni), więc stos jest niższy, a płyta zostaje szeroka. Przy budowie stos jest o 1/5
+     większy i stoi niżej - przed pierwszym pytaniem kamera odsuwa się (--talk). Płyta z odpowiedzią wysuwa się
+     ku bliższemu rogowi (w dół ekranu, w stronę rozmowy) i lekko rośnie; linijki widać dopiero na wysuniętej. */
+  @media (max-width: 1023.98px) {
+    .sv[data-live] .ch-kl-rig {
+      --win: calc(var(--sh) - 449px);
+      --w: min(74vw, calc((var(--win) - 76px) / .68));
+      --gs: clamp(
+        calc(var(--w) * .1),
+        min(calc((var(--win) - var(--w) * .572) / 4), calc((var(--win) - 40px - var(--w) * .286) / 5.35), calc((var(--win) - 76px) / 6.8)),
+        calc(var(--w) * .16));
+      --rx: 66deg; --cs: 44px;
+      --sx: calc(var(--w) * -.14); --sy: calc(var(--w) * .14); --grow: .04;
+      left: 50%; top: max(calc(122px + 3.35 * var(--gs)), calc(82px + 2 * var(--gs) + var(--w) * .286));
+      transform: translate3d(0, calc((1 - var(--talk, 1)) * 10vh - var(--up, 0) * 3.5vh), 0) scale(calc(1 + (1 - var(--talk, 1)) * .2));
+    }
+    .sv[data-live] .ch-kl-plate { border-radius: 16px; }
+    .sv[data-live] .ch-kl-rows i { height: 2px; }
+    .sv[data-live] .ch-kl-doc { right: 5%; bottom: 4.5%; }
+    .sv[data-live] .ch-kl-doc b { order: 3; margin: calc(var(--w) * .01) 0 0; font-size: calc(var(--w) * .074); }
+    .sv[data-live] .ch-kl-ln { font-size: calc(var(--w) * .052); opacity: var(--o, 0); }
+    .sv[data-live] .ch-kl-team { gap: 4px; }
+    .sv[data-live] .ch-kl-tick { width: 9px; margin-left: -4.5px; }
+    .sv[data-live] .ch-kl-probe::before { height: 28px; }
+
+    .sv[data-live] .ch-kl .ch-kl-side { left: 24px; right: 24px; top: calc(100% - 355px); width: auto; gap: 0; }
+    .sv[data-live] .ch-kl-meta { display: none; }
+    .sv[data-live] .ch-kl-side .ch-k-turn { gap: 10px; }
+    .sv[data-live] .ch-kl-side .ch-k-ans { max-width: none; font-size: 18px; line-height: 1.36; }
+    .sv[data-live] .ch-kl-side .ch-bub { padding: 9px 14px 10px; }
+  }
+  /* niższy telefon: odpowiedź mniejszym pismem (najdłuższa mieści się w 3-4 liniach nad narratorem) */
+  @media (max-width: 1023.98px) and (max-height: 720px) {
+    .sv[data-live] .ch-kl-side .ch-k-ans { font-size: 16.5px; }
+  }
+}

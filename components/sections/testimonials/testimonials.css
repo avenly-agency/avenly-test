@@ -1,0 +1,195 @@
+/* Sekcja "Opinie" (components/sections/Testimonials.tsx + testimonials/*). Chat 1, praca równoległa
+   (PRACA-ROWNOLEGLA.md): style sekcji tylko w tym pliku, wszystkie klasy z prefiksem op-.
+   Układ REDAKCJA (wybór właściciela 2026-09-27; potem "podrasuj, dodaj animowane cudzysłowy i duszy").
+   Zasady: głęboka neutralna czerń, ostre włosowe linie, jeden akcent (kolor marki --brand - jak .im-accent),
+   bez blur / mgiełek / cieni za tekstem, bez efektów najechania na treści (reaguje tylko link).
+   Stany startowe animacji wyłącznie pod [data-live] (JS działa) i tylko przy
+   prefers-reduced-motion: no-preference - bez JS i przy ograniczonym ruchu treść stoi od razu.
+   Każda strefa (.op-ed-top, .op-ed-rule, .op-ed-quotes, .op-ed-foot) ma własne data-live / data-in,
+   więc animuje się dopiero wtedy, gdy sama wjedzie w ekran. */
+
+.op {
+  --op-ease: cubic-bezier(.16, 1, .3, 1);
+  --op-acc: var(--hl); /* akcent nagłówków (globals.css: --hl / --hl-rgb, propozycje akcentu 2026-09-28) */
+  position: relative; width: 100%; padding: 96px 0; background: #050505; overflow-x: clip; color: #f8fafc;
+}
+@media (min-width: 768px) { .op { padding: 136px 0; } }
+
+.op-head { max-width: 48rem; margin: 0 auto; text-align: center; }
+.op-head--start { margin: 0; text-align: left; }
+.op-head--start .im-lead { margin: 0; }
+
+.op-w { display: inline-block; }
+.op-open { display: inline-block; }
+
+/* Wspólne słowo opinii ("polecam"): zakreślone jak przez redaktora - ostry, półprzezroczysty pas
+   akcentu pod dolną częścią słowa (nie podkreślenie w kolorze, które wyglądałoby jak link). */
+.op-hl {
+  color: #fff; white-space: nowrap; padding: 0 .06em; margin: 0 -.06em;
+  background: linear-gradient(rgb(var(--hl-rgb) / .24), rgb(var(--hl-rgb) / .24)) 0 84% / 100% .36em no-repeat;
+  -webkit-box-decoration-break: clone; box-decoration-break: clone;
+}
+
+/* Link do profilu Google (zewnętrzny): tekst z włosowym podkreśleniem, cel dotyku 44 px. Tekst jest
+   liniowy (nie flex), więc przy zawinięciu strzałka zostaje przy ostatnim słowie (.op-link-end). */
+.op-link {
+  display: inline-block; padding: 11px 0; color: #e2e8f0; font-size: 15px; font-weight: 500; line-height: 22px;
+  text-decoration: none; -webkit-tap-highlight-color: transparent; transition: color .4s, opacity .2s;
+}
+.op-link-g { display: inline-block; width: 18px; height: 18px; margin-right: 10px; vertical-align: -4px; }
+.op-link-text { text-decoration: underline 1px rgba(255, 255, 255, .26); text-underline-offset: 6px; transition: text-decoration-color .4s; }
+.op-link-end { white-space: nowrap; }
+.op-link-arrow { display: inline-block; width: 16px; height: 16px; margin-left: 8px; vertical-align: -3px; color: var(--op-acc); transition: transform .5s var(--op-ease); }
+@media (hover: hover) {
+  .op-link:hover { color: #fff; }
+  .op-link:hover .op-link-text { text-decoration-color: #f8fafc; }
+  .op-link:hover .op-link-arrow { transform: translate(2px, -2px); }
+}
+.op-link:active { opacity: .7; }
+.op-link:focus-visible { outline: 2px solid #60a5fa; outline-offset: 4px; border-radius: 6px; }
+
+/* ── Górna strefa: nagłówek i podtytuł (jedna kolumna) ──
+   2026-09-28: bez ogromnego "5,0" i gwiazdek (decyzja właściciela: słaby social proof). */
+.op-ed-top { max-width: 48rem; }
+.op-ed-head .im-title { margin-bottom: 18px; }
+
+/* ── Linie redakcyjne ze znakiem cudzysłowu: “ otwiera część z cytatami, ” ją zamyka ── */
+.op-ed-rule { display: flex; align-items: center; gap: 20px; margin: 52px 0 32px; }
+.op-ed-rule--end { margin: 40px 0 0; }
+@media (min-width: 640px) { .op-ed-rule { gap: 28px; margin: 64px 0 40px; } .op-ed-rule--end { margin: 48px 0 0; } }
+@media (min-width: 1024px) { .op-ed-rule { gap: 32px; margin: 72px 0 44px; } .op-ed-rule--end { margin: 52px 0 0; } }
+.op-ed-line { flex: 1; height: 1px; background: rgba(255, 255, 255, .12); transform-origin: left; }
+.op-ed-rule--end .op-ed-line { background: rgba(255, 255, 255, .09); }
+/* Stała szerokość znaku = grubość kreski w jednostkach viewBoxa (84 szer.): --sw = 84 / szerokość
+   daje dokładnie 1 px (bez vector-effect, więc pathLength i rysowanie kreską są precyzyjne). */
+.op-ed-mark { --sw: 1.2; --sw2: 2; flex: none; display: block; width: 70px; height: auto; overflow: visible; }
+.op-ed-mark--close { --sw: 1.62; --sw2: 2.6; width: 52px; }
+@media (min-width: 640px) {
+  .op-ed-mark { --sw: .95; --sw2: 1.6; width: 88px; }
+  .op-ed-mark--close { --sw: 1.31; --sw2: 2.1; width: 64px; }
+}
+@media (min-width: 1024px) {
+  .op-ed-mark { --sw: .78; --sw2: 1.3; width: 108px; }
+  .op-ed-mark--close { --sw: 1.05; --sw2: 1.75; width: 80px; }
+}
+.op-ed-mark-ink { fill: rgb(var(--hl-rgb) / .06); stroke: rgb(var(--hl-rgb) / .62); stroke-width: var(--sw); stroke-linejoin: round; }
+.op-ed-mark-trace { fill: none; stroke: #f1f6ff; stroke-width: var(--sw2); stroke-linecap: round; stroke-dasharray: .07 .93; opacity: 0; }
+
+/* ── Cytaty ── */
+.op-ed-quotes { display: grid; gap: 52px; }
+@media (min-width: 1024px) {
+  .op-ed-quotes { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 0; }
+  .op-ed-q--lead { padding-right: 72px; }
+  .op-ed-q:not(.op-ed-q--lead) { padding-left: 56px; }
+  /* Linia szpalty (rysowana przy wejściu). */
+  .op-ed-q:not(.op-ed-q--lead)::before {
+    content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 1px;
+    background: rgba(255, 255, 255, .09); transform-origin: top;
+  }
+}
+.op-ed-q { position: relative; margin: 0; }
+.op-ed-idx { display: flex; align-items: center; gap: 12px; margin: 0 0 18px; font-size: 14px; font-weight: 500; color: var(--op-acc); font-variant-numeric: tabular-nums; }
+@media (min-width: 640px) { .op-ed-idx { margin-bottom: 22px; } }
+.op-ed-idx::after { content: ''; width: 28px; height: 1px; background: rgb(var(--hl-rgb) / .45); transform-origin: left; }
+.op-ed-text { margin: 0; }
+.op-ed-text p { margin: 0; font-size: 17px; line-height: 1.64; color: #cbd5e1; text-wrap: pretty; }
+/* Druga opinia na tablecie bez nadmiernie długich wierszy (~65 znaków). */
+@media (min-width: 640px) {
+  .op-ed-text p { font-size: 18px; line-height: 1.66; }
+  .op-ed-q:not(.op-ed-q--lead) .op-ed-text { max-width: 38rem; }
+}
+.op-ed-q--lead .op-ed-text p {
+  font-size: clamp(23px, 6.6vw, 30px); font-weight: 300; line-height: 1.24; letter-spacing: -.02em; color: #f1f5f9;
+}
+@media (min-width: 640px) { .op-ed-q--lead .op-ed-text p { font-size: clamp(30px, 4.6vw, 40px); line-height: 1.2; letter-spacing: -.022em; } }
+@media (min-width: 1024px) { .op-ed-q--lead .op-ed-text p { font-size: clamp(28px, 3.1vw, 44px); } }
+/* Cudzysłów otwierający wysunięty na margines - tekst zaczyna się równo z krawędzią szpalty. */
+.op-ed-q--lead .op-open { margin-left: -.4em; width: .4em; }
+.op-ed-by { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 24px; font-size: 14px; }
+.op-ed-by i { width: 16px; height: 1px; background: rgba(255, 255, 255, .3); transform-origin: left; }
+@media (min-width: 400px) { .op-ed-by { gap: 6px 14px; font-size: 15px; } .op-ed-by i { width: 28px; } }
+@media (min-width: 640px) { .op-ed-by { margin-top: 30px; } }
+.op-ed-by cite { font-style: normal; font-weight: 600; color: #f8fafc; }
+.op-ed-src { color: #94a3b8; }
+
+/* ── Stopka ── */
+.op-ed-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 32px; margin-top: 8px; }
+.op-ed-note { margin: 0; padding: 8px 0 0; font-size: 14px; color: #94a3b8; }
+@media (min-width: 640px) { .op-ed-foot { margin-top: 4px; } .op-ed-note { padding: 0; } }
+
+/* ── Duże ekrany (2K / 4K): szerszy kontener, więc cytaty odrobinę większe ── */
+@media (min-width: 2560px) {
+  .op-ed-q--lead .op-ed-text p { font-size: 50px; }
+  .op-ed-text p { font-size: 19px; }
+  .op-ed-q:not(.op-ed-q--lead) .op-ed-text { max-width: 44rem; }
+}
+
+/* ── Ruch (tylko bez ograniczenia ruchu) ── */
+@media (prefers-reduced-motion: no-preference) {
+  /* Góra: etykieta, nagłówek i podtytuł wchodzą po kolei. */
+  .op-ed-top[data-live] .op-head > * {
+    opacity: 0; transform: translateY(14px); transition: opacity 1s var(--op-ease), transform 1s var(--op-ease);
+  }
+  .op-ed-top[data-live] .op-head > :nth-child(2) { transition-delay: .08s; }
+  .op-ed-top[data-live] .op-head > :nth-child(3) { transition-delay: .16s; }
+  .op-ed-top[data-in] .op-head > * { opacity: 1; transform: none; }
+
+  /* Linie: “ rysuje się kreską i wypełnia, linia biegnie od znaku w prawo; na dole linia dobiega
+     do ” i dopiero wtedy rysuje się zamknięcie. Potem co 8 s ostra plamka światła obiega znak. */
+  .op-ed-rule[data-live] .op-ed-line { transform: scaleX(0); transition: transform 1.8s var(--op-ease) .45s; }
+  .op-ed-rule--end[data-live] .op-ed-line { transition-delay: 0s; }
+  .op-ed-rule[data-live]:not([data-in]) .op-ed-mark-ink { stroke-dasharray: 1 1; stroke-dashoffset: 1; fill: rgb(var(--hl-rgb) / 0); }
+  .op-ed-rule[data-in] .op-ed-line { transform: none; }
+  .op-ed-rule[data-in] .op-ed-mark-ink { animation: op-ed-draw 2.2s var(--op-ease) both; }
+  .op-ed-rule[data-in] .op-ed-mark g > g + g .op-ed-mark-ink { animation-delay: .25s; }
+  .op-ed-rule--end[data-in] .op-ed-mark-ink { animation-delay: 1s; }
+  .op-ed-rule--end[data-in] .op-ed-mark g > g + g .op-ed-mark-ink { animation-delay: 1.25s; }
+  .op-ed-rule[data-in][data-vis] .op-ed-mark-trace { animation: op-ed-trace 8s linear 3s infinite; }
+  .op-ed-rule[data-in][data-vis] .op-ed-mark g > g + g .op-ed-mark-trace { animation-delay: 3.3s; }
+  .op-ed-rule--end[data-in][data-vis] .op-ed-mark-trace { animation-delay: 5.5s; }
+  .op-ed-rule--end[data-in][data-vis] .op-ed-mark g > g + g .op-ed-mark-trace { animation-delay: 5.8s; }
+
+  /* Cytaty: numer i kreska, słowa wschodzą po kolei (pierwszy wolniej, drugi szybkim ciągiem),
+     linia szpalty rysuje się z góry, na końcu redaktor podkreśla wspólne słowo. */
+  .op-ed-quotes[data-live] :is(.op-ed-idx, .op-ed-by) {
+    opacity: 0; transform: translateY(12px); transition: opacity 1s var(--op-ease), transform 1s var(--op-ease);
+  }
+  .op-ed-quotes[data-live] .op-ed-q:not(.op-ed-q--lead) .op-ed-idx { transition-delay: .25s; }
+  .op-ed-quotes[data-live] .op-ed-by { transition-delay: 1s; }
+  .op-ed-quotes[data-live] .op-ed-q:not(.op-ed-q--lead) .op-ed-by { transition-delay: 1.2s; }
+  .op-ed-quotes[data-live] .op-ed-idx::after, .op-ed-quotes[data-live] .op-ed-by i { transform: scaleX(0); transition: transform 1.2s var(--op-ease) .3s; }
+  .op-ed-quotes[data-live] .op-ed-q::before { transform: scaleY(0); transition: transform 1.8s var(--op-ease) .2s; }
+  .op-ed-quotes[data-live] .op-ed-text .op-w {
+    opacity: 0; transform: translateY(.42em);
+    transition: opacity .9s var(--op-ease), transform .9s var(--op-ease);
+    transition-delay: calc(.15s + var(--i) * 34ms);
+  }
+  .op-ed-quotes[data-live] .op-ed-q:not(.op-ed-q--lead) .op-ed-text .op-w { transition-delay: calc(.4s + var(--i) * 12ms); }
+  .op-ed-quotes[data-live] .op-ed-text .op-hl {
+    background-size: 0% .36em; color: inherit;
+    transition: background-size 1.2s var(--op-ease), color 1s var(--op-ease);
+    transition-delay: calc(1.1s + var(--i) * 34ms);
+  }
+  .op-ed-quotes[data-live] .op-ed-q:not(.op-ed-q--lead) .op-ed-text .op-hl { transition-delay: calc(1.4s + var(--i) * 12ms); }
+  .op-ed-quotes[data-in] :is(.op-ed-idx, .op-ed-by, .op-ed-text .op-w) { opacity: 1; transform: none; }
+  .op-ed-quotes[data-in] .op-ed-idx::after, .op-ed-quotes[data-in] .op-ed-by i { transform: none; }
+  .op-ed-quotes[data-in] .op-ed-q::before { transform: none; }
+  .op-ed-quotes[data-in] .op-ed-text .op-hl { background-size: 100% .36em; color: #fff; }
+
+  .op-ed-foot[data-live] { opacity: 0; transform: translateY(12px); transition: opacity 1s var(--op-ease) .5s, transform 1s var(--op-ease) .5s; }
+  .op-ed-foot[data-in] { opacity: 1; transform: none; }
+}
+
+@keyframes op-ed-draw {
+  0% { stroke-dasharray: 1 1; stroke-dashoffset: 1; fill: rgb(var(--hl-rgb) / 0); }
+  99.9% { stroke-dasharray: 1 1; stroke-dashoffset: 0; }
+  100% { stroke-dasharray: none; stroke-dashoffset: 0; fill: rgb(var(--hl-rgb) / .06); }
+}
+/* Plamka światła: jedno okrążenie znaku (~2,6 s), potem przerwa do końca cyklu. */
+@keyframes op-ed-trace {
+  0% { opacity: 0; stroke-dashoffset: 0; }
+  3% { opacity: 1; }
+  30% { opacity: 1; }
+  33% { opacity: 0; stroke-dashoffset: -1; }
+  100% { opacity: 0; stroke-dashoffset: -1; }
+}

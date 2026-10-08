@@ -1,0 +1,96 @@
+/* Podstrona „Chatboty AI” - 2. NOC „22:00” (chat 13, runda 3). Prefiks ch-n-.
+   Pełnoekranowy, przypięty film ze scenką Oferty; bohaterem jest ogromny zegar na całą szerokość ekranu.
+   Zmienne pisze noc.tsx z przewijania (na .ch-n-pin): --p (postęp sceny), --dim (kamera przenosi ostrość z zegara
+   na rozmowę: zegar cofa się i gaśnie do tła), --say (odpowiedź słowo po słowie), --dawn (rano: zegar wraca
+   i wjeżdża w górę kadru, horyzont jaśnieje, zapytanie ląduje w skrzynce).
+   NAJPIERW układ statyczny (bez JS i przy ograniczonym ruchu: godzina, rozmowa, skrzynka, narrator jako lista),
+   niżej film - tylko pod .sv[data-live] i prefers-reduced-motion: no-preference.
+   Bez rozmyć i poświat; dymki rozmowy kryjące (wielkie cyfry zegara nie prześwitują przez tekst). */
+
+.ch-n-stage { position: relative; }
+.ch-n-in { display: grid; gap: 20px; align-content: start; }
+.ch-n-sky, .ch-n-horizon { display: none; }
+.ch-n-star { position: absolute; width: var(--s, 7px); height: var(--s, 7px); background: #fff; opacity: var(--o, .5); clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%); }
+.ch-n-clock { margin: 0; font-size: clamp(72px, 12vw, 160px); font-weight: 600; line-height: .86; letter-spacing: -.06em; font-variant-numeric: tabular-nums; white-space: nowrap; color: #f8fafc; }
+.ch-n-status { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0; font-size: 15.5px; line-height: 1.3; color: #e2e8f0; }
+.ch-n-status .ch-spark { width: 15px; height: 15px; }
+.ch-n-status span:first-child { padding-right: 10px; border-right: 1px solid rgba(255, 255, 255, .22); color: #94a3b8; }
+.ch-n-talk { display: grid; gap: 10px; align-content: start; min-width: 0; max-width: 40rem; }
+.ch-n-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin: 0 0 4px; font-size: 13.5px; line-height: 1.3; color: #94a3b8; }
+.ch-n-box { max-width: 34rem; } /* karta nowej wiadomości (InboxCard): wąska jak wiersz poczty, nie szeroka tabela */
+
+/* ══ FILM ══ */
+@media (prefers-reduced-motion: no-preference) {
+  .sv[data-live] .ch-n { --nh: 100vh; --clock: min(34vw, 60vh); padding-top: 0; }
+  @supports (height: 100svh) { .sv[data-live] .ch-n { --nh: 100svh; --clock: min(34vw, 60svh); } }
+  .sv[data-live] .ch-n-pin { height: calc(var(--nh) + 340vh); }
+  .sv[data-live] .ch-n-stage { position: sticky; top: 0; height: var(--nh); overflow: clip; }
+  .sv[data-live] .ch-n-in { position: relative; display: block; height: 100%; }
+
+  /* niebo: gwiazdy suną w różnym tempie z przewijaniem i gasną przed świtem; gwiazda klienta zapala się kolorem podstrony */
+  .sv[data-live] .ch-n-sky { display: block; position: absolute; inset: 0; pointer-events: none; }
+  .sv[data-live] .ch-n-star { opacity: calc(var(--o, .5) * (1 - var(--dawn, 0) * .85)); transform: translate3d(0, calc(var(--p, 0) * var(--d, 1) * -120px), 0); }
+  .sv[data-live] .ch-n-star-client { left: 66%; top: 15%; --s: 17px; --d: .6; background: rgb(var(--sv-ac)); opacity: 0; transform: scale(.2); transition: opacity .9s ease, transform 1.2s var(--sv-ease); }
+  .sv[data-live] .ch-n-pin[data-talk] .ch-n-star-client { opacity: calc(1 - var(--dawn, 0)); transform: none; }
+  /* horyzont: krawędź planety; druga linia w kolorze podstrony jaśnieje przed świtem */
+  .sv[data-live] .ch-n-horizon { display: block; position: absolute; left: 0; right: 0; bottom: 0; height: 34%; overflow: hidden; pointer-events: none; }
+  .sv[data-live] .ch-n-horizon i { position: absolute; left: 50%; top: 40%; width: 300vw; height: 300vw; margin-left: -150vw; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .15); }
+  .sv[data-live] .ch-n-horizon i + i {
+    border-color: rgb(var(--sv-ac)); border-width: 2px; opacity: var(--dawn, 0);
+    -webkit-mask-image: linear-gradient(90deg, transparent 14%, #000 72%); mask-image: linear-gradient(90deg, transparent 14%, #000 72%);
+  }
+
+  /* zegar: ogromny pośrodku; --dim cofa go i gasi do tła rozmowy, --dawn przywraca i podnosi w górę kadru */
+  .sv[data-live] .ch-n-clock {
+    position: absolute; left: 50%; top: 45%; z-index: 1; font-size: var(--clock); pointer-events: none;
+    opacity: calc(1 - var(--dim, 0) * .9 + var(--dawn, 0) * .9);
+    transform: translate(-50%, -50%) translate3d(0, calc(var(--dim, 0) * -3vh + var(--dawn, 0) * -17vh), 0) scale(calc(1 - var(--dim, 0) * .32 + var(--dawn, 0) * .06));
+  }
+  .sv[data-live] .ch-n-status { position: absolute; left: 50%; top: calc(45% + var(--clock) * .43 + 22px); z-index: 2; flex-wrap: nowrap; white-space: nowrap; transform: translateX(-50%); opacity: calc(1 - var(--dim, 0)); }
+
+  /* rozmowa: w środku kadru, na tle przygaszonego zegara; rano odpływa w górę */
+  .sv[data-live] .ch-n-talk {
+    position: absolute; left: 50%; top: 50%; z-index: 3; width: min(640px, calc(100% - 48px)); max-width: none;
+    opacity: calc(1 - var(--dawn, 0) * 1.6); transform: translate(-50%, -50%) translate3d(0, calc(var(--dawn, 0) * -70px), 0);
+    will-change: opacity; /* krycie zmienia kompozytor, bez rysowania rozmowy od nowa co klatkę świtu (wydajność, 2026-10-05) */
+  }
+  .sv[data-live] .ch-n-meta { opacity: var(--dim, 0); }
+  .sv[data-live] .ch-n-talk .ch-bub { padding: 15px 20px 16px; font-size: clamp(17px, 1.5vw, 22px); }
+  .sv[data-live] .ch-n-talk .ch-msg > .ch-spark { width: 21px; height: 21px; margin-top: 15px; }
+  .sv[data-live] .ch-n-talk .ch-msg[data-who="client"] .ch-bub { background: #131316; }
+  .sv[data-live] .ch-n-talk .ch-msg[data-who="bot"] .ch-bub { background: linear-gradient(rgb(var(--sv-ac) / .1), rgb(var(--sv-ac) / .1)), #0c0c0e; }
+  /* odpowiedź pisana przewijaniem: słowo `i` z `n` pojawia się, gdy --say minie jego miejsce */
+  .sv[data-live] .ch-n-say .ch-w {
+    --on: clamp(0, calc(var(--say, 0) * (var(--n) + 1) - var(--i)), 1);
+    opacity: var(--on); transform: translate3d(0, calc((1 - var(--on)) * .28em), 0);
+  }
+
+  /* skrzynka: rano wjeżdża pod zegar */
+  .sv[data-live] .ch-n-box {
+    position: absolute; left: 50%; top: 57%; z-index: 3; width: min(560px, calc(100% - 48px)); max-width: none;
+    opacity: clamp(0, calc(var(--dawn, 0) * 2.6 - 1.4), 1); transform: translate(-50%, 0) translate3d(0, calc((1 - var(--dawn, 0)) * 60px), 0);
+    will-change: opacity; /* jak rozmowa wyżej */
+  }
+  /* karta wiadomości w skali sceny (wymiary karty w em - chatboty.css) */
+  .sv[data-live] .ch-n-box .ch-inbox { font-size: clamp(16px, 1.3vw, 19.5px); }
+  .sv[data-live] .ch-n-narr { position: absolute; left: 24px; bottom: 7vh; z-index: 4; width: min(36%, 30rem); margin: 0; opacity: var(--dim, 0); }
+
+  @media (max-width: 1023.98px) {
+    .sv[data-live] .ch-n-narr { left: 24px; right: 84px; bottom: 5vh; width: auto; } /* prawy dolny róg: bąbel czatu */
+    .sv[data-live] .ch-n-talk { top: 46%; }
+    .sv[data-live] .ch-n-box { top: 50%; }
+    .sv[data-live] .ch-n-box .ch-inbox { font-size: 16px; }
+    .sv[data-live] .ch-n-talk .ch-bub { padding: 12px 16px 13px; font-size: 16px; }
+    .sv[data-live] .ch-n-talk .ch-msg > .ch-spark { width: 18px; height: 18px; margin-top: 13px; }
+  }
+  @media (max-width: 639.98px) {
+    /* telefon: zostaje pierwsza wymiana rozmowy (cała nie mieści się w wysokości ekranu) */
+    .sv[data-live] .ch-n-talk > .ch-n-msg:nth-of-type(n + 3) { display: none; }
+    .sv[data-live] .ch-n-horizon { height: 24%; }
+    .sv[data-live] .ch-n-status { font-size: 14.5px; }
+  }
+}
+
+@media (max-width: 639.98px) {
+  .ch-n-clock { font-size: clamp(64px, 20vw, 96px); }
+}

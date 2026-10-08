@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import { useEffect, useState } from 'react';
 
 /**
  * Client wrapper który ładuje Chatbot i LifecycleManager dynamic z ssr: false.
@@ -34,6 +35,29 @@ const CookieConsent = dynamic(
 );
 
 export function DeferredClientWidgets() {
+  // Mount dopiero po idle - dynamic z ssr:false startuje fetch + parse chunków
+  // natychmiast po hydration, czyli w środku okna intro Hero (0-1.5s: Framer Motion
+  // text intro + fade-in aurory). requestIdleCallback przesuwa chatbot/cookie/lifecycle
+  // za intro; timeout 1500ms gwarantuje że baner cookies i tak pojawi się szybko.
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    type IdleCb = (cb: () => void, opts?: { timeout: number }) => number;
+    const w = window as unknown as {
+      requestIdleCallback?: IdleCb;
+      cancelIdleCallback?: (id: number) => void;
+    };
+    const start = () => setReady(true);
+    const id = w.requestIdleCallback
+      ? w.requestIdleCallback(start, { timeout: 1500 })
+      : window.setTimeout(start, 800);
+    return () => {
+      if (w.requestIdleCallback && w.cancelIdleCallback) w.cancelIdleCallback(id);
+      else window.clearTimeout(id);
+    };
+  }, []);
+
+  if (!ready) return null;
+
   return (
     <>
       <LifecycleManager />

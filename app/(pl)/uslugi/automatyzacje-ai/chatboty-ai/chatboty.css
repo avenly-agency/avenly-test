@@ -1,0 +1,190 @@
+/* Podstrona „Chatboty AI” (/uslugi/automatyzacje-ai/chatboty-ai i EN) - chat 13, praca równoległa, etap 3, fala 2.
+   Style tylko w tym pliku, prefiks ch-. Szkielet wspólny (korzeń, tło-mgławica, wejście z czerni, nagłówek, przycisk,
+   zakończenie, panel przełączników): app/(pl)/uslugi/_usluga/usluga.css (sv-) - tylko używamy.
+   Chatboty to INNA usługa niż strony WWW: bez kadru ze stroną klienta i bez filmu. Podstrona jest rozmową.
+   RUNDA 1 - cztery pomysły na całą podstronę (pierwszy ekran + główna interakcja), przełącznik w panelu na dole ekranu:
+     .ch-b  „Twoja branża”   (trade.tsx)   - wybór branży, rozmowa dla tej firmy, zapytanie w skrzynce,
+     .ch-t  „Rozmowa”        (thread.tsx)  - podstrona jako wątek: pytanie z listy, odpowiedź strony,
+     .ch-n  „Druga w nocy”   (night.tsx)   - zegar nocy z suwakiem godziny, rozmowy i skrzynka rano,
+     .ch-s  „Źródła”         (sources.tsx) - konstelacja wiedzy firmy, odpowiedź ze źródłem.
+   Wspólne: .ch-spark (asystent jako postać - czteroramienna gwiazda), .ch-msg / .ch-bub (wypowiedzi), .ch-w (słowa
+   odpowiedzi po kolei), .ch-chip (pytania do wyboru), .ch-tag („Przykładowa rozmowa”), .ch-try (prawdziwy czat).
+   Język strony: czerń luksusowa, ostre włosowe linie, pomarańcz podstrony (--sv-ac) tylko w liniach, dymkach
+   i punktach; drobny tekst jasny (kontrast AA). Bez rozmyć, tekstu z gradientem, wersalików, cieni za tekstem.
+   Stany „przed odsłoną” tylko pod .sv[data-live] (JS działa) - bez JS wszystko widać od razu; przy ograniczonym
+   ruchu reguła szkieletu zdejmuje przejścia i animacje, a sceny od razu pokazują stan końcowy.
+   Notatki: docs/podstrony/usluga-chatboty-ai.md. */
+
+.ch { --ch-glass: linear-gradient(180deg, rgba(0, 0, 0, .5), rgba(0, 0, 0, .7)); --ch-ac-hi: rgb(var(--sv-ac)); }
+@supports (color: color-mix(in oklab, #fff, #000)) { .ch { --ch-ac-hi: color-mix(in oklab, rgb(var(--sv-ac)) 72%, #fff); } }
+
+/* ══ PIERWSZY EKRAN: nagłówek przy lewej krawędzi kontenera, scena po prawej (od 1024 px), niżej jedna kolumna ══ */
+.ch-hero { position: relative; z-index: 1; }
+.ch-hero-in { position: relative; display: grid; gap: 44px; padding-top: 128px; }
+.ch-col { display: grid; gap: 40px; align-content: start; min-width: 0; }
+@media (min-width: 1024px) {
+  .ch-hero-in { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px 64px; align-items: start; padding-top: 148px; }
+}
+/* h1 w trzech krótkich liniach: mieści się w lewej kolumnie i zostawia pierwszy ekran scenie */
+.sv.ch .sv-title { max-width: none; margin-bottom: 24px; font-size: clamp(46px, 6.8vw, 72px); line-height: 1; }
+@media (min-width: 1024px) { .sv.ch .sv-title { font-size: clamp(48px, 4.9vw, 84px); } }
+@media (max-width: 639.98px) { .sv.ch .sv-title { margin-bottom: 18px; font-size: clamp(44px, 12.6vw, 56px); } }
+.sv.ch .sv-lead { max-width: 30rem; }
+
+/* Obwódka ze światłem z góry (język bąbla czatu i plakietek paska pod hero): jasna u góry, gaśnie ku dołowi.
+   Element potrzebuje position (relative / absolute) i border-radius. --lit = kolor światła „r g b” (domyślnie biel),
+   --lit-a = krycie u góry. Zamiast równej obwódki - powierzchnia czyta się jak ciemne szkło, bez połysku i poświat. */
+.ch-lit::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: linear-gradient(180deg, rgb(var(--lit, 255 255 255) / var(--lit-a, .44)), rgb(var(--lit, 255 255 255) / .13) 48%, rgb(var(--lit, 255 255 255) / .05) 92%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  transition: opacity .6s ease;
+}
+
+/* drugi przycisk nagłówka: prawdziwy asystent z rogu strony */
+.ch-try {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px; height: 56px; padding: 0 24px;
+  border-radius: 14px; border: 1px solid rgba(255, 255, 255, .24); background: rgba(0, 0, 0, .4); color: #f8fafc;
+  font-size: 15.5px; font-weight: 600; line-height: 1; white-space: nowrap; cursor: pointer;
+  transition: border-color .35s ease, background-color .35s ease;
+}
+.ch-try svg { flex: none; width: 17px; height: 17px; color: rgb(var(--sv-ac)); }
+.ch-try:focus-visible { outline: 2px solid #60a5fa; outline-offset: 3px; }
+@media (hover: hover) { .ch-try:hover { border-color: rgb(var(--sv-ac) / .75); background: rgba(0, 0, 0, .6); } }
+
+/* ══ WSPÓLNE: asystent jako postać, wypowiedzi, słowa po kolei, pytania do wyboru ══ */
+.ch-spark { display: inline-grid; place-items: center; flex: none; width: 22px; height: 22px; color: rgb(var(--sv-ac)); }
+.ch-spark svg { display: block; width: 100%; height: 100%; fill: currentColor; overflow: visible; }
+@keyframes ch-breathe { 50% { transform: scale(.82); opacity: .75; } }
+@keyframes ch-think { 0% { transform: rotate(0deg) scale(.78); } 50% { transform: rotate(90deg) scale(1.14); } 100% { transform: rotate(180deg) scale(.78); } }
+@keyframes ch-speak { 50% { transform: scale(1.16); } }
+@media (prefers-reduced-motion: no-preference) {
+  .ch-spark svg { animation: ch-breathe 4.2s ease-in-out infinite; }
+  .ch-spark[data-state="think"] svg { animation: ch-think 1.3s cubic-bezier(.6, 0, .3, 1) infinite; }
+  .ch-spark[data-state="speak"] svg { animation: ch-speak 1.1s ease-in-out infinite; }
+}
+
+/* etykieta „Przykładowa rozmowa”: przerywana włosowa obwódka = przykład, nie prawdziwy czat */
+.ch-tag { display: inline-flex; align-items: center; flex: none; height: 24px; padding: 0 10px; border-radius: 999px; border: 1px dashed rgba(255, 255, 255, .3); font-size: 12.5px; line-height: 1; color: #cbd5e1; white-space: nowrap; }
+
+.ch-stage { position: relative; min-width: 0; border-radius: 22px; background: var(--ch-glass); box-shadow: var(--sv-edge); }
+
+.ch-msg { display: flex; align-items: flex-start; gap: 10px; }
+.ch-msg[data-who="client"] { justify-content: flex-end; padding-left: 14%; }
+.ch-msg[data-who="bot"] { padding-right: 8%; }
+.ch-msg > .ch-spark { width: 18px; height: 18px; margin-top: 13px; }
+.ch-bub { margin: 0; min-width: 0; padding: 11px 16px 12px; font-size: 16px; line-height: 1.5; text-wrap: pretty; overflow-wrap: anywhere; }
+.ch-msg[data-who="client"] .ch-bub { border-radius: 18px 18px 5px 18px; border: 1px solid rgba(255, 255, 255, .22); background: rgba(255, 255, 255, .05); color: #f1f5f9; }
+.ch-msg[data-who="bot"] .ch-bub { border-radius: 5px 18px 18px 18px; border: 1px solid rgb(var(--sv-ac) / .5); background: rgb(var(--sv-ac) / .09); color: #f8fafc; }
+.ch-w { display: inline-block; }
+@keyframes ch-w { from { opacity: 0; transform: translateY(.3em); } }
+@keyframes ch-in { from { opacity: 0; transform: translateY(14px); } }
+.sv[data-live] .ch-msg { transition: opacity .6s ease, transform .8s var(--sv-ease); }
+.sv[data-live] .ch-msg[data-state="off"] { opacity: 0; transform: translateY(12px); transition: none; }
+.sv[data-live] .ch-msg .ch-bub { transition: opacity .5s ease; }
+.sv[data-live] .ch-msg[data-state="think"] .ch-bub { opacity: 0; transition: none; }
+.sv[data-live] .ch-say[data-say="0"] .ch-w { opacity: 0; }
+.sv[data-live] .ch-say[data-say="1"] .ch-w { animation: ch-w .55s ease both; animation-delay: calc(var(--i) * 42ms); }
+
+.ch-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.ch-chip {
+  min-height: 46px; padding: 10px 18px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .22);
+  background: rgba(0, 0, 0, .45); color: #f1f5f9; font-size: 15.5px; line-height: 1.3; text-align: left; cursor: pointer;
+  transition: border-color .35s ease, background-color .35s ease, opacity .4s ease;
+}
+.ch-chip:focus-visible { outline: 2px solid #60a5fa; outline-offset: 3px; }
+.ch-chip[aria-pressed="true"] { border-color: rgb(var(--sv-ac) / .85); background: rgb(var(--sv-ac) / .13); }
+.ch-chip:disabled { opacity: .45; cursor: default; }
+@media (hover: hover) { .ch-chip:not(:disabled):hover { border-color: rgb(var(--sv-ac) / .75); } }
+
+/* ══ SEKCJE (runda 2): wspólny rytm, nagłówek sekcji, narrator przypiętej sceny, zapytanie w skrzynce ══ */
+.ch-sec { position: relative; z-index: 1; padding: 104px 0 0; }
+@media (min-width: 1024px) { .ch-sec { padding-top: 150px; } }
+.ch-sec-head { position: relative; z-index: 2; }
+.sv.ch .ch-sec-head .sv-h2 { margin: 0 0 18px; max-width: 18ch; }
+.sv.ch .ch-sec-lead { margin: 0; max-width: 34rem; text-wrap: pretty; }
+.sv[data-live] .ch-sec-head > * { transition: opacity 1.1s ease, transform 1.2s var(--sv-ease); }
+.sv[data-live] .ch-sec-head > :nth-child(2) { transition-delay: .12s; }
+.sv[data-live] .ch-sec-head:not([data-in]) > * { opacity: 0; transform: translateY(18px); transition: none; }
+
+/* Narrator (Narr / setNarr w talk.tsx): zdania leżą w jednym miejscu i widać JEDNO naraz; nad nimi paski kroków,
+   pasek bieżącego kroku wypełnia się z postępem sceny (--f). Bez JS / ograniczony ruch: zwykła numerowana lista. */
+.ch-narr { list-style: none; display: grid; gap: 12px; margin: 0; padding: 0; max-width: 36rem; }
+.ch-narr-i { position: relative; display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 12px; align-items: start; min-width: 0; }
+.ch-narr-bar { display: none; }
+.ch-narr-n {
+  display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; border: 1px solid rgb(var(--sv-ac) / .6);
+  font-size: 12px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; color: var(--ch-ac-hi);
+}
+.ch-narr-t { font-size: clamp(17px, 1.5vw, 21px); line-height: 1.45; color: #f8fafc; text-wrap: balance; }
+@media (prefers-reduced-motion: no-preference) {
+  .sv[data-live] .ch-narr { gap: 0; }
+  .sv[data-live] .ch-narr-i { grid-area: 1 / 1; padding-top: 18px; }
+  .sv[data-live] .ch-narr-bar {
+    display: block; position: absolute; top: 0; height: 2px; border-radius: 2px; overflow: hidden; background: rgba(255, 255, 255, .15);
+    left: calc(var(--i) * (100% + 8px) / var(--n)); width: calc((100% - (var(--n) - 1) * 8px) / var(--n));
+  }
+  .sv[data-live] .ch-narr-bar i { display: block; height: 100%; background: rgb(var(--sv-ac)); transform-origin: 0 50%; transform: scaleX(var(--f, 0)); }
+  .sv[data-live] .ch-narr-i[data-on="2"] .ch-narr-bar i { transform: none; }
+  .sv[data-live] .ch-narr-i :is(.ch-narr-n, .ch-narr-t) { opacity: 0; transform: translateY(10px); transition: opacity .45s ease, transform .7s var(--sv-ease); }
+  .sv[data-live] .ch-narr-i[data-on="1"] :is(.ch-narr-n, .ch-narr-t) { opacity: 1; transform: none; transition-delay: .12s; }
+}
+
+/* Gotowe zapytanie w skrzynce (InboxCard w talk.tsx; ten sam pojemnik ma lista języków w glos.tsx): przed `data-on` pola są puste (włosowe kreski), potem
+   (prawa kolumna szersza - stoją w niej dłuższe wartości: „Czego potrzebuje” i adres e-mail)
+   wypełniają się po kolei, a górna linia karty zapala się kolorem podstrony. */
+/* RUNDA 6 (właściciel 2026-10-05: „ten element zrób bardziej pasujący do designu, bo trochę odstaje”): karta mówi
+   językiem dymków hero - ciemne szkło, obwódka świecąca od góry (.ch-lit; po nadejściu wiadomości światło w kolorze
+   podstrony, ::after), a w środku NOWA WIADOMOŚĆ jak na liście poczty: kropka „nieprzeczytane”, kto + kiedy, niżej
+   czego potrzebuje i kontakt. Dawna siatka etykiet i wartości na szarawym szkle USUNIĘTA. Wymiary w em - skalę
+   ustawia font-size karty (Noc: większa, Plan: skala motywu). */
+.ch-inbox { position: relative; display: grid; gap: .85em; padding: 1em 1.25em 1.15em; border-radius: 1.15em; background: rgba(5, 5, 6, .93); font-size: 15px; line-height: 1.35; color: #e2e8f0; }
+.ch-inbox::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: linear-gradient(180deg, rgb(var(--sv-ac) / .95), rgb(var(--sv-ac) / .32) 48%, rgb(var(--sv-ac) / .1) 92%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  transition: opacity .9s ease;
+}
+.ch-inbox-t { display: flex; align-items: center; gap: .55em; margin: 0; padding-bottom: .8em; border-bottom: 1px solid rgba(255, 255, 255, .12); font-size: .9em; font-weight: 500; line-height: 1.3; color: #cbd5e1; transition: color .6s ease; }
+.ch-inbox-t svg { flex: none; width: 1.1em; height: 1.1em; color: rgb(var(--sv-ac)); }
+.ch-inbox-mail { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "who when" "need need" "mail mail"; gap: .3em 1em; margin: 0; padding-left: 1.3em; }
+.ch-inbox-mail::before { content: ''; position: absolute; left: 0; top: .48em; width: .5em; height: .5em; border-radius: 50%; background: rgb(var(--sv-ac)); } /* nowa wiadomość */
+.ch-inbox-f { min-width: 0; }
+.ch-inbox-f[data-f="0"] { grid-area: who; }
+.ch-inbox-f[data-f="1"] { grid-area: need; }
+.ch-inbox-f[data-f="2"] { grid-area: when; }
+.ch-inbox-f[data-f="3"] { grid-area: mail; }
+.ch-inbox-f dt { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.ch-inbox-f dd { position: relative; margin: 0; color: #f1f5f9; overflow-wrap: anywhere; }
+.ch-inbox-f[data-f="0"] dd { font-size: 1.08em; font-weight: 600; letter-spacing: -.01em; color: #fff; }
+.ch-inbox-f[data-f="2"] dd { padding-top: .16em; font-size: .88em; font-variant-numeric: tabular-nums; white-space: nowrap; color: #94a3b8; }
+.ch-inbox-f[data-f="3"] dd { font-size: .92em; color: #94a3b8; }
+.sv[data-live] .ch-inbox dd::before { content: ''; position: absolute; left: 0; top: .7em; width: min(100%, 9em); height: 1px; background: rgba(255, 255, 255, .22); opacity: 0; transition: opacity .4s ease; }
+.sv[data-live] .ch-inbox-mail::before { transition: opacity .4s ease .15s, transform .7s cubic-bezier(.22, .61, .36, 1) .15s; }
+.sv[data-live] .ch-inbox:not([data-on])::after { opacity: 0; }
+.sv[data-live] .ch-inbox:not([data-on]) .ch-inbox-t { color: #94a3b8; }
+.sv[data-live] .ch-inbox:not([data-on]) .ch-inbox-mail::before { opacity: 0; transform: scale(.4); transition: none; }
+.sv[data-live] .ch-inbox:not([data-on]) dd { color: transparent; }
+.sv[data-live] .ch-inbox:not([data-on]) dd::before { opacity: 1; }
+.sv[data-live] .ch-inbox[data-on] dd { transition: color .7s ease calc(var(--i) * 150ms + 200ms); }
+
+/* ══ TELEFON I TABLET (części wspólne) ══ */
+@media (max-width: 1023.98px) {
+  .sv.ch .sv-lead { max-width: 34rem; }
+}
+@media (max-width: 639.98px) {
+  .ch-hero-in { gap: 36px; padding-top: 116px; }
+  .ch-col { gap: 34px; }
+  .ch-sec { padding-top: 88px; }
+  .sv.ch .sv-actions { gap: 10px; }
+  .ch-try { height: 52px; padding: 0 20px; }
+  .ch-bub { font-size: 15.5px; }
+  .ch-msg[data-who="client"] { padding-left: 8%; }
+  .ch-msg[data-who="bot"] { padding-right: 0; }
+  .ch-chip { padding: 10px 16px; font-size: 15px; }
+  .ch-narr-t { font-size: 16.5px; }
+}

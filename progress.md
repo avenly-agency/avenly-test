@@ -1,42 +1,53 @@
 # avenly-web — Progress
 
 ## Status
-**Ostatnia aktualizacja:** 2026-06-01
+**Ostatnia aktualizacja:** 2026-10-07 (przegląd koordynatora: dokumentacja główna doprowadzona do stanu po wdrożeniu `a6a206db` z 2026-10-06 - lista wdrożeń w „Stan wdrożenia”, log etapów 2 i 3 w „Iteracje zrealizowane”; nic nie było budowane ani wdrażane). Wcześniej 2026-10-06 (siedem wdrożeń, ostatnie `a6a206db`; wśród nich `292f5691`: poprawka mignięcia hero Chatbotów AI na wejściu i akcent nagłówka Wiedzy „Nie zmyśla.”; wcześniej `f2f29804`: optymalizacja hero i sekcji Realizacje na stronie głównej; wcześniej `fad591c2`: tło `/uslugi` i `/realizacje` też bez interakcji z kursorem; wcześniej `74b14420`: optymalizacja podstron usług i tło bez interakcji z kursorem; wcześniej tego dnia `bc047217`: cały bieżący stan etapu 3 na avenly.pl - patrz „Stan wdrożenia”). Wcześniej 2026-09-30 (wdrożenie `a540e815`: poprawka Search Console - Opinie bez JSON-LD Review; poszedł też bieżący stan podstron etapu 2, patrz „Stan wdrożenia”). Wcześniej 2026-09-29 (praca równoległa etap 2: strona Kontakt zamknięta - Obok siebie + tło Opływ + formularz Bez karty, lokalnie, niewdrożona). Wcześniej tego dnia: Blog na stronie głównej = Panorama, wdrożone na avenly.pl, deploy `e49199f5`. Wcześniej 2026-09-28 (Oferta: nowe copy usług, bez WordPressa / CMS i obietnic kurierskich, UI/UX i audyt jako dodatki, przycisk „Cała oferta” w kolorze usługi; zasady w PRODUCT.md „Co obiecujemy w ofercie”)
 **Tracker główny:** `C:\Users\Start\Desktop\progress.md`
-**Pełny kontekst projektu:** [project_context.md](./project_context.md)
+**Pełny kontekst projektu:** [project_context.md](./project_context.md) · **szczegóły i decyzje właściciela:** [CLAUDE.md](./CLAUDE.md)
+
+### Stan wdrożenia (2026-10-07)
+- **Na avenly.pl - stan z 2026-10-06, ostatnie wdrożenie `a6a206db`.** Produkcja = bieżący stan repozytorium (sprawdzone 2026-10-07: po buildzie z 2026-10-06 14:50 nie zmienił się żaden plik źródłowy; kolejność wdrożeń potwierdzona poleceniem `wrangler pages deployment list`). Na produkcji są: strona główna i podstrony etapu 2 w wersjach końcowych, one-page (zamknięta) oraz **podstrony w pracy w wariantach domyślnych przełączników** (strona firmowa, Strona interaktywna, sklep, system CRM, chatboty AI, O nas) - bez panelu propozycji. **Po zamknięciu tych podstron trzeba wdrożyć ponownie.**
+- **Siedem wdrożeń 2026-10-06** (każde na polecenie właściciela wydane w chacie danej podstrony; każde = cały bieżący stan repozytorium; build ze sprawdzaniem typów; produkcja sprawdzona tylko `curl`-em z `C:\Windows\System32`): (1) `90723428` - CRM: „zbudowany” zamiast „szyty”, bez linii dowodów pod przyciskiem, lżejsza sekcja modułów „W dół”; (2) `9afa4557` - nowa nazwa usługi „Strona interaktywna” w całym serwisie (adres bez zmian); (3) `292f5691` - chatboty: poprawka mignięcia hero na wejściu (`sv-wait`), akcent Wiedzy „Nie zmyśla.” (szczegóły w następnym punkcie); (4) `1a4a7f4a` - Strona interaktywna: wejście pierwszego ekranu „Wschód”, gwiazda na czole nici, przegląd wydajności podstrony; (5) `6bd06458` - mgławica podstron usług: blask i winieta liczone w każdej klatce (opcja `liveGlow` w `realizacje/_rl/nebula.ts`, włączona w `_usluga/sky.tsx`); (6) `1f8381e3` - mgławica podstron usług: płynna odsłona przy wejściu (front odsłony w kompozycji, zegar odsłony krokami); (7) `a6a206db` - mgławica podstron usług: gaz jako dwie przenikające się klatki kluczowe, spoczynek ~30 kl./s. **Niesprawdzone:** żadna z tych zmian nie była oglądana w przeglądarce (warianty shadera mgławicy sprawdzone tylko statycznie - przy błędzie budowania moduł wraca do zwykłego wariantu); płynność ocenia właściciel; ESLint i Lighthouse nie były puszczane.
+- **Stan lokalny 2026-10-07:** serwer deweloperski Avenly na :3001 nie działał (port wolny); dysk 23 GB wolne (91% zajęte); praca nadal niezacommitowana w git.
+- **Szczegóły wdrożenia `292f5691`** (2026-10-06, trzecie z siedmiu tego dnia, na polecenie właściciela: „wrzuć wszystkie zmiany na avenly.pl”): poprawka mignięcia układu statycznego w hero Chatbotów AI na wejściu (zdanie filmu i pole pytań z klasą szkieletu `sv-wait` + reguła `.sv:not([data-live]) .sv-wait` w `usluga.css`) oraz akcent nagłówka Wiedzy „Nie zmyśla.” zamiast „Wie, czego nie wie.” (także punkt Zakresu i EN). Sprawdzone jednym `curl` na produkcji: nowy tekst i klasy są w HTML. Nie oglądane w przeglądarce.
+- **Na avenly.pl - WSZYSTKO, czwarte wdrożenie 2026-10-05** (deploy `f2f29804`, na polecenie właściciela: „wrzucaj na avenly.pl”). Poszła optymalizacja dwóch pierwszych sekcji strony głównej (właściciel: „zoptymalizuj pierwszą sekcję strony głównej oraz drugą, bo lagują”, „zoptymalizuj hero całe, żeby nie lagowało”, „teraz drugą sekcję”): tempo rysowania hero i Realizacji liczone z czasu i zależne od aktywności, shader planety w dwóch przebiegach (szum w połowie rozdzielczości), pauza sceny hero przy < 30% widoczności, szklany przycisk „Zobacz realizacje” bez `backdrop-filter`, mgławica Realizacji bez liczenia przed odsłoną sekcji, znikające i ukryte kadry bez rozmycia tła (szczegóły: PRACA-ROWNOLEGLA.md „Wydajność podstron usług”, CLAUDE.md „Hero strony głównej” i tabela shaderów). Build: 43 strony, sprawdzanie typów czyste. Sprawdzone po wdrożeniu (odpowiedzi serwera, bez przeglądarki): strona główna, `/en/`, `/o-nas/`, `/uslugi/`, sklep, chatboty, `/realizacje/` + case study, `/kontakt/`, `/blog/`, `/sitemap.xml` = 200; nieistniejąca strona = 404; plik RSC strony głównej = 200; lista plików JS na produkcji zgodna z lokalnym buildem (`/`, `/realizacje`, one-page); kawałki JS ze sceną hero (nowy shader planety) i sceną Realizacji są na produkcji. **Niesprawdzone - nowy shader planety nie był oglądany w żadnej przeglądarce przed wdrożeniem** (błąd kompilacji shadera = zostaje statyczny obraz planety), wygląd i płynność na komputerze i telefonie, ESLint, Lighthouse. **Po zamknięciu podstron w pracy trzeba wdrożyć ponownie.**
+- **Wcześniej tego dnia na avenly.pl - WSZYSTKO, trzecie wdrożenie 2026-10-05** (deploy `fad591c2`, na polecenie właściciela: „wrzucaj na avenly.pl”). Poszło: tło katalogu `/uslugi` z kategoriami i podstrony `/realizacje` z case studies bez interakcji z kursorem (właściciel: „z podstrony /uslugi też usuń ten efekt”, „z realizacji też usuń”) - żadne tło-mgławica na podstronach nie reaguje już na kursor; reszta jak we wdrożeniu `74b14420`. Build: 43 strony, sprawdzanie typów czyste. Sprawdzone po wdrożeniu (odpowiedzi serwera, bez przeglądarki): strona główna, `/en/`, `/o-nas/`, `/uslugi/`, `/uslugi/strony-www/`, 6 podstron usług, `/realizacje/` + case study, `/kontakt/`, `/blog/`, `/en/services/`, `/en/work/`, `/sitemap.xml` = 200; nieistniejąca strona = 404; `/uslugi/design/ui-ux/` = 301; plik RSC Realizacji = 200; lista plików JS na produkcji zgodna z lokalnym buildem (`/uslugi`, `/uslugi/strony-www`, `/en/services`, `/realizacje`, case study, one-page; `/uslugi` zgodne po kilkunastu sekundach od wdrożenia - tyle trwa rozejście się nowej wersji). **Niesprawdzone:** wygląd i płynność w przeglądarce (komputer, telefon, ograniczony ruch, EN), ESLint, Lighthouse. **Po zamknięciu podstron w pracy trzeba wdrożyć ponownie.**
+- **Wcześniej tego dnia na avenly.pl - WSZYSTKO, drugie wdrożenie 2026-10-05** (deploy `74b14420`, na polecenie właściciela: „wrzuć na avenly.pl”, po przekrojowej optymalizacji podstron usług). Poszło: tło podstron usług bez interakcji z kursorem (właściciel: „usuń na każdej podstronie w usłudze hover na tle i dystorsję, bo laguje”), poprawki wydajności wszystkich sześciu podstron usług (lista w PRACA-ROWNOLEGLA.md, „Wydajność podstron usług”) oraz bieżący stan podstron w pracy (firmowa, na miarę, sklep, CRM, chatboty, O nas) w wariantach domyślnych przełączników. Build: 43 strony, sprawdzanie typów czyste (pierwsze sprawdzenie typów po optymalizacji). Sprawdzone po wdrożeniu (odpowiedzi serwera, bez przeglądarki): strona główna, `/en/`, `/o-nas/`, `/uslugi/`, `/uslugi/strony-www/`, 5 podstron stron WWW i CRM, chatboty, `/realizacje/` + case study, `/kontakt/`, `/blog/`, dwie trasy EN, `/sitemap.xml` = 200; nieistniejąca strona = 404; `/uslugi/design/ui-ux/` = 301 → `/uslugi/strony-www/`; pliki RSC one-page = 200; lista plików JS na produkcji zgodna z lokalnym buildem (one-page, sklep, chatboty). **Niesprawdzone:** wygląd i płynność w przeglądarce (komputer, telefon, ograniczony ruch, EN), Lighthouse. Uwaga: `curl` z Git Bash zwraca dla HTTPS błąd 43 - do sprawdzania produkcji używać `C:\Windows\System32\curl.exe`. **Po zamknięciu podstron w pracy trzeba wdrożyć ponownie.**
+- **Wcześniej tego dnia na avenly.pl - WSZYSTKO, wdrożenie 2026-10-05** (deploy `bc047217`, na polecenie właściciela: „wszystkie zmiany do teraz wrzuć na cloudflare na avenly.pl”, w trakcie pracy równoległej etapu 3). Poszło: zamknięte podstrony etapu 2 w wersjach końcowych (Usługi - katalog, Realizacje, Kontakt, Blog), nowe teksty Usług / Realizacji / Kontaktu, usunięta usługa „Projekt UI/UX” (301 z `/uslugi/design*` działa), **one-page (zamknięta)** oraz **bieżący stan podstron w pracy**: strona firmowa, strona szyta na miarę, sklep, system CRM, chatboty AI i O nas - tam, gdzie wybory właściciela są otwarte, produkcja pokazuje wariant domyślny przełącznika (panel propozycji nie trafia do produkcji). **Po zamknięciu tych podstron trzeba wdrożyć ponownie.** Build: 43 strony, bez błędów typów, dev server na :3001 działał w tym czasie. Sprawdzone po wdrożeniu (odpowiedzi serwera, bez przeglądarki): strona główna, `/en/`, `/o-nas/`, `/uslugi/`, `/uslugi/strony-www/`, 5 podstron stron WWW i CRM, chatboty, `/realizacje/` + case study, `/kontakt/`, `/blog/`, trasy EN, `/sitemap.xml` = 200; nieistniejąca strona = 404; `/uslugi/design/ui-ux/` = 301 → `/uslugi/strony-www/`; pliki RSC = 200; nagłówki h1 na produkcji zgodne z buildem. **Niesprawdzone:** wygląd i działanie w przeglądarce (telefon, ograniczony ruch, EN), Lighthouse - do weryfikacji końcowej. **Wrangler:** wdrożenie z profilu Avenly w `C:\Users\Start\.wrangler-avenly` (kontakt@avenly.pl, wrangler 4.147.0); globalne logowanie zostaje na koncie RKS. Wrangler ostrzega o brakujących nowych uprawnieniach tokenu (`k2.read` / `k2.write`) - na wdrożenia Pages nie wpływa, odświeżenie = `wrangler login` z tą samą zmienną `XDG_CONFIG_HOME` (wymaga kliknięcia w przeglądarce zalogowanej na konto Avenly).
+- **Wcześniej na avenly.pl - WSZYSTKO, wdrożenie 2026-09-30** (deploy `a540e815`, na polecenie właściciela: „wywołaj wrangler i wrzuć na produkcję”, mimo trwającej pracy równoległej etapu 2): (1) poprawka Search Console „Wiele weryfikacji bez obiektu aggregateRating” - sekcja Opinie bez JSON-LD Review (szczegóły INSTRUKCJA-SEO.md „Ocena Google”; po wdrożeniu kliknąć „Sprawdź poprawkę” w Search Console); (2) poprawka typów w `components/blog/BlogBackdrop.tsx` (build padał); (3) **razem z tym poszedł bieżący stan podstron etapu 2**: Kontakt (zamknięty), Blog (zamknięty) oraz O nas, Usługi i Realizacje w WARIANTACH DOMYŚLNYCH przełączników (O nas: Kropka + Korekta, Usługi: tło Kropla, Realizacje: Scena + ramka Szkło + tło Kurtyna) - wybory właściciela jeszcze otwarte, po nich trzeba wdrożyć ponownie. Sprawdzone po wdrożeniu: `/`, `/en/`, `/o-nas/`, `/uslugi/`, `/realizacje/`, `/kontakt/`, `/blog/`, `/en/work/` 200, nieistniejąca strona 404, pliki RSC 200, brak `"@type":"Review"` w HTML `/` i `/en/`. **Wrangler:** globalne logowanie było na koncie RKS (klubsportowyrks@gmail.com, używa go `rksweb`), a `npx wrangler@4` padał na `ECOMPROMISED` (blokada cache npm przy prawie pełnym dysku) - wdrożenie z wranglera 4.144.0 z cache npx, z logowaniem Avenly w osobnym katalogu `C:\Users\Start\.wrangler-avenly` (patrz CLAUDE.md „Deploy flow”). Build: dev server avenly-web działał w tym czasie na :3001 (:3000 zajmuje `rksweb`) - build go nie ruszył (Next 16 trzyma dev w `.next/dev`).
+- **Wcześniej na avenly.pl - WSZYSTKO, wdrożenie 2026-09-29** (deploy `e49199f5`, na polecenie właściciela: „tak reset i wrzucaj na avenly.pl”): sekcja Blog na stronie głównej = układ **Panorama** (przewijanie = jazda kamery w bok wzdłuż okładek, nagłówek w scenie, wszystko przy krawędziach wrappera; ograniczony ruch = karty) - szczegóły `docs/sekcje/blog.md`. Sprawdzone po wdrożeniu: `/`, `/blog/`, wpis, `/o-nas/`, `/kontakt/`, `/realizacje/`, `/uslugi/`, `/en/` 200, nieistniejąca strona 404, pliki RSC 200, Panorama w HTML strony głównej, bez przełącznika propozycji. Przed buildem serwer deweloperski zrestartowany z czystym `.next/dev` (zgoda właściciela; po zapełnieniu dysku 2026-09-28 cache Turbopacka dawał 404 na wszystkich podstronach poza `/`) - po restarcie wszystkie podstrony 200. Praca nadal NIEZACOMMITOWANA w git.
+- **Wcześniej na avenly.pl (Cloudflare Pages) - WSZYSTKO, wdrożenie 2026-09-28** (deploy `881f01e6`, na polecenie właściciela: „wrzuć wszystkie nowe zmiany na produkcję”): cała modernizacja strony głównej (Dlaczego Avenly, Proces, Opinie, Oferta, Blog, stopka), nowe copy sekcji, usunięta ocena „5,0 na Google”, jeden kolor marki. Sprawdzone po wdrożeniu: strony PL / EN 200, 404 z własną stroną, pliki RSC (`flatten-rsc`) 200, nowe teksty i token `--brand` w CSS na produkcji. Wrangler zalogowany na kontakt@avenly.pl (logowanie RKS zastąpione). Uwaga: praca nadal NIEZACOMMITOWANA w git.
+- **Wcześniej na produkcji:** wszystko do poprawki tekstów realizacji Kardyś włącznie (2026-09-25).
+- **Historycznie „tylko lokalnie” do 2026-09-28 (dziś już na produkcji):** płynne przejście Realizacje → „Dlaczego Avenly”, czat bez `backdrop-filter`, cała nowa sekcja „Dlaczego Avenly” (Stos warstw + Konstelacje, 11 rund z 2026-09-26: karty w głębokiej czerni z zakładką (numer + kategoria), teren z warstwic na całej karcie (jasno przy wizualizacji, czysto pod tekstem), konstelacja z historią krok po kroku (napis kroku na dole karty), karty 2 i 4 w lustrze, stos z efektami przewijania na każdej szerokości (także telefon), kształty tła w kolorze karty na ekranie), etykiety sekcji „Gwiazda” we wszystkich sekcjach strony głównej, tło „Dlaczego Avenly” = Mapa warstwic + tekst u góry, sekcja „Proces” = szklana Wstęga + tło Głębia (zamknięta), **usunięta sekcja „Asystent AI”** (2026-09-27, po Opiniach od razu Oferta), sekcja „Oferta” = układ Plan z żyjącymi rysunkami, indeks Karty, zegar Obwódka, bez tła (2026-09-27, zamknięta), a 2026-09-28 nowe copy usług i zasady „Co obiecujemy w ofercie” (bez WordPressa / CMS, bez obietnicy integracji z kurierami także w `/uslugi` i na podstronie sklepu, UI/UX i audyt jako dodatki, AI w CRM jako opcja) oraz przycisk „Cała oferta” w kolorze usługi.
+- **Czeka na decyzję właściciela (chat 0):** nic - „Dlaczego Avenly” i „Proces” zamknięte. Rozstrzygnięte: 2026-09-26 „Dlaczego Avenly” = Stos warstw + Konstelacje, etykiety sekcji = Gwiazda; 2026-09-27 tło „Dlaczego Avenly” = Mapa warstwic, tekst w karcie = U góry, „Proces” = Wstęga, materiał Szkło, tło Głębia.
+- **Praca równoległa (od 2026-09-27):** 6 chatów modernizuje sekcje strony głównej równolegle - podział i zasady w [PRACA-ROWNOLEGLA.md](./PRACA-ROWNOLEGLA.md), notatki chatów w `docs/sekcje/*.md` (konsolidacja do dokumentacji głównej po zakończeniu).
+- **Git:** większość pracy od czerwca (Sesje 28-31 i wrzesień) jest niezacommitowana w drzewie roboczym.
 
 ## Aktualne wyniki
 
 | Metryka | Wartość |
 |---|---|
-| **PageSpeed mobile** | 85 / 100 (z shaderami na mobile, oczekiwany spadek 5-10pt do weryfikacji) |
-| **PageSpeed desktop** | 99 / 100 |
-| **FCP / LCP / CLS / TBT (mobile)** | 2.8s / 4.1s / 0 / 30ms |
-| **Accessibility issues** | 0 (zero) |
-| **SEO** | 8 typów JSON-LD schema, robots 2026-ready |
+| **Hosting** | Cloudflare Pages od 2026-09-19 (`npm run deploy`), `_headers` + `_redirects`, poczta na Hostingerze |
+| **PageSpeed (ostatni pomiar PSI, Sesja 22)** | mobile 85 / desktop 99 — **do ponownego pomiaru** po nowym hero i sekcjach |
+| **Lighthouse lokalny (Sesje 29-31)** | desktop 95-97 (LCP 1,0-1,2 s = render planety, CLS 0); mobile z throttlingiem LCP hero 2,4-2,6 s, CLS 0 |
+| **Accessibility issues** | 0 zgłoszonych (kontrasty AA poprawione względem makiet hero / Realizacji) |
+| **SEO** | 9 typów JSON-LD (Service na 6 podstronach usług po usunięciu UI/UX, ItemList realizacji), hreflang PL/EN, robots 2026-ready, pełny blok Open Graph na podstronach (2026-10-01) |
 | **AI search** | Google AI Overviews aktywnie cytuje z linkiem |
-| **Blog content automation** | 2 slash commands (`/new-post`, `/blog-research`) z multi-source research mode |
-| **Impact section** | WebGL shaders (TOPO/ORBS/VOLTAGE/SCAN) + Dramatic GlassEdge (blur 16px, mask 15%) |
-| **WebGL shaders count** | **12 lokalizacji** (Sesja 24: dodany PortfolioFlowBackground — subtle aurora pod Portfolio sticky child) |
-| **GlassEdge tiers** | **3**: Medium (Impact) / Strong (5 service subpages) / Dramatic (UI/UX bento + hero mockup + /o-nas stat cards) |
-| **Chat dispatch** | **6 lokalizacji**: AiConsultant, AvenlyAICta (×7 pages), Portfolio, /realizacje (card + CTA), /o-nas (FAQ card) |
-| **Production navigation** | ✅ Naprawione — flatten-rsc.mjs post-build script + Framer Motion removal z Services/ServicesHub + SmoothScrolling pathname reset simplified |
-| **Safari mobile compatibility** | ✅ Sesja 21+22 — Chatbot dvh, filter scroll fix, sticky piny dvh, overflow-x-clip (Sesja 22 cofnięte z hidden bo łamało sticky), backdrop-filter -webkit prefixes |
-| **Mobile UX bugs fixes** | ✅ Sesja 22 — 4 zgłoszone bugi mobile naprawione (menu horizontal scroll, random scroll-to-top, ServicesHub filter UX, service subpages scroll-lock broken) |
-| **Service subpages shadery** | ✅ Sesja 22 — shadery aktywne na mobile (DPR clamp 1.0) i desktop (DPR 1.5/1.25) na 6 podstronach (5× strony-www + UI/UX) |
-| **Scope cards layout** | ✅ Sesja 23 — vertical stack (heading nad cards centered), max-w-2xl, mask 8%-92% (2 widoczne naraz), 5 podstron strony-www zsynchronizowane |
-| **Hero perf optimization** | ✅ Sesja 24 — Framer Motion intro animations (SSR-safe), `isolate` na text container, aurora deferred z requestIdleCallback + motion fade-in 1.2s, SSR baseline gradient, notification stack state-driven z layout animation |
-| **Portfolio depth** | ✅ Sesja 24 — 5 warstw głębi: aurora flow shader → grid dots → floor reflection → blobs → cards z baseline shadow + lift |
-| **Bento corner fix** | ✅ Sesja 24 — shader wrapper `inset-0` → `inset-px` w 7 plikach (eliminuje shader prześwitywanie przez border anti-aliasing na rounded corners) |
-| **content-visibility USUNIĘTY** | ✅ Sesja 26 — `.render-optimize` to no-op (GSAP pin #465 conflict + F5 scroll-jump). Perf zapewnia lazy-load + IO-pauza shaderów |
-| **chatboty-ai redesign** | ✅ Sesja 26 — Living Ask autoplay demo (zamiast scroll-locka) + bento Dots seed-varied + theme **orange** (był teal) + Plasma hero shader fade-in |
-| **Responsywność 2K/4K** | ✅ Sesja 26 — DEDYKOWANE breakpointy `3xl`=2560(2K)/`4xl`=3840(4K), **FullHD nietknięte**; szerszy `container` tylko od 2K (1920/2400px) + scrollbar per-theme |
-| **Copywriting (głos klienta)** | ✅ Sesja 27 — pełny przegląd copy całej strony w głosie korzyści ("Ty/zyskujesz/dostajesz"), wyjątek /o-nas (głos "my"); zero myślników em/en, jeden CTA "Bezpłatna konsultacja", zero fabrykowanych metryk, ★★★★★ 5,0 na Google zamiast fake avatarów |
-| **Cookie consent (RODO)** | ✅ Sesja 27 — pełny system: `lib/cookie-consent.ts` (4 kategorie, localStorage + cookie, wersjonowanie) + `CookieConsent.tsx` baner (compact + ustawienia per kategoria) + link "Ustawienia cookies" w Footer; gotowe do bramkowania GA/Meta przez `hasConsent()` |
-| **Polityka prywatności** | ✅ Sesja 27 — z 5-sekcyjnego szkicu do pełnych **12 sekcji RODO** ("Polityka prywatności i cookies"): administrator, podstawy prawne, cele, prawa, cookies (4 kat. z tabelami), odbiorcy/EOG, retencja, bezpieczeństwo i in. Wersja 1.0 od 2026-06-01 |
-| **Navbar theming per podstrona** | ✅ Sesja 27 — `getNavbarTheme()` → obiekt `NavTheme` (rekord `NAV_THEMES`); kropka, hover linków/hamburgera/social/CTA, blob menu mobile w kolorze motywu (blue/emerald/rose/amber/sky/orange); kropka `motion.span` z płynnym tweenem koloru |
-| **Drugi telefon kontaktowy** | ✅ Sesja 27 — +48 531 104 402; `lib/seo-data.ts` CONTACT `phone2`/`phone2Display` + kafel Telefon z dwoma klikalnymi numerami w `ContactSection.tsx` |
-| **Scope-card animacja fix** | ✅ Sesja 27 — usunięty konkurencyjny `y` translate (walczył ze spring rodzica), `viewport margin` → `amount: 0.4` (stagger sterowany scrollem), `scale:0.96` + ease-out-expo; naprawia "clanky" odczucie na 5 podstronach strony-www |
+| **Wersja EN** | ✅ Sesja 28 — `/en/` z przetłumaczonymi slugami |
+| **Strona główna** | Hero 12a (Sesja 29) → TechStack (ikony w szkle) → Realizacje (Sesje 30-31) → Impact → Process → Testimonials → Services → BlogTeaser → stopka (sekcje „Asystent AI” i CTA „Gotowy na cyfrową dominację?” usunięte 2026-09-27) |
+| **Podstrony (etap 2)** | ✅ `/uslugi` + `/uslugi/strony-www` (katalog: Kadr + Obrys + Mgławica, 2026-10-01), `/blog` + wpis (Wierna / Okładka, 2026-09-29), `/kontakt` (Opływ, 2026-09-29), `/realizacje` + case studies (Plansze + Mgławica, 2026-10-01); 🔎 `/o-nas` czeka na wybór wejścia i układu |
+| **Podstrony usług (etap 3)** | ✅ one-page (2026-10-02, szkielet `_usluga/`); 🔧 strona firmowa, Strona interaktywna, sklep, system CRM, chatboty AI - w pracy, na produkcji w wariantach domyślnych (stan: PRACA-ROWNOLEGLA.md) |
+| **Usługi** | 7 usług w 3 kategoriach (Strony WWW ×5, Automatyzacja AI, Marketing - audyt „wkrótce”); „Projekt UI/UX” usunięty 2026-10-01; „Strona szyta na miarę” → „Strona interaktywna” 2026-10-06 |
+| **WebGL shaders** | tabela w CLAUDE.md (stan 2026-10-07): strona główna (planeta hero, mgławica Realizacji, Impact ×4, Proces ×2), `/kontakt` (Opływ), `/blog` (linie), `/uslugi` i `/realizacje` (mgławice), 6 podstron usług (mgławica szkieletu + głębia kart na 4 podstronach stron WWW), `/o-nas` (pole światła, podstrona w pracy); stare shadery podstron usług (Rays, bento, UI/UX) nieaktywne (+2 w martwym `Portfolio.tsx`) |
+| **GlassEdge tiers** | nieużywany na żadnej aktywnej stronie (został w starych, nieimportowanych `*Client.tsx`); Medium (Impact) usunięty 2026-09-25 |
+| **„Dlaczego Avenly”** | ✅ Stos warstw + Konstelacje (2026-09-26) - stos kart z efektami przewijania na każdej szerokości; ✅ tło Mapa warstwic + tekst u góry (2026-09-27) |
+| **Oferta** | ✅ Plan (2026-09-27) - rysunki techniczne usług rysują się i ożywają scenkami z kamerą; karty z zegarem Obwódka; bez tła; telefon: zbliżenia kamery, swipe z obrazem za palcem; ✅ 2026-09-28 copy „chwyt + konkret”, uczciwe obietnice (PRODUCT.md), przycisk „Cała oferta” w kolorze usługi |
+| **Blog content automation** | 2 slash commands (`/new-post`, `/blog-research`), 3 posty |
+| **Production navigation** | ✅ `flatten-rsc.mjs` (Sesja 20) + `copy-404.mjs` (Sesja 28) w `npm run build` |
+| **Copywriting** | ✅ głos korzyści, jeden CTA, zero fabrykowanych metryk, bez em-dashy i rozstrzelonych wersalików (PRODUCT.md) |
+| **Cookie consent (RODO)** | ✅ Sesja 27 — gotowe do bramkowania GA/Meta przez `hasConsent()` |
+
+Historyczne wyniki sesji 20-27 (Safari, mobile UX, scope cards, hero perf starego hero, Portfolio depth, bento corner fix, 2K/4K, scrollbar, navbar theming, drugi telefon): opisane w logu niżej.
 
 ---
 
@@ -862,9 +873,287 @@ W trakcie sesji eksperymentalnie dodano toggle dla "Wersji B" makiety (drugi moc
 - **`app/globals.css`** — nowy utility `.no-scrollbar`.
 - Gotowe do **bramkowania przyszłych GA/Meta** przez `hasConsent('analytics')`; obecnie brak skryptów analytics, więc nic do blokowania.
 
+
+### Sesja 28 (2026-07-07) — Wersja EN + perf startu strony
+**Cel:** dwujęzyczna strona bez zmiany polskich URL-i.
+
+- **Architektura:** route groups `app/(pl)/` + `app/(en)/en/` z dwoma root layoutami (poprawny `<html lang>`), wspólny `components/layout/AppShell.tsx`. Słowniki w `lib/i18n/` (PL 1:1 z dawnym copy, EN w głosie korzyści), podawane przez props z server pages; globalne widgety wybierają język z `usePathname()`.
+- **Slugi EN przetłumaczone** (`/en/about-us`, `/en/contact`, `/en/work`, `/en/services/websites/online-store`...) - mapa `PL_TO_EN_SEGMENT` w `lib/i18n/locale.ts`, `localizeHref` / `switchLocalePath` / `i18nAlternates`; 301 ze starych `/en/<polski-slug>`.
+- **SEO:** hreflang `pl-PL` / `en` / `x-default` + canonical per język, sitemap z alternates; blog i polityka prywatności tylko PL.
+- **Custom 404 przy dwóch root layoutach:** trasa `app/(pl)/nie-znaleziono/` + post-build `scripts/copy-404.mjs`.
+- **Chatbot:** `language` w body do n8n, EN welcome fallback, quick replies na EN tylko z `label_en`.
+- **Perf:** async kompilacja shadera hero (`KHR_parallel_shader_compile`), leniwy start shaderów below-the-fold (warm IO 600 px), `DeferredClientWidgets` po `requestIdleCallback`.
+
+### Sesja 29 — Hero 12a (planeta + logotyp z cząstek + konstelacja usług)
+**Cel:** nowe hero z handoffu `claude-design/design_handoff_avenly_hero/` zamiast Aurora + powiadomień.
+
+- Scena: planeta WebGL (desktop) / statyczny render WebP (mobile, element LCP na każdej szerokości), logotyp AVENLY z ~30k cząstek (GPU na desktopie, canvas 2D na telefonie) z 3 stanami (wejście, lity napis, „dziura” pod kursorem / palcem), niebo z „luksusowymi” gwiazdami i konstelacją 6 usług jako prawdziwymi linkami.
+- Koncept CTA (decyzja właściciela): bez pola „adres Twojej strony” z makiety - h1 „Twój biznes ma potencjał. Zamień go w klientów.”, „Bezpłatna konsultacja” + „Zobacz realizacje”, linia dowodów z obronnymi faktami.
+- Kolejność wejścia: planeta → logotyp → tekst. Start sceny rozbity na taski ≤ ~50 ms (Lighthouse desktop 95-97, CLS 0).
+- Navbar: linki w osi strony, przełącznik PL/EN przy CTA. Szczegóły i zasady: CLAUDE.md „Hero strony głównej”.
+
+### Sesja 30 — Realizacje na stronie głównej (handoff 8b „Kurtyna”)
+- Nowa sekcja **Realizacje** zamiast dawnego Portfolio (poziomy scroll 300vh): kadr ze zrzutem strony klienta, kurtyna przy zmianie projektu, indeks 4 pozycji, panele informacji. `Portfolio.tsx` został na dysku jako martwy kod.
+- **Bez scroll-locka z makiety** (decyzja właściciela): kadry zmieniają się same co 5 s, klik / swipe / strzałki ręcznie, pauza przy kursorze nad indeksem (WCAG 2.2.2).
+- Dwa układy z jednego markupu: scena (desktop z myszą, 100vh) i flow (dotyk / < 1024). JSON-LD `ItemList`.
+
+### Sesja 31 (ok. 2026-09-23) — Realizacje: mgławica, układ „symetria z grupami”, czat, zasady copy
+- Tło sekcji: **mgławica WebGL** w barwach aktywnej realizacji (zastąpiła jedwab z handoffu), odbicie w podłodze i filtr falowania usunięte.
+- Układ sceny: nagłówek nad kadrem, kadr 90% makiety z panelami po bokach, pasek 4 miniatur na szerokość kadru z wędrującym wskaźnikiem, równy margines góra / dół.
+- Kadr = **ciemne fluid glass**; model przejścia „nadpisywany” (duchy kadrów przy szybkim klikaniu).
+- Czat: neutralne szkło (później zmienione na granatowe - 2026-09-24). Navbar: tło bez granatu.
+- PRODUCT.md: **zakaz rozstrzelonych wersalików / mono w etykietach** („AI slop”) - etykiety zwykłym Inter.
+
+### 2026-09-19 — Migracja hostingu na Cloudflare Pages
+- Hosting z Hostingera (Apache + `.htaccess`) na **Cloudflare Pages**: `npm run deploy` / `deploy:preview` (wrangler), `public/_headers` (bezpieczeństwo, cache, `noindex` na `*.pages.dev`), `public/_redirects` (301). `.htaccess` usunięty.
+- Purge cache po deployu niepotrzebny; poczta `@avenly.pl` zostaje na Hostingerze (MX/SPF/DKIM w DNS Cloudflare).
+
+### 2026-09-24 — TechStack, Realizacje (odsłona + mobile), czat, kadry AVIF
+- **TechStack:** wybór właściciela „Ikony w szkle” z 7 propozycji; 8 faktów z oferty, pętla bez szwu (4 kopie, -50%).
+- **Realizacje - wejście sekcji „wow”:** sekcja startuje jako czerń, shader maluje mgławicę od środka kadru i zapala gwiazdy; na desktopie jednorazowe dociągnięcie do sekcji + blokada scrolla ~2 s (jedyny wyjątek od zasady bez scroll-locka), na dotyku bez blokady i wcześniej (35% wys. okna).
+- **Realizacje - mobile:** jedna kolumna na szerokość kadru, pasek 4 miniatur z wskaźnikiem jak w scenie, panel 1-2 kolumny, cele 44 px, automat na dotyku odkładany o 10 s po dotknięciu, ręczny wybór wyłącza automat (WCAG 2.2.2); mgławica także na telefonach (poza Save-Data / ≤ 2 GB RAM).
+- **Realizacje - jakość:** kadry AVIF (główne) + WebP (zapas) z masterów 3840×2160 (`scripts/realizacje-images.mjs`), bez tiltu kursora (ostrość), fix szybkiego klikania (duchy w kolejności wyboru, jedno tło pod kurtyną).
+- **Czat:** nowa odsłona - granatowe szkło, obwódki ze światłem z góry, akcent motywu podstrony.
+
+### 2026-09-25 — Kardyś, przejście Realizacje → Impact, „Dlaczego Avenly”
+- **Kardyś (teksty realizacji):** punkt wyjścia = przestarzała strona na WordPressie i sklep bez zamówień; dziś nowa strona, sklep z płatnościami online i panel do zarządzania stroną oraz sklepem. Poprawka właściciela: **bez personalizacji graweru** (usunięta też z `projects.ts` i case study). Wdrożone na avenly.pl.
+- **Płynne przejście** z Realizacji do „Dlaczego Avenly”: nakładka `.rz-box::after` gasnąca do `#050505`.
+- **Impact - dostosowanie do nowego języka (nie redesign):** nagłówek jak w Realizacjach, kafle z obwódką świecącą od góry w kolorze kafla, ikony w okrągłych plakietkach, 98/100 PageSpeed zamiast „99%”, link „Chatboty AI →”, „hostingowi na Cloudflare”.
+- **„Bez matowego efektu”** (2 rundy): usunięte `GlassEdge`, mgiełki i rozmyte poświaty z kafli; czat bez `backdrop-filter` (pełne tło); shadery kafli na komputerze do DPR 2.
+- **Wizualizacje kafli wtopione w shader:** 7 propozycji (Konstelacje, Orbity, Siatka punktów, Mini interfejsy, Nurt, Radar, Kręgi na wodzie) przez jeden uogólniony `VIZ_GLSL` + sceny w `components/sections/impact/viz.tsx`; przełącznik tylko w `npm run dev`. Fix krycia płótna (jasność ≈ a³ → sumowanie w przestrzeni liniowej).
+- **Czytelność:** każdy kafel opowiada historię w 2-3 krokach - napis bieżącego kroku + pasek postępu jak w „stories”, podświetlenie podpisu węzła; kroki zgrane z rozbłyskami w shaderze przez wspólny `VIZ_EPOCH`; cykle wydłużone do 8-10,5 s (przelot impulsu 20% cyklu), halo pod napisami jak na mapach. Reduced motion = statyczna lista kroków.
+- Weryfikacja: headless Chrome z zamrożonym czasem (napisy, podpisy, pasek i shader zgodne), desktop 1920 i telefon 390, zero błędów konsoli.
+
+### 2026-09-26 — „Dlaczego Avenly”: czytelniej, bez zmatowienia, z głębią (trzecia runda)
+- **Zmatowienie - źródła i poprawki:** linie warstwic miały zmienną grubość i miękkie krawędzie (szerokie rozmyte pasy na płaskim terenie), gęste pierścienie wokół węzłów zlewały się w ziarnistą mgiełkę, węzły i impulsy miały gaussowskie poświaty, napisy - ciemne rozmyte halo, a na telefonie bufor 1,25x był rozciągany na ekran 3x. Teraz: linie o stałej szerokości w px wygładzone na 1 px (`OES_standard_derivatives`), gęste warstwice gasną zamiast migotać, zero poświat, bez `text-shadow`, na dotyku DPR 2 (Save-Data / ≤ 2 GB RAM: 1,25).
+- **Głębia:** warstwice cieniowane metodą Tanaki (światło z lewej góry), wyżej jaśniejsze, co 4. grubsza; paralaksa terenu za kursorem i przy przewijaniu (schemat stoi, teren płynie pod nim); "fosa" wokół schematu - leży nad mapą; tło kafli i plakietek oświetlone od góry.
+- **Czytelność:** historia jak stepper - przebyte odcinki i osiągnięte węzły świecą do końca cyklu, przyszłe są puste, groty kierunku, dotarcie = ostry pierścień; podpisy węzłów w chipach z numerem kroku (ten sam numer przed napisem kroku), 3 stany podpisu (przed / teraz / zaliczony); atak zatrzymuje się na pierścieniu Cloudflare; łuk wydajności z podziałką 0 / 100 i podpisem „98”; tekst kafli na czystym tle (shader gasi warstwice pod elementami `data-im-shield`).
+- Wszystkie 7 propozycji stylu działają na nowym potoku (wspólny `VIZ_GLSL`); wybór stylu nadal czeka na właściciela.
+- Weryfikacja: zrzuty headless (desktop 1920, retina 1440, telefon 390 @3x), stany podpisów przy zamrożonym czasie zgodne z krokami, paralaksa sprawdzona dwoma położeniami kursora, 4 shadery kompilują się bez błędów, `tsc` czysto.
+
+### 2026-09-26 — „Dlaczego Avenly”: propozycje układu sekcji zamiast bento (przełącznik „Układ sekcji”)
+- Prośba właściciela: „ciekawiej niż bento grid, kilka propozycji restrukturyzacji + dodatkowy toggle”. Drugi przełącznik (tylko `npm run dev`), produkcja nadal = bento.
+- **Rozdziały** (tekst po lewej, przyklejona scena z dużą wizualizacją po prawej), **Droga klienta** (korzyści jako etapy drogi klienta na jednej linii wypełnianej przewijaniem), **Stos warstw** (karty nasuwają się na siebie, przykryte cofają się w głąb), **Panel** (lista-akordeon + scena, automat = jeden cykl historii); do tego bento bez zmian.
+- Refaktor: shadery i `ShaderCanvas` w `components/sections/impact/shader.tsx` (z `paused` i `epoch` - historia od kroku 1, gdy kafel się pokazuje), układy w `impact/layouts.tsx`, `Impact.tsx` = nagłówek + przełączniki; sekcja `overflow-x-clip` zamiast `overflow-hidden` (sticky).
+- Weryfikacja: zrzuty każdego układu na 1440 i 390, bento identyczne jak przed refaktorem, kafle schowane nie uruchamiają shadera, `tsc` i ESLint czysto.
+
+### 2026-09-27 — Sekcja „Asystent AI” usunięta ze strony głównej (praca równoległa, chat 2)
+- Trzy rundy propozycji modernizacji sekcji (pokaz rozmowy z asystentem między Opiniami a Ofertą): runda 1 (Nocna zmiana, Rozmowa, Gotowe zapytanie, Wielu klientów naraz) - „lack of soul, miałkie”; runda 2 (Postać, Głos ze światła, Poprzednia dopracowana) - wybrana „Poprzednia, dopracowana” ułożona poziomo; potem wersje tego konceptu (Konsola, Oś kroków, Identyfikator, Trzy panele).
+- Ostatecznie właściciel: „nie pasuje ta sekcja do reszty, jest trochę zbędna” → **„usuń sekcję z chatbotami”**. Asystenta pokazują już: karta 2 w „Dlaczego Avenly”, „Wirtualny Asystent AI” w Realizacjach, konstelacja hero, pasek pod hero, Oferta i prawdziwy czat w rogu.
+- Usunięte: `components/sections/AiConsultant.tsx`, `components/sections/ai-consultant/`, `lib/i18n/home/ai-consultant.ts`; w `components/home/HomeClient.tsx` import i blok sekcji (komentarz w miejscu importu), w `lib/i18n/home/index.ts` pole `aiConsultant`. Po Opiniach od razu Oferta (bez odstępu - sprawdzone), `/` i `/en/` działają, `tsc` i ESLint czysto.
+- Wnioski z rund (na wypadek powrotu tematu) w `docs/sekcje/asystent-ai.md`: „dusza” = asystent jako postać + rozmowa o biznesie odwiedzającego; pokaz musi mieścić się w wysokości ekranu.
+
+### 2026-09-27 — Usunięta sekcja CTA „Gotowy na cyfrową dominację?”
+
+- Decyzja właściciela („usuń, bo chyba jest niepotrzebna”). Powody: dublowała CTA z hero, Procesu i Oferty; niezgodna z PRODUCT.md (Title Case „Dominację”, hasło w stylu hype, niesprawdzalne „Dołącz do firm, które wyprzedziły konkurencję”, drugie CTA „Napisz do nas”, rozmyta poświata za kartą). Usunięte `components/sections/CallToAction.tsx`, `lib/i18n/home/cta.ts`, pole `cta` w `lib/i18n/home/index.ts`, blok `#kontakt` w `HomeClient`.
+- Kotwica `#kontakt` była celem przycisku „Darmowa Wycena” w nawigacji (komputer + menu na telefonie) i linku „Kontakt” w stopce - teraz prowadzą prosto na `/kontakt` (`localizeHref`: EN `/en/contact`), jeden krok mniej do formularza. Sprawdzone w przeglądarce (PL i EN).
+
+### 2026-09-27 — Sekcja „Opinie” zamknięta: Redakcja (praca równoległa, chat 1)
+- Wybór z Redakcja / Scena / Gwiazdy / Certyfikat; właściciel: „wybieram redakcję, ale podrasuj sekcję, dodaj gdzieś te animowane cudzysłowy ze sceny i w ogóle dodaj duszy tej sekcji, żeby nie była taka miałka”.
+- Rozkładówka magazynu: pierwsza opinia jako wielki cytat, druga w węższej szpalcie, stopka jak przypis („Cytaty bez skrótów i poprawek.”). Cytaty „w cudzysłowie”: znaki “ ” rysowane kreską na liniach nad i pod cytatami, co 8 s obiega je ostra plamka światła. Wspólne słowo „polecam” zakreślone w obu cytatach (pas koloru pod słowem, nie podkreślenie jak link). Każda strefa wchodzi, gdy sama pojawi się na ekranie.
+- Responsywność na prośbę właściciela (telefon, tablet, 2K+), link do profilu z celem dotyku 44 px. 2026-09-28: bez ogromnego „5,0”, gwiazdek i AggregateRating (słaby social proof), nowe copy nagłówka i podtytułu.
+- Pliki: `components/sections/Testimonials.tsx` + `testimonials/*`. Szczegóły: CLAUDE.md „Sekcja Opinie”, historia rund `docs/sekcje/opinie.md`.
+
+### 2026-09-28 — Stopka: Kropka „Nad i” (praca równoległa, chat 5)
+- Runda 1: Kropka / Wizytówka / Na żywo / Żaluzje / Obecna; wielki napis AVENLY z Kropki usunięty („ten napis avenly mi nie siedzi” - powtarzał logotyp z hero); runda 2 zakończeń: Nad i / Linia / Finał. Wybór: „wybieram kropka … zakończenie wybieram: nad i”.
+- Tytuł „Postaw kropkę nad i” (EN „Dot the i”) - kropka marki spada na „i” (pierścień przy lądowaniu, co 12 s błysk), biały przycisk „Bezpłatna konsultacja”; kolumny Usługi / Na skróty / Kontakt z wyraźnie większymi, białymi nagłówkami (poprawka właściciela); pasek prawny bez oceny Google; akcent w kolorze motywu podstrony; bez WebGL i framer-motion.
+- Pliki: `components/layout/Footer.tsx` + `footer/dot.tsx`, `footer/shared.tsx`, `footer.css`, `lib/i18n/footer.ts`. Szczegóły: CLAUDE.md „Stopka - Kropka nad i”, historia rund `docs/sekcje/stopka.md`.
+
+### 2026-09-28 — Redesign bloga (/blog i /blog/[slug])
+- Właściciel: „weźmy pod lupę jeszcze bloga, trzeba go zredesignować i dostosować do poziomu strony”. Dawny blog łamał zasady strony: rozmyte kule światła, gradientowy tekst, wersalikowe plakietki z pulsującą kropką, szkło (`backdrop-blur`), karty unoszące się i świecące po najechaniu, shader warstwic (motyw „Dlaczego Avenly”), fioletowe plamy na wpisie, filtr z 5 pustymi kategoriami, zagnieżdżony `<main>`.
+- `/blog`: etykieta „Blog” + „Konkretna wiedza. Bez żargonu.” + podtytuł jak sekcja Blog na stronie głównej, siatka tych samych kart (1 / 2 / 3 kolumny, wejście kaskadą), bez filtrów i wyszukiwarki; nowe metadane (bez „poradników”, sentence case).
+- `/blog/[slug]`: powrót „Wszystkie wpisy”, etykieta z kategorią, h1, zajawka jako wstęp, data i czas czytania; okładka w ramce jak karty; kolumna do czytania z typografią strony (kreski list w kolorze marki); cytat na końcu = karta z białym przyciskiem; „Czytaj dalej” (pozostałe wpisy); pasek postępu czytania w kolorze marki.
+- Linki CTA w 3 wpisach ujednolicone do „Bezpłatna konsultacja” (także w `docs/blog-style-guide.md` i `/new-post`). Usunięte: `BlogHero`, `BlogHeroBackground`, `BlogList`, `.blog-content`.
+- Weryfikacja: build + zrzuty z `out/` (1440 × 900 i 390 × 844, lista i wpis), bez błędów konsoli, hierarchia nagłówków h1 → h2 → h3; `tsc` i ESLint czysto. Uwaga: w dev serwerze `/blog/` wisi (zapamiętany błąd Turbopacka z pełnego dysku) - do restartu serwera.
+
+### 2026-09-28 — Jeden kolor marki (kropka logo #3b82f6)
+- Właściciel: pastelowy akcent nagłówków („baby blue” `#adcbfd`) i etykiety w tym kolorze się nie podobają, „trzeba brandingowo ujednolicić - kropka jest niebieska, nagłówki baby blue”. Audyt: 12 odcieni niebieskiego w interfejsie.
+- Tokeny w `globals.css` (blok „KOLOR MARKI”): `--brand` `#3b82f6` (kropka logo) + `--brand-rgb`, `--brand-hi` `#60a5fa` (hover / fokus / drobny tekst). Podpięte: akcenty nagłówków, gwiazdki i linie etykiet (tekst etykiet neutralny `#e2e8f0`), pasek pod hero (gwiazdki, linia, poświata szkła; ikony neutralne), Opinie (cudzysłowy, numery, zakreślenie), strzałka Bloga, najechanie na profile w stopce, scrollbar (dawniej `#2f5beb`). Nagłówek hero: akcent biały (niebieski zniknąłby na planecie). Etykieta „Oferta” nie zmienia już koloru z usługą, za to etykieta „Realizacje” ma gwiazdki i linie w kolorze aktywnej realizacji (`--rz-accent`, płynne przejście przy zmianie projektu).
+- Przełącznik propozycji akcentu (Obecny / Srebro / Błękit marki / Stal / Cienka biel) usunięty - decyzja „jak kropka” go rozstrzygnęła. Zasada w PRODUCT.md (Design Principles 11) i CLAUDE.md („Schemat kolorów”).
+- Poza zakresem (kodowanie treści, do decyzji): jasne odcienie usług w Ofercie (one-page `#93c5fd`, CRM `#7dd3fc`) i etapów Procesu (krok 1 `#93c5fd`).
+
+### 2026-09-28 — Copy sekcji strony głównej (chwyt, potem konkret)
+- Przegląd tekstów wszystkich sekcji wg PRODUCT.md (głos korzyści, „chwyt, potem konkret”, bez obietnic bez pokrycia). Zmiany tylko w słownikach (PL i EN), układ bez zmian.
+- **„Dlaczego Avenly”:** podtytuł zamiast banału „Świat pędzi do przodu. Nie zostawaj w tyle.” zapowiada 4 karty („Ładny wygląd to dopiero początek. Twoja strona sprzedaje, odpowiada klientom, jest widoczna w Google i działa bez przerw.”); tytuły kart = chwyt (kategorię mówi zakładka): „Z odwiedzającego w klienta”, „Żadne pytanie nie czeka do rana”, „Szybkość, którą widzi Google”, „Działa, kiedy klient jej szuka”; opisy bez „maszyny do pozyskiwania klientów” i „domykania tematów”.
+- **Proces:** opisy kroków w głosie korzyści (co Ty masz na etapie) zamiast „słuchamy i analizujemy” / „bierzemy na siebie”; krok 4 mówi o wsparciu po starcie (tytuł „Start i wsparcie” to obiecywał, opis nie).
+- **Opinie:** etykieta „Opinie”, nagłówek „Nie wierz nam na słowo. Uwierz klientom.” (EN „Don't take our word for it. Take theirs.”), link „Sprawdź opinie w Google” (dawniej zaproszenie do wystawienia opinii - nie do potencjalnego klienta).
+- **Realizacje:** Kardyś opisany efektem („Dziś ma nową stronę…”) zamiast „Postawiliśmy”; asystent bez żargonu „kwalifikuje zapytania” („Działa na tej stronie, w prawym dolnym rogu…”).
+- **Oferta:** wstęp „Nie szukasz osobno grafika, programisty i kogoś od AI…” (tytuł „Jeden zespół.” już mówi o zespole).
+- **Zgodność z „Co obiecujemy w ofercie”:** pasek pod hero „Panel do zarządzania firmą” zamiast „Panel do samodzielnej edycji” (obietnica CMS), węzeł konstelacji hero „Lokalne SEO” zamiast „SEO i marketing” (marketingu nie ma w ofercie).
+- Bez zmian: h1 hero, Blog, stopka (spełniają zasady).
+- **Ocena „5,0 na Google” usunięta z całej strony** (decyzja właściciela: „tak, usuń 5,0 na Google” - słaby social proof): linia dowodów hero („Bezpłatnie · bez zobowiązań · odpowiedź w 24 h”), sekcja Opinie (bez ogromnego „5,0”, gwiazdek i paralaksy liczby; nagłówek w jednej kolumnie, podtytuł „Tak o współpracy z Avenly piszą klienci w Google.”, bez zdania „Wspólne słowo w każdej opinii” - „polecam” zakreślone tylko w cytatach), CTA 5 podstron stron WWW (blok „★★★★★ 5,0 na Google od naszych klientów.”), JSON-LD: bez AggregateRating (sekcja Opinie i globalny LocalBusiness w `lib/schemas.ts`) i bez `reviewRating` - Review z autorem i treścią zostaje. PRODUCT.md zasada 4 i INSTRUKCJA-SEO.md zaktualizowane.
+- Weryfikacja: zrzuty 1440 × 900 i 390 × 844 (karty „Dlaczego Avenly”, Proces, Opinie, Oferta) - tekst mieści się w kartach; `tsc` i ESLint czysto; `/` i `/en/` 200. Kopie słowników sprzed zmiany: scratchpad sesji (`copy-backup/`).
+
+### 2026-09-28 — Oferta: copy usług, uczciwe obietnice, kolor przycisku (praca równoległa, chat 3)
+- **Bez WordPressa i CMS** (właściciel: „nie używamy już WordPressa ani CMS w postaci WordPressa do tworzenia stron firmowych”): strona firmowa bez „panelu CMS” i samodzielnej edycji („Podstrona dla każdej usługi”), w rysunku strony na miarę blok Headless CMS zamieniony na moodboard marki (zdjęcie, próbki kolorów, typografia; kolor płynie do strony i maluje nagłówek).
+- **Strona szyta na miarę = „to już nie tylko strona, to uczucie”** (poprzednia wersja „frajerska”): nowy opis, legenda i scenka; krok 3: kursor klienta dotyka autorskiego kształtu, a ten odpowiada falą (strona reaguje na człowieka).
+- **Copy wszystkich usług** („teksty w reszcie są mid”): każda usługa ma własny chwyt o tym, co klient czuje lub zyskuje, potem fakty; legenda do ~30 znaków, zgodna z odnośnikami na rysunkach; podpisy scenek z perspektywy klienta. PL i EN.
+- **Kurierzy:** weryfikacja - w kodzie Avenly (`shop-engine`, Kardyś) nie ma integracji InPost / DPD; technicznie wykonalne (InPost ShipX REST + Geowidget, DPD SOAP z umową, albo broker Furgonetka). Właściciel: „załagodź” - „Kurier lub paczkomat” w Ofercie, a na podstronie sklepu, w kategoriach, katalogu `/uslugi` i metadanych „wysyłka kurierem lub do paczkomatu” zamiast „integracji z InPost / DPD / DHL”. Scenka sklepu: „Klient wybiera produkt…”.
+- **Pozycjonowanie:** UI/UX i audyt jako skromne dodatki (projekt do akceptacji przed kodem, szybki przegląd z listą poprawek), AI w CRM jako opcja („na życzenie”).
+- **Przycisk „Cała oferta” w kolorze otwartej usługi**, potem poprawka „clanky”: tekst, tło i obwódka z jednej animowanej `--of-c`, najechanie przez `@property --of-h`, wspólne przejście koloru sekcji 1,3 s z miękkim startem.
+- Nowe zasady marki w PRODUCT.md: „Chwyt, potem konkret” i „Co obiecujemy w ofercie”. Weryfikacja: zrzuty paneli, próbkowanie stylów przycisku w trakcie zmiany usługi; `tsc` i ESLint czysto; `/`, `/en/`, `/uslugi/`, podstrona sklepu PL / EN odpowiadają 200. Uwaga: 28.09 dysk C był pełny (0 B) - usunięte stare tymczasowe profile Chrome po zrzutach (`%TEMP%\op-chrome-*`); coś innego zajmuje ~255 GB.
+
+### 2026-09-29 — Strona Kontakt zamknięta: Obok siebie + tło Opływ + formularz Bez karty (praca równoległa etap 2, chat 4)
+- Restyling `/kontakt` i `/en/contact` do designu strony głównej w 6 rundach. Runda 1: czerń zamiast niebieskiego „zalanego” tła z shaderem, nagłówek jak w sekcjach strony głównej (`SectionLabel` + `.im-title` / `.im-lead`, „Zacznijmy.” z kropką marki), etykiety bez rozstrzelonych wersalików, biały przycisk „Wyślij wiadomość”, stany (błędy, wysyłanie, wysłane, błąd serwera) w nowym stylu, dane firmy z `seo-data.ts`, animacje CSS zamiast framer-motion (naprawiony błąd hydratacji h1 przy ograniczonym ruchu), lista usług z etykietami jak w Ofercie (wartości do Web3Forms bez zmian).
+- Tło (właściciel: „tło jakieś jak tamto dał”, potem „daj kilka wersji”): płynny błękit i 4 odmiany odrzucone („zupełnie niepasujące do brandingu marki”), potem Kropka / Siatka / Sygnał / **Opływ** - wybór: „opływ jest zajebisty”. Opływ = włosowe linie przepływu opływają formularz (WebGL, funkcja prądu, kreski w kolorze marki, kursor rozsuwa linie, pisanie przyspiesza przepływ, wysłanie = pas światła); bez „tarczy” pod tekstem („usuń ten cień za lewą częścią”).
+- Układ „Obok siebie” (odrzucony „Formularz pierwszy”), formularz **„Bez karty”** (odrzucona lżejsza „Karta”): wprost na czerni, pola „na linii” z niebieską linią fokusu, kształt formularza wyznacza strumień.
+- Mobile / tablet („dostosuj do mobile”): zwarte dane (numery obok siebie), tytuł formularza na pierwszym ekranie telefonu, 1024-1279 px dane w 2 kolumnach, twarde spacje po jednoliterowych słowach. Zrzuty 320-1440, telefon w poziomie, EN, ograniczony ruch; `tsc` / ESLint czysto; wysyłka testowana z podmienionym `fetch` (bez maili).
+- Dokumentacja scalona od razu na prośbę właściciela („zaktualizuj pliki .md”): CLAUDE.md (rozdział „Strona Kontakt”, wiersz w tabeli shaderów, niespójności), PRODUCT.md (anti-references: tło zalane błękitem, „tarcza” pod tekstem; zasada 7; bez sierotek), project_context.md, notatki `docs/podstrony/kontakt.md`. Nie wdrożone (build i wdrożenie robi koordynator).
+
+### 2026-09-29 — Sekcja „Blog” zamknięta: Panorama + konsolidacja dokumentacji (praca równoległa, chat 4)
+- Przebudowa całej sekcji w 3 rundach (właściciel: „przebuduj całą sekcję tak, aby dorównywała poziomem reszcie strony”, potem „zrób 4 następne bardziej cinematic jak cała strona”): runda C = Okładka / Przelot / Kamera / Panorama / Okładka w ruchu. Wybór: „dosuń po prostu do lewej wszystko do skrajności wrappera i tyle, wybieram 4. panorama”.
+- **Panorama:** przewijanie = jazda kamery w bok wzdłuż dużych okładek 3 najnowszych wpisów (scena sticky na pełną szerokość ekranu, paralaksa zdjęć, przygaszone okładki poza kadrem, licznik z linią postępu). Nagłówek sekcji w scenie (poprawka po uwadze „heading seems off do dolnej części sekcji”), wszystko przy krawędziach wrappera, szerokość okładki mierzona tak, żeby scena mieściła się w oknie (1366 × 768 i niskie telefony bez podtytułu). Telefon: „Wszystkie wpisy” w wierszu etykiety, scena nad bąblem czatu. Ograniczony ruch = karty, bez JS = pierwszy wpis.
+- Usunięte: pozostałe propozycje, przełącznik „Blog - układ”, `proposals.css`, hooki i pola danych tylko dla propozycji. Weryfikacja: pomiar krawędzi na 6 rozmiarach (1440, 1366 × 768, 1920, 820, 390, 375), zrzuty, reduced motion, `tsc` / ESLint / build.
+- **Serwer deweloperski:** po zapełnieniu dysku 2026-09-28 cache Turbopacka dawał 404 na wszystkich podstronach poza `/` (uszkodzony `.next/dev/types/routes.d.ts`) - za zgodą właściciela: stop, usunięcie `.next/dev`, restart. Wdrożenie na avenly.pl: `e49199f5`.
+- **Konsolidacja pracy równoległej:** notatki `docs/sekcje/*.md` (Opinie, Blog, Stopka) przeniesione do CLAUDE.md (nowe rozdziały), project_context.md, README.md i progress.md; nowe zasady w PRODUCT.md (Design Principles 12-14: dusza sekcji, nagłówki nad linkami, treść przy krawędziach wrappera; anti-references: wielki logotyp na dole, kompozycja wyśrodkowana obok wyrównanych; opinie słowo w słowo bez dat względnych); PRACA-ROWNOLEGLA.md - wszystkie sekcje zakończone, poprawione nieaktualne zasady (ocena Google, akcent `#adcbfd`).
+
+### 2026-09-29 → 2026-10-01 — Etap 2 pracy równoległej: podstrony Blog, Usługi, Realizacje zamknięte (chaty 3, 2, 5)
+- **Blog (chat 3, zamknięty 2026-09-29):** właściciel odrzucił wrześniowy redesign i wrócił do wersji z czerwca 2026, zmodernizowanej do języka strony. Lista `/blog` = „Wierna” (nagłówek na liniach bloga, pigułki kategorii z wpisów, sortowanie, wyszukiwarka, karta najnowszego wpisu), wpis = „Okładka + Nagłówek na liniach”. Nowe pliki `components/blog/BlogIndex.tsx`, `cards.tsx`, `BlogBackdrop.tsx`, `data.ts` i `blog.css` (prefiks `bl-`); `docs/blog-style-guide.md` i `/new-post` zaktualizowane. Notatki: `docs/podstrony/blog.md`.
+- **Katalog usług (chat 2, zamknięty 2026-10-01, 17 rund):** `/uslugi` i `/uslugi/strony-www` w układzie pierwotnej wersji - niska góra „Kropka” („Od strony po system.”), filtr kategorii, galeria kart z rysunkami Oferty (karta Kadr, wejście Obrys), box „Nie wiesz, co wybrać?” z własnym rysunkiem, tło Mgławica (kopia mgławicy Realizacji). Kod w `app/(pl)/uslugi/_katalog/`, `ServicesHub.tsx` usunięty. Usunięta widoczna ścieżka i linki „Wróć” na wszystkich podstronach poza blogiem. Notatki: `docs/podstrony/uslugi.md`.
+- **Realizacje (chat 5, zamknięte 2026-10-01, 18 rund):** nagłówek na cały pierwszy ekran („Dowód, nie obietnice.” + kadry w głębi z żywymi stronami klientów), Plansze 01-04 (przypięte sceny z wielką nazwą i stroną klienta przewijaną w kadrze), „Wszystkie realizacje” z filtrem i kartą „Twoja firma może być następna”, case study z makietą „Strona na żywo”, mgławica za całą podstroną. Kod w `app/(pl)/realizacje/_rl/`, obrazy całych stron w `public/realizacje/`. Notatki: `docs/podstrony/realizacje.md`.
+- **O nas (chat 1):** przebudowa oddana 2026-09-29 (wejście „przelot” ze znakiem AVENLY w trzech wersjach, cztery układy reszty strony) - **czeka na wybór właściciela**. Notatki: `docs/podstrony/o-nas.md`.
+- Plan etapu 2 w archiwum: `docs/praca-rownolegla-etap-2.md`. Wdrożenie stanu pośredniego: `a540e815` (2026-09-30).
+
+### 2026-10-01 — Etap 3: copywriting podstron, „Projekt UI/UX” usunięty jako usługa (chat 6)
+- Teksty Usług, Realizacji i Kontaktu przepisane jednym piórem (PL i EN) po kilku rundach z właścicielem. Opisy: `/uslugi` „Klient ocenia Twoją firmę, zanim się odezwie. Tu decydujesz, co wtedy zobaczy.”, `/uslugi/strony-www` „Klient sprawdza Cię w sieci, zanim zadzwoni. Od Twojej strony zależy, czy to zrobi.”, `/realizacje` „Te strony pracują dziś dla prawdziwych firm. Zobacz, co widzą ich klienci.”, box katalogu ze zdaniem właściciela. Pełny blok Open Graph na 6 stronach (wcześniej bez obrazka).
+- Nowe zasady copy (PRODUCT.md): bez „drabinki potrzeb”, zdanie o kliencie zamiast pochwały produktu, bez przechwałek i docinków, klientowi nie przypisujemy pracy agencji, bez form zakładających płeć czytelnika.
+- **„Projekt UI/UX” usunięty jako osobna usługa** (decyzja właściciela: projekt do akceptacji jest częścią każdej budowy): podstrony `/uslugi/design*` zarchiwizowane w `docs/archiwum/usluga-ui-ux/`, 301 w `public/_redirects`, Oferta 7 pozycji w 3 kategoriach, konstelacja hero, stopka, formularz i sitemap bez UI/UX.
+- Opisy kafli katalogu: własne zdania dla one-page, Chatbotów AI i Audytu (dwa ostatnie czekają na ocenę). Notatki: `docs/podstrony/copy.md`.
+
+### 2026-10-02 — One-page zamknięta: film w trzech scenach + szkielet podstron usług (chat 7)
+- Pilot przebudowy podstron usług. Kierunek „Okaz” (plan z samych kresek) odrzucony po trzech rundach; przyjęty **film w trzech scenach**: kadr z zaprojektowaną stroną klienta i kamerą (droga klienta: pierwszy ekran → oferta → formularz → „Nowe zapytanie”), stos czterech czarnych kart z rysunkami w języku Oferty i światami świecących linii w tle, zakres z terminem na linii wymiarowej i pokazem w kadrze, zakończenie „Zacznijmy od rozmowy.”. Właściciel: „super, podstrona dopięta”.
+- Wspólny szkielet `app/(pl)/uslugi/_usluga/` (`ServiceShell`, `ServiceHead`, `Steps`, `ServiceEnding`, `usePin` / `useFrame`, `Sketch`, `Dock`, mgławica w kolorze podstrony). Termin „Start w 3-5 dni” potwierdzony, stary `OnePageClient.tsx` i `onePageDict` usunięte. Wzorzec dla fali 2: `docs/podstrony/usluga-one-page.md`.
+- Hierarchia podstron usług (decyzja właściciela 2026-10-01 / 02): one-page poziom 1, strona firmowa 2, sklep 2-3, strona na miarę 3 - każda efektowna na swoim poziomie.
+
+### 2026-10-02 → 2026-10-06 — Fala 2: strona firmowa, Strona interaktywna, sklep, system CRM, chatboty AI (chaty 8-13, w toku)
+- **Strona firmowa (chat 8):** scena „Piętra” przyjęta („banger”), makieta bez klikania i w palecie podstrony, sekcja kart 27 podstron w czterech wersjach do wyboru, telefon z podglądem kart (runda 8).
+- **Strona interaktywna (chat 9):** sceny „Horyzont” i „Nić” wybrane, makieta z czterema ekranami i ujęciami z kamerą, trzy nowe sceny „Technologii”; 2026-10-06 nowa nazwa usługi, wejście „Wschód”, przegląd wydajności.
+- **Sklep (chat 10):** mini sklep do klikania w kadrze, płatność przez przekierowanie do operatora, „Na tle szablonów” i Stos wybrane, makiety ciemne z etykietą „Przykładowy sklep”, telefon (rundy 7-10), copywriting sekcja po sekcji (hero czeka na wybór).
+- **System CRM (chat 11, od 2026-10-04):** własny pomysł zamiast wzorca stron WWW, po uwadze właściciela bez sekcji do klikania; sześć sekcji, wszystkie wersje wybrane; „rozejście” zamiast linii światła (`scripts/crm-bloom.mjs`); telefon i wydajność zrobione rachunkiem z kodu.
+- **Chatboty AI (chat 13, od 2026-10-04):** hero z polem pytań i filmem, „22:00” z zegarem, Języki, Plan; Wiedza w dwóch nowych wersjach do wyboru; zweryfikowane raz 2026-10-04 (15 wersji), późniejsze rundy nieoglądane.
+- Zasady wspólne z tych rund: makiety w palecie podstrony i podpisane jako przykład, jedno zdanie i jedno miejsce akcji naraz, kamera powoli z postojami, bez lecących linii światła, odsłony kończą się przy wejściu, bez odbicia, AI i portal klienta tylko jako opcje (PRODUCT.md, CLAUDE.md „Podstrony usług w pracy - fala 2”).
+- 2026-10-04: zasada właściciela „bez weryfikacji w trakcie pracy” (przeglądarka w tle, zrzuty, `tsc`, ESLint dopiero na jego sygnał - „zbyt laguje”). Dlatego większość rund z 2026-10-04 → 2026-10-06 jest nieoglądana w przeglądarce.
+
+### 2026-10-05 — Wydajność: tła bez interakcji z kursorem, optymalizacja podstron usług i strony głównej (4 wdrożenia)
+- Właściciel: „usuń na każdej podstronie w usłudze hover na tle i dystorsję, bo laguje i zoptymalizuj te podstrony wszystkie”, potem to samo dla `/uslugi` i `/realizacje`. Żadne tło-mgławica na podstronach nie reaguje już na kursor (czarna dziura, smuga i fale wyłączone).
+- Podstrony usług: sekcje daleko od ekranu nic nie liczą, zmienne CSS pisane co klatkę bliżej elementów, shadery kart kompilowane w tle, niewidoczne ekrany makiet nie są rysowane (lista: PRACA-ROWNOLEGLA.md „Wydajność podstron usług”).
+- Strona główna („zoptymalizuj pierwszą sekcję strony głównej oraz drugą, bo lagują”): tempo rysowania hero i Realizacji liczone z czasu i zależne od aktywności, shader planety w dwóch przebiegach, scena hero stoi przy < 30% widoczności, przycisk „Zobacz realizacje” bez `backdrop-filter`, mgławica Realizacji nie liczy się przed odsłoną sekcji.
+- Wdrożenia: `bc047217`, `74b14420`, `fad591c2`, `f2f29804`.
+
+### 2026-10-06 — „Strona interaktywna”, płynność mgławicy podstron usług, 7 wdrożeń
+- **Nowa nazwa usługi:** „Strona szyta na miarę” → **„Strona interaktywna”** (EN „Interactive website”). Właściciel: „każda firma tak pisze i jest to cringe”; odrzucił przymiotniki-hasła (z rozmachem, autorska, flagowa, premium). Zmienione nazwy w Ofercie, danych usług, konstelacji hero, stopce, etykiecie formularza i metadanych; adres podstrony, nazwy plików i wartość opcji formularza zostają.
+- **Mgławica podstron usług (pliki wspólne, trzy poprawki po uwagach właściciela):** blask i winieta liczone w każdej klatce (`liveGlow`), płynna odsłona przy wejściu (front w kompozycji, zegar krokami), gaz jako dwie przenikające się klatki kluczowe.
+- **Chatboty:** poprawka mignięcia hero na wejściu (klasa szkieletu `sv-wait`), akcent Wiedzy „Nie zmyśla.” zamiast „Wie, czego nie wie.”. **CRM:** „zbudowany” zamiast „szyty”, bez linii dowodów, lżejsza sekcja modułów. **Strona interaktywna:** wejście „Wschód”, gwiazda na czole nici, warstwy w filmie.
+- Wdrożenia (w kolejności): `90723428`, `9afa4557`, `292f5691`, `1a4a7f4a`, `6bd06458`, `1f8381e3`, `a6a206db`. Wszystko sprawdzone tylko `curl`-em; płynność ocenia właściciel.
+
+### 2026-10-07 — Przegląd koordynatora: dokumentacja zaktualizowana
+- `CLAUDE.md`: baner etapu 3, drzewo tras, tabela shaderów (nowe wiersze: linie bloga, mgławice katalogu i Realizacji, tło szkieletu z `liveGlow`, głębia kart czterech podstron, pole światła O nas; stare shadery podstron oznaczone jako nieaktywne), rozdziały „Blog”, „Katalog usług”, „Podstrona Realizacje”, „Podstrony usług w pracy - fala 2”, oznaczenie rozdziałów historycznych, zdarzenia czatu, mapa slugów, Deploy flow.
+- `PRODUCT.md`: nowe zasady copy i designu z etapów 2-3. `PRACA-ROWNOLEGLA.md`: stan na 2026-10-07, tabela wdrożeń, korekty zleceń po rundach. `project_context.md`, `README.md`, `INSTRUKCJA-SEO.md`: stan stron, usług i plików. Notatki chatów: dopiski koordynatora.
+- Stan: produkcja = `a6a206db` = bieżące repozytorium; serwer deweloperski na :3001 nie działał; 23 GB wolnego miejsca na dysku. Nic nie było budowane, wdrażane ani oglądane w przeglądarce.
+
+### 2026-09-27 — Sekcja „Oferta” zamknięta: Plan (praca równoległa, chat 3)
+- **Układ Plan** (wybór z Plan / Stroik / Karta / Cel; właściciel: „nadaj tej sekcji trochę duszy, zajebiście mi się podoba ten motion reveal elementów na makietach”): oferta jako teczka rysunków technicznych - karty usług po lewej, czarna deska z rysunkiem wybranej usługi po prawej. Rysunek rysuje się linia po linii z piórem kreślarskim, potem ożywa scenką w 3 krokach (co usługa robi dla klienta) z podpisem kroku jak napisy; przy zmianie stary rysunek zwija się, nowy rysuje od zera.
+- **Ruch kinowy w podstawowej sekcji** („fajne motion i zostaw je”): kamera najeżdża na akcję w każdym kroku scenki, deska otwiera się jak przysłona, światło przesuwa się po krawędzi deski, nagłówek wyjeżdża linijkami spod maski, karty wchodzą kaskadą.
+- **Indeks Karty + zegar Obwódka** (z Tor / Spis / Miniatury / Karty i Obwódka / Tarcza / Pasek): obwódka wybranej karty w kolorze usługi ubywa do zmiany usługi (automat 8 s), bez liczników sekund.
+- **Tło sekcji: Bez tła** - odrzucone po drodze: „kinowa cała sekcja” (pasy, kamera przy przewijaniu), „kino wprost” (Taśma filmowa, Montaż, Obiektyw, Echo), renderowane tła Promienie / Przepływ (WebGL) i Linie konstrukcyjne. Wszystkie propozycje, ich pliki, style i przełączniki usunięte.
+- **Responsywność i „wow” na telefonie:** wejście liczone od deski (wcześniej przysłona i rysowanie grały poza ekranem - IntersectionObserver w Chrome uwzględnia `clip-path` deski, pomiar przez wrapper `.of-pl-frame`), mocniejsze zbliżenia kamery na małej desce, swipe z obrazem za palcem w nieruchomym kadrze, linia od wybranej pigułki do deski, deska bliżej krawędzi ekranu.
+- Weryfikacja: zrzuty 320-2560 (10 szerokości), reduced motion, swipe zdarzeniami dotyku; `tsc` i ESLint czysto; `/`, `/uslugi/`, `/kontakt/`, `/en/` odpowiadają 200. Notatki i historia rund: `docs/sekcje/oferta.md`.
+
+### 2026-09-27 — „Proces”: wybór Wstęgi, podrasowany materiał, tło sekcji w propozycjach
+
+- **Kolory wstęgi** („żeby wstęga się wyróżniała od tła, bo się zlewa”): wstęga = barwione szkło w nasyconych akcentach kroków (błękit, fiolet, bursztyn, zieleń - `RIBBON_ACC`), płynne przejście wzdłuż wstęgi między krokami; tło Głębia = neutralne srebrne szkło z 18% nutą akcentu, przygaszone. Parametr `sat` w `glass()`.
+
+- **Zamknięcie sekcji:** tło = **Głębia** (wybór właściciela; Kaustyki / Soczewki / Tafle / Nici / Bez tła i przełącznik usunięte, `backdrop.tsx` uproszczony do dwóch szklanych wstęg). **Responsywność** („dostosuj do mobile, efekt wow ma zostać taki sam”): na telefonie ten sam zygzak co na komputerze - wstęga 34 px biegnie wzdłuż tekstu na przemian po lewej i prawej (wcięcie tekstu 56 px po jej stronie), między krokami przecina ekran łukiem S (krzywe Béziera z pionowymi stycznymi); start od środka, koniec nad CTA. Zrzuty 1440, 820 (tablet), 390 i 320; ESLint i `tsc` (pliki Procesu) czysto.
+
+- **Skrzyżowanie i szkło luksusowe** (właściciel: „problem z momentem, jak się krzyżuje”, „tło głębia również daj szklane”, „szkło jeszcze bardziej luksusowe”): skręt `twistAngle()` (długo lico, krótko i rzadko krawędź), `crossWidth()` (ustawiona bokiem = cienka krawędź szkła zamiast punktu), wspólny `glass()` - szlif kryształu (chłodna + ciepła linia), ostre refleksy dwóch świateł, przydymione wnętrze, wędrujący refleks co ~11 s; Głębia = szklane wstęgi, Soczewki i Tafle na tym samym materiale. Odrzucone po drodze: pochylenie w perspektywie (ząbki), rozmyty połysk (mgiełka), drugi blik obok głównego na kuli („oczy”).
+
+- **Materiał = Szkło** (wybór właściciela: „wybieram wstęgę szkło, ale tło sekcji daj kilka propozycji jeszcze”): usunięte Satyna / Linie / Pył / Metal, przełącznik „Wstęga”, `shade()` / `shadeSatin()`; zapas 2D = uproszczone szkło. **Tło - druga runda:** Kaustyki (domyślne; sieć świetlna z szumu komórkowego - pierwsza wersja z formuły „water caustic” wyglądała jak dym, więc ostre krawędzie komórek + wędrujące plamy), Soczewki (szklane kule, łuk bliku), Tafle (szklane tafle) + Głębia / Nici / Bez tła. Zrzuty 1440 × 900 i 390 × 844; ESLint czysto.
+
+- **Wygląd wstęgi - propozycje** (właściciel: „zbyt metaliczna, zrób kilka propozycji, mogą być zupełnie inne, pasujące do poprzednich sekcji”; tło na razie zostaje): **Satyna** (domyślna, kolorowa tkanina), **Szkło** (przezroczysta tafla - jak planeta w hero), **Linie** (wstęga z włosowych linii - jak warstwice w „Dlaczego Avenly”), **Pył** (wstęga z cząstek - jak logotyp w hero), **Metal** (poprzednia). Jeden shader z gałęzią wg `u_look`, przełącznik „Wstęga” w dev. Zrzuty 1440 × 900 i 390 × 844.
+
+- **Wybór właściciela:** „wstęga jest genialna i piękna, wybieram wstęgę, resztę wywal i trzeba ją podrasować, i coś z tłem dodać ciekawego”. Usunięte: Pryzmat, Grawer, rundy 1-2 (Makieta, Warstwy, Typografia, Lista kontrolna, Horyzont), `process/shared.tsx`, przełącznik „Układ procesu”, pola słownika `stepLabel` / `of` / `mock`; `process.css` przepisany (tylko `.pr-*` / `.pw-*`).
+- **Wstęga podrasowana:** wspólny materiał `process/silk.ts` (satyna zamiast folii: wygięcie w poprzek = połysk wzdłuż wstęgi, blik h^28 + połysk h^5, rąbek przy ustawieniu bokiem), nieregularny skręt, obrót w czasie i falowanie linii środkowej; renderer WebGL na płótnie o wysokości toru (gładkie cieniowanie na piksel, AA z `fwidth`) z zapasem canvas 2D (usunięte ząbki przy skręcie, strażnik jakości); szersza wstęga (do 96 px, telefon 24 px).
+- **Tło sekcji - propozycje** (`process/backdrop.tsx`, przełącznik „Tło sekcji”): **Głębia** (domyślna - dwie przygaszone jedwabne wstęgi w oddali), **Nici** (trzy skręcone sznurki z włosowych nici), **Bez tła**; paralaksa, barwa etapu na ekranie, wygaszenie pod tekstem i przy krawędziach sekcji, WebGL na płótnie sticky z MSAA.
+- Weryfikacja: zrzuty 1440 × 900 i 390 × 844 (oba tła), reduced motion; `tsc` i ESLint czysto.
+
+### 2026-09-27 — „Dlaczego Avenly” zamknięta, „Proces”: trzecia runda, praca równoległa
+
+- **„Dlaczego Avenly”:** wybór właściciela - tło sekcji **Mapa warstwic**, tekst w karcie **U góry**; Horyzont / Siatka / Bez tła / U dołu i oba przełączniki usunięte (`impact/backdrop.tsx`, `impact/stack.tsx`, `Impact.tsx`, `globals.css`).
+- **Praca równoległa:** [PRACA-ROWNOLEGLA.md](./PRACA-ROWNOLEGLA.md) - 6 chatów, podział sekcji (0 Proces + koordynacja, 1 Opinie, 2 Asystent AI, 3 Oferta, 4 Blog, 5 Kontakt i stopka), zasady (style sekcji we własnym pliku CSS, bez `git checkout/restore/stash/reset/clean`, jeden dev server, bez buildów). Style „Procesu” przeniesione z `globals.css` do `components/sections/process/process.css`.
+- **„Proces” - trzecia runda** (właściciel: „niby spoko, ale poprzednia sekcja jest totalnie high-endowa i luksusowa, a proces tego nie oddaje; nie 1:1 te same elementy, tylko feeling”): **Pryzmat** (domyślny; wiązka światła przez 4 szklane tafle, wachlarz promieni w akcentach Impactu, automat 7,5 s), **Wstęga** (jedwabna wstęga na canvasie 2D rozwija się przy przewijaniu i schodzi do CTA), **Grawer** (numery z polerowanego metalu z blikiem przy przewijaniu). Weryfikacja: zrzuty 1440 × 900 i 390 × 844, reduced motion; `tsc` i ESLint czysto.
+
+### 2026-09-26 — Sekcja „Proces”: druga runda propozycji
+- Właściciel o dopracowanym Horyzoncie: „odgrzewany kotlet, nie podoba mi się, daj kilka propozycji” (powtarzał motywy z innych sekcji). Nowe układy celowo bez planety, gwiazdki, warstwic i przyklejonej sceny w stylu stosu:
+  - **Makieta** (domyślna): strona klienta w oknie przeglądarki dorasta z krokami - szkic, projekt w kolorach marki klienta, budowa (kłódka, 98 PageSpeed, wersja na telefon), start (Online, powiadomienie o nowym zapytaniu); lista kroków z automatem co 7 s, klik wybiera.
+  - **Warstwy**: izometryczne warstwy strony (szkic, projekt, kod, strona online) składają się w jedną w rytmie czytanych kroków (scena przyklejona obok listy).
+  - **Typografia**: ogromne słowa Plan / Projekt / Budowa / Start - bieżące wypełnia się bielą, kolejne w konturze.
+  - **Lista kontrolna**: przyklejony wstęp z postępem i CTA, kroki odhaczane przy przewijaniu.
+- Horyzont zostaje w przełączniku do porównania. Słownik: `short` (jedno słowo etapu) i `mock` (teksty w makiecie), PL i EN.
+- Weryfikacja: zrzuty 1440 × 900 i 390 × 844 wszystkich układów (Makieta także etapy 3 i 4); `tsc` i ESLint czysto.
+
+### 2026-09-26 — Sekcja „Proces”: Horyzont (wybór właściciela) zrobiony porządnie
+- Właściciel wybrał Horyzont („spoko, tylko zrób to porządnie, bo teraz jest pod frajera, rozkmiń fajnie”). Pozostałe propozycje (Obecny, Orbita, Tarcza, Panele), przełącznik i ich style usunięte.
+- Nowa sekcja: podróż po krawędzi planety sterowana przewijaniem - przyklejona scena, światło (gwiazdka jak w etykietach) idzie po łuku przez 4 etapy, przebyta droga świeci, zaliczone etapy się zapalają, pod łukiem treść aktywnego etapu (krok, tytuł, opis, „Dostajesz”, motyw liniowy). Powierzchnia planety z warstwicami (ten sam kafel co mapa w „Dlaczego Avenly”), które przesuwają się przy przewijaniu (planeta się obraca) i gasną pod tekstem. Przy wejściu krawędź rysuje się od lewej, a światło wschodzi nad horyzontem. Na końcu podróży CTA „Bezpłatna konsultacja” (bez pustej przerwy po scenie). Etapy klikalne (płynny przejazd).
+- Dawne błędy wersji „pod frajera”: prostokątna „powierzchnia” z widoczną krawędzią, płaski łuk z małymi kropkami, cienkie numery na różnych wysokościach, wszystko wyśrodkowane bez hierarchii.
+- Reduced motion / niski ekran: układ statyczny (łuk z etapami + 4 kroki + CTA); telefon: te same efekty, podpisy numerami, treść wyśrodkowana pod łukiem.
+- Weryfikacja: zrzuty 1440 × 900 (także retina), 390 × 844, reduced motion; `tsc` i ESLint czysto.
+
+### 2026-09-26 — „Dlaczego Avenly”: stos kart na telefonie i tablecie (runda 11)
+- Ten sam efekt co na komputerze na każdej szerokości: karty przyklejają się jedna na drugiej, przykryte cofają się w głąb (mniejsze, ciemniejsze), zakładki z numerem i kategorią, horyzont w kolorze aktywnej karty przyklejony nad stosem, stos zamyka się równo na końcu.
+- Wysokie karty (niskie telefony, niskie laptopy) przyklejają się dopiero, gdy widać ich dół - nic nie zostaje ucięte; zakładki widać, gdy ekran na to pozwala. Bez JS zwykła lista.
+- Weryfikacja: zrzuty 390 × 844, 390 × 664, 1366 × 650 i 1440 × 900 (pełny stos bez zmian); `tsc` i ESLint czysto.
+
+### 2026-09-26 — „Dlaczego Avenly”: dopasowanie do telefonu, tabletu i niskich ekranów (runda 10)
+- Telefon: tekst na czystym tle (shader rozpoznaje układ karty z położenia tekstu i wizualizacji, nie z proporcji - wcześniej warstwice wchodziły pod tytuł i opis), warstwice wyrastają od dołu przy wizualizacji; zwarty rytm (tytuł tuż pod zakładką, opis 16 px, mniejsze odstępy); horyzont bez przyklejania i bez przypadkowych kresek przy krawędziach.
+- Laptopy z niskim ekranem (np. 1366 × 768): karty obok siebie (tekst + wizualizacja) zwykłą listą - dawniej spadały do jednej kolumny, bo układ był związany z przyklejaniem stosu.
+- Weryfikacja: zrzuty 360, 390, 768 × 1024, 1024 × 768, 1366 × 650 i 1440 × 900 (stos bez zmian); `tsc` i ESLint czysto.
+
+### 2026-09-26 — „Dlaczego Avenly”: odcień tła wg karty, napisy historii na dole (runda 9)
+- Kształty tła (krawędź planety, łuki, gwiazdka / warstwice mapy / siatka) przyjmują kolor karty, która jest na ekranie (niebieski / indygo / bursztyn / zieleń), z płynnym przejściem 1,4 s; samo tło zostaje neutralną czernią (poprawka właściciela - pierwsza wersja barwiła całe tło). Horyzont przyklejony nad stosem kart, więc kolorowy łuk widać przez cały stos. Mapa warstwic: SVG jako maska, kolor z CSS.
+- Napisy historii („Klienci pytają o ceny i terminy…”) przeniesione na dół karty pod wizualizację, pasek kroków na szerokość wizualizacji - wspólna linia z wynikiem 98/100 / linkiem w kolumnie tekstu.
+- Weryfikacja: zrzuty 1440 (karty 1, 3, 4 - odcień niebieski / bursztynowy / zielony) i 390; `tsc` i ESLint czysto.
+
+### 2026-09-26 — „Dlaczego Avenly”: karty 2 i 4 w lustrze, tekst u góry (runda 8)
+- Karty 2 i 4 w lustrze od 1024 px (wizualizacja po lewej, tekst i zakładka po prawej) - stos zygzakiem; zakładka w tej samej siatce co treść (numer nad tytułem); shader przesuwa światło na stronę wizualizacji.
+- Tekst w karcie: przełącznik w dev „U góry” (domyślny - tytuł i opis pod zakładką, wynik / link na dole kolumny) / „U dołu” (jak podpis plakatu). Druga, słabsza kałuża warstwic w rogu naprzeciw tekstu - bez czarnej plamy pod tekstem, kompozycja po skosie. Wygaszenie pod dodatkiem (wynik / link) liczone osobno.
+- Weryfikacja: zrzuty 1440 (karty 1-3 i stos, oba ułożenia), telefon 390; `tsc` i ESLint czysto.
+
+### 2026-09-26 — „Dlaczego Avenly”: czerń kart, tło sekcji, etykiety „Gwiazda” (runda 7)
+- Właściciel wybrał etykiety sekcji „Gwiazda” - pozostałe warianty, przełącznik i ich style usunięte; `SectionLabel` bez numeru sekcji (był potrzebny tylko wariantowi „Rozdział”).
+- Karty „Dlaczego Avenly”: bez ikony w nagłówku (zostaje numer i kategoria), tło = głęboka neutralna czerń z ostrym refleksem u góry zamiast granatowo-szarego („matowego”) gradientu.
+- Tło sekcji („za dużo czerni”) - 3 propozycje z przełącznikiem „Tło sekcji” w dev: Horyzont (domyślny; krawędź planety z gwiazdką nad pierwszą kartą, jaśniejsza powierzchnia, równoleżniki), Mapa warstwic (kafel SVG z generatora `scripts/impact-contours.mjs`), Siatka (72 / 288 px z krzyżykami) + Bez tła.
+- Weryfikacja: zrzuty 1440 (także retina) i 390 dla wariantów tła, `tsc` i ESLint czysto.
+
+### 2026-09-26 — „Dlaczego Avenly”: teren na całej karcie (runda 6)
+- Właściciel: okno-instrument z rundy 5 się nie podoba („zrób to na full box, a nie takie małe”; „pierwotnie były zbalansowane - shader tam, gdzie powinien być, a tam, gdzie tekst, zostawione”). Wariant „Okno” i przełącznik „Styl kart” usunięte; teren shadera leży na całej karcie, także pod nagłówkiem-zakładką (bez paska z linią).
+- Nowy rozkład jasności jak w pierwotnych kaflach: pełny kolor w rogu i przy krawędzi po stronie wizualizacji, spadek po skosie (do sześcianu, jak dawne a³), pod tekstem szerokie łagodne wygaszenie do zera, pod napisem kroku słabsze.
+- Większe karty stosu (do 640 px wysokości) i wizualizacja (do 560 px). Naprawiony koniec stosu: odstępy nad kartami zamiast pod nimi, więc zakładki nie mieszają się przy wyjeździe (przednia karta zakrywa je po kolei).
+- Weryfikacja: zrzuty 1440 (karta z przodu, stos zakładek, wyjazd stosu), telefon 390; 4 shadery działają, `tsc` i ESLint czysto.
+
+### 2026-09-26 — „Dlaczego Avenly”: karty premium (runda 5)
+- Właściciel: „bardziej premium feeling, czegoś brakuje”. Karta dostała nagłówek-zakładkę (numer „03 / 04”, kategoria, ikona) - przykryte karty w stosie pokazują zakładki, więc stos czyta się jak podpisane warstwy; redakcyjny tytuł na czystej powierzchni; teren z konstelacją w oprawionym oknie-instrumencie; oprawa karty jak bezel; łagodniejsze cofanie przykrytych kart (zakładka czytelna).
+- Przełącznik „Styl kart” w dev: Okno (domyślny) / Pełny teren. Kategorie kart w słowniku (`kickers`, PL + EN).
+- Weryfikacja: zrzuty retina 1440 (karta z przodu i stos zakładek), telefon 390, wariant Pełny teren; 4 shadery bez błędów, `tsc` czysto.
+
+### 2026-09-26 — „Dlaczego Avenly”: wybór Stos warstw + Konstelacje, spokojniejszy shader, etykiety sekcji
+- **Wybór właściciela:** układ „Stos warstw” + wizualizacje „Konstelacje”. Pozostałe 4 układy, 6 stylów wizualizacji, oba przełączniki, ich style i teksty usunięte; z `VIZ_GLSL` wycięte gałęzie odrzuconych stylów (orbity, siatka, panele, nurt, radar, kręgi). Pliki: `impact/stack.tsx` (zamiast `layouts.tsx`), `impact/viz.tsx` (same konstelacje), `impact/shader.tsx`.
+- **Bez efektów najechania na karty** (obwódka, paralaksa za kursorem). Bez restartu historii przy zmianie karty i bez przeskoku terenu po odsłonięciu przykrytej karty (czas terenu `u_tt` stoi razem z płótnem) - koniec „przeładowywania”.
+- **Shader z wyczuciem:** cienkie „rytowane” warstwice (0,55-1,7 px, organicznie jak dawniej, ostra krawędź), stonowana jasność, jaśniej po stronie wizualizacji; zamiast prostokątnych masek za tekstem („cienie”) miękkie, szerokie wygaszenie pod kolumną tekstu; delikatniejsze elementy konstelacji, bez grotów.
+- **Etykiety sekcji - propozycje:** wspólny `components/ui/SectionLabel.tsx` we wszystkich sekcjach strony głównej (Realizacje, Dlaczego Avenly, Proces, Opinie, Asystent AI, Blog, CTA - zamiast pigułek wersalikami); przełącznik „Etykiety sekcji” w dev: Gwiazda / Pigułka / Rozdział / Horyzont.
+- Weryfikacja: zrzuty stosu 1440 i 390, zestawienie 4 wariantów etykiet (Dlaczego Avenly, Realizacje, Blog), nagłówek Realizacji z wyższym wariantem bez nachodzenia na kadr, 4 shadery bez błędów, `tsc` czysto, ESLint bez nowych błędów.
+
+### 2026-09-26 — Sekcja „Proces”: propozycje redesignu (przełącznik „Układ procesu”)
+- Prośba właściciela: redesign sekcji Proces w luksusowym języku reszty strony, copy podobne, kilka propozycji + toggle. Produkcja nadal = obecny układ.
+- **Horyzont** (krawędź planety z 4 etapami na łuku, wszystko widoczne), **Orbita** (kroki na przechylonej orbicie wokół planety, aktywny z przodu), **Tarcza** (tarcza zegarka ze wskazówką i łukiem czasu), **Panele** (rozsuwane kolumny z motywami liniowymi kroków); obecny do porównania.
+- Copy: tytuły i opisy kroków bez zmian; doszły lead, „Dostajesz” przy każdym kroku (z opisów, bez nowych obietnic) i zakończenie z „Bezpłatną konsultacją”. Nowy nagłówek bez wersalików i gradientu; zero rozmytych poświat.
+- Wspólny mechanizm przełączników propozycji: `components/utils/proposals.tsx` (też dla „Dlaczego Avenly”).
+- Weryfikacja: zrzuty 1440 i 390 każdego wariantu, automat Orbity / Tarczy / Paneli przechodzi do kroku 2 po 7 s, `tsc` i ESLint czysto.
+
 ---
 
 ## Stan końcowy plików projektu
+
+> Lista historyczna (sesje 7-19; ścieżki sprzed podziału na `app/(pl)` / `app/(en)` i sprzed przebudowy podstron). Aktualna mapa plików: `CLAUDE.md` („Routing”, „Konwencje”) i `project_context.md`.
 
 ### Nowe pliki (utworzone w ramach SEO + a11y + perf + blog automation)
 - `lib/seo-data.ts` — central source danych firmy
@@ -874,7 +1163,7 @@ W trakcie sesji eksperymentalnie dodano toggle dla "Wersji B" makiety (drugi moc
 - `components/utils/DeferredClientWidgets.tsx` — lazy load Chatbot + LifecycleManager
 - `app/o-nas/faq-data.ts` — DRY source FAQ (UI + schema)
 - `app/polityka-prywatnosci/layout.tsx` — wrapper dla metadata
-- `public/.htaccess` — Apache config
+- ~~`public/.htaccess` — Apache config~~ (usunięty 2026-09-19; zastąpiony przez `public/_headers` + `public/_redirects` dla Cloudflare Pages)
 - `public/og-default.png` — fallback OG image 1200×630
 - `public/favicon-16.png`, `favicon-32.png`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`
 - `public/manifest.webmanifest`
@@ -925,10 +1214,25 @@ Otwórz `lib/seo-data.ts` i podmień:
 ### Bugi w danych (low priority, do uporządkowania)
 - [x] ~~`app/data/services.ts` design card href — naprawione (Sesja 19, 2026-05-25): `/uslugi/design/ui-ux`~~
 - [x] ~~`app/data/services.ts` marketing card href — naprawione (Sesja 19): `/uslugi/marketing/audyt-wydajnosci-seo`~~ — **ale podstrona wciąż zwraca `null`**, do wypełnienia
-- [ ] `app/uslugi/marketing/page.tsx` — wypełnij stronę kategorii lub zwróć `notFound()` zamiast `null`
-- [ ] `app/uslugi/marketing/audyt-wydajnosci-seo/page.tsx` — jak wyżej
-- [ ] `app/data/posts.ts` post #2: blockquote linkuje `/audyt` — zmień na `/kontakt`
-- [ ] `OnePageClient.tsx` Counter animuje 0→3 obok napisu "3–5 dni" — zmień target lub usuń
+- [ ] `app/(pl)/uslugi/marketing/page.tsx` — wypełnij stronę kategorii albo usuń (dziś `null` + metadata `noindex`)
+- [ ] `app/(pl)/uslugi/marketing/audyt-wydajnosci-seo/page.tsx` — jak wyżej
+- [x] ~~`app/data/posts.ts` post #2: blockquote linkuje `/audyt`~~ — naprawione (link do `/kontakt`)
+- [ ] Usunąć martwy `components/sections/Portfolio.tsx` + `lib/i18n/home/portfolio.ts` (Sesja 30)
+- [x] ~~Po wyborze stylu wizualizacji Impact: usunąć pozostałe style, przełącznik i nieużywane teksty~~ - zrobione 2026-09-26 / 27 (Stos warstw + Konstelacje, odrzucone warianty usunięte)
+- [ ] Zmierzyć PageSpeed (PSI) po deployu nowego hero / Realizacji / Impact
+- [x] ~~`OnePageClient.tsx`: licznik 0→3 obok „3-5 dni”~~ - nieaktualne: one-page przebudowana 2026-10-02, plik usunięty; termin „Start w 3-5 dni” potwierdzony przez właściciela
+- [ ] Po pracy równoległej (2026-09-29): Lighthouse / PageSpeed po wdrożeniu `e49199f5`, ESLint całego projektu, jeden przegląd strony głównej z góry na dół (przejścia, kotwice), commit do git (do decyzji właściciela), decyzja o zakończeniu pracy równoległej (PRACA-ROWNOLEGLA.md → archiwum, ostrzeżenie w CLAUDE.md)
+- [ ] Opinie: link do profilu Google to długi adres wyszukiwarki z `authuser=4` - zamienić na `GOOGLE_BUSINESS.profileUrl`? Prawdziwe daty opinii (miesiąc i rok), jeśli mają być pokazane
+- [ ] Stopka: adres profilu Useme (dawny link prowadził na ogólną stronę) - dopisać do `SOCIAL` w `seo-data.ts` i `SOCIALS` w `footer/shared.tsx`
+- [ ] Nawigacja: przycisk „Darmowa Wycena” (EN „Free quote”) łamie zasadę jednego CTA „Bezpłatna konsultacja” i jest w Title Case (zgłaszały chaty 1 i 5, w etapie 2 także chat Kontaktu) - do decyzji właściciela
+- [ ] Stopka na `/kontakt/`: przycisk „Bezpłatna konsultacja” nie przewija do formularza - `Footer.tsx` porównuje `pathname === '/kontakt'`, a przy `trailingSlash` przychodzi `/kontakt/` (poprawka: ścieżka bez końcowego `/`; sprawdzić na buildzie)
+- [ ] Kontakt: prawdziwa wysyłka testowa formularza (Web3Forms) po wdrożeniu - za zgodą właściciela
+- [ ] `lib/i18n/services.ts`: nieużywane pola sekcji Oferta (`headingLead`, `headingAccent`, `lead`, `seeMorePrefix`, `moreLabel`) do usunięcia
+- [ ] Blog: wpisy tylko ze stycznia 2026 (3 szt.) - dodać nowe (`/new-post`); tytuły z wielką literą po dwukropku i zawyżony czas czytania w `posts.ts` - do decyzji
+- [ ] **Etap 3 - po wyborach właściciela:** zamknięcie pięciu podstron usług i O nas, jedna pełna weryfikacja (zrzuty, telefon, ograniczony ruch, EN, bez JS, `tsc`, ESLint, Lighthouse), wdrożenie końcowe
+- [ ] Porządki (PRACA-ROWNOLEGLA.md „Chat 0”): jeden moduł mgławicy zamiast dwóch kopii, usunięcie starych `*Client.tsx` i słowników, nieimportowanych plików chatbotów, pliku `app/(pl)/o-nas/parts.tsx.tmp.*`, martwego kodu po UI/UX, `ServiceTemplate` / `AvenlyAICta` / `ProcessAccordion`, zrzutów z `docs/podstrony/zrzuty/`
+- [ ] Do decyzji właściciela: terminy realizacji na podstronach usług (firmowa, Strona interaktywna), wartość opcji formularza `Strona Szyta na Miarę` (temat maila), zmiana adresu Strony interaktywnej (z 301, po pracy równoległej), fakty Mcentrum („Nr 1”, „<1s”, technologia „CMS”), baza wiedzy chatbota w Supabase / n8n (nadal może wymieniać „Projekt UI/UX” i „stronę szytą na miarę”)
+- [ ] Oferta na stronie głównej: rysunek i legenda sklepu po decyzji o płatności przez przekierowanie do operatora (Przelewy24 albo Stripe)
 
 ### Potencjalne dalsze optymalizacje wydajności (gdyby score 85 nie wystarczył)
 Risk/reward słaby — score 85 mobile to top 20% w PL. Ale gdyby kiedyś:
@@ -962,15 +1266,15 @@ Risk/reward słaby — score 85 mobile to top 20% w PL. Ale gdyby kiedyś:
 - Chatbot bubble ma z-30, mobile menu ma z-40 — bubble się chowa pod menu.
 
 ### Deploy
-- Zmiana treści (`app/data/*.ts`) — wymaga rebuildu i ponownego uploadu `out/`
+- Zmiana treści (`app/data/*.ts`, słowniki `lib/i18n/`) — wymaga rebuildu i `npm run deploy` (Cloudflare Pages)
 - Zmiana konfiguracji chatbota (welcome, quick replies w Supabase `chatbot_config`) — **NIE wymaga rebuildu**
-- Po deploy ZAWSZE: Cloudflare → Caching → Purge Everything
-- `.htaccess` często ukryty w FTP — włącz "Pokaż ukryte pliki"
+- Purge cache po deployu NIE jest potrzebny (HTML `max-age=0`, chunki z hashem); wyjątek: podmiana obrazu w `public/portfolio/` pod tą samą nazwą
+- Wrangler: logowanie Avenly (kontakt@avenly.pl) leży w osobnym profilu `C:\Users\Start\.wrangler-avenly` - wdrażać z `XDG_CONFIG_HOME=C:/Users/Start/.wrangler-avenly` (samo `npm run deploy` użyje globalnego logowania RKS i dostanie błąd autoryzacji); polecenia: CLAUDE.md „Deploy flow”
 
 ### Co działa "out of the box" i nie wymaga uwagi
 - Robots.txt + sitemap.xml — generowane przy build
 - Schema.org JSON-LD — automatycznie wstrzykiwane na każdej podstronie
 - OG image — fallback dla całej strony, custom dla blog posts i case studies
 - Favicon set — wszystkie rozmiary + manifest
-- Cache headers — `.htaccess` zarządza
-- HTTPS redirect — wymuszony przez `.htaccess`
+- Cache i nagłówki bezpieczeństwa — `public/_headers` (Cloudflare Pages)
+- HTTPS, Brotli, trailing slash, `/404.html` — Cloudflare Pages sam

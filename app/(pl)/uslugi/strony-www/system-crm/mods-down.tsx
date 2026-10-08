@@ -1,0 +1,285 @@
+'use client';
+
+import { useCallback, useEffect, useRef } from 'react';
+import type { ModsCopy } from '@/lib/i18n/uslugi/system-crm-mods';
+import { useFrame, useReducedPref, useSeen } from '../../_usluga/shared';
+import { Empty, MOD_ICONS, ModCount, ModFrame, START, Spot, bloomMark, flag, put, wipe } from './mods-ui';
+import './mods.css'; // style sekcji we własnym pliku (praca równoległa), prefiks cr8-
+import { SecHead, offsetTo } from './scene';
+import type { SceneProps } from './types';
+import { Win } from './ui';
+
+// SEKCJA MODUŁÓW - „W DÓŁ” (WYBRANA przez właściciela 2026-10-05: „w dół fajne, tylko daj o wiele niżej ten pasek,
+// gdzie się odkrywa”). BEZ PRZYPIĘCIA - sąsiednie sekcje, „Bębny” i „Tory”, są przypięte, więc ta daje stronie oddech.
+// Okno systemu rośnie dokładnie tak, jak je przewijasz: jego dolna krawędź stoi w stałym miejscu okna przeglądarki
+// („linia wzrostu”), a treść strony przesuwa się pod nią - okno wydłuża się o kolejne piętra.
+//   Okno     u góry trzy ekrany na start (widoczne od razu), pod nimi każdy kolejny moduł jako piętro na całą
+//            szerokość okna: numer, nazwa i zdanie o module, obok (telefon: pod nimi) duży mini-ekran. Na końcu
+//            puste miejsce.
+//   Linia    linia wzrostu leży NISKO - tuż nad bąblem czatu. Jej położenie ustala WYŁĄCZNIE CSS (`bottom` paska
+//            stanu w mods.css: max(92px, 10svh) - ze `svh`, więc nie skacze, gdy na telefonie chowa się pasek adresu).
+//            Dołem okna jest pasek stanu z licznikiem „Włączone moduły”: przykleja go CSS (position: sticky), więc
+//            stoi nieruchomo także przy przewijaniu palcem. Scena MIERZY prawdziwe położenie paska (jeden prostokąt
+//            na klatkę) i prowadzi pod jego środkiem szew: tam kończą się razem płyta okna i lista pięter. Dzięki
+//            pomiarowi szew trafia pod pasek także w trakcie chowania paska adresu (window.innerHeight jest wtedy
+//            nieaktualne, a przeglądarka przykleja pasek już do nowej krawędzi).
+//   Piętro   wchodzi do okna jako puste miejsce ze spokojnym znakiem wolnego miejsca. W CHWILI WEJŚCIA scena stawia
+//            mu data-open i rozejście (.cr-bloom, kłęby gazu od lewej do prawej) gra SAMO do końca - przejście CSS
+//            zmiennej --bloom, czyli czas, a nie położenie przewijania. Po BLOOM_MS warstwy dostają data-bloomed
+//            (maska zdjęta, znak wolnego miejsca schowany), licznik przeskakuje o jeden. NIGDY WSTECZ: raz odsłonięte
+//            piętro zostaje odsłonięte. (Właściciel 2026-10-05: „żeby nie było sytuacji, kiedy użytkownik już
+//            zescrollował i widzi cały element, a część nie jest revealed na dole” - zatrzymanie przewijania
+//            w połowie niczego już nie zostawia w pół.)
+//            Chwila wejścia: komputer - góra piętra mija linię wzrostu (ENTER); telefon i tablet - dopiero gdy nad
+//            pasek stanu wyjdzie PEEK px piętra (pasek zasłania pierwsze 52 px, a palec przewija wolniej niż kółko:
+//            przy starcie na linii rozejście kończyłoby się za paskiem i nikt by go nie zobaczył).
+//   Start /  piętra, które przy starcie sceny są już w oknie albo nad ekranem, oraz te, które po szybkim przeskoku
+//   skok     znalazły się nad ekranem, odsłaniają się natychmiast (bez rozejścia); piętra na ekranie - rozejściem.
+//   Finał    ostatnie miejsce zostaje puste: znak wolnego miejsca stoi dalej, a przerywany obrys ze zdaniem „+ to,
+//            czego potrzebuje Twoja firma” pojawia się tak samo - przy wejściu. Pasek stanu staje na dole okna
+//            z licznikiem 8 / 8.
+//   Niski    gdy CSS nie przykleja paska stanu (małe okno przeglądarki poniżej 500 px wysokości: telefon poziomo;
+//   ekran    także chwila przed data-live na korzeniu podstrony), scena działa w ZWYKŁYM UKŁADZIE: okno widać
+//            w całości, bez szwu, a piętro odsłania się (tak samo - na czas, nigdy wstecz), gdy jego góra minie
+//            PLAIN_AT wysokości ekranu.
+// Jedna klatka przewijania (useFrame) = najwyżej dwa odczyty układu (okno i pasek stanu) i dwa zapisy `clip-path`
+// (szew okna) - WPROST na płycie okna i na liście pięter, tylko przy zmianie.
+// WYDAJNOŚĆ (właściciel 2026-10-06: „jak się mockup rozwija przy scrollu, to niemiłosiernie laguje”): dawniej szew
+// szedł przez zmienne CSS --cy / --cut pisane co klatkę na przodkach całego okna - zmienne się dziedziczą, więc
+// przeglądarka przeliczała w każdej klatce style wszystkich pięter i mini-ekranów (setki elementów), a potem
+// malowała od nowa płytę okna z dużym cieniem. Teraz: żadnych dziedziczonych zmiennych w klatce (licznik --cn stoi
+// na pasku stanu i zmienia się tylko, gdy wchodzi piętro), a płyta okna i lista pięter mają własne warstwy
+// (will-change w mods.css) - przesunięcie szwu nie maluje ich treści od nowa.
+// Położenia pięter idą z pomiaru układu (offsetTo) przy zmianie rozmiaru, nie z klatki.
+// Bez JS / ograniczony ruch: zwykła sekcja - całe okno, wszystkie piętra, licznik 8 / 8.
+
+// ── STROJENIE (położenie linii wzrostu i próg niskiego ekranu: `bottom` paska stanu w mods.css) ──
+/** Komputer (od WIDE px szerokości): zapas wejścia [px] - piętro zaczyna się odsłaniać, gdy jego górna krawędź jest
+    najwyżej tyle POD linią wzrostu. 0 = dokładnie na linii; wartość ujemna = później. */
+const ENTER = 0;
+/** Telefon i tablet (poniżej WIDE): piętro zaczyna się odsłaniać, gdy nad pasek stanu wyszło tyle px jego góry.
+    44 px = odstęp piętra (24 px) + cała gwiazdka znaku wolnego miejsca (15 px) + 5 px: najpierw widać puste miejsce,
+    potem rozejście gra na treści, która właśnie wysuwa się zza paska. */
+const PEEK = 44;
+/** Szerokość okna przeglądarki, od której obowiązuje układ komputerowy (jak @media (min-width: 1024px) w mods.css). */
+const WIDE = 1024;
+/** Zwykły układ (pasek stanu nieprzyklejony): piętro odsłania się, gdy jego góra minie ten ułamek wysokości ekranu. */
+const PLAIN_AT = 0.85;
+/** Czas rozejścia piętra [ms] - jak przejście --bloom w mods.css (.cr8-c-floor[data-open]); zmieniać razem. */
+const BLOOM_MS = 1100;
+/** Zapas, gdyby przeglądarka nie podała wyliczonego `bottom` przyklejonego paska [px]. */
+const LB_SPARE = 92;
+
+interface Geo {
+  /** Pełna wysokość okna, góra listy pięter w układzie okna i wysokość samej listy pięter. */
+  fullH: number; wrapY: number; listH: number;
+  /** Piętra (ostatnie = puste miejsce) w układzie listy pięter. */
+  floors: { y: number; h: number }[];
+  /** Odległość linii wzrostu od dołu ekranu [px] - z CSS paska stanu; null = pasek się nie przykleja (zwykły układ). */
+  lb: number | null;
+  /** Zapas wejścia [px] względem linii wzrostu (ujemny = później). */
+  enter: number;
+}
+/** Stan sceny: które piętra są już odsłonięte (nigdy wstecz), zegary zdjęcia maski, czy pierwsza klatka już była,
+    ostatnio zapisane przycięcia płyty okna i listy pięter oraz licznik (zapis tylko przy zmianie). */
+interface Run { open: boolean[]; timers: number[]; ready: boolean; plate: string; list: string; count: number }
+
+const px = (v: number) => `${v.toFixed(1)}px`;
+
+/** Odsłona piętra: data-open uruchamia przejście --bloom (CSS), po jego końcu maska schodzi (data-bloomed).
+    `now` = bez rozejścia (piętro poza ekranem albo start sceny) - od razu stan końcowy. */
+const reveal = (el: HTMLElement, now: boolean, timers: number[]) => {
+  flag(el, 'data-open', true);
+  if (now) { bloomMark(el, true); return; }
+  timers.push(window.setTimeout(() => bloomMark(el, true), BLOOM_MS + 200));
+};
+
+export const ModsDown = ({ t, x, headId }: SceneProps<ModsCopy>) => {
+  const g = t.grow;
+  const n = g.modules.length;
+  const reduced = useReducedPref();
+  const sysRef = useRef<HTMLDivElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const footRef = useRef<HTMLDivElement>(null);
+  const floorEls = useRef<HTMLElement[]>([]);
+  const geo = useRef<Geo | null>(null);
+  /** Płyta okna i lista pięter - to na nich stoi `clip-path` szwu. */
+  const plateEl = useRef<HTMLElement | null>(null);
+  const listEl = useRef<HTMLElement | null>(null);
+  const run = useRef<Run>({ open: [], timers: [], ready: false, plate: '', list: '', count: -1 });
+  useSeen(sysRef, 0.04);
+
+  const frame = useCallback(() => {
+    const sys = sysRef.current, wrap = wrapRef.current, foot = footRef.current, G = geo.current;
+    if (!sys || !wrap || !foot || !G) return;
+    const S = run.current;
+    const vh = window.innerHeight;
+    // odczyty układu (okno i - gdy pasek jest przyklejany - pasek stanu) PRZED zapisami
+    const top = sys.getBoundingClientRect().top;
+    // `edge` = miejsce, w którym piętro zaczyna się odsłaniać, w układzie listy pięter
+    let edge: number;
+    if (G.lb === null) {
+      // zwykły układ: bez linii wzrostu i szwu - piętra odsłaniają się przy wejściu na ekran
+      edge = vh * PLAIN_AT - top - G.wrapY;
+    } else {
+      // prawdziwe położenie paska stanu w układzie okna (przykleja go CSS: dół na linii wzrostu, nie wyżej niż góra
+      // listy pięter i nie niżej niż dół okna)
+      const fr = foot.getBoundingClientRect();
+      const footTop = fr.top - top, footH = fr.height;
+      // szew: płyta okna i lista pięter kończą się w połowie wysokości paska; gdy pasek stoi na dole okna - bez przycięć
+      // (tolerancja 1 px: wymiary z pomiaru układu są zaokrąglone do całych pikseli, prostokąty nie)
+      const whole = footTop >= G.fullH - footH - 1;
+      const seam = footTop + footH / 2;
+      const plate = whole ? '' : `inset(0 0 ${px(G.fullH - seam)} 0 round 18px)`;
+      const list = whole ? '' : `inset(0 0 ${px(Math.max(0, G.listH - (seam - G.wrapY)))} 0)`;
+      if (plate !== S.plate) { S.plate = plate; if (plateEl.current) plateEl.current.style.clipPath = plate; }
+      if (list !== S.list) { S.list = list; if (listEl.current) listEl.current.style.clipPath = list; }
+      // linia wzrostu w układzie okna: gdy pasek jest przyklejony (albo stoi już na dole okna), to jego dolna krawędź;
+      // gdy czeka jeszcze na górze listy pięter - z wysokości ekranu i odległości z CSS
+      const stuck = footTop > G.wrapY + 1;
+      const line = stuck ? footTop + footH : vh - G.lb - top;
+      edge = line - G.wrapY + G.enter;
+    }
+    // `over` = górna krawędź ekranu w układzie listy pięter
+    const over = -top - G.wrapY;
+    const last = G.floors.length - 1;
+    let count = 0;
+    G.floors.forEach((f, k) => {
+      if (!S.open[k] && f.y <= edge) {
+        const el = floorEls.current[k];
+        if (el) {
+          S.open[k] = true;
+          // przed pierwszą klatką (start sceny) i nad ekranem - natychmiast; na ekranie - rozejściem
+          reveal(el, !S.ready || f.y + f.h <= over, S.timers);
+        }
+      }
+      if (S.open[k] && k < last) count += 1;
+    });
+    if (count !== S.count) { S.count = count; put(foot, '--cn', String(count)); }
+  }, []);
+
+  useEffect(() => {
+    const sys = sysRef.current, wrap = wrapRef.current, foot = footRef.current;
+    if (!sys || !wrap || !foot) return;
+    const floors = Array.from(wrap.querySelectorAll<HTMLElement>('.cr8-c-floor'));
+    floorEls.current = floors;
+    const plate = sys.querySelector<HTMLElement>('.cr8-c-win'), list = wrap.querySelector<HTMLElement>('.cr8-c-floors');
+    plateEl.current = plate;
+    listEl.current = list;
+    /** Zdejmuje szew: okno w całości. */
+    const whole = () => {
+      if (plate) plate.style.removeProperty('clip-path');
+      if (list) list.style.removeProperty('clip-path');
+      run.current.plate = ''; run.current.list = '';
+    };
+    if (reduced) {
+      // ograniczony ruch: zwykła sekcja w stanie końcowym, bez śladów po scenie
+      geo.current = null;
+      run.current = { open: [], timers: [], ready: false, plate: '', list: '', count: -1 };
+      wipe(sys, [], ['data-ready']);
+      wipe(foot, ['--cn']);
+      whole();
+      floors.forEach((el) => { el.removeAttribute('data-open'); bloomMark(el, true); });
+      return;
+    }
+    // stan pięter: odsłonięte (data-open zostaje z poprzedniego przebiegu) są bez maski, pozostałe czekają w stanie
+    // „przed” (maska wraca - CSS trzyma im --bloom: 0, dopóki nie wejdą do okna)
+    whole(); // przycięcie z poprzedniego przebiegu sceny nie może zostać na elementach
+    const S: Run = { open: floors.map((el) => el.hasAttribute('data-open')), timers: [], ready: false, plate: '', list: '', count: -1 };
+    run.current = S;
+    floors.forEach((el, k) => bloomMark(el, S.open[k]));
+
+    let raf = 0, rafReady = 0;
+    const measure = () => {
+      raf = 0;
+      // odczyty: czy CSS przykleja pasek stanu i jak nisko leży linia wzrostu (ujemne `bottom` = niski ekran,
+      // pasek stoi zwyczajnie na dole okna), potem wymiary okna i położenia pięter
+      const cs = getComputedStyle(foot);
+      const bottom = parseFloat(cs.bottom);
+      const lb = cs.position !== 'sticky' ? -1 : Number.isFinite(bottom) ? bottom : LB_SPARE;
+      const next: Geo = {
+        fullH: sys.offsetHeight, wrapY: offsetTo(wrap, sys).y, listH: list ? list.offsetHeight : 0,
+        floors: floors.map((el) => { const b = offsetTo(el, wrap); return { y: b.y, h: b.h }; }),
+        lb: lb >= 0 ? lb : null,
+        enter: window.innerWidth >= WIDE ? ENTER : -(foot.offsetHeight + PEEK),
+      };
+      geo.current = next;
+      // zwykły układ: okno w całości (bez szwu)
+      if (next.lb === null) whole();
+      frame();
+      if (!S.ready) {
+        // po pierwszej klatce: kolejne piętra wchodzą rozejściem, a licznik dochodzi przejściem (data-ready - dopiero
+        // w następnej klatce, żeby pierwsze ustawienie licznika nie było animowane)
+        S.ready = true;
+        rafReady = requestAnimationFrame(() => flag(sys, 'data-ready', true));
+      }
+    };
+    const kick = () => { if (!raf) raf = requestAnimationFrame(measure); };
+    const ro = new ResizeObserver(kick);
+    ro.observe(sys); ro.observe(wrap);
+    // pierwszy pomiar biegnie, zanim korzeń podstrony dostanie data-live (pasek stanu jeszcze nieprzyklejony) -
+    // po zmianie atrybutu mierzymy jeszcze raz; zmiana wysokości okna przeglądarki zmienia linię wzrostu
+    const root = sys.closest('.sv');
+    const mo = new MutationObserver(kick);
+    if (root) mo.observe(root, { attributes: true, attributeFilter: ['data-live'] });
+    window.addEventListener('resize', kick);
+    document.fonts?.ready.then(kick).catch(() => {});
+    kick();
+    return () => {
+      cancelAnimationFrame(raf); cancelAnimationFrame(rafReady);
+      S.timers.forEach((id) => window.clearTimeout(id));
+      ro.disconnect(); mo.disconnect();
+      window.removeEventListener('resize', kick);
+    };
+  }, [frame, reduced]);
+
+  useFrame(frame, !reduced);
+
+  const start = g.modules.slice(0, START), built = g.modules.slice(START);
+  return (
+    <section className="cr-sec cr8-c" aria-labelledby={headId}>
+      <div className="container mx-auto px-6">
+        <SecHead id={headId} title={g.title} accent={g.titleAccent} lead={g.lead} />
+        <div ref={sysRef} className="cr8-c-sys">
+          {/* płyta okna: kończy się pod paskiem stanu (clip-path); lista pięter nad nią kończy się na tym samym szwie */}
+          <Win app={t.app} className="cr8-c-win">{null}</Win>
+          <div className="cr8-c-body">
+            <ol className="cr8-c-start">
+              {start.map((mod, i) => {
+                const Icon = MOD_ICONS[i % MOD_ICONS.length];
+                return (
+                  <li key={mod.name} className="cr8-c-col">
+                    <h3 className="cr8-name"><Icon aria-hidden="true" />{mod.name}</h3>
+                    <p className="cr8-text">{mod.text}</p>
+                    <ModFrame i={i} t={t} x={x} size="m" />
+                  </li>
+                );
+              })}
+            </ol>
+            <div ref={wrapRef} className="cr8-c-wrap">
+              <ol className="cr8-c-floors">
+                {built.map((mod, k) => (
+                  <li key={mod.name} className="cr8-c-floor">
+                    {/* treść piętra pojawia się rozejściem przy wejściu do okna, znak wolnego miejsca schodzi dopełnieniem */}
+                    <div className="cr8-c-in cr-bloom" data-bloomed="">
+                      <div className="cr8-c-what">
+                        <span className="cr8-c-n" aria-hidden="true">{String(START + k + 1).padStart(2, '0')}</span>
+                        <h3 className="cr8-c-title">{mod.name}</h3>
+                        <p className="cr8-c-d">{mod.text}</p>
+                      </div>
+                      <div className="cr8-c-screen"><ModFrame i={START + k} t={t} x={x} size="m" /></div>
+                    </div>
+                    <Spot out />
+                  </li>
+                ))}
+                <li className="cr8-c-floor cr8-c-floor--more"><Empty text={g.more} /></li>
+              </ol>
+              {/* pasek stanu = dół okna: na żywo przyklejony do linii wzrostu (position: sticky w obrębie listy pięter) */}
+              <div ref={footRef} className="cr8-c-foot"><ModCount label={g.count} n={n} /></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};

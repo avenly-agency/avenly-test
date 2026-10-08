@@ -23,6 +23,12 @@ interface Props {
   categoryPath: string;
   /** Typ usługi dla schema.org (np. "Web Development", "AI Chatbot Development"). */
   serviceType?: string;
+  /**
+   * Język strony. Dla 'en' podawaj name/description/path już w wersji EN
+   * (path z prefiksem /en/...) - locale steruje tylko stałymi breadcrumbami
+   * (home + katalog usług).
+   */
+  locale?: 'pl' | 'en';
 }
 
 export function ServicePageSchema({
@@ -32,7 +38,9 @@ export function ServicePageSchema({
   categoryName,
   categoryPath,
   serviceType,
+  locale = 'pl',
 }: Props) {
+  const isEn = locale === 'en';
   return (
     <>
       <JsonLd
@@ -42,8 +50,8 @@ export function ServicePageSchema({
       <JsonLd
         id="ld-breadcrumb"
         data={breadcrumbSchema([
-          { name: 'Avenly', url: '/' },
-          { name: 'Usługi', url: '/uslugi' },
+          { name: 'Avenly', url: isEn ? '/en/' : '/' },
+          { name: isEn ? 'Services' : 'Usługi', url: isEn ? '/en/services' : '/uslugi' },
           { name: categoryName, url: categoryPath },
           { name, url: path },
         ])}

@@ -1,0 +1,246 @@
+/* SZKIELET PODSTRON USŁUG - praca równoległa, etap 3, chat 7 (pilot: one-page). Style tylko w tym pliku, prefiks sv-.
+   Wspólne dla 7 podstron usług: korzeń i tło (mgławica w kolorze podstrony), wejście z czerni, nagłówek z kropką,
+   przyciski, podpisy kroków sceny, szkic (rysunek z pomiaru treści) i jego odsłona, zakres z terminem, zakończenie,
+   panel przełączników propozycji. Scena pokazująca usługę i jej style żyją w katalogu danej podstrony (własny prefiks).
+   Język strony głównej: tło #050505, czerń luksusowa z ostrym refleksem u góry, ostre włosowe linie, kolor podstrony
+   (--sv-ac = "r g b" z lib/service-theme.ts) tylko w akcentach. Bez blur / mgiełek / tekstu z gradientem / wersalików /
+   masek i prostokątów za tekstem / efektów najechania na kartach.
+   Stany „przed wejściem” i przypięte sceny tylko pod .sv[data-live] (JS działa) i przy prefers-reduced-motion:
+   no-preference - bez JS i przy ograniczonym ruchu wszystko widać od razu. Opis: docs/podstrony/usluga-one-page.md. */
+
+.sv {
+  --sv-ac: 59 130 246;
+  --sv-ease: cubic-bezier(.16, 1, .3, 1);
+  --sv-draw: cubic-bezier(.65, 0, .35, 1);
+  --sv-line: rgba(255, 255, 255, .1);
+  --sv-edge: inset 0 1px 0 rgba(255, 255, 255, .2), inset 0 0 0 1px rgba(255, 255, 255, .06), inset 0 -1px 0 rgba(0, 0, 0, .7);
+  --hl: rgb(var(--sv-ac)); /* kropka nagłówka i akcenty .im-accent w kolorze podstrony */
+  position: relative; isolation: isolate; padding-bottom: 112px; background: #050505; color: #f8fafc; overflow-x: clip;
+}
+@media (min-width: 768px) { .sv { padding-bottom: 148px; } }
+
+/* ── TŁO: mgławica (sky.tsx; shader z /realizacje - tylko import). Jedno płótno przyklejone do okna ZA całą treścią
+   (sticky + ujemny margines = nie zajmuje miejsca), koniec podstrony gaśnie do czerni stopki. Start z czerni: do
+   pierwszej klatki czysta czerń. Bez WebGL / Save-Data ([data-fail]): poświata CSS w kolorze podstrony od dołu okna. ── */
+.sv-sky { position: sticky; top: 0; z-index: 0; height: 100vh; height: 100lvh; margin-bottom: -100vh; margin-bottom: -100lvh; overflow: hidden; pointer-events: none; }
+.sv-sky-neb { position: absolute; inset: 0; }
+.sv-sky-neb[data-fail] { background: radial-gradient(60% 45% at 50% 100%, rgb(var(--sv-ac) / .16), transparent 70%); }
+.sv-sky-neb canvas { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; }
+.sv-sky-neb[data-ready] canvas { opacity: 1; }
+.sv-sky-end { position: absolute; left: 0; right: 0; bottom: 0; z-index: 0; height: min(70vh, 640px); pointer-events: none; background: linear-gradient(180deg, rgba(5, 5, 5, 0), rgba(5, 5, 5, .18) 16%, rgba(5, 5, 5, .5) 36%, rgba(5, 5, 5, .8) 56%, rgba(5, 5, 5, .95) 72%, #050505 86%); }
+/* Przejście do stopki bez linii: stopka ma u góry włosową linię (footer.css, zamrożony), która na tle gasnącej mgławicy
+   wyglądała jak podświetlona krawędź (właściciel: „usuń to podświetlenie na footerze, żeby było ładne przejście
+   płynne”). Na podstronach usług ją chowamy - mgławica gaśnie do czerni stopki bez granicy. */
+body:has(.sv) .ft::before { display: none; }
+
+/* ── NAGŁÓWEK: jedno zdanie z kropką w kolorze podstrony (jak „AVENLY.”, „Od strony po system.”), krótki opis,
+   biały przycisk i linia dowodów. Bez etykiety, bez widocznej ścieżki. ── */
+.sv-head { position: relative; z-index: 1; }
+.sv .sv-title { margin: 0 0 22px; max-width: 18ch; font-size: clamp(44px, 6.8vw, 108px); line-height: .98; letter-spacing: -.05em; text-wrap: balance; }
+.sv-mask { display: block; overflow: hidden; padding: .04em .06em .12em; margin: -.04em -.06em -.12em; }
+.sv-line { display: block; }
+.sv .sv-lead { margin: 0; max-width: 36rem; font-size: 18px; text-wrap: pretty; }
+.sv-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 14px; margin-top: 34px; }
+.sv-proof { display: flex; flex-wrap: wrap; align-items: center; margin: 18px 0 0; font-size: 14px; line-height: 1.5; color: #94a3b8; }
+.sv-proof-dot { margin: 0 9px; color: rgba(148, 163, 184, .6); }
+.sv-head[data-align="center"] { text-align: center; }
+.sv-head[data-align="center"] .sv-title, .sv-head[data-align="center"] .sv-lead { margin-inline: auto; }
+.sv-head[data-align="center"] :is(.sv-actions, .sv-proof) { justify-content: center; }
+.sv-head[data-align="center"] .sv-lead { text-wrap: balance; }
+@media (max-width: 639.98px) {
+  .sv .sv-title { margin-bottom: 18px; font-size: clamp(44px, 12.6vw, 56px); }
+  .sv .sv-lead { font-size: 16.5px; line-height: 1.6; }
+  .sv-actions { margin-top: 28px; }
+  .sv-proof { font-size: 13.5px; }
+  .sv-proof-dot { margin: 0 7px; }
+}
+
+/* ── Przyciski: biały „Bezpłatna konsultacja” (jak hero strony głównej, stopka, /uslugi, /realizacje, /kontakt). ── */
+.sv-cta {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  height: 56px; padding: 0 28px; border-radius: 14px;
+  font-size: 15.5px; font-weight: 700; line-height: 1; white-space: nowrap; text-decoration: none;
+  color: #020617; background: #fff; box-shadow: inset 0 -1px 0 rgba(2, 6, 23, .12);
+  transition: background-color .35s ease, transform .2s ease;
+}
+.sv-cta svg { flex: none; width: 17px; height: 17px; transition: transform .45s var(--sv-ease); }
+.sv-cta:active { transform: scale(.985); }
+.sv-cta:focus-visible { outline: 2px solid #60a5fa; outline-offset: 3px; }
+@media (hover: hover) {
+  .sv-cta:hover { background: #eef3fb; }
+  .sv-cta:hover svg { transform: translateX(3px); }
+}
+
+/* ── WEJŚCIE (decyzja właściciela z etapu 2): czerń -> tło rodzi się z czerni -> tekst po kolei (data-go) -> scena
+   (data-on). Bezpiecznik (zepsuty JS): tekst sam po 6 s, scena po 6,5 s; bez JS <noscript> pokazuje wszystko.
+   .sv-wait = treść, którą JS przestawia w scenę i której w układzie statycznym nie wolno pokazać przed data-live
+   (np. tekst filmu i pole pytań w hero Chatbotów AI - 2026-10-06, właściciel: przez chwilę po wejściu widać było
+   zdanie filmu z narratorem nisko na czarnym ekranie, zanim strona dostała data-live). ── */
+@keyframes sv-rise { from { opacity: 0; transform: translateY(18px); } }
+@keyframes sv-line { from { transform: translate3d(0, 108%, 0); } }
+@keyframes sv-late { from { opacity: 0; transform: translateY(28px); } }
+@keyframes sv-show { to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  .sv:not([data-go]) .sv-line { transform: translate3d(0, 108%, 0); animation: sv-show 1s cubic-bezier(.19, 1, .22, 1) 6s forwards; }
+  .sv:not([data-go]) .sv-in { opacity: 0; transform: translateY(18px); animation: sv-show 1s var(--sv-ease) 6s forwards; }
+  .sv[data-go] .sv-line { animation: sv-line 1.3s cubic-bezier(.19, 1, .22, 1) both; animation-delay: calc(var(--d, 0) * 140ms + 60ms); }
+  .sv[data-go] .sv-in { animation: sv-rise 1.1s var(--sv-ease) both; animation-delay: calc(var(--d, 0) * 120ms + 60ms); }
+  .sv:not([data-on]) .sv-late { opacity: 0; animation: sv-show 1s ease 6.5s forwards; }
+  .sv[data-on] .sv-late { animation: sv-late 1.4s var(--sv-ease) both; animation-delay: calc(var(--d, 0) * 130ms); }
+  /* przed data-live (SSR przed hydratacją, pierwsza klatka po nawigacji) treść czekająca na scenę jest schowana;
+     po data-live krycie i transform bierze scena podstrony (bez animacji wejścia - nie nadpisuje krycia z --cam) */
+  .sv:not([data-live]) .sv-wait { opacity: 0; animation: sv-show 1s ease 6s forwards; }
+}
+
+/* ── PODPISY KROKÓW sceny (Steps w parts.tsx): numer w kółku jak odnośniki rysunków Oferty, pasek kroku wypełnia się
+   razem ze sceną. Komputer / tablet: trzy kolumny. Telefon: jeden podpis naraz (zmiana z przenikaniem), trzy paski. ── */
+.sv-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.sv-step { position: relative; min-width: 0; }
+.sv-step-bar { display: none; position: absolute; left: 0; right: 0; top: 0; height: 2px; border-radius: 2px; background: rgba(255, 255, 255, .13); overflow: hidden; }
+.sv-step-bar i { display: block; height: 100%; background: rgb(var(--sv-ac)); transform-origin: 0 50%; transform: scaleX(var(--f, 0)); }
+.sv-step-body { display: flex; align-items: flex-start; gap: 12px; color: #e2e8f0; }
+.sv-step-n {
+  flex: none; display: inline-grid; place-items: center; width: 24px; height: 24px; margin-top: 0; border-radius: 50%;
+  border: 1px solid rgb(var(--sv-ac) / .6); color: rgb(var(--sv-ac)); color: color-mix(in oklab, rgb(var(--sv-ac)) 70%, #fff);
+  font-size: 12px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums;
+}
+.sv-step-t { font-size: 15.5px; line-height: 1.5; text-wrap: pretty; }
+@media (min-width: 768px) { .sv-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 32px; } }
+@media (prefers-reduced-motion: no-preference) {
+  .sv[data-live] .sv-step { padding-top: 16px; }
+  .sv[data-live] .sv-step-bar { display: block; }
+  .sv[data-live] .sv-step-body { color: #94a3b8; transition: color .6s ease; }
+  .sv[data-live] .sv-step[data-on="1"] .sv-step-body { color: #f8fafc; }
+  .sv[data-live] .sv-step[data-on="2"] .sv-step-body { color: #cbd5e1; }
+  .sv[data-live] .sv-step[data-on="2"] .sv-step-bar i { transform: none; }
+  @media (max-width: 767.98px) {
+    .sv[data-live] .sv-steps { gap: 0; }
+    .sv[data-live] .sv-step { grid-area: 1 / 1; }
+    .sv[data-live] .sv-step-bar { left: calc(var(--i) * (100% + 8px) / 3); right: auto; width: calc((100% - 16px) / 3); }
+    .sv[data-live] .sv-step-body { opacity: 0; transform: translateY(8px); transition: opacity .45s ease, transform .6s var(--sv-ease); }
+    .sv[data-live] .sv-step[data-on="1"] .sv-step-body { opacity: 1; transform: none; }
+  }
+}
+
+/* ── SZKIC (sketch.tsx): rysunek techniczny wygenerowany z pomiaru treści - język rysunków Oferty. Linie o stałej
+   grubości w px ekranu, „tekst” jako kreski, przyciski w kolorze podstrony. Linie rysują się po kolei (--d). ── */
+.sv-sk { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+.sv-sk path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+/* --sv-skw: mnożnik grubości linii - scena ustawia go odwrotnie do skali pomniejszonego kadru, żeby włosowe linie
+   nie znikały i nie rwały się po pomniejszeniu (zgłoszenie właściciela: „przerywane linie”). */
+.sv-sk-box { stroke: rgba(255, 255, 255, .72); stroke-width: calc(1.3px * var(--sv-skw, 1)); }
+.sv-sk-soft { stroke: rgba(255, 255, 255, .38); stroke-width: calc(1.1px * var(--sv-skw, 1)); }
+.sv-sk path.sv-sk-acc { stroke: rgb(var(--sv-ac)); stroke-width: calc(1.5px * var(--sv-skw, 1)); fill: rgb(var(--sv-ac) / .13); }
+.sv-sk-bar { stroke: rgba(255, 255, 255, .2); }
+.sv-sk-hi { stroke: rgba(255, 255, 255, .46); }
+.sv-sk-xl { stroke: rgba(255, 255, 255, .86); }
+.sv-sk-accbar { stroke: rgb(var(--sv-ac) / .85); }
+@media (prefers-reduced-motion: no-preference) {
+  .sv[data-live] .sv-sk path { stroke-dasharray: 1 1; stroke-dashoffset: 1; opacity: 0; }
+  .sv[data-live] .sv-sk[data-draw="1"] path {
+    stroke-dashoffset: 0; opacity: 1;
+    transition: stroke-dashoffset .9s var(--sv-draw) var(--d, 0ms), opacity .2s linear var(--d, 0ms);
+  }
+  /* narysowane: bez kreskowania (pathLength + dasharray zostawiały drobne przerwy w liniach) */
+  .sv[data-live] .sv-sk[data-draw="2"] path { stroke-dasharray: none; stroke-dashoffset: 0; opacity: 1; }
+}
+
+/* ── ODSŁONA SZKIC -> GOTOWE (.sv-rvb): gotowa treść (.sv-rvb-real) odsłania się ukośnie spod szkicu (.sv-rvb-sk),
+   na granicy biegnie ostra linia światła (bez rozmycia). --rv = położenie linii w % przekątnej (pisze JS), --rvo =
+   widoczność linii. Po odsłonie [data-done]: bez masek. Bezpiecznik: maska znika sama po 7 s. ── */
+.sv-rvb { position: relative; --sv-ang: 112deg; }
+.sv-rvb-sk, .sv-rvb-beam { position: absolute; inset: 0; display: none; pointer-events: none; }
+@keyframes sv-unmask { to { -webkit-mask-image: none; mask-image: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  .sv-rvb:not([data-done]) > .sv-rvb-real {
+    -webkit-mask-image: linear-gradient(var(--sv-ang), #000 calc(var(--rv, -4) * 1%), transparent calc(var(--rv, -4) * 1% + .12%));
+    mask-image: linear-gradient(var(--sv-ang), #000 calc(var(--rv, -4) * 1%), transparent calc(var(--rv, -4) * 1% + .12%));
+    animation: sv-unmask 1ms 7s forwards;
+  }
+  .sv[data-live] .sv-rvb:not([data-done]) > .sv-rvb-sk {
+    display: block;
+    -webkit-mask-image: linear-gradient(var(--sv-ang), transparent calc(var(--rv, -4) * 1%), #000 calc(var(--rv, -4) * 1% + .12%));
+    mask-image: linear-gradient(var(--sv-ang), transparent calc(var(--rv, -4) * 1%), #000 calc(var(--rv, -4) * 1% + .12%));
+  }
+  .sv[data-live] .sv-rvb:not([data-done]) > .sv-rvb-beam {
+    display: block; opacity: var(--rvo, 0);
+    background: linear-gradient(var(--sv-ang), transparent calc(var(--rv, -4) * 1% - .45%), rgba(255, 255, 255, .95) calc(var(--rv, -4) * 1%), rgb(var(--sv-ac) / .7) calc(var(--rv, -4) * 1% + .22%), transparent calc(var(--rv, -4) * 1% + 1.1%));
+  }
+}
+
+/* ── ZAKRES („co dostajesz”) + TERMIN - te same miejsca na każdej podstronie usługi (drabina: zakres i termin widać
+   w tych samych punktach przy przeklikaniu one-page -> firmowa -> na miarę). Treść przy krawędziach kontenera. ── */
+.sv-scope { position: relative; z-index: 1; padding: 96px 0 0; }
+@media (min-width: 1024px) { .sv-scope { padding-top: 136px; } }
+.sv-scope-in { display: grid; gap: 44px; }
+@media (min-width: 1024px) { .sv-scope-in { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 80px; align-items: start; } }
+.sv .sv-h2 { margin: 0 0 34px; font-size: clamp(34px, 4.2vw, 56px); line-height: 1.04; letter-spacing: -.04em; text-wrap: balance; }
+/* termin na linii wymiarowej (motyw wymiaru z rysunków Oferty): |--- 3-5 dni ---| */
+.sv-term { display: grid; gap: 10px; max-width: 26rem; }
+.sv-term-l { font-size: 14.5px; line-height: 1.3; color: #94a3b8; }
+.sv-term-dim { display: flex; align-items: center; gap: 16px; }
+.sv-term-dim i { position: relative; flex: 1; height: 1px; background: rgba(255, 255, 255, .3); }
+.sv-term-dim i::before { content: ''; position: absolute; top: -6px; width: 1px; height: 13px; background: rgb(var(--sv-ac)); }
+.sv-term-dim i:first-child::before { left: 0; }
+.sv-term-dim i:last-child::before { right: 0; }
+.sv-term-dim b { font-size: clamp(30px, 3vw, 40px); line-height: 1; font-weight: 600; letter-spacing: -.035em; white-space: nowrap; font-variant-numeric: tabular-nums; color: #f8fafc; }
+.sv-fits { display: grid; gap: 3px; margin: 30px 0 0; max-width: 26rem; font-size: 15.5px; line-height: 1.6; color: #e2e8f0; }
+.sv-fits-l { margin-bottom: 4px; font-size: 14.5px; color: #94a3b8; }
+.sv-fits-i { display: flex; align-items: center; gap: 11px; }
+.sv-fits-i::before { content: ''; flex: none; width: 3px; height: 3px; border-radius: 50%; background: rgb(var(--sv-ac)); }
+.sv-scope-list { list-style: none; margin: 0; padding: 0; }
+.sv-scope-row { position: relative; display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 6px 0; padding: 22px 0 24px; }
+.sv-scope-row::before, .sv-scope-row:last-child::after { content: ''; position: absolute; left: 0; right: 0; height: 1px; background: rgba(255, 255, 255, .13); transform-origin: 0 50%; }
+.sv-scope-row::before { top: 0; }
+.sv-scope-row:last-child::after { bottom: 0; }
+.sv-scope-n { grid-row: 1 / span 2; padding-top: 6px; font-size: 13.5px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; color: rgb(var(--sv-ac)); color: color-mix(in oklab, rgb(var(--sv-ac)) 72%, #fff); }
+.sv-scope-t { font-size: 20px; line-height: 1.25; font-weight: 600; letter-spacing: -.02em; color: #f8fafc; }
+.sv-scope-d { grid-column: 2; max-width: 34rem; font-size: 16px; line-height: 1.6; color: #94a3b8; text-wrap: pretty; }
+@media (min-width: 1280px) {
+  .sv-scope-row { grid-template-columns: 44px minmax(0, 15rem) minmax(0, 1fr); gap: 0 24px; align-items: baseline; }
+  .sv-scope-n { grid-row: auto; padding-top: 0; }
+  .sv-scope-d { grid-column: 3; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sv[data-live] .sv-scope-in:not([data-in]) :is(.sv-scope-head, .sv-scope-n, .sv-scope-t, .sv-scope-d) { opacity: 0; }
+  .sv[data-live] .sv-scope-in:not([data-in]) .sv-scope-row::before, .sv[data-live] .sv-scope-in:not([data-in]) .sv-scope-row::after { transform: scaleX(0); }
+  .sv[data-live] .sv-scope-in[data-in] .sv-scope-head { transition: opacity 1.1s ease; }
+  .sv[data-live] .sv-scope-in[data-in] .sv-scope-row::before, .sv[data-live] .sv-scope-in[data-in] .sv-scope-row::after { transition: transform 1.2s var(--sv-draw) calc(var(--i, 0) * 90ms); }
+  .sv[data-live] .sv-scope-in[data-in] :is(.sv-scope-n, .sv-scope-t, .sv-scope-d) { transition: opacity .9s ease calc(var(--i, 0) * 90ms + 320ms); }
+}
+
+/* ── ZAKOŃCZENIE nad stopką (propozycja - do decyzji właściciela): jedno zdanie z kropką, zdanie faktów, przycisk. ── */
+.sv-end { position: relative; z-index: 1; padding: 112px 0 0; text-align: center; }
+@media (min-width: 1024px) { .sv-end { padding-top: 168px; } }
+.sv-end .sv-h2 { margin: 0 auto 18px; font-size: clamp(40px, 5.6vw, 84px); line-height: 1; letter-spacing: -.045em; }
+.sv .sv-end-lead { margin: 0 auto 34px; max-width: 34rem; }
+@media (prefers-reduced-motion: no-preference) {
+  .sv[data-live] .sv-end-in:not([data-in]) > * { opacity: 0; transform: translateY(18px); }
+  .sv[data-live] .sv-end-in[data-in] > * { transition: opacity 1.1s ease, transform 1.2s var(--sv-ease); }
+  .sv[data-live] .sv-end-in[data-in] > :nth-child(2) { transition-delay: .12s; }
+  .sv[data-live] .sv-end-in[data-in] > :nth-child(3) { transition-delay: .24s; }
+}
+
+/* ── PANEL PRZEŁĄCZNIKÓW propozycji (dock.tsx; tylko `npm run dev`): stały, zwijany, na dole okna, poza treścią. ── */
+.sv-dock {
+  position: fixed; left: 50%; bottom: 14px; z-index: 2147483000; transform: translateX(-50%);
+  display: grid; justify-items: center; gap: 8px; width: max-content; max-width: min(96vw, 1100px);
+  padding: 8px; border-radius: 18px; background: rgba(8, 8, 10, .96); color: #e2e8f0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 0 0 1px rgba(255, 255, 255, .1), 0 18px 40px -12px rgba(0, 0, 0, .9);
+}
+.sv-dock:not([data-open]) { left: 72px; transform: none; padding: 4px; border-radius: 999px; }
+.sv-dock-btn { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 14px; border-radius: 999px; font-size: 12.5px; font-weight: 600; color: #cbd5e1; cursor: pointer; }
+.sv-dock-btn:hover { color: #f8fafc; background: rgba(255, 255, 255, .06); }
+.sv-dock-btn:focus-visible { outline: 2px solid #60a5fa; outline-offset: 2px; }
+.sv-dock-in { display: grid; justify-items: center; gap: 6px; max-height: 40vh; overflow: auto; }
+.sv-dock .iv-switch { margin: 0; max-width: 100%; flex-wrap: wrap; justify-content: center; }
+@media (max-width: 767.98px) {
+  .sv-dock { left: 8px; right: 84px; transform: none; width: auto; max-width: none; bottom: 10px; }
+  .sv-dock:not([data-open]) { left: 62px; right: auto; width: max-content; bottom: 14px; } /* obok znaczka Next.js, pod treścią sceny */
+  .sv-dock .iv-switch { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; width: 100%; scrollbar-width: none; }
+}
+
+/* Ograniczony ruch: bez przejść i animacji. */
+@media (prefers-reduced-motion: reduce) {
+  .sv *, .sv *::before, .sv *::after { transition-duration: 0s !important; transition-delay: 0s !important; animation: none !important; }
+}
