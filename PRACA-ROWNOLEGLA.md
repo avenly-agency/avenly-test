@@ -134,7 +134,7 @@ Właściciel: „żeby nie używali narzędzi do weryfikacji typu odpalanie w tl
 
 **Git, 2026-10-08 (na polecenie właściciela „zrób commita”):** cały stan repozytorium zapisany w commicie `4baae40` na `main` (644 pliki; poza commitem został tylko `app/(pl)/o-nas/parts.tsx.tmp.*`) i **wypchnięty** do `origin` - PUBLICZNEGO repozytorium `avenly-agency/avenly-test`. Kolejne commity i wypchnięcia tylko na wyraźne polecenie właściciela. Dla chatów: `git diff -- <twoje pliki>` pokazuje odtąd zmiany względem tego commita, zasada „bez commitów z własnej inicjatywy” obowiązuje dalej. Tego samego dnia usunięty projekt `avenly-test` na Vercelu (stara wersja strony z czerwca pod `avenly-test.vercel.app`, indeksowalna kopia avenly.pl) - adres zwraca 404, wypchnięcie do GitHuba nie uruchamia już wdrożenia na Vercelu.
 
-Wdrożenie `e22e7cd0` (2026-10-14) objęło cały stan repozytorium - produkcja = repozytorium (bez commita: zmiany od `4baae40` są niezacommitowane). **Po zamknięciu podstron w pracy trzeba wdrożyć ponownie.** Serwer deweloperski na :3001 działa (stan 2026-10-08); gdy nie odpowiada, uruchamia go pierwszy chat, który go potrzebuje (zasada 10).
+Wdrożenie `e22e7cd0` (2026-10-14) objęło cały stan repozytorium - produkcja = repozytorium; ten stan (z podglądem linku z `b349e699`) jest w commicie `903f887` wypchniętym na GitHuba 2026-10-14 (polecenie właściciela „na GitHuba też zpushuj”). **Po zamknięciu podstron w pracy trzeba wdrożyć ponownie.** Serwer deweloperski na :3001 działa (stan 2026-10-08); gdy nie odpowiada, uruchamia go pierwszy chat, który go potrzebuje (zasada 10).
 
 ### Wydajność podstron usług (2026-10-05, zmiana przekrojowa na polecenie właściciela)
 
