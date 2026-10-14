@@ -1,0 +1,35 @@
+/* ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+   O NAS - „W CO WIERZYMY”, propozycja 1 „MANIFEST” (principles-manifest.tsx, prefiks on-p5-; 2026-10-14).
+   Zasady dopisują się jako wiersze plakatu (słowa spod maski), na końcu cały plakat z podpisem - linią z gwiazdą.
+   Bez ruchu: principles-kit.css. Pod .on[data-live]: kolumna i wiersze w położeniach z JS (transformy 2D).
+   ═══════════════════════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* słowa w maskach (zapas na polskie znaki nad i pod linią) */
+.on-p5-m { display: inline-block; overflow: hidden; overflow: clip; padding: .1em 0 .14em; margin: -.1em 0 -.14em; vertical-align: top; }
+.on-p5-w { display: inline-block; }
+
+.on[data-live] .on-p5-box { position: relative; height: 100%; }
+.on[data-live] .on-p5-col { position: absolute; left: 1.5rem; right: 1.5rem; top: 0; transform-origin: 0 0; }
+.on[data-live] .on-p5-list { margin: 0; }
+/* wiersz = samo hasło w przepływie; numer nad nim i zdanie pod nim stoją obok przepływu (miejsce robi JS) */
+.on[data-live] .on-p5-it { position: absolute; left: 0; right: 0; top: 0; }
+.on[data-live] .on-p5-t {
+  max-width: 13.5em; line-height: 1; letter-spacing: -.045em;
+  font-size: clamp(40px, min(6.2vw, 9.5vh), 112px); font-size: clamp(40px, min(6.2vw, 9.5svh), 112px);
+}
+.on[data-live] .on-p5-it:not(.on-p5-head) .on-p5-w { transform: translateY(112%); }
+.on[data-live] .on-p5-n { position: absolute; left: 0; bottom: 100%; margin: 0 0 12px; }
+.on[data-live] .on-p5-d { position: absolute; left: 0; top: 100%; margin: 22px 0 0; }
+.on[data-live] .on-p5-it:not(.on-p5-head) :is(.on-p5-n, .on-p5-d) { opacity: 0; }
+/* podpis: linia z gwiazdą na szerokość kolumny, odsłaniana od czubka (clip-path pisze JS) */
+.on[data-live] .on-p5-sign { position: absolute; left: 0; top: 0; width: 100%; overflow: visible; fill: var(--brand, #3b82f6); visibility: hidden; }
+
+@media (max-width: 767px) {
+  .on[data-live] .on-p5-t { max-width: none; font-size: clamp(30px, min(9.4vw, 5.6vh), 44px); font-size: clamp(30px, min(9.4vw, 5.6svh), 44px); }
+  .on[data-live] .on-p5-d { margin-top: 14px; }
+  .on[data-live] .on-p5-n { margin-bottom: 8px; font-size: 13px; }
+}
+@media (max-width: 1023px) and (orientation: landscape) and (max-height: 560px) {
+  .on[data-live] .on-p5-t { font-size: clamp(24px, min(4.6vw, 8vh), 40px); font-size: clamp(24px, min(4.6vw, 8svh), 40px); }
+  .on[data-live] .on-p5-d { margin-top: 10px; font-size: 14.5px; line-height: 1.5; max-width: 30rem; }
+}

@@ -1,6 +1,6 @@
 # Instrukcja SEO — co już działa, co podmienić po rejestracji działalności
 
-## TL;DR — aktualny stan (2026-10-07)
+## TL;DR — aktualny stan (2026-10-08)
 
 ✅ **Wszystko techniczne jest zrobione i działa.** Strona jest cytowana przez Google AI Overviews z linkiem.
 
@@ -11,7 +11,8 @@
 | Sitemap | ✅ Bez 404, zróżnicowane lastModified; od 2026-10-01 bez `/uslugi/design*` (usługa UI/UX usunięta, 301 w `public/_redirects`) |
 | JSON-LD Schema (9 typów) | ✅ Organization, ProfessionalService, WebSite, Service ×6, BlogPosting ×3, CreativeWork, ItemList (realizacje na stronie głównej), FAQPage (Review usunięty 2026-09-30 - patrz „Ocena Google”) |
 | Wersja EN + hreflang | ✅ `/en/` z przetłumaczonymi slugami, `pl-PL` / `en` / `x-default` + canonical per język, sitemap z alternates (blog i polityka tylko PL) |
-| OG image (Twitter/FB/LinkedIn preview) | ✅ `/og-default.png` 1200×630 + per-page dla blog/realizacje |
+| OG image (Twitter/FB/LinkedIn preview) | ✅ `/og-default.png` 1200×630 + per-page dla blog/realizacje; od 2026-10-08 podpięty na każdej stronie. Grafika od 2026-10-09 nowa (niebo, krawędź planety, nowe logo; `scripts/brand-icons.mjs`), bez tekstu - lokalnie, wejdzie przy następnym wdrożeniu; po wdrożeniu odświeżyć podgląd w debuggerze udostępniania Facebooka / LinkedIn |
+| Tytuły i opisy stron | ✅ Przegląd 2026-10-08 (PL i EN): tytuł do ok. 60 znaków z marką, opis do ok. 160, tylko usługi z oferty |
 | Favicon set + PWA manifest | ✅ Wszystkie rozmiary |
 | Wizytówka Google | ✅ Wpięta jako `sameAs` w Organization schema |
 | AI search visibility | ✅ Google AI Overviews aktywnie cytuje |
@@ -32,6 +33,8 @@ Decyzja właściciela: „5,0 na Google” z gwiazdkami to słaby social proof (
 ### Dane do podmiany PO REJESTRACJI działalności
 
 Schema jest **defensywna** — pomija puste pola. Bez działalności wszystko działa w trybie "virtual business / agencja online".
+
+**Stan 2026-10-14 (wdrożone `e22e7cd0`):** działalność zarejestrowana jako JDG „Avenly Michał Grzejdak” - w `lib/seo-data.ts` uzupełnione `COMPANY_IDS.nip` = `5381873554` i `SITE.legalName` = „Avenly Michał Grzejdak” (NIP w stopce, w polityce prywatności i jako `taxID` w danych strukturalnych; nazwa jako administrator w polityce prywatności i `legalName`). **Puste zostały REGON i adres** (właściciel ich nie podał; przy JDG adres w CEIDG bywa domowy) - strona działa jako firma online bez adresu. Polityka w punkcie 1 odsyła jeszcze do „adresu siedziby Administratora” - do uzupełnienia adresem albo skrócenia zdania.
 
 Po rejestracji NIP/REGON/adresu, otwórz `lib/seo-data.ts` i podmień:
 
@@ -94,18 +97,20 @@ Wszystko centralizowane w `lib/schemas.ts`. Dane firmy w `lib/seo-data.ts`.
 
 ### 3. Metadata na każdej podstronie
 
-- Tytuł SEO (60-70 znaków, słowa kluczowe na początku)
-- Description 150-160 znaków
+- Tytuł SEO: do ok. 60 znaków razem z dopiskiem „ | Avenly”, słowa kluczowe na początku, sentence case
+- Description do ok. 160 znaków (dłuższy Google ucina), w głosie korzyści
 - Canonical URL
 - Open Graph + Twitter Card
-- **Open Graph na podstronie zawsze w całości** (`type`, `locale`, `siteName`, `url`, obrazek + własna karta Twittera): blok `openGraph` strony zastępuje blok z root layoutu, nie łączy się z nim. 2026-10-01 uzupełnione na Usługach, Realizacjach i Kontakcie (wcześniej bez obrazka).
+- **Open Graph na podstronie zawsze w całości** (`type`, `locale`, `siteName`, `url`, obrazek + własna karta Twittera): blok `openGraph` strony zastępuje blok z root layoutu, nie łączy się z nim. Od 2026-10-08 pełny blok mają wszystkie strony z własnymi metadanymi.
+- Gdzie zmieniać: strona główna - stałe `HOME_TITLE` / `HOME_DESCRIPTION` w `app/(pl)/layout.tsx` (EN: `app/(en)/layout.tsx`); podstrona usługi - obiekt `SERVICE` w jej `page.tsx` (tytuł, opis i dane strukturalne z jednego miejsca); pozostałe strony - `metadata` w `page.tsx` albo `layout.tsx` danej trasy
 - Keywords PL long-tail
-- Globalny fallback OG image: `/og-default.png` (1200×630)
+- Globalny fallback OG image: `/og-default.png` (1200×630; od 2026-10-14 KADR Z HERO: planeta z renderu hero, napis AVENLY po łuku orbity z cięciem gwiazdą w stanie końcowym (geometria z `hero/logo.ts`), niebo z gwiazdami, bez tekstu - generuje `node scripts/brand-icons.mjs`, który robi też `public/favicon.ico` (16 / 32 / 48)). Serwisy społecznościowe trzymają stary podgląd pod tym samym adresem - po wdrożeniu odświeżyć w debuggerze udostępniania Facebooka i LinkedIn Post Inspector.
 - `/blog/[slug]` — OG z `post.mainImage`, `article:published_time`, `authors`
 - `/realizacje/[slug]` — OG z `project.mockupImage`
 
 ### 4. Favicon set + PWA
 
+- Od 2026-10-09 wszystkie ikony z nowym logo (kafel z linią i gwiazdą), generuje `node scripts/brand-icons.mjs` - po zmianie logo uruchomić ponownie
 - `favicon-16.png`, `favicon-32.png`
 - `apple-touch-icon.png` (180×180)
 - `icon-192.png`, `icon-512.png` (Android Add to Home Screen)
@@ -187,7 +192,11 @@ verification: {
 
 - **„Projekt UI/UX” nie jest już osobną usługą (2026-10-01).** Podstrony `/uslugi/design` i `/uslugi/design/ui-ux` (PL i EN) usunięte, w `public/_redirects` są 301 na `/uslugi/strony-www/` i `/en/services/websites/`, sitemap ich nie zawiera. W Search Console stare adresy pojawią się jako „Strona z przekierowaniem” - to poprawne.
 - **„Strona szyta na miarę” nazywa się „Strona interaktywna” (2026-10-06).** Zmienione: nazwa w metadanych i danych strukturalnych podstrony (PL „Strona interaktywna”, EN „Interactive website”), w Ofercie, stopce i formularzu. **Adres zostaje** `/uslugi/strony-www/strona-szyta-na-miare` (EN `/en/services/websites/custom-website`). Zmiana adresu jest planowana po zakończeniu pracy równoległej, jednym przejściem z 301 (folder trasy, `PL_TO_EN_SEGMENT` w `lib/i18n/locale.ts`, `app/sitemap.ts`, motywy, katalog, linki, `_redirects`) - do tego czasu nie zmieniać pojedynczych miejsc.
-- **Podstrony usług są w przebudowie** (etap 3 pracy równoległej): metadane przebudowanych podstron są już bez „CMS”, „WooCommerce”, „Headless” i Title Case. W root layoutach zostały jeszcze słowa kluczowe „WooCommerce” i „UI/UX design” - do usunięcia przy porządkach.
+- **O nas - opis strony (2026-10-13, lokalnie):** „Avenly to polska agencja interaktywna. Projektujemy i piszemy strony WWW, sklepy internetowe, systemy CRM i chatboty AI. Zobacz, dla kogo i jak pracujemy.” (154 znaki; `app/(pl)/o-nas/layout.tsx`, EN `app/(en)/en/about-us/layout.tsx`). Nazwy usług celowo w opisie strony, nie w widocznym zdaniu pod h1 (właściciel: lista usług pod nagłówkiem „to jest po prostu wymienienie”). Linki „Zobacz realizację” w sekcji „Dla kogo pracujemy” mają w nazwie firmę (tekst dla czytników), obrazy stron klientów - opisy ze słownika.
+- **Przegląd tytułów i opisów (2026-10-08, lokalnie - wejdzie na produkcję przy następnym wdrożeniu).** Strona główna: „Avenly - agencja interaktywna · strony WWW, sklepy i chatboty AI” z opisem od nagłówka hero (dawniej Title Case i „Marketing”, którego nie ma w ofercie). Podstrony usług: opisy skrócone do ok. 160 znaków, tytuły strony firmowej, sklepu i CRM skrócone do ok. 60 znaków z marką, pełny blok Open Graph i karta Twittera (wcześniej linki do podstron usług, O nas, bloga i polityki nie miały obrazka w podglądzie). O nas: tytuł i opis w sentence case, bez „agencji marketingowej”. Słowa kluczowe bez „WooCommerce”, „UI/UX design”, „software house” i „premium”. Opis firmy w danych strukturalnych (`SITE.description`) i `manifest.webmanifest` wymieniają tylko usługi z oferty. Bez zmian: Usługi, kategoria Strony WWW, Realizacje i case studies (pisane 1-8 października).
+- **Podstrony usług są w przebudowie** (etap 3 pracy równoległej): po zamknięciu podstrony sprawdź, czy jej tytuł i opis nadal zgadzają się z nagłówkiem (sklep ma tytuł z sedna podstrony, bo nagłówek hero czeka na wybór).
+- **Case study realizacji (2026-10-08, wdrożone `9410dac7`).** Tytuł strony zawiera rodzaj realizacji i markę, np. „Klub Sportowy RKS - strona i aplikacja klubowa · case study | Avenly” (`title.absolute` w `app/(pl)/realizacje/[slug]/page.tsx` i w trasie EN - szablon „%s | Avenly” z root layoutu do tej trasy nie dochodził). Opis skrócony do ok. 160 znaków (opis realizacji + „Realizacja dla: …”). Open Graph kompletny (`locale`, `siteName`). Dane strukturalne CreativeWork: nazwa wyświetlana jak h1, pełny adres obrazu, a wersja EN ma własny adres, `@id` i język (wcześniej wskazywała polską stronę i nie zgadzała się z ItemList na `/en/`) - builder `caseStudySchema(project, opts)` w `lib/schemas.ts`, drugi parametr opcjonalny. Do zrobienia po Twojej stronie: Rich Results Test na jednym case study PL i EN.
+- **Kopia strony na Vercelu usunięta (2026-10-08).** Pod `avenly-test.vercel.app` stała stara wersja strony z czerwca z `index, follow` (zduplikowana treść avenly.pl). Projekt usunięty, adres zwraca 404. Jeśli Google zdążył ją zaindeksować, wypadnie sama; można przyspieszyć w Search Console tylko dla własnej domeny - dla `vercel.app` nie trzeba nic robić.
 - Po zamknięciu podstron: Rich Results Test na 6 podstronach usług i nowy pomiar PageSpeed (ostatni pomiar PSI pochodzi sprzed przebudowy strony).
 
 ---

@@ -1,0 +1,8 @@
+/* ═════════ ZAKOŃCZENIE (ending.tsx) - układ planszy tytułowej ═════════ */
+.on-end { padding: clamp(120px, 16vh, 180px) 0 clamp(96px, 12vh, 150px); }
+.on-end-h { margin-bottom: 22px; }
+.on-end-line { display: block; width: 100%; height: auto; margin-bottom: 30px; overflow: visible; }
+.on-end .on-lead { margin-bottom: 30px; }
+.on[data-live] .on-end-comet .on-comet-line { transform: scaleX(.0001); }
+.on[data-live] .on-end[data-in] .on-end-comet .on-comet-line { transform: none; animation: on-line-in 1.4s var(--on-io) .3s both; }
+.on[data-live] .on-end[data-in] .on-end-comet .on-comet-gem { animation: on-gem-in 1.4s var(--on-io) .3s both, on-gem-out .5s ease 1.75s forwards; }

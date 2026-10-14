@@ -1,0 +1,83 @@
+'use client';
+
+import { useRef, type CSSProperties } from 'react';
+import type { Locale } from '@/lib/i18n/locale';
+import { Head } from './parts';
+import { Consult, More, Shot, swapText, track, YourSlot, type Clients } from './sec-clients-parts';
+import { css, flag, usePin } from './shared';
+import './sec.css';
+
+// „DLA KOGO PRACUJEMY” - WERSJA 4 „EKRAN” (2026-10-13). Prefiks on-3e-.
+// Ruch: kamera stoi, zmienia się obraz. Układ jak kadr filmu z planszą: u góry rodzaj firmy wielkim pismem, pod nim
+// jeden szeroki ekran na całą szerokość wrappera (panorama 21:9, na telefonie 16:10), pod ekranem wiersz podpisu
+// (nazwa realizacji, zdanie, link). Przy przewijaniu strona następnego klienta ROZCHODZI SIĘ po ekranie kilkoma
+// kłębami, które rosną i zlewają się od lewej do prawej (zasada z PRODUCT.md, Design Principles 19 - bez kurtyny
+// i lecącej linii światła); słowo u góry wymienia się jak plansza tytułowa (stare wyjeżdża w górę pod maskę, nowe
+// wjeżdża z dołu), podpis przenika. Ostatni obraz: puste miejsce z gwiazdą - „Twoja firma” - i przycisk.
+// Maskę kłębów liczy sam CSS ze zmiennej --b (0-1, pisze JS na warstwie); po pełnym odsłonięciu maska schodzi.
+// Bez JS / ograniczony ruch: lista pozycji, każda ze swoim kadrem.
+
+const SIZES = '(max-width: 767px) 92vw, 84vw';
+
+export function SecClientsScreen({ t, locale, live }: { t: Clients; locale: Locale; live: boolean }) {
+  const pin = useRef<HTMLDivElement>(null);
+  const els = useRef<{ words: HTMLElement[]; layers: HTMLElement[]; caps: HTMLElement[] } | null>(null);
+  const n = t.items.length + 1; // klienci + „Twoja firma”
+
+  usePin(pin, (p, el) => {
+    const c = (els.current ??= {
+      words: Array.from(el.querySelectorAll<HTMLElement>('.on-3e-word > span')),
+      layers: Array.from(el.querySelectorAll<HTMLElement>('.on-3e-layer')),
+      caps: Array.from(el.querySelectorAll<HTMLElement>('.on-3e-cap')),
+    });
+    const tr = track(p, n);
+    // słowo: plansza tytułowa - wyjeżdża w górę pod maskę, następne wjeżdża z dołu
+    c.words.forEach((w, i) => {
+      const y = (1 - tr.tin(i)) * 112 - tr.out(i) * 112;
+      css(w, 'transform', Math.abs(y) < 0.05 ? 'none' : `translateY(${y.toFixed(2)}%)`);
+      css(w, 'visibility', Math.abs(y) > 111.9 ? 'hidden' : 'visible');
+    });
+    // ekran: warstwa następnej pozycji rozchodzi się po poprzedniej (pierwsza jest od początku)
+    c.layers.forEach((l, i) => {
+      if (i === 0) return;
+      const b = tr.move(i);
+      css(l, '--b', b.toFixed(4));
+      css(l, 'visibility', b < 0.002 ? 'hidden' : 'visible');
+      flag(l, 'data-full', b > 0.998);
+    });
+    c.caps.forEach((cp, i) => swapText(cp, tr.tin(i), tr.out(i), 14));
+  }, live);
+
+  return (
+    <section className="on-sec on-3 on-3c on-3e" aria-labelledby="on-3-h">
+      <Head id="on-3-h" label={t.label} title={t.heading} accent={t.headingAccent} lead={t.lead} live={live} />
+      <div ref={pin} className="on-pin on-3c-pin" style={{ '--n': n } as CSSProperties}>
+        <div className="on-stick on-3e-stick">
+          <div className="container mx-auto px-6 on-3e-box">
+            <ol className="on-3e-list">
+              {t.items.map((it) => (
+                <li key={it.href} className="on-3e-item">
+                  <h3 className="on-3e-word"><span>{it.type}</span></h3>
+                  <div className="on-3c-frame on-3e-layer"><Shot slug={it.image} sizes={SIZES} big /></div>
+                  <div className="on-3e-cap">
+                    <p className="on-3e-name">{it.name}</p>
+                    <p className="on-3e-line">{it.line}</p>
+                    <More href={it.href} label={t.more} locale={locale} />
+                  </div>
+                </li>
+              ))}
+              <li className="on-3e-item">
+                <h3 className="on-3e-word"><span className="im-accent">{t.yours.type}</span></h3>
+                <div className="on-3c-frame on-3c-frame--you on-3e-layer on-3e-layer--you" aria-hidden="true"><YourSlot label={t.yours.frame} /></div>
+                <div className="on-3e-cap">
+                  <p className="on-3e-line">{t.yours.line}</p>
+                  <Consult label={t.yours.cta} locale={locale} />
+                </div>
+              </li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

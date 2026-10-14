@@ -1,0 +1,92 @@
+import type { CSSProperties } from 'react';
+import { GEM, LOGO_PIECES, LOGO_STAR, LOGO_STAR_CENTER } from '@/lib/brand/logo';
+import { css } from './shared';
+
+// Klocki z nowego logo (2026-10-09, „cięcie”) dla scen O nas - wszystko w jednostkach logo (litery y 0..-100,
+// linia y -62,5). Animacje: transformacje CSS na elementach SVG (px = jednostki logo), bez zmiany geometrii.
+
+/** Kolejność liter od lewej (opóźnienia wejścia i rozcinania idą za gwiazdą, od lewej do prawej). */
+export const LETTER_ORDER = { A: 0, V: 1, E: 2, N: 3, L: 4, Y: 5 } as const;
+
+/** Litery rozłożone na połówki nad linią i pod nią. Zewnętrzne <g> = wejście (CSS), wewnętrzna ścieżka = ruch
+    sterowany przewijaniem (styl inline) - dwie warstwy, żeby animacja wejścia i przewijanie się nie gryzły. */
+export function Pieces({ outline = false }: { outline?: boolean }) {
+  return (
+    <>
+      {LOGO_PIECES.map((pc, i) => {
+        const k = LETTER_ORDER[pc.letter];
+        return (
+          <g key={i} className="on-pc-in" style={{ '--k': k, '--dir': pc.part === 'up' ? -1 : 1 } as CSSProperties}>
+            {outline && <path className="on-pc-o" data-k={k} pathLength={1} d={pc.d} />}
+            <path className="on-pc" data-k={k} data-part={pc.part} d={pc.d} />
+          </g>
+        );
+      })}
+    </>
+  );
+}
+
+/** Punkty wielokąta wypełniającego szczelinę litery „całej” (LOGO_WHOLE_FILLS): wierzchołek z partnerem wysuwa się
+    o ułamek jednostki w głąb połówki (od partnera) - wypełnienie zachodzi na litery bez włoskowatych szwów. */
+export const fillPoints = (poly: [number, number, number?][]) => poly.map(([x, y, pi]) => {
+  if (pi === undefined) return `${x},${y}`;
+  const dx = x - poly[pi][0], dy = y - poly[pi][1], l = Math.hypot(dx, dy) || 1;
+  return `${(x + (dx / l) * 0.8).toFixed(2)},${(y + (dy / l) * 0.8).toFixed(2)}`;
+}).join(' ');
+
+/** Linia z gwiazdą jako JEDEN kształt - ten sam przebieg co LOGO_STAR (linia włosowa wchodzi łagodnym łukiem w ramię
+    gwiazdy, bez szwu i bez zakładki): gwiazda w skali `sz` ze środkiem w (starX, y), linia rozciągnięta od czubka
+    `tipX` do gwiazdy. Punkty z pliku logo względem środka gwiazdy; linia logo ma 605,912 jednostki od czubka do
+    wejścia w ramię gwiazdy (6,705 jednostki przed jej środkiem). Gdy czubek dochodzi do gwiazdy - sama gwiazda.
+    Dla (-32,5; 580,117; -62,5; 1) = dokładnie znak z logo. */
+export const markShape = (tipX: number, starX: number, y: number, sz: number) => {
+  const P = (dx: number, dy: number) => `${(starX + dx * sz).toFixed(3)} ${(y + dy * sz).toFixed(3)}`;
+  const jx = starX - 6.705 * sz, S = jx - tipX; // wejście linii w ramię gwiazdy, długość linii od czubka
+  if (S < 0.5) {
+    return `M${P(0, -20)}C${P(1.4, -6.8)} ${P(6.8, -1.4)} ${P(20, 0)}C${P(6.8, 1.4)} ${P(1.4, 6.8)} ${P(0, 20)}` +
+      `C${P(-1.4, 6.8)} ${P(-6.8, 1.4)} ${P(-20, 0)}C${P(-6.8, -1.4)} ${P(-1.4, -6.8)} ${P(0, -20)}Z`;
+  }
+  const lx = S / 605.912;
+  const L = (dx: number, dy: number) => `${(jx - dx * lx).toFixed(3)} ${(y + dy * sz).toFixed(3)}`;
+  return `M${P(-6.705, -4.557)}C${P(-2.795, -7.727)} ${P(-0.778, -12.656)} ${P(0, -20)}` +
+    `C${P(1.4, -6.8)} ${P(6.8, -1.4)} ${P(20, 0)}C${P(6.8, 1.4)} ${P(1.4, 6.8)} ${P(0, 20)}` +
+    `C${P(-0.778, 12.656)} ${P(-2.795, 7.727)} ${P(-6.705, 4.557)}` +
+    `C${L(51.897, 1.578)} ${L(220.18, 0.334)} ${L(605.912, 0)}` +
+    `C${L(220.18, -0.334)} ${L(51.897, -1.578)} ${P(-6.705, -4.557)}Z`;
+};
+
+/** Sama linia znaku (bez gwiazdy) od czubka `tipX` do gwiazdy w (starX, y) w skali `sz` - do scen, w których gwiazda
+    jest osobnym, nieprzezroczystym kształtem GEM, a linia dorasta do niej. Krawędzie linii trafiają dokładnie w kontur
+    gwiazdy (jak w logo), a kształt domyka się w jej środku - para „GEM + ta linia” w jednym kolorze i bez zmian krycia
+    daje ten sam znak bez szwu. NIE używać tej pary tam, gdzie znak zmienia krycie albo dostaje obrys (zakładka). */
+export const markLine = (tipX: number, starX: number, y: number, sz: number) => {
+  const jx = starX - 6.705 * sz, lx = Math.max(0, jx - tipX) / 605.912;
+  const L = (dx: number, dy: number) => `${(jx - dx * lx).toFixed(2)} ${(y + dy * sz).toFixed(2)}`;
+  return `M${L(0, 4.557)}C${L(51.897, 1.578)} ${L(220.18, 0.334)} ${L(605.912, 0)}` +
+    `C${L(220.18, -0.334)} ${L(51.897, -1.578)} ${L(0, -4.557)}L${starX.toFixed(2)} ${y.toFixed(2)}Z`;
+};
+
+/** Długość kometki: od czubka linii (x -32,5) do środka gwiazdy (x 580,117). */
+export const COMET_LEN = LOGO_STAR_CENTER.x + 32.5;
+
+/** Linia logo z gwiazdą jako „kometka”: linia rośnie od czubka, gwiazda leci na jej czole. Bez JS / postęp 1 = zwykłe
+    logo. Na czas lotu gwiazdę rysuje osobny klejnot (ten sam kształt), bo ściśnięta linia ściska też swoją gwiazdę. */
+export function Comet({ className, style }: { className?: string; style?: CSSProperties }) {
+  return (
+    <g className={className ? `on-comet ${className}` : 'on-comet'} style={style}>
+      <path className="on-comet-line" d={LOGO_STAR} />
+      <g className="on-comet-gem">
+        <path d={GEM} transform={`translate(${LOGO_STAR_CENTER.x} ${LOGO_STAR_CENTER.y})`} />
+      </g>
+    </g>
+  );
+}
+
+/** Postęp kometki 0-1 (sceny sterowane przewijaniem). */
+export const setComet = (g: Element | null | undefined, c: number) => {
+  if (!g) return;
+  const line = g.firstElementChild, gem = g.lastElementChild;
+  css(line, 'transform', c >= 0.9995 ? 'none' : `scaleX(${Math.max(0.0001, c).toFixed(4)})`);
+  css(gem, 'transform', `translateX(${(-COMET_LEN * (1 - c)).toFixed(2)}px)`);
+  css(gem, 'opacity', c > 0.002 && c < 0.998 ? '1' : '0');
+};

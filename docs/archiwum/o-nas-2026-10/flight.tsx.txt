@@ -1,0 +1,368 @@
+'use client';
+
+import { useCallback, useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
+import {
+  GEM, LOGO_CUT_SHIFT, LOGO_LETTERS_BOX, LOGO_PIECES, LOGO_STAR, LOGO_VIEWBOX, LOGO_WHOLE_FILLS, type LogoPiece,
+} from '@/lib/brand/logo';
+import type { Locale } from '@/lib/i18n/locale';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { Ending } from './ending';
+import { Faq } from './faq';
+import { fillPoints, LETTER_ORDER } from './mark';
+import { beatsOf, BeatText, Hint, IntroText } from './parts';
+import { attr, clamp01, css, flag, lin, mix, seg, useFrame } from './shared';
+import './flight.css';
+
+// O NAS - WERSJA „PRZELOT” (propozycja 2026-10-09, prefiks on-f-; runda 3: cięcie jak w hero - właściciel: „pomysł
+// z negatywami i takimi zoomami z przelotu zajebisty, ale cięcie jakoś chcę fajnie też, tak jak na hero, że się
+// przecina”). Jedna gwiazda prowadzi całą scenę (100svh + 600vh):
+//   1. CIĘCIE (na czas, jak wejście hero): obok tekstu stoi CAŁY napis AVENLY; gwiazda wpada z lewej jak spadająca
+//      gwiazda - rozpędza się, najszybciej tnie środek, hamuje na końcu - szczelina otwiera się dokładnie na jej czole,
+//      za nią zostaje linia logo, górne połówki liter zsuwają się o 3u, przy lądowaniu błysk ostrych promieni,
+//   2. USTAWIENIE (przewijanie): patrzymy wzdłuż linii cięcia - litery zjeżdżają po niej do punktu zbiegu i stają jedna
+//      za drugą, linia skraca się do punktu, a gwiazda z jej końca zostaje daleko z przodu jako cel lotu,
+//   3. LOT (przewijanie): litery są bramami - kamera przelatuje przez samo cięcie każdej z nich (połówki rozchodzą się
+//      w górę i w dół, litera z bliska zostaje obrysem - „negatyw”, krawędzie cięcia świecą kolorem gwiazdy),
+//      w szczelinie widać gwiazdę. Między bramami postoje przy ujęciach z treścią (tekst nadlatuje z głębi do lewej
+//      krawędzi wrappera). Po ostatniej bramie gwiazda rośnie do pełnej wielkości.
+// Niebo = gwiazdy lecące od punktu zbiegu (canvas 2D, rysowany w klatce przewijania, na całą podstronę). Bez WebGL.
+// Głębia liczona wykładniczo (stała prędkość powiększania - bez gwałtownego „uderzenia” bramy przy kamerze).
+// Bez JS / ograniczony ruch: ujęcia jedno pod drugim, niebo nieruchome.
+
+const LETTERS: LogoPiece['letter'][] = ['A', 'V', 'E', 'N', 'L', 'Y'];
+const STOPS_N = 7;     // pierwszy ekran, bez pośredników, pięć zasad
+const GAP = 3;         // odstęp ujęć w głąb
+const GATE_AT = 0.7;   // brama stoi tuż za ujęciem (przy postoju widać ją w ok. 59% wielkości)
+const G = 1.1;         // tempo powiększania (log2 na jednostkę głębi)
+// Oś czasu przewijania (jednostki umowne): postój przy przeciętym logo, ustawienie w głąb, lot z postojami.
+const OPEN = 0.45, SWING = 1.05, T0 = OPEN + SWING;
+const DWELL0 = 0.5, DWELL = 1, TRAVEL = 1;
+const T_FLIGHT = DWELL0 + (STOPS_N - 1) * (DWELL + TRAVEL) + 0.3;
+const stopA = (k: number) => (k === 0 ? 0 : DWELL0 + TRAVEL + (k - 1) * (DWELL + TRAVEL));
+const stopB = (k: number) => stopA(k) + (k === 0 ? DWELL0 : DWELL);
+const C_END = (STOPS_N - 1) * GAP - 1;
+
+/** Kamera lotu w chwili `tf` (od końca ustawienia): głębia `c`, numer postoju `k`, postęp przelotu do następnego `u`. */
+const camAt = (tf: number) => {
+  let k = 0;
+  for (let i = 1; i < STOPS_N; i++) if (tf >= stopA(i)) k = i;
+  const u = k < STOPS_N - 1 ? seg(tf, stopB(k), stopA(k + 1)) : 0;
+  return { c: k * GAP - 1 + GAP * u, k, u };
+};
+
+// CIĘCIE na czas (ms od wejścia) - wartości jak w wejściu hero (components/sections/hero/logo.ts).
+const STAR_AT = 1700;  // gwiazda wpada z lewej (napis i tekst już stoją)
+const FLY = 1150;      // przelot: od wlotu do zatrzymania w miejscu gwiazdy logo
+const SLIDE = 520;     // zsunięcie górnej połówki litery
+const GLINT = 560;     // błysk promieni przy lądowaniu
+const COOL = 520;      // stygnięcie rozgrzanego środka gwiazdy
+const LEAD = 80;       // gwiazda pojawia się w locie na tym odcinku przed czubkiem linii (jednostki logo)
+const STREAK = 230;    // długość ogona przy największej prędkości (jednostki logo)
+const CUT_END = STAR_AT + FLY + Math.max(SLIDE, GLINT, COOL) + 160;
+const X_IN = -32.5 - LEAD, X_STAR = 580.117, LINE_Y = -62.5;
+/** Droga przelotu (smootherstep): gwiazda rozpędza się, najszybciej tnie środek napisu, hamuje do zera. */
+const fly = (v: number) => { const x = clamp01(v); return x * x * x * (x * (6 * x - 15) + 10); };
+/** Prędkość przelotu 0-1 (szczyt w połowie) - długość ogona. */
+const flySpeed = (v: number) => { const x = clamp01(v); return 16 * x * x * (1 - x) * (1 - x); };
+/** Ułamek czasu lotu, w którym czoło gwiazdy jest na danym ułamku drogi. */
+const flyAt = (f: number) => {
+  let lo = 0, hi = 1;
+  for (let i = 0; i < 24; i++) { const m = (lo + hi) / 2; if (fly(m) < f) lo = m; else hi = m; }
+  return hi;
+};
+const outExpo = (v: number) => { const x = clamp01(v); return x >= 1 ? 1 : 1 - Math.pow(2, -10 * x); };
+const outCubic = (v: number) => 1 - Math.pow(1 - clamp01(v), 3);
+/** Chwila (ms), w której gwiazda mija prawą krawędź litery - wtedy jej górna połówka zaczyna się zsuwać. */
+const PASS = LETTERS.map((l) => STAR_AT + FLY * flyAt((LOGO_LETTERS_BOX[l].right - X_IN) / (X_STAR - X_IN)));
+
+// Gwiazdy nieba: kierunek od punktu zbiegu i głębia (log2); stała tablica.
+let seed = 4099;
+const rnd = () => {
+  seed = (seed + 0x6d2b79f5) | 0;
+  let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+};
+const DEPTH = 4.5;       // zakres głębi gwiazd (log2) - po nim gwiazda wraca do punktu zbiegu
+const STAR_SPEED = 0.55; // gwiazdy są dalej niż bramy: płyną wolniej
+const STARS = Array.from({ length: 230 }, () => ({
+  x: rnd() * 2 - 1, y: rnd() * 2 - 1, l: rnd() * DEPTH, r: 0.5 + rnd() * 0.9, a: 0.35 + rnd() * 0.6,
+}));
+
+const drawSky = (cv: HTMLCanvasElement, vx: number, vy: number, c: number) => {
+  const W = cv.clientWidth, H = cv.clientHeight;
+  if (!W || !H) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+  const pw = Math.round(W * dpr), ph = Math.round(H * dpr);
+  if (cv.width !== pw || cv.height !== ph) { cv.width = pw; cv.height = ph; }
+  const ctx = cv.getContext('2d');
+  if (!ctx) return;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#fff';
+  const reach = Math.hypot(Math.max(vx, W - vx), Math.max(vy, H - vy));
+  for (const s of STARS) {
+    let e = (s.l + c * STAR_SPEED) % DEPTH;
+    if (e < 0) e += DEPTH;
+    const k = Math.pow(2, e - DEPTH + 1.2);
+    const x = vx + s.x * reach * k, y = vy + s.y * reach * k;
+    if (x < -4 || x > W + 4 || y < -4 || y > H + 4) continue;
+    ctx.globalAlpha = s.a * Math.min(1, e / 1.5) * Math.min(1, (DEPTH - e) / 0.7);
+    ctx.beginPath();
+    ctx.arc(x, y, s.r * (0.7 + (0.5 * e) / DEPTH), 0, 6.2832);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+};
+
+type Gate = { g: SVGGElement; i: number; ups: SVGGElement[]; kerf: SVGGElement | null };
+type Els = {
+  panels: HTMLElement[]; gates: Gate[]; flat: SVGGElement | null; line: SVGPathElement | null;
+  drawn: SVGRectElement | null; uncut: SVGRectElement | null; tail: SVGPolygonElement | null;
+  starF: SVGGElement | null; starB: SVGGElement | null; core: SVGPathElement | null; rays: SVGPathElement | null;
+  prog: SVGPathElement[]; progLine: SVGPathElement | null; hint: HTMLElement | null; w: number; h: number;
+};
+const collect = (el: HTMLElement): Els => ({
+  panels: Array.from(el.querySelectorAll<HTMLElement>('.on-f-panel')),
+  gates: Array.from(el.querySelectorAll<SVGGElement>('.on-f-gate')).map((g) => ({
+    g, i: Number(g.dataset.i), ups: Array.from(g.querySelectorAll<SVGGElement>('.on-f-up')), kerf: g.querySelector<SVGGElement>('.on-f-kerf'),
+  })),
+  flat: el.querySelector<SVGGElement>('.on-f-flat'), line: el.querySelector<SVGPathElement>('.on-f-line'),
+  drawn: el.querySelector<SVGRectElement>('#on-f-drawn rect'), uncut: el.querySelector<SVGRectElement>('#on-f-uncut rect'),
+  tail: el.querySelector<SVGPolygonElement>('.on-f-tail'),
+  starF: el.querySelector<SVGGElement>('.on-f-star--front'), starB: el.querySelector<SVGGElement>('.on-f-star--back'),
+  core: el.querySelector<SVGPathElement>('.on-f-core'), rays: el.querySelector<SVGPathElement>('.on-f-rays'),
+  prog: Array.from(el.querySelectorAll<SVGPathElement>('.on-f-prog-pc')),
+  progLine: el.querySelector<SVGPathElement>('.on-f-prog-line'),
+  hint: el.querySelector<HTMLElement>('.on-hint .on-cut-hint-in'),
+  w: 0, h: 0,
+});
+
+/** `intro = false` + `hero`: pierwszy ekran daje osobne wejście (heroes.tsx) - scena zaczyna się od razu lotem
+    (bez tekstu pierwszego ekranu, cięcia na czas i ustawienia), a niebo tej wersji leży także pod wejściem. */
+export function Flight({ t, locale, live, ready, intro = true, hero }: {
+  t: ONasDict; locale: Locale; live: boolean; ready: boolean; intro?: boolean; hero?: ReactNode;
+}) {
+  const pin = useRef<HTMLDivElement>(null);
+  const stage = useRef<HTMLDivElement>(null);
+  const box = useRef<HTMLDivElement>(null);
+  const canvas = useRef<HTMLCanvasElement>(null);
+  const cache = useRef<Els | null>(null);
+  const state = useRef({ p: 0, over: 0, ms: 0 }); // postęp sceny, przewinięcie za sceną (px), czas cięcia (ms)
+  const beats = beatsOf(t);
+
+  /** Cała scena dla bieżącego stanu (przewijanie + czas cięcia). `sky` = przerysuj też niebo. */
+  const paint = useCallback((sky: boolean) => {
+    const pinEl = pin.current, st = stage.current, bx = box.current, cv = canvas.current;
+    if (!pinEl || !st || !bx || !cv) return;
+    const s0 = state.current;
+    // odczyty przed zapisami
+    const vh = window.innerHeight;
+    const W = st.clientWidth, H = st.clientHeight, mob = W < 768;
+    const bxL = bx.offsetLeft, bxT = bx.offsetTop, bxW = bx.clientWidth;
+    const vx = mob ? W * 0.5 : bxL + bxW * 0.71, vy = H * (mob ? 0.27 : 0.48); // punkt zbiegu (na linii cięcia)
+    const els = (cache.current ??= collect(pinEl));
+    const resized = els.w !== W || els.h !== H;
+    const origins = resized ? els.panels.map((pn) => [vx - bxL - pn.offsetLeft, vy - bxT - pn.offsetTop]) : null;
+
+    const base = intro ? T0 : 0;
+    const tt = s0.p * (base + T_FLIGHT);
+    const w = intro ? lin(tt, OPEN, T0) : 1; // ustawienie logo w głąb
+    const { c, k, u } = camAt(Math.max(0, tt - base));
+    if (sky) drawSky(cv, vx, vy, c + (s0.over / vh) * 1.1); // po scenie niebo płynie dalej z przewijaniem
+    if (s0.over > vh) return; // scena poza ekranem - reszty nie liczymy
+
+    if (origins) {
+      els.w = W; els.h = H;
+      els.panels.forEach((pn, i) => css(pn, 'transform-origin', `${origins[i][0].toFixed(1)}px ${origins[i][1].toFixed(1)}px`));
+    }
+    // ujęcia z treścią: skala wokół punktu zbiegu (nadlatują z głębi, stają, mijają kamerę)
+    els.panels.forEach((pn, i) => {
+      const s = Math.pow(2, -(i * GAP - c - 1) * G);
+      const o = seg(s, 0.42, 0.82) * (1 - seg(s, 1.2, 2.1));
+      css(pn, 'opacity', o.toFixed(3));
+      css(pn, 'visibility', o < 0.002 ? 'hidden' : 'visible');
+      if (o >= 0.002) {
+        const still = Math.abs(s - 1) < 0.002; // na postoju bez skali - ostry tekst
+        css(pn, 'transform', mob ? (still ? 'none' : `scale(${s.toFixed(4)})`) : still ? 'translateY(-50%)' : `scale(${s.toFixed(4)}) translateY(-50%)`);
+      }
+      css(pn, '--e', seg(s, 0.45, 0.95).toFixed(3));
+      flag(pn, 'data-on', o > 0.9);
+    });
+
+    // CIĘCIE: po ruszeniu przewijania jest już skończone (bez stanów pośrednich w trakcie ustawienia)
+    const ms = w > 0 ? CUT_END : s0.ms;
+    const tfl = clamp01((ms - STAR_AT) / FLY);
+    const headX = mix(X_IN, X_STAR, fly(tfl));   // czoło gwiazdy (jednostki logo)
+    const sz = mix(0.45, 1, seg(tfl, 0.62, 1));  // gwiazda rośnie do wielkości gwiazdy logo pod koniec lotu
+    attr(els.uncut, 'x', headX.toFixed(2));      // szczelina otwiera się dokładnie na czole gwiazdy
+
+    // płaskie logo obok tekstu: prawy koniec (gwiazda) przy prawej krawędzi wrappera, linia cięcia na wysokości punktu zbiegu
+    const Lw = mob ? bxW - 48 : Math.min((bxW - 48) * 0.49, 680);
+    const sF = Lw / 632.617;                                              // px na jednostkę logo
+    const X0 = (mob ? bxL + 24 : bxL + bxW - 24 - Lw) + 32.5 * sF;        // ekranowe x punktu logo x = 0
+    const u0 = ((mob ? 0.34 : 0.56) * H) / 100;                           // px na jednostkę logo bramy przy skali 1
+
+    // litery: z miejsca w napisie zjeżdżają po linii cięcia do punktu zbiegu (dalsze szybciej maleją), potem są bramami
+    els.gates.forEach(({ g, i, ups, kerf }) => {
+      const cx = LOGO_LETTERS_BOX[LETTERS[i]].cx;
+      const s = Math.pow(2, -(i * GAP + GATE_AT - c - 1) * G);
+      const fog = seg(s, 0.1, 0.45) * (1 - seg(s, 2.6, 5));
+      const e = i === 0 ? seg(w, 0.2, 1) : seg(w, 0.04 * (5 - i), 0.62 + 0.04 * (5 - i));
+      const o = mix(1, fog, e);
+      css(g, 'opacity', o.toFixed(3));
+      css(g, 'visibility', o < 0.002 ? 'hidden' : 'visible');
+      if (o < 0.002) return;
+      const kq = s * u0;
+      const kk = e >= 1 ? kq : sF * Math.pow(Math.max(kq, sF * 0.04) / sF, e);
+      const ax = mix(X0 + cx * sF, vx, e); // punkt cięcia litery na ekranie
+      attr(g, 'transform', `translate(${(ax - cx * kk).toFixed(2)} ${(vy + 62.5 * kk).toFixed(2)}) scale(${kk.toFixed(5)})`);
+      css(g, 'fill-opacity', (1 - 0.94 * seg(s, 0.75, 1.7)).toFixed(3)); // z bliska zostaje obrys („negatyw”)
+      const sl = outExpo((ms - PASS[i]) / SLIDE); // górna połówka zsuwa się po cięciu (bez przestrzelenia)
+      const up = sl >= 1 ? 'none' : `translateX(${(-LOGO_CUT_SHIFT * (1 - sl)).toFixed(3)}px)`;
+      ups.forEach((n) => css(n, 'transform', up));
+      css(kerf, 'opacity', e.toFixed(3)); // krawędzie cięcia świecą, gdy litera staje się bramą
+    });
+
+    // gwiazda: tnie logo -> zjeżdża do punktu zbiegu (cel lotu) -> po ostatniej bramie rośnie do pełnej wielkości
+    const last = STOPS_N - 2;
+    const uL = k === last ? u : k > last ? 1 : 0;
+    const ss = mix(0.05, 0.1, clamp01((c + 1) / (last * GAP))) * Math.pow(10, uL);
+    const dest = (ss * H * (mob ? 0.26 : 0.36)) / 40;
+    const eS = seg(w, 0, 0.8);
+    const flatK = sF * sz;
+    const starK = eS >= 1 ? dest : flatK * Math.pow(dest / flatK, eS);
+    const sx = mix(X0 + headX * sF, vx, eS);
+    const starT = `translate(${sx.toFixed(1)} ${vy.toFixed(1)}) scale(${starK.toFixed(5)})`;
+    attr(els.starF, 'transform', starT);
+    attr(els.starB, 'transform', starT);
+    css(els.starF, 'opacity', w > 0 ? '0' : seg(tfl, 0, 0.12).toFixed(3)); // w cięciu gwiazda leci NAD literami
+    css(els.starB, 'opacity', w > 0 ? '1' : '0');                           // w locie jest ZA bramami (widać ją w szczelinie)
+    const land = ms - STAR_AT - FLY;
+    css(els.core, 'opacity', (1 - clamp01(land / COOL)).toFixed(3));        // rozgrzany środek stygnie po dolocie
+    const gl = clamp01(land / GLINT);
+    css(els.rays, 'opacity', land <= 0 || gl >= 1 ? '0' : ((1 - gl) * 0.9).toFixed(3));
+    css(els.rays, 'transform', `scale(${(0.3 + 1.2 * outCubic(gl)).toFixed(3)})`);
+
+    // linia logo za gwiazdą; przy ustawieniu skraca się z obu stron do punktu zbiegu
+    attr(els.flat, 'transform', `translate(${X0.toFixed(2)} ${(vy + 62.5 * sF).toFixed(2)}) scale(${sF.toFixed(5)})`);
+    const lineL = mix(-40, (vx - X0) / sF, seg(w, 0, 0.75));
+    const lineR = Math.min(559, (sx - X0) / sF - (20 * starK) / sF - 1);
+    attr(els.drawn, 'x', lineL.toFixed(2));
+    attr(els.drawn, 'width', Math.max(0, lineR - lineL).toFixed(2));
+    css(els.line, 'opacity', (1 - seg(w, 0.45, 0.8)).toFixed(3));
+    // ogon spadającej gwiazdy: długość z prędkości
+    const sp = flySpeed(tfl), tl = STREAK * sp;
+    if (w <= 0 && tfl > 0 && tfl < 1 && tl > 2) {
+      const bx0 = headX - 16 * sz, hw = 2.75 * sz;
+      attr(els.tail, 'points', `${bx0.toFixed(2)},${(LINE_Y - hw).toFixed(2)} ${bx0.toFixed(2)},${(LINE_Y + hw).toFixed(2)} ${(bx0 - tl).toFixed(2)},${LINE_Y}`);
+      css(els.tail, 'opacity', Math.min(1, sp * 4).toFixed(3));
+    } else css(els.tail, 'opacity', '0');
+
+    // małe logo w rogu = postęp lotu (minięte litery zapalają się)
+    els.prog.forEach((pc) => flag(pc, 'data-on', c > Number(pc.dataset.k) * GAP + GATE_AT - 1));
+    flag(els.progLine, 'data-on', c >= C_END - 0.01);
+    css(els.hint, 'opacity', (1 - seg(s0.p, 0, 0.02)).toFixed(3));
+  }, [intro]);
+
+  // ograniczony ruch: jedno nieruchome niebo
+  useEffect(() => {
+    const cv = canvas.current;
+    if (cv && !live) drawSky(cv, cv.clientWidth * 0.62, cv.clientHeight * 0.46, 0);
+  }, [live]);
+
+  // cięcie na czas (jak wejście hero): pętla klatek tylko do końca cięcia
+  useEffect(() => {
+    if (!live || !intro) return;
+    let raf = 0;
+    const t0 = performance.now();
+    const tick = (now: number) => {
+      state.current.ms = now - t0;
+      paint(false);
+      if (state.current.ms < CUT_END) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [live, intro, paint]);
+
+  useFrame((frac) => {
+    const pinEl = pin.current;
+    if (!pinEl) return;
+    const r = pinEl.getBoundingClientRect();
+    const top = r.top - frac, span = Math.max(1, r.height - window.innerHeight);
+    state.current.p = clamp01(-top / span);
+    state.current.over = Math.max(0, -top - span);
+    paint(true);
+  }, live);
+
+  return (
+    <>
+      <div className="on-f-sky" aria-hidden="true"><canvas ref={canvas} /></div>
+      {hero}
+      <section className="on-f" aria-labelledby="on-h1">
+        <div ref={pin} className="on-f-pin" style={{ '--on-f-len': intro ? 600 : 540 } as CSSProperties}>
+          <div ref={stage} className="on-f-stick">
+            <svg className="on-f-svg" aria-hidden="true" focusable="false">
+              <defs>
+                {/* prostokąty przycięcia w jednostkach logo: wypełnienie szczeliny przed czołem gwiazdy, pas krawędzi
+                    cięcia, narysowana część linii */}
+                <clipPath id="on-f-uncut"><rect x={X_IN} y={-74} width={900} height={24} /></clipPath>
+                <clipPath id="on-f-band"><rect x={-40} y={-68.7} width={660} height={12.4} /></clipPath>
+                <clipPath id="on-f-drawn"><rect x={-40} y={-90} width={0} height={60} /></clipPath>
+                <linearGradient id="on-f-tailg" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0" stopColor="#60a5fa" stopOpacity="0" />
+                  <stop offset=".55" stopColor="#bfdbfe" stopOpacity=".55" />
+                  <stop offset="1" stopColor="#ffffff" />
+                </linearGradient>
+              </defs>
+              <g className="on-f-star on-f-star--back"><path className="on-f-gem" d={GEM} /></g>
+              {/* od najdalszej do najbliższej - bliższa brama zasłania dalszą */}
+              {[...LETTERS].reverse().map((letter) => {
+                const dn = LOGO_PIECES.find((pc) => pc.letter === letter && pc.part === 'down');
+                const up = LOGO_PIECES.find((pc) => pc.letter === letter && pc.part === 'up');
+                if (!dn || !up) return null;
+                return (
+                  <g key={letter} className="on-f-gate" data-i={LETTER_ORDER[letter]}>
+                    <path d={dn.d} vectorEffect="non-scaling-stroke" />
+                    <g className="on-f-up"><path d={up.d} vectorEffect="non-scaling-stroke" /></g>
+                    <g className="on-f-fill" clipPath="url(#on-f-uncut)">
+                      {LOGO_WHOLE_FILLS[letter].map((poly, j) => <polygon key={j} points={fillPoints(poly)} />)}
+                    </g>
+                    <g className="on-f-kerf" clipPath="url(#on-f-band)">
+                      <path d={dn.d} vectorEffect="non-scaling-stroke" />
+                      <g className="on-f-up"><path d={up.d} vectorEffect="non-scaling-stroke" /></g>
+                    </g>
+                  </g>
+                );
+              })}
+              <g className="on-f-flat">
+                <path className="on-f-line" d={LOGO_STAR} clipPath="url(#on-f-drawn)" />
+                <polygon className="on-f-tail" fill="url(#on-f-tailg)" />
+              </g>
+              <g className="on-f-star on-f-star--front">
+                <path className="on-f-gem" d={GEM} />
+                <path className="on-f-core" d={GEM} transform="scale(.42)" />
+                <path className="on-f-rays" d="M-64 0H64M0 -64V64" vectorEffect="non-scaling-stroke" />
+              </g>
+            </svg>
+            <div ref={box} className="container mx-auto px-6 on-f-box">
+              {intro
+                ? <div className="on-f-panel on-i"><IntroText t={t.intro} locale={locale} /></div>
+                : <div className="on-f-panel" aria-hidden="true" />}
+              {[beats.direct, ...beats.rules].slice(0, STOPS_N - 1).map((b, i) => (
+                <div key={i} className="on-f-panel on-beat"><BeatText b={b} /></div>
+              ))}
+              <svg className="on-f-prog" viewBox={LOGO_VIEWBOX} aria-hidden="true" focusable="false">
+                {LOGO_PIECES.map((pc, i) => <path key={i} className="on-f-prog-pc" data-k={LETTER_ORDER[pc.letter]} d={pc.d} />)}
+                <path className="on-f-prog-line" d={LOGO_STAR} />
+              </svg>
+            </div>
+            {intro && <Hint label={t.intro.hint} />}
+          </div>
+        </div>
+      </section>
+      <Faq t={t.faqSection} faq={t.faq} live={live} ready={ready} />
+      <Ending t={t.ending} locale={locale} live={live} />
+    </>
+  );
+}

@@ -1,0 +1,120 @@
+'use client';
+
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { GEM } from '@/lib/brand/logo';
+import { axis, pad, sm, type Pr } from './principles-kit';
+import { Scene } from './scene-kit';
+import { attr, css, usePin } from './shared';
+import './principles-orbit.css'; // prefiks on-p8-
+
+// „W CO WIERZYMY” - PROPOZYCJA 4 „ORBITA” (2026-10-14, „zrób 5 wersji tej sekcji zasady”). Na środku świeci gwiazda
+// z logo (blask mgławicy podstrony stoi przy niej - data-sky), wokół niej po pochylonej orbicie krążą nagłówek sekcji
+// i pięć zasad. Przewijanie obraca orbitę: zasada, która dochodzi na przód (pod gwiazdę), rośnie do pełnego,
+// czytelnego napisu z numerem i jednym zdaniem; pozostałe są dalej - mniejsze i ciemniejsze, z tyłu chowają się za
+// gwiazdą. Cienka elipsa orbity jak warstwice ze strony głównej. Bez JS / ograniczony ruch: nagłówek i lista.
+// Technika: położenie na orbicie liczone w 2D (skala + przesunięcie, napis zawsze przodem do widza - ostre litery,
+// bez transformacji 3D), z-index z głębi; wymiary mierzone tylko przy zmianie rozmiaru.
+
+const H0 = 18, MOVE = 40, HOLD = 30, END = 12;
+const TAU = Math.PI * 2;
+
+type Geo = { W: number; H: number; cx: number; cy: number; rx: number; ry: number; anchor: number[]; narrow: boolean };
+
+export function PrinciplesOrbit({ t, live }: { t: Pr; live: boolean }) {
+  const pin = useRef<HTMLDivElement>(null), stage = useRef<HTMLDivElement>(null);
+  const star = useRef<HTMLSpanElement>(null), ring = useRef<SVGEllipseElement>(null);
+  const geo = useRef<Geo | null>(null);
+  const els = useRef<{ items: HTMLElement[]; rest: HTMLElement[][] } | null>(null);
+  const prog = useRef(0);
+  const N = t.items.length, M = N + 1;
+  const ax = useMemo(() => axis(N, H0, MOVE, HOLD), [N]);
+  const len = ax.len + END;
+
+  const measure = useCallback((): Geo | null => {
+    const s = stage.current, c = els.current;
+    if (!s || !c) return null;
+    const W = s.clientWidth, H = s.clientHeight;
+    if (!W || !H) return null;
+    const narrow = W < 720;
+    const cx = W / 2, cy = H * (narrow ? 0.34 : 0.37);
+    const rx = W * (narrow ? 0.4 : 0.41), ry = H * (narrow ? 0.25 : 0.28);
+    // punkt zaczepienia = środek hasła (nad nim numer, pod nim zdanie); skala wokół niego
+    const anchor = c.items.map((it) => {
+      const ti = it.querySelector<HTMLElement>('.on-p8-t');
+      const a = ti ? ti.offsetTop + ti.offsetHeight / 2 : 0;
+      it.style.transformOrigin = `50% ${a.toFixed(1)}px`;
+      return a;
+    });
+    if (ring.current) { attr(ring.current, 'cx', cx.toFixed(1)); attr(ring.current, 'cy', cy.toFixed(1)); attr(ring.current, 'rx', rx.toFixed(1)); attr(ring.current, 'ry', ry.toFixed(1)); }
+    css(star.current, 'transform', `translate(${cx.toFixed(1)}px, ${cy.toFixed(1)}px)`);
+    return { W, H, cx, cy, rx, ry, anchor, narrow };
+  }, []);
+
+  const paint = useCallback(() => {
+    const el = pin.current;
+    if (!el) return;
+    const c = (els.current ??= (() => {
+      const items = Array.from(el.querySelectorAll<HTMLElement>('.on-p8-it'));
+      return { items, rest: items.map((it) => Array.from(it.querySelectorAll<HTMLElement>('.on-p8-n, .on-p8-d'))) };
+    })());
+    const g = (geo.current ??= measure());
+    if (!g) return;
+    const cam = ax.cam(prog.current * len);
+    c.items.forEach((it, j) => {
+      let th = ((j - cam) * TAU) / M;
+      th = ((((th + Math.PI) % TAU) + TAU) % TAU) - Math.PI; // (-π, π], 0 = przód (pod gwiazdą)
+      const z = Math.cos(th), u = (z + 1) / 2;
+      const x = g.cx + g.rx * Math.sin(th), y = g.cy + g.ry * z;
+      const s = 0.3 + 0.7 * Math.pow(u, 1.8);
+      // przód w pełni, boki przygaszone, tył prawie niewidoczny (na telefonie boki ciemniej - mniej miejsca)
+      const o = Math.abs(th) < 0.12 ? 1 : Math.pow(u, g.narrow ? 5 : 3.2);
+      css(it, 'visibility', o < 0.01 ? 'hidden' : 'visible');
+      css(it, 'opacity', o.toFixed(3));
+      css(it, 'z-index', String(Math.round(50 + z * 40)));
+      css(it, 'transform', `translate(calc(-50% + ${(x - g.W / 2).toFixed(2)}px), ${(y - g.anchor[j]).toFixed(2)}px) scale(${s.toFixed(4)})`);
+      const a = 1 - sm(Math.abs(th) / 0.24);
+      c.rest[j].forEach((r) => { css(r, 'opacity', a.toFixed(3)); css(r, 'visibility', a < 0.002 ? 'hidden' : 'visible'); });
+    });
+  }, [ax, len, measure, M]);
+
+  useEffect(() => {
+    if (!live) return;
+    const s = stage.current;
+    if (!s) return;
+    const ro = new ResizeObserver(() => { geo.current = null; paint(); });
+    ro.observe(s);
+    let dead = false;
+    document.fonts?.ready.then(() => { if (!dead) { geo.current = null; paint(); } });
+    return () => { dead = true; ro.disconnect(); geo.current = null; els.current = null; };
+  }, [live, paint]);
+  usePin(pin, (p) => { prog.current = p; paint(); }, live);
+
+  return (
+    <section className="on-sec on-p8" aria-labelledby="on-p8-h">
+      <Scene pin={pin} len={len}>
+        <div className="container mx-auto px-6 on-p8-box">
+          <div ref={stage} className="on-p8-stage">
+            {/* orbita (cienka elipsa) i gwiazda z logo w środku (data-sky: blask mgławicy podstrony stoi przy niej) */}
+            <svg className="on-pk-fx on-p8-ring" aria-hidden="true" focusable="false"><ellipse ref={ring} /></svg>
+            <span ref={star} className="on-pk-fx on-p8-star" data-sky="" aria-hidden="true">
+              <svg viewBox="-20 -20 40 40" focusable="false"><path d={GEM} /></svg>
+            </span>
+            <header className="on-p8-it on-p8-head">
+              <h2 id="on-p8-h" className="on-pk-h on-p8-t">{t.heading} <span className="on-pk-acc">{t.headingAccent}</span></h2>
+              <p className="on-pk-lead on-p8-d">{t.lead}</p>
+            </header>
+            <ol className="on-pk-list on-p8-list">
+              {t.items.map((it, i) => (
+                <li key={i} className="on-p8-it">
+                  <p className="on-pk-n on-p8-n" aria-hidden="true">{pad(i + 1)} / {pad(N)}</p>
+                  <h3 className="on-pk-t on-p8-t">{it.title}</h3>
+                  <p className="on-pk-d on-p8-d">{it.desc}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      </Scene>
+    </section>
+  );
+}

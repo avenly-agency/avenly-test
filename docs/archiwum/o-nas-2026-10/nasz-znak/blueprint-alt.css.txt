@@ -1,0 +1,107 @@
+/* ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+   O NAS - „NASZ ZNAK”: PROPOZYCJE, runda 29 (2026-10-13; blueprint-alt.tsx). Układ sceny: scene-kit.css (on-k-).
+     on-b4  „Z bliska” - logo w kadrze, kamera (viewBox) najeżdża od całości do gwiazdy,
+     on-b2  „Trzy poprawki” - przykładowa strona przed poprawkami i po nich.
+   Stara „Konstrukcja” ma style .on-bp- w o-nas.css. Wersje z rundy 28: docs/archiwum/o-nas-2026-10/runda-28-nasz-znak/.
+   ═══════════════════════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* ═════════ „Z BLISKA” ═════════ */
+.on-b4-art { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+/* litery: z daleka białe, z bliska ciemne bryły z jasną krawędzią (--fo pisze JS); krawędź stałej grubości */
+.on-b4-art .on-pc { fill: #fff; fill-opacity: var(--fo, .92); stroke: rgba(255, 255, 255, .85); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.on-b4-mark { fill: var(--on-ac); }
+
+/* ═════════ „TRZY POPRAWKI” ═════════ */
+/* stan w pasku kadru: bez ruchu „po poprawkach”; w scenie „przed poprawkami”, na końcu „po” (data-done pisze JS) */
+.on-b2-state { margin-left: auto; padding-left: 12px; color: #cbd5e1; }
+.on-b2-state b { font-weight: 500; }
+.on-b2-state b:first-child { display: none; }
+.on[data-live] .on-b2-frame:not([data-done]) .on-b2-state b:first-child { display: inline; }
+.on[data-live] .on-b2-frame:not([data-done]) .on-b2-state b:last-child { display: none; }
+/* Makieta: wymiary w --u (1% szerokości makiety; bez jednostek kontenera stałe 10 px / 3 px).
+   Zmienne stanu pisze JS na tym elemencie (0 = przed poprawką, 1 = po): --al wyrównanie, --bt przycisk, --ct kontrast;
+   --g1 linia pomocnicza wyrównania, --f2 kółko-opuszek przy przycisku (widać je tylko w czasie swojej poprawki). */
+.on-b2-mock { --u: 10px; --al: 1; --g1: 0; --bt: 1; --f2: 0; --ct: 1; container-type: inline-size; color: #f8fafc; }
+@supports (width: 1cqi) { .on-b2-mock { --u: 1cqi; } }
+.on[data-live] .on-b2-mock { --al: 0; --bt: 0; --ct: 0; }
+.on-b2-mock p { margin: 0; }
+.on-b2-guide {
+  position: absolute; left: calc(var(--u) * 6); top: calc(var(--u) * 8.4); bottom: 0; width: 1px; background: #60a5fa;
+  transform-origin: 50% 0; transform: scaleY(var(--g1)); opacity: var(--g1);
+}
+.on-b2-nav {
+  position: relative; display: flex; align-items: center; gap: calc(var(--u) * 3); height: calc(var(--u) * 8.4);
+  margin: 0 calc(var(--u) * 6); border-bottom: 1px solid rgba(255, 255, 255, .1);
+}
+.on-b2-logo { display: block; width: calc(var(--u) * 2.6); height: calc(var(--u) * 2.6); }
+.on-b2-logo svg { display: block; width: 100%; height: 100%; fill: var(--on-ac); }
+.on-b2-links { display: flex; gap: calc(var(--u) * 2.4); margin-left: auto; }
+.on-b2-links i { width: calc(var(--u) * 6); height: calc(var(--u) * .7); border-radius: 99px; background: rgba(255, 255, 255, .34); }
+.on-b2-navbtn { width: calc(var(--u) * 9); height: calc(var(--u) * 3.4); border-radius: calc(var(--u) * 1); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .4); }
+.on-b2-hero {
+  position: absolute; left: calc(var(--u) * 6); right: calc(var(--u) * 6); top: calc(var(--u) * 8.4); bottom: 0;
+  display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: calc(var(--u) * 1.6); align-items: center;
+}
+.on-b2-copy { grid-column: 1 / span 6; min-width: 0; }
+/* przed poprawką każdy element stoi trochę inaczej (przesunięcia w różne strony), po niej wszystkie na jednej linii */
+.on-b2-mock .on-b2-eyebrow {
+  margin-bottom: calc(var(--u) * 1.6); font-size: calc(var(--u) * 1.5); font-weight: 600; line-height: 1.2; color: #60a5fa;
+  opacity: calc(.4 + .6 * var(--ct)); transform: translateX(calc(var(--u) * 1.4 * (1 - var(--al))));
+}
+.on-b2-title {
+  font-size: calc(var(--u) * 4.3); font-weight: 700; line-height: 1.08; letter-spacing: -.03em; text-wrap: balance;
+  color: rgb(248 250 252 / calc(.26 + .74 * var(--ct))); transform: translateX(calc(var(--u) * -1.7 * (1 - var(--al))));
+}
+.on-b2-mock .on-b2-text {
+  display: grid; gap: calc(var(--u) * 1.1); margin: calc(var(--u) * 2.4) 0 calc(var(--u) * 3);
+  transform: translateX(calc(var(--u) * 2.6 * (1 - var(--al))));
+}
+.on-b2-text i { height: calc(var(--u) * .8); border-radius: 99px; background: rgb(255 255 255 / calc(.09 + .19 * var(--ct))); }
+.on-b2-text i:first-child { width: 86%; }
+.on-b2-text i:last-child { width: 62%; }
+.on-b2-btnrow {
+  position: relative; display: flex; align-items: center; height: calc(var(--u) * 5.6);
+  transform: translateX(calc(var(--u) * 1.2 * (1 - var(--al))));
+}
+/* przycisk: przed poprawką za mały, rośnie od lewej krawędzi do wygodnej wielkości */
+.on-b2-btn {
+  display: inline-flex; align-items: center; height: calc(var(--u) * 5.6); padding: 0 calc(var(--u) * 2.6);
+  border-radius: calc(var(--u) * 1.4); background: #fff; color: #020617; font-size: calc(var(--u) * 1.6); font-weight: 700;
+  line-height: 1; white-space: nowrap; transform-origin: 0 50%; transform: scale(calc(.58 + .42 * var(--bt)));
+}
+/* opuszek palca: stała wielkość - przed poprawką wystaje poza przycisk, po niej mieści się w nim */
+.on-b2-finger {
+  position: absolute; left: calc(var(--u) * 3.4); top: 50%; width: calc(var(--u) * 4.4); height: calc(var(--u) * 4.4);
+  margin-top: calc(var(--u) * -2.2); border-radius: 50%; background: rgb(59 130 246 / .28); box-shadow: 0 0 0 1px #60a5fa;
+  opacity: var(--f2); pointer-events: none;
+}
+.on-b2-pic {
+  grid-column: 8 / span 5; aspect-ratio: 5 / 4; display: flex; align-items: center; justify-content: center;
+  border-radius: calc(var(--u) * 1.6); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1);
+  background: linear-gradient(160deg, rgb(59 130 246 / .28), rgb(59 130 246 / .05) 60%), #0b0d14;
+  transform: translateY(calc(var(--u) * 3.2 * (1 - var(--al))));
+}
+.on-b2-pic svg { width: 22%; height: auto; fill: rgba(255, 255, 255, .7); }
+
+@media (max-width: 767px) {
+  /* telefon: makieta bez obrazka, większe pismo względem szerokości */
+  .on-b2-mock { --u: 3px; }
+  .on-b2-nav { height: calc(var(--u) * 10); }
+  .on-b2-logo { width: calc(var(--u) * 3.6); height: calc(var(--u) * 3.6); }
+  .on-b2-links i:first-child { display: none; }
+  .on-b2-links i { width: calc(var(--u) * 9); height: calc(var(--u) * 1); }
+  .on-b2-navbtn { width: calc(var(--u) * 13); height: calc(var(--u) * 5); border-radius: calc(var(--u) * 1.5); }
+  .on-b2-guide, .on-b2-hero { top: calc(var(--u) * 10); }
+  .on-b2-copy { grid-column: 1 / -1; }
+  .on-b2-pic { display: none; }
+  .on-b2-mock .on-b2-eyebrow { font-size: calc(var(--u) * 2.6); margin-bottom: calc(var(--u) * 2.4); }
+  .on-b2-title { font-size: calc(var(--u) * 5.6); }
+  .on-b2-mock .on-b2-text { gap: calc(var(--u) * 1.8); margin: calc(var(--u) * 3.6) 0 calc(var(--u) * 4.4); }
+  .on-b2-text i { height: calc(var(--u) * 1.1); }
+  .on-b2-btnrow { height: calc(var(--u) * 8.6); }
+  .on-b2-btn { height: calc(var(--u) * 8.6); padding: 0 calc(var(--u) * 4); border-radius: calc(var(--u) * 2.2); font-size: calc(var(--u) * 2.9); }
+  .on-b2-finger { left: calc(var(--u) * 5); width: calc(var(--u) * 6.6); height: calc(var(--u) * 6.6); margin-top: calc(var(--u) * -3.3); }
+}
+@supports (width: 1cqi) {
+  @media (max-width: 767px) { .on-b2-mock { --u: 1cqi; } }
+}

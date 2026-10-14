@@ -1,0 +1,119 @@
+'use client';
+
+import { useRef, type CSSProperties } from 'react';
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
+import { GEM } from '@/lib/brand/logo';
+import { localizeHref, type Locale } from '@/lib/i18n/locale';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { Head } from './parts';
+import { css, flag, seg, usePin } from './shared';
+import './sec.css';
+
+// SEKCJA PO PLAKACIE - PROPOZYCJA 1 „DLA KOGO PRACUJEMY” (2026-10-13). Prefiks on-3c-.
+// Właściciel: „usuń te, co zrobiłeś, i zrób sekcje, które nie są związane z tym formatem, czyli bez pośredników itp.”
+// - nowy TEMAT sekcji zamiast kolejnej sceny o drodze wiadomości. Tu: dla kogo pracujemy (prawdziwi klienci).
+// Przypięta 100svh + 4 × 60vh. Po lewej jedno wielkie słowo naraz - rodzaj firmy (klub sportowy, pracownia grawerska,
+// gabinet fizjoterapii), pod nim nazwa realizacji, zdanie i link; po prawej taśma kadrów z prawdziwymi zrzutami tych
+// stron: jedzie w górę razem z przewijaniem, kadr na środku jest ostry i pełny, sąsiednie mniejsze i przygaszone
+// (ostrość jak w kamerze), z postojem przy każdym. Ostatnia pozycja: „Twoja firma” - pusty kadr z gwiazdą
+// i przycisk „Bezpłatna konsultacja”. Telefon i tablet: słowo u góry, taśma kadrów pod nim.
+// Obrazy: public/portfolio/stage/ (te same zrzuty co w sekcji Realizacje na stronie głównej), fakty i nazwy jak
+// w lib/i18n/projects.ts (słownik O nas trzyma ich krótkie kopie - bez ciągnięcia całych danych realizacji do paczki).
+// Bez JS / ograniczony ruch: lista pozycji i siatka kadrów.
+
+const img = (slug: string, w: number, ext: 'avif' | 'webp') => `/portfolio/stage/${slug}-${w}.${ext}`;
+const set = (slug: string, ext: 'avif' | 'webp') => `${img(slug, 720, ext)} 720w, ${img(slug, 1200, ext)} 1200w`;
+const SIZES = '(max-width: 1023px) 92vw, 46vw';
+const MOVE = 0.14; // część przewijania sceny na przejście między pozycjami
+
+export function SecClients({ t, locale, live }: { t: ONasDict['clients']; locale: Locale; live: boolean }) {
+  const pin = useRef<HTMLDivElement>(null), strip = useRef<HTMLDivElement>(null);
+  const els = useRef<{ texts: HTMLElement[]; frames: HTMLElement[] } | null>(null);
+  const n = t.items.length + 1; // klienci + „Twoja firma”
+
+  usePin(pin, (p, el) => {
+    const c = (els.current ??= {
+      texts: Array.from(el.querySelectorAll<HTMLElement>('.on-3c-t')),
+      frames: Array.from(el.querySelectorAll<HTMLElement>('.on-3c-frame')),
+    });
+    // n pozycji = n postojów i n - 1 przejść na odcinku 0,06-0,9 sceny
+    const hold = (0.84 - (n - 1) * MOVE) / n;
+    const from = (i: number) => 0.06 + (i + 1) * hold + i * MOVE; // początek przejścia z pozycji i do i + 1
+    let pos = 0;
+    for (let i = 0; i < n - 1; i++) pos += seg(p, from(i), from(i) + MOVE);
+    // taśma kadrów: komórka `pos` stoi na środku okna (przesunięcie w % wysokości taśmy - bez pomiarów)
+    css(strip.current, 'transform', `translate3d(0, ${(-((pos + 0.5) / n) * 100).toFixed(3)}%, 0)`);
+    c.frames.forEach((f, i) => {
+      const d = Math.abs(i - pos), k = Math.min(1, d);
+      css(f, 'transform', k < 0.0005 ? 'none' : `scale(${(1 - 0.14 * k).toFixed(4)})`);
+      css(f, 'opacity', Math.max(0, 1 - 0.7 * k - Math.max(0, d - 1) * 0.3).toFixed(3));
+    });
+    // tekst: jedna pozycja naraz; poprzednia odjeżdża w górę w pierwszej połowie przejścia, następna wjeżdża w drugiej
+    c.texts.forEach((tx, i) => {
+      const tin = i === 0 ? 1 : seg(p, from(i - 1) + MOVE / 2, from(i - 1) + MOVE);
+      const out = i === n - 1 ? 0 : seg(p, from(i), from(i) + MOVE / 2);
+      const o = tin * (1 - out);
+      css(tx, 'opacity', o.toFixed(3));
+      css(tx, 'visibility', o < 0.002 ? 'hidden' : 'visible');
+      css(tx, 'transform', o >= 0.9995 ? 'none' : `translate3d(0, ${((1 - tin) * 26 - out * 26).toFixed(2)}px, 0)`);
+      flag(tx, 'data-on', o > 0.6); // klikalna tylko pozycja na ekranie
+    });
+  }, live);
+
+  return (
+    <section className="on-sec on-3 on-3c" aria-labelledby="on-3-h">
+      <Head id="on-3-h" label={t.label} title={t.heading} accent={t.headingAccent} lead={t.lead} live={live} />
+      <div ref={pin} className="on-pin on-3c-pin" style={{ '--n': n } as CSSProperties}>
+        <div className="on-stick on-3c-stick">
+          <div className="container mx-auto px-6 on-3c-box">
+            <ol className="on-3c-texts">
+              {t.items.map((it) => (
+                <li key={it.href} className="on-3c-t">
+                  <h3 className="on-3c-type">{it.type}</h3>
+                  <p className="on-3c-name">{it.name}</p>
+                  <p className="on-3c-line">{it.line}</p>
+                  <Link href={localizeHref(it.href, locale)} prefetch={false} className="on-3c-more">
+                    {t.more}
+                    <ArrowRight aria-hidden="true" />
+                  </Link>
+                </li>
+              ))}
+              <li className="on-3c-t">
+                <h3 className="on-3c-type im-accent">{t.yours.type}</h3>
+                <p className="on-3c-line on-3c-line--you">{t.yours.line}</p>
+                <Link href={localizeHref('/kontakt', locale)} prefetch={false} className="on-cta">
+                  {t.yours.cta}
+                  <ArrowRight aria-hidden="true" />
+                </Link>
+              </li>
+            </ol>
+            {/* kadry są ilustracją pozycji z listy obok (nazwy i linki są w tekście) */}
+            <div className="on-3c-view" aria-hidden="true">
+              <div ref={strip} className="on-3c-strip">
+                {t.items.map((it) => (
+                  <div key={it.image} className="on-3c-cell">
+                    <div className="on-3c-frame">
+                      <picture>
+                        <source type="image/avif" srcSet={set(it.image, 'avif')} sizes={SIZES} />
+                        <source type="image/webp" srcSet={set(it.image, 'webp')} sizes={SIZES} />
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={img(it.image, 1200, 'webp')} alt="" width={1200} height={675} loading="lazy" decoding="async" />
+                      </picture>
+                    </div>
+                  </div>
+                ))}
+                <div className="on-3c-cell">
+                  <div className="on-3c-frame on-3c-frame--you">
+                    <svg viewBox="-20 -20 40 40" focusable="false"><path d={GEM} /></svg>
+                    <span>{t.yours.frame}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

@@ -1,0 +1,181 @@
+'use client';
+
+import { useRef } from 'react';
+import { GEM, LOGO_STAR } from '@/lib/brand/logo';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { Pieces } from './mark';
+import { Intro, Scene, swap } from './scene-kit';
+import { attr, css, flag, keyframes, seg, usePin } from './shared';
+import './blueprint-alt.css'; // prefiksy on-b2- i on-b4-
+
+// „NASZ ZNAK” - PROPOZYCJE, runda 29 (2026-10-13). Właściciel o trzech wersjach z rundy 28 (rysunek konstrukcji,
+// „Na Twojej stronie”, „Trzy kadry”): „nasz znak niby spoko, ale ch.. wie, co tam się dzieje w każdej z wersji” -
+// liczby wymiarów bez opisu, siatka, oznaczenia w rodzaju „44 px” nic nie mówiły widzowi. Dwie nowe wersje pokazują
+// JEDNĄ rzecz naraz i nazywają ją zwykłym zdaniem obok; układ jak w „Portalu” (tekst po lewej, cały kadr po prawej),
+// nagłówek sekcji jest pierwszą pozycją tekstu (scene-kit.tsx).
+//   BlueprintZoom „Z bliska” - kamera najeżdża na logo: całość → linia przecinająca litery → jazda wzdłuż szczeliny
+//                 → gwiazda. Bez siatki i liczb; zdanie obok mówi dokładnie to, co widać. Przypięte 100lvh + 260vh.
+//   BlueprintFix  „Trzy poprawki” - przykładowa strona przed poprawkami i po nich: elementy wyrównują się do jednej
+//                 linii, przycisk rośnie do wygodnej wielkości (kółko = opuszek palca), tekst nabiera kontrastu.
+//                 Widz widzi różnicę bez oznaczeń; ta wersja ma własną etykietę i nagłówek (nie mówi o logo).
+// Wersje z rundy 28: docs/archiwum/o-nas-2026-10/runda-28-nasz-znak/. Stara „Konstrukcja” (blueprint.tsx) zostaje
+// w przełączniku do porównania. Po wyborze niewybrane usunąć (kopie do archiwum).
+
+type Bp = ONasDict['blueprint'];
+const f3 = (n: number) => n.toFixed(3);
+const pad = (n: number) => String(n).padStart(2, '0');
+const star = <svg viewBox="-20 -20 40 40" focusable="false"><path d={GEM} /></svg>;
+/** Okno pozycji tekstu w postępie sceny: [wejście od, do, wyjście od, do]; -1 = stoi od początku, 2 = zostaje. */
+type Win = [number, number, number, number];
+const swapAll = (el: HTMLElement, p: number, wins: Win[]) => {
+  el.querySelectorAll<HTMLElement>('.on-k-t').forEach((tx, j) => {
+    const [a, b, c, e] = wins[Math.min(j, wins.length - 1)];
+    swap(tx, a < 0 ? 1 : seg(p, a, b), c > 1 ? 0 : seg(p, c, e));
+  });
+};
+
+/* ───────── Z BLISKA ───────── */
+
+/** Kamera: środek kadru (jednostki logo) i szerokość kadru jako logarytm (zbliżenie rośnie równo, bez szarpnięć). */
+const cam = (p: number, x: number, y: number, w: number) => ({ p, x, y, lw: Math.log(w) });
+const CAM = [
+  cam(0, 284, -50, 720), cam(0.14, 284, -50, 720),      // całe logo (nagłówek)
+  cam(0.28, 110, -58, 300), cam(0.38, 110, -58, 300),   // początek linii przy A i V
+  cam(0.48, 60, -62.5, 120),                            // szczelina w literze A
+  cam(0.72, 500, -62.5, 120),                           // jazda wzdłuż szczeliny do litery Y
+  cam(0.84, 574, -62.5, 64), cam(1, 574, -62.5, 64),    // gwiazda
+];
+const LW_FAR = Math.log(720), LW_NEAR = Math.log(64);
+const ZOOM_TEXT: Win[] = [
+  [-1, -1, 0.12, 0.18],
+  [0.18, 0.24, 0.4, 0.45],
+  [0.45, 0.5, 0.74, 0.79],
+  [0.79, 0.84, 0.88, 0.92],
+  [0.92, 0.96, 2, 2],
+];
+
+export function BlueprintZoom({ t, live }: { t: Bp; live: boolean }) {
+  const pin = useRef<HTMLDivElement>(null);
+  const svg = useRef<SVGSVGElement>(null);
+
+  usePin(pin, (p, el) => {
+    const sv = svg.current;
+    if (!sv) return;
+    const k = keyframes(p, CAM, ['x', 'y', 'lw']);
+    const W = sv.clientWidth || 16, H = sv.clientHeight || 10;
+    const w = Math.exp(k.lw), h = (w * H) / W;
+    // kamera = viewBox (wektor zawsze ostry)
+    attr(sv, 'viewBox', `${(k.x - w / 2).toFixed(2)} ${(k.y - h / 2).toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)}`);
+    // z bliska litery to ciemne bryły z jasną krawędzią (jak w wejściu) - biała plama nie zalewa kadru
+    css(sv, '--fo', f3(0.92 - 0.78 * seg((LW_FAR - k.lw) / (LW_FAR - LW_NEAR), 0.05, 0.6)));
+    swapAll(el, p, ZOOM_TEXT);
+  }, live);
+
+  return (
+    <section className="on-sec on-b4" aria-labelledby="on-bp-h">
+      <Scene pin={pin} len={260}>
+        <div className="container mx-auto px-6 on-k-box">
+          <div className="on-k-texts">
+            <Intro
+              id="on-bp-h" label={t.label} title={t.heading} accent={t.headingAccent} lead={t.zoom.lead} live={live}
+              className="on-k-t"
+            />
+            <ol className="on-k-list">
+              {t.zoom.says.map((s, i) => (
+                <li key={i} className="on-k-t"><p className="on-k-say">{s}</p></li>
+              ))}
+            </ol>
+          </div>
+          <div className="on-k-frame" data-sky="" aria-hidden="true">
+            <div className="on-k-glass">
+              <svg ref={svg} className="on-b4-art" viewBox="-76 -275 720 450" focusable="false">
+                <Pieces />
+                <path className="on-b4-mark" d={LOGO_STAR} />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </Scene>
+    </section>
+  );
+}
+
+/* ───────── TRZY POPRAWKI ───────── */
+
+const FIX_TEXT: Win[] = [
+  [-1, -1, 0.13, 0.18],
+  [0.18, 0.23, 0.43, 0.47],
+  [0.47, 0.52, 0.7, 0.74],
+  [0.74, 0.79, 2, 2],
+];
+
+export function BlueprintFix({ t, live }: { t: Bp; live: boolean }) {
+  const pin = useRef<HTMLDivElement>(null);
+  const frame = useRef<HTMLDivElement>(null);
+  const mock = useRef<HTMLDivElement>(null);
+  const fx = t.fix;
+
+  usePin(pin, (p, el) => {
+    const m = mock.current;
+    // 1. wyrównanie (linia pomocnicza tylko na czas ruchu), 2. przycisk (kółko = opuszek palca), 3. kontrast tekstu
+    css(m, '--al', f3(seg(p, 0.2, 0.36)));
+    css(m, '--g1', f3(seg(p, 0.17, 0.25) * (1 - seg(p, 0.4, 0.46))));
+    css(m, '--bt', f3(seg(p, 0.52, 0.66)));
+    css(m, '--f2', f3(seg(p, 0.47, 0.53) * (1 - seg(p, 0.69, 0.74))));
+    css(m, '--ct', f3(seg(p, 0.77, 0.92)));
+    flag(frame.current, 'data-done', p >= 0.92);
+    swapAll(el, p, FIX_TEXT);
+  }, live);
+
+  return (
+    <section className="on-sec on-b2" aria-labelledby="on-bp-h">
+      <Scene pin={pin} len={230}>
+        <div className="container mx-auto px-6 on-k-box">
+          <div className="on-k-texts">
+            <Intro
+              id="on-bp-h" label={fx.label} title={fx.heading} accent={fx.headingAccent} lead={fx.lead} live={live}
+              className="on-k-t"
+            />
+            <ol className="on-k-list">
+              {fx.items.map((it, i) => (
+                <li key={i} className="on-k-t">
+                  <span className="on-k-n" aria-hidden="true">{pad(i + 1)} / {pad(fx.items.length)}</span>
+                  <h3 className="on-k-title">{it.title}</h3>
+                  <p className="on-k-desc">{it.desc}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+          {/* makieta jest ilustracją pozycji z listy obok: napisy w niej to atrapa interfejsu, nie treść strony */}
+          <div ref={frame} className="on-k-frame on-b2-frame" data-sky="" aria-hidden="true">
+            <p className="on-k-bar">
+              <i className="on-k-dot" />
+              {fx.caption}
+              <span className="on-b2-state"><b>{fx.before}</b><b>{fx.after}</b></span>
+            </p>
+            <div ref={mock} className="on-k-glass on-b2-mock">
+              <i className="on-b2-guide" />
+              <div className="on-b2-nav">
+                <span className="on-b2-logo">{star}</span>
+                <span className="on-b2-links"><i /><i /><i /></span>
+                <span className="on-b2-navbtn" />
+              </div>
+              <div className="on-b2-hero">
+                <div className="on-b2-copy">
+                  <p className="on-b2-eyebrow">{fx.mock.eyebrow}</p>
+                  <p className="on-b2-title">{fx.mock.title}</p>
+                  <p className="on-b2-text"><i /><i /></p>
+                  <p className="on-b2-btnrow">
+                    <span className="on-b2-btn">{fx.mock.cta}</span>
+                    <i className="on-b2-finger" />
+                  </p>
+                </div>
+                <div className="on-b2-pic">{star}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Scene>
+    </section>
+  );
+}

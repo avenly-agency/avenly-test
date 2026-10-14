@@ -30,9 +30,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     // absolute: szablon „%s | Avenly” z root layoutu nie dochodzi do tej trasy (layout listy ma własny tytuł) - markę dopisujemy tutaj
-    title: { absolute: `${name} - ${kind ? `${kind} · ` : ""}${t.metaTitleSuffix} | Avenly` },
+    // bez dopisku „case study”: z nim tytuł miał do 72 znaków i Google ucinał markę
+    title: { absolute: `${name}${kind ? ` - ${kind}` : ""} | Avenly` },
     // opis do ok. 160 znaków (dłuższy Google ucina): opis realizacji + dla kogo; technologie są w słowach kluczowych
-    description: `${project.description} ${t.metaProjectFor} ${project.client}.`,
+    // „Project for: …” tylko wtedy, gdy cały opis mieści się w 160 znakach
+    description:
+      `${project.description} ${t.metaProjectFor} ${project.client}.`.length <= 160
+        ? `${project.description} ${t.metaProjectFor} ${project.client}.`
+        : project.description,
     alternates: i18nAlternates(`/realizacje/${project.slug}`, LOCALE),
     keywords: [
       project.title,

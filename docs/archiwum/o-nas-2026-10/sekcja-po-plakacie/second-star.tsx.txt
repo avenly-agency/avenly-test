@@ -1,0 +1,160 @@
+'use client';
+
+import { useCallback, useEffect, useRef } from 'react';
+import { GEM, LOGO_STAR } from '@/lib/brand/logo';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { markLine } from './mark';
+import { Head, Narrator, setNarrator } from './parts';
+import { attr, css, flag, lin, mix, seg, usePin } from './shared';
+import './second.css';
+
+// DRUGA SEKCJA - PROPOZYCJA 1 „JEDNA GWIAZDA” (2026-10-12; właściciel: „daj kilka propozycji co do drugiej sekcji,
+// bo aktualna mi się nie podoba”). Prefiks on-2s-. Przypięta 100svh + 230vh, SVG w pikselach ekranu, bez WebGL.
+// Ruch: ZAPADANIE do punktu (po przejeździe w bok i wjeździe w głąb z wejścia - trzeci, inny ruch kamery).
+//   1. Na cały ekran stoi obrys gwiazdy z logo („negatyw”, jak powidoki w wejściu); na jego czterech ramionach
+//      cztery etapy pracy: rozmowa, projekt, kod, wdrożenie.
+//   2. Obrys zapada się w jeden punkt (za nim dolatują powidoki) i zostaje mała, pełna gwiazda w kolorze marki:
+//      wszystkie etapy prowadzą te same osoby.
+//   3. Od „Ty” do gwiazdy rysuje się prosta linia z logo (wiadomość leci prosto do nas), a po niej wraca odpowiedź.
+//      Obraz końcowy = znak z logo (linia z gwiazdą) rozpięty między „Ty” a „Avenly”.
+// Gwiazda (GEM) i linia (markLine) to dwa nieprzezroczyste kształty w jednym kolorze - razem dają znak z logo bez
+// szwu; linia nie zmienia krycia (odsłania ją przycięcie), a obrys gwiazdy znika, zanim linia do niej dojdzie.
+// Jedno zdanie narratora naraz. Bez JS / ograniczony ruch: nagłówek, gotowy znak między „Ty” a „Avenly”, lista kroków.
+
+type Geo = { W: number; H: number; bl: number; bw: number };
+type Els = {
+  star: SVGPathElement | null; echo: SVGPathElement[]; tipsG: SVGGElement | null; tips: SVGGElement[];
+  line: SVGPathElement | null; cr: SVGRectElement | null; you: SVGGElement | null; us: SVGTextElement | null;
+  msg: SVGCircleElement | null; ans: SVGCircleElement | null; reply: SVGTextElement | null;
+};
+const collect = (el: HTMLElement): Els => ({
+  star: el.querySelector<SVGPathElement>('.on-2s-star'),
+  echo: Array.from(el.querySelectorAll<SVGPathElement>('.on-2s-echo')),
+  tipsG: el.querySelector<SVGGElement>('.on-2s-tips'),
+  tips: Array.from(el.querySelectorAll<SVGGElement>('.on-2s-tip')),
+  line: el.querySelector<SVGPathElement>('.on-2s-line'), cr: el.querySelector<SVGRectElement>('.on-2s-cr'),
+  you: el.querySelector<SVGGElement>('.on-2s-you'), us: el.querySelector<SVGTextElement>('.on-2s-us'),
+  msg: el.querySelector<SVGCircleElement>('.on-2s-msg'), ans: el.querySelector<SVGCircleElement>('.on-2s-ans'),
+  reply: el.querySelector<SVGTextElement>('.on-2s-reply'),
+});
+
+export function SecondStar({ t, live, stepsLabel }: { t: ONasDict['direct']; live: boolean; stepsLabel: string }) {
+  const pin = useRef<HTMLDivElement>(null), stage = useRef<HTMLDivElement>(null), box = useRef<HTMLDivElement>(null);
+  const narr = useRef<HTMLOListElement>(null);
+  const geo = useRef<Geo | null>(null), els = useRef<Els | null>(null);
+  const memo = useRef({ p: 0, key: '' });
+
+  const paint = useCallback(() => {
+    const el = pin.current, st = stage.current, bx = box.current;
+    if (!el || !st || !bx) return;
+    const g = (geo.current ??= { W: st.clientWidth, H: st.clientHeight, bl: bx.offsetLeft + 24, bw: Math.max(1, bx.clientWidth - 48) });
+    const { W, H, bl, bw } = g;
+    if (!W || !H) return;
+    const c = (els.current ??= collect(el));
+    const p = memo.current.p, mob = W < 768;
+    // pole sceny: pod nawigacją, nad narratorem; gwiazda na jego środku
+    const top = mob ? 84 : 100, low = mob ? 200 : 180;
+    const ah = Math.max(180, H - top - low), cy = top + ah / 2;
+    const R0 = Math.max(70, Math.min(W * (mob ? 0.42 : 0.3), ah / 2 - (mob ? 36 : 30))); // promień obrysu na starcie
+    const r1 = mob ? 15 : 24, s1 = r1 / 20;                                               // gwiazda na końcu
+    const x0 = bl + 5, x1 = bl + bw - r1 - 2, jx = x1 - 6.705 * s1;                       // „Ty”, gwiazda, wejście linii
+    // zapadanie ze stałym tempem pomniejszania; środek jedzie z osi ekranu na prawy koniec linii
+    const pose = (v: number) => ({ x: mix(W / 2, x1, v), s: (R0 * Math.pow(r1 / R0, v)) / 20 });
+
+    // części zależne tylko od wymiarów - raz na zmianę rozmiaru
+    const key = `${W}|${H}|${bl}|${bw}`;
+    if (memo.current.key !== key) {
+      memo.current.key = key;
+      attr(c.line, 'd', markLine(x0, x1, cy, s1));
+      attr(c.cr, 'x', (x0 - 2).toFixed(1)); attr(c.cr, 'y', (cy - 14).toFixed(1)); attr(c.cr, 'height', '28');
+      attr(c.you, 'transform', `translate(${x0.toFixed(1)} ${cy.toFixed(1)})`);
+      attr(c.us, 'x', (x1 + r1).toFixed(1)); attr(c.us, 'y', (cy + r1 + 30).toFixed(1));
+      attr(c.reply, 'x', ((x0 + x1) / 2).toFixed(1)); attr(c.reply, 'y', (cy - 22).toFixed(1));
+      // podpisy ramion: góra i dół wyśrodkowane; boczne na telefonie nad ramieniem (do środka), na komputerze na zewnątrz
+      c.tips.forEach((tp, i) => {
+        const tx = tp.querySelector('text');
+        const side = i === 1 || i === 3, sign = i === 1 ? 1 : -1;
+        attr(tx, 'x', side && !mob ? String(sign * 14) : '0');
+        attr(tx, 'y', i === 2 ? '28' : side ? (mob ? '-28' : '5') : '-14');
+        attr(tx, 'text-anchor', !side ? 'middle' : (i === 1) === mob ? 'end' : 'start');
+      });
+    }
+
+    // 1-2. obrys zapada się w gwiazdę; powidoki dolatują za nim
+    const a = seg(p, 0.07, 0.5), main = pose(a);
+    attr(c.star, 'transform', `translate(${main.x.toFixed(2)} ${cy.toFixed(2)}) scale(${main.s.toFixed(4)})`);
+    css(c.star, 'fill-opacity', seg(p, 0.42, 0.54).toFixed(3));
+    css(c.star, 'stroke-opacity', (1 - seg(p, 0.46, 0.56)).toFixed(3));
+    c.echo.forEach((e, i) => {
+      const lag = (i + 1) * 0.035, ai = seg(p, 0.07 + lag, 0.5 + lag), ps = pose(ai);
+      attr(e, 'transform', `translate(${ps.x.toFixed(2)} ${cy.toFixed(2)}) scale(${ps.s.toFixed(4)})`);
+      const o = (i ? 0.3 : 0.5) * (1 - seg(ai, 0.8, 1));
+      css(e, 'opacity', o.toFixed(3));
+      css(e, 'visibility', o < 0.002 ? 'hidden' : 'visible');
+    });
+    const R = main.s * 20, lab = 1 - seg(a, 0.18, 0.6);
+    const pts = [[main.x, cy - R], [main.x + R, cy], [main.x, cy + R], [main.x - R, cy]];
+    c.tips.forEach((tp, i) => attr(tp, 'transform', `translate(${pts[i][0].toFixed(1)} ${pts[i][1].toFixed(1)})`));
+    css(c.tipsG, 'opacity', lab.toFixed(3));
+    css(c.tipsG, 'visibility', lab < 0.002 ? 'hidden' : 'visible');
+
+    // 3. „Ty” i „Avenly”, wiadomość rysuje linię do gwiazdy, potem wraca odpowiedź
+    const eo = seg(p, 0.5, 0.58);
+    [c.you, c.us].forEach((n) => { css(n, 'opacity', eo.toFixed(3)); css(n, 'visibility', eo < 0.002 ? 'hidden' : 'visible'); });
+    const b = seg(p, 0.58, 0.75), head = mix(x0, jx, b);
+    attr(c.cr, 'width', (b > 0 ? head - x0 + 3 : 0).toFixed(1));
+    attr(c.msg, 'transform', `translate(${head.toFixed(1)} ${cy.toFixed(1)})`);
+    css(c.msg, 'opacity', b > 0.004 && b < 0.99 ? '1' : '0');
+    const r = seg(p, 0.79, 0.92);
+    attr(c.ans, 'transform', `translate(${mix(jx, x0, r).toFixed(1)} ${cy.toFixed(1)})`);
+    css(c.ans, 'opacity', r > 0.004 && r < 0.99 ? '1' : '0');
+    flag(c.you, 'data-on', r >= 0.99);
+    css(c.reply, 'opacity', seg(r, 0.4, 1).toFixed(3));
+
+    setNarrator(narr.current, p < 0.3 ? 0 : p < 0.56 ? 1 : 2, [lin(p, 0, 0.3), lin(p, 0.3, 0.56), lin(p, 0.56, 0.93)]);
+  }, []);
+
+  useEffect(() => {
+    if (!live) return;
+    const st = stage.current, bx = box.current;
+    if (!st || !bx) return;
+    const ro = new ResizeObserver(() => { geo.current = null; paint(); });
+    ro.observe(st); ro.observe(bx);
+    return () => { ro.disconnect(); geo.current = null; els.current = null; memo.current.key = ''; };
+  }, [live, paint]);
+  usePin(pin, (p) => { memo.current.p = p; paint(); }, live);
+
+  return (
+    <section className="on-sec on-2 on-2s" aria-labelledby="on-2-h">
+      <Head id="on-2-h" label={t.label} title={t.heading} accent={t.headingAccent} lead={t.leadShort} live={live} />
+      <div ref={pin} className="on-pin on-2-pin on-2s-pin">
+        <div ref={stage} className="on-stick on-2-stick">
+          <svg className="on-2-svg" aria-hidden="true" focusable="false">
+            <defs><clipPath id="on-2s-clip"><rect className="on-2s-cr" x={0} y={0} width={0} height={0} /></clipPath></defs>
+            {[0, 1].map((i) => <path key={i} className="on-2s-echo" d={GEM} vectorEffect="non-scaling-stroke" />)}
+            <g className="on-2s-tips">
+              {t.star.tips.slice(0, 4).map((s, i) => (
+                <g key={i} className="on-2s-tip"><circle r={3} /><text>{s}</text></g>
+              ))}
+            </g>
+            <path className="on-2s-line" clipPath="url(#on-2s-clip)" />
+            <path className="on-2s-star" d={GEM} vectorEffect="non-scaling-stroke" />
+            <g className="on-2s-you"><circle r={4.5} /><text x={-4} y={30}>{t.you}</text></g>
+            <text className="on-2s-us" textAnchor="end">{t.us}</text>
+            <circle className="on-2s-msg" r={3.5} />
+            <circle className="on-2s-ans" r={3.5} />
+            <text className="on-2s-reply" textAnchor="middle">{t.reply}</text>
+          </svg>
+          <div ref={box} className="container mx-auto px-6 on-2-box">
+            {/* bez JS / ograniczony ruch: gotowy znak między „Ty” a „Avenly” */}
+            <div className="on-2-still on-2s-still" aria-hidden="true">
+              <svg viewBox="-32.5 -84 632.617 43" focusable="false"><path d={LOGO_STAR} /></svg>
+              <p><span>{t.you}</span><span>{t.reply}</span><span>{t.us}</span></p>
+            </div>
+            <Narrator ref={narr} items={t.star.steps} label={stepsLabel} />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

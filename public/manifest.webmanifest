@@ -1,7 +1,7 @@
 {
-  "name": "Avenly — Agencja Interaktywna",
+  "name": "Avenly - agencja interaktywna",
   "short_name": "Avenly",
-  "description": "Polska agencja interaktywna. Strony WWW, Chatboty AI, Sklepy, SEO.",
+  "description": "Polska agencja interaktywna. Strony WWW, sklepy internetowe, systemy CRM i chatboty AI.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#050505",

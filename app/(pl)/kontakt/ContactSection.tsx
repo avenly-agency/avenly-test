@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useRef, type CSSProperties, type ComponentType } from 'react'
+import { useEffect, useLayoutEffect, useRef, type CSSProperties, type ComponentType } from 'react'
 import { Check, Loader2, AlertCircle, ArrowRight, Mail, Phone, Clock } from 'lucide-react'
 import Link from 'next/link'
 import { SectionLabel } from '@/components/ui/SectionLabel'
+import { GEM } from '@/lib/brand/logo'
 import { CONTACT } from '@/lib/seo-data'
 import { ServiceSelect } from './ServiceSelect'
 import { ContactBackdrop } from './Backdrop'
@@ -123,6 +124,21 @@ function InfoItem({
 	)
 }
 
+/* ── „Wiadomość wysłana” otwiera się przez gwiazdę z logo (2026-10-13) ────
+   Właściciel po przejściu „Portal” na /o-nas: „portal zajebisty, gdzie można jeszcze ten efekt użyć zmiany
+   z gwiazdami?” i polecenie „wykonaj”. W środku formularza otwiera się gwiazda i rośnie: w niej widać potwierdzenie,
+   poza nią jeszcze formularz (wycięty tym samym kształtem), przed nią lecą dwa obrysy-powidoki w kolorze marki.
+   Okna to clip-path pisany w klatce, całość trwa ok. sekundy. Ograniczony ruch: dotychczasowa podmiana bez ruchu. */
+const STAR_FROM = 0.25 // skala gwiazdy (promień 20 jedn.) na starcie = promień 5 px
+const STAR_ECHO = [1, 1.24, 1.56] // obrys okna i dwa powidoki przed nim
+const STAR_WAIST = 7.884 // wcięcie gwiazdy: okno zakrywa formularz, gdy wcięcia wyjdą poza jego rogi
+const STAR_MS = 1050
+const starD = (cx: number, cy: number, s: number) => {
+	const P = (x: number, y: number) => `${(cx + x * s).toFixed(1)} ${(cy + y * s).toFixed(1)}`
+	return `M${P(0, -20)}C${P(1.4, -6.8)} ${P(6.8, -1.4)} ${P(20, 0)}C${P(6.8, 1.4)} ${P(1.4, 6.8)} ${P(0, 20)}` +
+		`C${P(-1.4, 6.8)} ${P(-6.8, 1.4)} ${P(-20, 0)}C${P(-6.8, -1.4)} ${P(-1.4, -6.8)} ${P(0, -20)}Z`
+}
+
 /* ── Formularz ─────────────────────────────────────────────────────────── */
 
 function FormCard({ ctx, t }: { ctx: ContactFormShared; t: KontaktDict }) {
@@ -130,6 +146,67 @@ function FormCard({ ctx, t }: { ctx: ContactFormShared; t: KontaktDict }) {
 	const { register, handleSubmit, control, setFocus, formState: { errors } } = form
 	const doneRef = useRef<HTMLHeadingElement | null>(null)
 	const wasSuccess = useRef(false)
+	const cardRef = useRef<HTMLDivElement | null>(null)
+	const inRef = useRef<HTMLDivElement | null>(null)
+	const doneBoxRef = useRef<HTMLDivElement | null>(null)
+	const ringsRef = useRef<SVGSVGElement | null>(null)
+
+	// Odsłona potwierdzenia przez gwiazdę. Efekt układu: stan startowy trafia do DOM przed pierwszym malowaniem
+	// (potwierdzenie nie mignie w całości). Atrybut data-star: "run" = w trakcie (formularz jeszcze widać poza oknem),
+	// "done" = po odsłonie (zwykły stan „wysłane”; wejścia CSS potwierdzenia wyłączone - kontakt.css).
+	useLayoutEffect(() => {
+		const card = cardRef.current, inner = inRef.current, done = doneBoxRef.current, svg = ringsRef.current
+		if (!isSuccess || !card || !inner || !done || !svg) return
+		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+		const w = card.clientWidth, h = card.clientHeight
+		if (!w || !h) return
+		const cx = w / 2, cy = h / 2
+		const ix = cx - inner.offsetLeft, iy = cy - inner.offsetTop // ten sam punkt w układzie formularza
+		const full = Math.max(STAR_FROM * 2, (Math.hypot(w, h) * 0.54) / STAR_WAIST)
+		const around = `M-400 -400H${w + 400}V${h + 400}H-400Z` // prostokąt wokół formularza: z gwiazdą daje wycięcie
+		const rings = Array.from(svg.children)
+		const paint = (b: number) => {
+			const s = STAR_FROM * Math.pow(full / STAR_FROM, b)
+			done.style.clipPath = `path("${starD(cx, cy, s)}")`
+			inner.style.clipPath = `path(evenodd, "${around}${starD(ix, iy, s)}")`
+			// obrysy gasną, zanim wyjdą daleko poza formularz (nie ma tu ramy, która by je przycięła)
+			const f = Math.min(1, Math.max(0, (b - 0.45) / 0.4))
+			svg.style.opacity = (1 - f * f * (3 - 2 * f)).toFixed(3)
+			rings.forEach((r, k) => r.setAttribute('transform', `translate(${cx.toFixed(1)} ${cy.toFixed(1)}) scale(${(s * STAR_ECHO[k]).toFixed(4)})`))
+		}
+		card.setAttribute('data-star', 'run')
+		svg.style.visibility = 'visible'
+		paint(0)
+		let raf = 0
+		let t0 = -1
+		const step = (now: number) => {
+			if (t0 < 0) t0 = now
+			const p = Math.min(1, (now - t0) / STAR_MS)
+			if (p >= 1) {
+				// Koniec: potwierdzenie bez okna; formularz (cały wycięty) wraca do zwykłego stanu „wysłane” - krycie 0
+				// z CSS, bez przenikania (przejście wyłączone na czas zmiany stanu).
+				done.style.clipPath = ''
+				svg.style.visibility = 'hidden'
+				inner.style.transition = 'none'
+				inner.style.clipPath = ''
+				card.setAttribute('data-star', 'done')
+				inner.getBoundingClientRect()
+				inner.style.transition = ''
+				return
+			}
+			paint(p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2) // łagodny start i koniec
+			raf = requestAnimationFrame(step)
+		}
+		raf = requestAnimationFrame(step)
+		return () => {
+			cancelAnimationFrame(raf)
+			done.style.clipPath = ''
+			inner.style.clipPath = ''
+			inner.style.transition = ''
+			svg.style.visibility = 'hidden'
+			card.removeAttribute('data-star')
+		}
+	}, [isSuccess])
 
 	// Po wysłaniu fokus na potwierdzenie (czytnik ekranu je odczyta), po "Wyślij kolejną" - na pierwsze pole.
 	useEffect(() => {
@@ -142,8 +219,8 @@ function FormCard({ ctx, t }: { ctx: ContactFormShared; t: KontaktDict }) {
 		has ? { 'aria-invalid': true as const, 'aria-describedby': `${name}-err` } : {}
 
 	return (
-		<div className="kt-card kt-rv" style={d(2)} data-done={isSuccess || undefined}>
-			<div className="kt-card-in" inert={isSuccess} aria-hidden={isSuccess || undefined}>
+		<div ref={cardRef} className="kt-card kt-rv" style={d(2)} data-done={isSuccess || undefined}>
+			<div ref={inRef} className="kt-card-in" inert={isSuccess} aria-hidden={isSuccess || undefined}>
 				<div className="kt-card-head">
 					<h2 className="kt-card-title">{t.form.heading}</h2>
 					<p className="kt-card-meta">{t.form.meta}</p>
@@ -245,13 +322,18 @@ function FormCard({ ctx, t }: { ctx: ContactFormShared; t: KontaktDict }) {
 			</div>
 
 			{isSuccess && (
-				<div className="kt-done" role="status">
+				<div ref={doneBoxRef} className="kt-done" role="status">
 					<span className="kt-done-ico" aria-hidden="true"><Check size={26} strokeWidth={2.2} /></span>
 					<h2 className="kt-done-title" ref={doneRef} tabIndex={-1}>{t.success.title}</h2>
 					<p className="kt-done-body">{t.success.body}</p>
 					<button type="button" onClick={resetSuccess} className="kt-again">{t.success.again}</button>
 				</div>
 			)}
+
+			{/* obrys okna-gwiazdy i dwa powidoki (widoczne tylko w trakcie odsłony potwierdzenia) */}
+			<svg ref={ringsRef} className="kt-star" aria-hidden="true" focusable="false">
+				{STAR_ECHO.map((e) => <path key={e} d={GEM} vectorEffect="non-scaling-stroke" />)}
+			</svg>
 		</div>
 	)
 }

@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import { Hero } from '@/components/sections/Hero';
 import type { Locale } from '@/lib/i18n/locale';
 import type { HomeDict } from '@/lib/i18n/home';
+import { afterHeroIntro } from '@/lib/hero-intro';
 
 // --- KONFIGURACJA LAZY LOADING ---
 
@@ -15,16 +16,19 @@ import type { HomeDict } from '@/lib/i18n/home';
 // załaduje (dynamic z ssr:true = lazy + Suspense) - wizualnie zero zmiany,
 // przesuwa się TYLKO hydratacja. Singleton promise: przy nawigacji client-side
 // idle następuje niemal od razu, więc opóźnienie dotyczy tylko initial load.
+// 2026-10-09 (właściciel: „jak wszystkie elementy na hero się pojawiają, to jest lag”): bramka czeka najpierw na
+// KONIEC WEJŚCIA HERO (napis + cięcie gwiazdą, ~3 s; albo przewinięcie strony / bezpiecznik 5 s - lib/hero-intro.ts),
+// dopiero potem na idle. Dawniej sekcje hydratowały się przy pierwszym idle, czyli dokładnie w czasie animacji hero.
 let idleGate: Promise<void> | null = null;
 const afterFirstIdle = (): Promise<void> => {
   if (typeof window === 'undefined') return Promise.resolve();
   if (!idleGate) {
-    idleGate = new Promise<void>((resolve) => {
+    idleGate = afterHeroIntro().then(() => new Promise<void>((resolve) => {
       type IdleCb = (cb: () => void, opts?: { timeout: number }) => number;
       const ric = (window as unknown as { requestIdleCallback?: IdleCb }).requestIdleCallback;
       if (ric) ric(() => resolve(), { timeout: 1800 });
       else window.setTimeout(resolve, 1200);
-    });
+    }));
   }
   return idleGate;
 };

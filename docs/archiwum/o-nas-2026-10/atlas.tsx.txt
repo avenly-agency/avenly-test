@@ -1,0 +1,253 @@
+'use client';
+
+import { useRef } from 'react';
+import { GEM, LOGO_PIECES, LOGO_STAR } from '@/lib/brand/logo';
+import type { Locale } from '@/lib/i18n/locale';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { Ending } from './ending';
+import { Faq } from './faq';
+import { LETTER_ORDER } from './mark';
+import { beatsOf, BeatText, Hint, IntroText } from './parts';
+import { attr, css, flag, lin, mix, seg, usePin } from './shared';
+import './atlas.css';
+
+// O NAS - WERSJA „GWIAZDOZBIÓR” (propozycja 2026-10-09, prefiks on-g-). Jedna długa przypięta scena (100svh + 720vh):
+// mapa nieba, po której kamera jedzie od gwiazdy do gwiazdy. Każda gwiazda to jedno ujęcie z treścią (pierwszy ekran,
+// „Bez pośredników”, „Każdy detal…”, pięć zasad) - jedno zdanie i jedno miejsce akcji naraz, kamera z postojami.
+// Linia między gwiazdami rysuje się za lecącą gwiazdką (jak linia logo). Osiem gwiazd leży na wierzchołkach gwiazdy
+// z logo (ten sam kształt co GEM, 50×), więc po ostatnim odcinku kamera odjeżdża i widać, że droga narysowała gwiazdę,
+// a potem odjeżdża jeszcze dalej: to gwiazda na końcu linii logo AVENLY (finał = całe logo na szerokość wrappera).
+// Kamera = atrybut viewBox (rysunek zawsze ostry, bez skalowania warstwy). Bez JS / ograniczony ruch: gotowy
+// gwiazdozbiór jako rysunek i wszystkie ujęcia jedno pod drugim.
+
+type Pt = [number, number];
+const K = 50; // skala gwiazdy logo (promień 20 -> 1000 jednostek mapy)
+// Ćwiartka gwiazdy logo (krzywa GEM od górnego ramienia do prawego) przecięta w połowie - de Casteljau, t = 0,5.
+const HALF_A: Pt[] = [[0, -20], [0.7, -13.4], [2.4, -8.75], [5.575, -5.575]];
+const HALF_B: Pt[] = [[5.575, -5.575], [8.75, -2.4], [13.4, -0.7], [20, 0]];
+const turn = ([x, y]: Pt, q: number): Pt => {
+  let a = x, b = y;
+  for (let i = 0; i < q; i++) { const n = -b; b = a; a = n; } // obrót o 90° zgodnie z ruchem wskazówek
+  return [Math.round(a * K * 100) / 100 || 0, Math.round(b * K * 100) / 100 || 0];
+};
+/** Osiem odcinków obrysu gwiazdy (zgodnie z ruchem wskazówek, od górnego ramienia). */
+const SEGS: Pt[][] = Array.from({ length: 8 }, (_, i) => (i % 2 ? HALF_B : HALF_A).map((pt) => turn(pt, i >> 1)));
+/** Osiem gwiazd = początki odcinków (ramiona i wcięcia gwiazdy logo na przemian). */
+const NODES: Pt[] = SEGS.map((s) => s[0]);
+const segD = (s: Pt[]) => `M${s[0][0]} ${s[0][1]}C${s[1][0]} ${s[1][1]} ${s[2][0]} ${s[2][1]} ${s[3][0]} ${s[3][1]}`;
+const N = NODES.length;
+
+// Siatka atlasu: okręgi (dwa przechodzą przez gwiazdy), południki co 45° (przez gwiazdy), podziałka co 15°.
+const RINGS = [394.2, 700, 1000, 1300];
+const dir = (deg: number): Pt => [Math.sin((deg * Math.PI) / 180), -Math.cos((deg * Math.PI) / 180)];
+const r1 = (v: number) => Math.round(v * 10) / 10 || 0;
+const MERID = Array.from({ length: 8 }, (_, i) => dir(i * 45));
+const TICKS = Array.from({ length: 24 }, (_, i) => dir(i * 15));
+// Drobne gwiazdy mapy: kropki o stałej wielkości na ekranie (odcinek zerowej długości z okrągłym końcem).
+let seed = 2027;
+const rnd = () => {
+  seed = (seed + 0x6d2b79f5) | 0;
+  let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+};
+const DOTS = [96, 44, 16].map((n) => {
+  let d = '';
+  for (let i = 0; i < n; i++) d += `M${Math.round(rnd() * 3600 - 1800)} ${Math.round(rnd() * 3600 - 1800)}h.01`;
+  return d;
+});
+
+// Oś czasu sceny (jednostki umowne): postój przy gwieździe, przejazd, finał w dwóch krokach.
+const DWELL0 = 0.8, DWELL = 1, TRAVEL = 0.9;
+const STOPS = (() => {
+  const out: { a: number; b: number }[] = [];
+  let acc = 0;
+  for (let i = 0; i < N; i++) {
+    const d = i ? DWELL : DWELL0;
+    out.push({ a: acc, b: acc + d });
+    acc += d + TRAVEL;
+  }
+  return out;
+})();
+const T_F1 = STOPS[N - 1].b;  // domknięcie gwiazdy + odjazd do całego gwiazdozbioru
+const T_F1E = T_F1 + 1.3;
+const T_F2 = T_F1E + 0.5;     // odjazd do całego logo
+const T_F2E = T_F2 + 1.6;
+const T_END = T_F2E + 0.6;
+
+type Els = {
+  segs: SVGPathElement[]; lens: number[]; nodes: SVGGElement[]; inner: SVGGElement[];
+  head: SVGGElement | null; lines: SVGGElement | null; cons: SVGGElement | null; grid: SVGGElement | null;
+  logoLine: SVGPathElement | null; clip: SVGRectElement | null; pcs: SVGPathElement[];
+  sts: HTMLElement[]; caps: HTMLElement[]; hint: HTMLElement | null;
+};
+const collect = (el: HTMLElement): Els => {
+  const all = <T extends Element>(s: string) => Array.from(el.querySelectorAll<T>(s));
+  const segs = all<SVGPathElement>('.on-g-seg');
+  return {
+    segs, lens: segs.map((s) => s.getTotalLength()),
+    nodes: all<SVGGElement>('.on-g-node'), inner: all<SVGGElement>('.on-g-node-in'),
+    head: el.querySelector<SVGGElement>('.on-g-head'), lines: el.querySelector<SVGGElement>('.on-g-lines'),
+    cons: el.querySelector<SVGGElement>('.on-g-cons'), grid: el.querySelector<SVGGElement>('.on-g-grid'),
+    logoLine: el.querySelector<SVGPathElement>('.on-g-logo-line'), clip: el.querySelector<SVGRectElement>('#on-g-clip rect'),
+    pcs: all<SVGPathElement>('.on-g-logo-pc'), sts: all<HTMLElement>('.on-g-st'), caps: all<HTMLElement>('.on-g-cap'),
+    hint: el.querySelector<HTMLElement>('.on-hint .on-cut-hint-in'),
+  };
+};
+
+export function Atlas({ t, locale, live, ready }: { t: ONasDict; locale: Locale; live: boolean; ready: boolean }) {
+  const pin = useRef<HTMLDivElement>(null);
+  const stage = useRef<HTMLDivElement>(null);
+  const box = useRef<HTMLDivElement>(null);
+  const map = useRef<SVGSVGElement>(null);
+  const cache = useRef<Els | null>(null);
+  const beats = beatsOf(t);
+
+  usePin(pin, (p, el) => {
+    const st = stage.current, svg = map.current, bx = box.current;
+    if (!st || !svg || !bx) return;
+    const c = (cache.current ??= collect(el));
+    // odczyty przed zapisami
+    const W = st.clientWidth, H = st.clientHeight;
+    const bl = bx.offsetLeft + 24, bw = Math.max(1, bx.clientWidth - 48); // lewa krawędź i szerokość treści wrappera
+    const mob = W < 768;
+    const ax = mob ? W * 0.5 : W * 0.7, ay = mob ? H * 0.24 : H * 0.48;   // miejsce gwiazdy na ekranie
+    const zs = mob ? W / 560 : Math.min(1.9, Math.max(0.95, W / 1050));    // px na jednostkę mapy przy gwieździe
+    const tt = p * T_END;
+    let cur = 0;
+    for (let i = 1; i < N; i++) if (tt >= STOPS[i].a) cur = i;
+    const u = cur < N - 1 ? seg(tt, STOPS[cur].b, STOPS[cur + 1].a) : 0;
+    const q1 = lin(tt, T_F1, T_F1E), q2 = lin(tt, T_F2, T_F2E);
+    const close = seg(q1, 0, 0.8);
+
+    // czoło rysowanej linii (ten sam punkt co koniec kreski - po długości łuku)
+    const draw = cur < N - 1 ? u : close;
+    let hx = NODES[cur][0], hy = NODES[cur][1];
+    if (draw > 0) {
+      if (draw < 1 && c.segs[cur]) {
+        const pt = c.segs[cur].getPointAtLength(draw * c.lens[cur]);
+        hx = pt.x; hy = pt.y;
+      } else { hx = SEGS[cur][3][0]; hy = SEGS[cur][3][1]; }
+    }
+    const moving = draw > 0.001 && draw < 0.999;
+
+    // kamera: z = px na jednostkę, (ox, oy) = miejsce środka mapy na ekranie
+    let z: number, ox: number, oy: number;
+    if (q1 <= 0) {
+      z = zs * (1 - 0.1 * Math.sin(Math.PI * u));
+      ox = ax - hx * z; oy = ay - hy * z;
+    } else {
+      const zf = (mob ? W * 0.78 : Math.min(W * 0.42, H * 0.62)) / (40 * K); // cała gwiazda w kadrze
+      const fx = mob ? W * 0.5 : W * 0.7, fy = mob ? H * 0.3 : H * 0.5;
+      const e1 = seg(q1, 0.05, 1);
+      const last = NODES[N - 1];
+      z = zs * Math.pow(zf / zs, e1);
+      ox = mix(ax - last[0] * zs, fx, e1); oy = mix(ay - last[1] * zs, fy, e1);
+      if (q2 > 0) {
+        const zl = bw / (632.617 * K); // całe logo na szerokość treści wrappera
+        const e2 = seg(q2, 0, 1);
+        z = zf * Math.pow(zl / zf, e2);
+        ox = mix(fx, bl + 612.617 * K * zl, e2);
+        oy = mix(fy, H * (mob ? 0.36 : 0.45) - 12.5 * K * zl, e2);
+      }
+    }
+
+    attr(svg, 'viewBox', `${(-ox / z).toFixed(2)} ${(-oy / z).toFixed(2)} ${(W / z).toFixed(2)} ${(H / z).toFixed(2)}`);
+    const iz = `scale(${(1 / z).toFixed(4)})`;
+    c.inner.forEach((g) => attr(g, 'transform', iz)); // gwiazdy w stałej wielkości na ekranie (1 jednostka = 1 px)
+    attr(c.lines, 'stroke-width', (1.3 / z).toFixed(3));
+    c.segs.forEach((s, j) => css(s, 'stroke-dashoffset', (1 - (j < cur ? 1 : j === cur ? draw : 0)).toFixed(4)));
+    attr(c.head, 'transform', `translate(${hx.toFixed(1)} ${hy.toFixed(1)}) scale(${(0.6 / z).toFixed(4)})`);
+    css(c.head, 'opacity', moving ? '1' : '0');
+    c.nodes.forEach((n, i) => {
+      const s = q1 > 0 ? (close >= 0.999 ? '2' : '1') : i < cur ? '1' : i === cur ? (moving ? '1' : '2') : '0';
+      if (n.dataset.s !== s) n.dataset.s = s;
+    });
+    flag(svg, 'data-closed', close >= 0.999);
+
+    // finał: gwiazdozbiór zamienia się w gwiazdę logo, od gwiazdy rośnie linia, litery składają się od prawej
+    flag(svg, 'data-f2', q2 > 0);
+    css(c.grid, 'opacity', (1 - seg(q2, 0, 0.3)).toFixed(3));
+    css(c.cons, 'opacity', (1 - seg(q2, 0.1, 0.36)).toFixed(3));
+    css(c.logoLine, 'opacity', seg(q2, 0.08, 0.32).toFixed(3));
+    attr(c.clip, 'x', mix(559, -40, seg(q2, 0.3, 0.86)).toFixed(1));
+    c.pcs.forEach((pc) => {
+      const m = 5 - Number(pc.dataset.k);
+      const o = seg(q2, 0.38 + m * 0.07, 0.6 + m * 0.07);
+      css(pc, 'opacity', o.toFixed(3));
+      css(pc, 'transform', o >= 0.999 ? 'none' : `translateY(${((pc.dataset.part === 'up' ? -1 : 1) * (1 - o) * 16).toFixed(2)}px)`);
+    });
+
+    // ujęcia z treścią: wchodzą pod koniec dojazdu, wychodzą na początku odjazdu
+    c.sts.forEach((s, i) => {
+      const inn = i === 0 ? 1 : seg(tt, mix(STOPS[i - 1].b, STOPS[i].a, 0.6), STOPS[i].a + 0.04);
+      const out = i < N - 1 ? seg(tt, STOPS[i].b, mix(STOPS[i].b, STOPS[i + 1].a, 0.32)) : seg(tt, T_F1, T_F1 + 0.35);
+      const vis = inn * (1 - out);
+      css(s, 'opacity', vis.toFixed(3));
+      css(s, 'visibility', vis < 0.002 ? 'hidden' : 'visible');
+      css(s, 'transform', `translate3d(0, ${((1 - inn) * 26 - out * 26).toFixed(2)}px, 0)`);
+      css(s, '--e', inn.toFixed(3));
+      flag(s, 'data-on', vis > 0.9);
+    });
+    css(c.caps[0], 'opacity', (seg(q1, 0.5, 0.85) * (1 - seg(q2, 0.02, 0.2))).toFixed(3));
+    css(c.caps[1], 'opacity', seg(q2, 0.62, 0.9).toFixed(3));
+    css(c.caps[1], 'top', `${(H * (mob ? 0.36 : 0.45) + (50 * bw) / 632.617 + (mob ? 28 : 44)).toFixed(0)}px`);
+    css(c.hint, 'opacity', (1 - seg(tt, 0, 0.25)).toFixed(3));
+  }, live);
+
+  return (
+    <>
+      <section className="on-g" aria-labelledby="on-h1">
+        <div ref={pin} className="on-g-pin">
+          <div ref={stage} className="on-g-stick">
+            <svg ref={map} className="on-g-map" viewBox="-1340 -1340 2680 2680" aria-hidden="true" focusable="false">
+              <defs>
+                <clipPath id="on-g-clip"><rect x={559} y={-90} width={700} height={60} /></clipPath>
+              </defs>
+              <g className="on-g-grid">
+                {RINGS.map((r, i) => <circle key={r} className={i % 2 ? undefined : 'on-g-ring-n'} r={r} />)}
+                {MERID.map(([x, y], i) => <line key={`m${i}`} x1={r1(x * 150)} y1={r1(y * 150)} x2={r1(x * 1300)} y2={r1(y * 1300)} />)}
+                {TICKS.map(([x, y], i) => <line key={`t${i}`} x1={r1(x * 985)} y1={r1(y * 985)} x2={r1(x * 1015)} y2={r1(y * 1015)} />)}
+                {DOTS.map((dd, i) => <path key={`d${i}`} className={`on-g-dot on-g-dot--${i}`} d={dd} />)}
+              </g>
+              <g className="on-g-cons">
+                <g className="on-g-route">{SEGS.map((s, i) => <path key={i} d={segD(s)} />)}</g>
+                <g className="on-g-lines" strokeWidth={8}>
+                  {SEGS.map((s, i) => <path key={i} className="on-g-seg" pathLength={1} d={segD(s)} />)}
+                </g>
+                {NODES.map(([x, y], i) => (
+                  <g key={i} className="on-g-node" data-s="1" transform={`translate(${x} ${y})`}>
+                    <g className="on-g-node-in" transform="scale(6)">
+                      <circle className="on-g-node-pulse" r={20} />
+                      <circle className="on-g-node-ring" r={5.5} />
+                      <path className="on-g-node-gem" d={GEM} />
+                    </g>
+                  </g>
+                ))}
+                <g className="on-g-head" transform="scale(0)"><path d={GEM} /></g>
+              </g>
+              {/* logo w skali mapy: środek gwiazdy logo = środek gwiazdozbioru */}
+              <g className="on-g-logo" transform={`translate(${(-580.117 * K).toFixed(2)} ${62.5 * K}) scale(${K})`}>
+                <path className="on-g-logo-line" d={LOGO_STAR} clipPath="url(#on-g-clip)" />
+                {LOGO_PIECES.map((pc, i) => (
+                  <path key={i} className="on-g-logo-pc" data-k={LETTER_ORDER[pc.letter]} data-part={pc.part} d={pc.d} />
+                ))}
+              </g>
+            </svg>
+            <div ref={box} className="container mx-auto px-6 on-g-box">
+              <div className="on-g-st on-i"><IntroText t={t.intro} locale={locale} /></div>
+              {[beats.direct, beats.detail, ...beats.rules].map((b, i) => (
+                <div key={i} className="on-g-st on-beat"><BeatText b={b} /></div>
+              ))}
+              <p className="on-g-cap on-g-cap--0">{t.atlas.finale[0]}</p>
+              <p className="on-g-cap on-g-cap--1">{t.atlas.finale[1]}</p>
+            </div>
+            <Hint label={t.intro.hint} />
+          </div>
+        </div>
+      </section>
+      <Faq t={t.faqSection} faq={t.faq} live={live} ready={ready} />
+      <Ending t={t.ending} locale={locale} live={live} />
+    </>
+  );
+}

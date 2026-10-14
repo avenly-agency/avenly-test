@@ -1,0 +1,168 @@
+'use client';
+
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { markShape } from './mark';
+import { axis, clamp01, lerp, pad, sm, type Pr } from './principles-kit';
+import { Scene } from './scene-kit';
+import { attr, css, usePin } from './shared';
+import './principles-cut.css'; // prefiks on-p6-
+
+// „W CO WIERZYMY” - PROPOZYCJA 2 „CIĘCIE” (2026-10-14, „zrób 5 wersji tej sekcji zasady”). Każda zasada dostaje znak
+// z logo: wielkie hasło na szerokość wrappera (jedna linia, rozmiar dobrany do długości), przez które przelatuje linia
+// z gwiazdą - jak w logo AVENLY: tnie litery na tej samej wysokości, górne połówki przesuwają się wzdłuż cięcia,
+// a gwiazda staje tuż za ostatnią literą. Pod hasłem numer i jedno zdanie. Przy następnej zasadzie przecięte hasło
+// rozchodzi się na dwie połówki (góra w górę, dół w dół), gwiazda odlatuje w prawo, a spod spodu wschodzi nowe hasło.
+// Blask mgławicy podstrony idzie za gwiazdą (jedna kotwica data-sky). Bez JS / ograniczony ruch: nagłówek i lista.
+// Technika: napis w trzech warstwach przyciętych clip-path (dół; góra przed gwiazdą; góra za gwiazdą przesunięta),
+// linia z gwiazdą = jeden kształt (markShape, jak w logo - gwiazda się nie rozciąga). Transformy 2D, bez warstw.
+
+const H0 = 18, MOVE = 44, HOLD = 30, END = 12;
+// Inter przy interlinii 1: linia bazowa ok. 0,863 em od góry, wersaliki 0,727 em. Logo tnie litery na 62,5% ich
+// wysokości (linia y -62,5 przy literach 0..-100), górne połówki przesunięte o 7,5 jednostki (LOGO_CUT_SHIFT).
+const BASE = 0.863, CAPH = 0.727;
+const CUT = BASE - 0.625 * CAPH;   // ok. 0,41 em od góry
+const KERF = 0.02;                 // pół szczeliny (em)
+const SHIFT = 0.075 * CAPH;        // przesunięcie górnych połówek (em)
+
+type Line = { fs: number; w: number; ox: number; oy: number };
+type Geo = { boxW: number; lines: Line[] };
+type Els = {
+  items: HTMLElement[]; boxes: (HTMLElement | null)[]; lo: (HTMLElement | null)[];
+  hr: (HTMLElement | null)[]; hl: (HTMLElement | null)[]; mark: (SVGPathElement | null)[]; rest: HTMLElement[][];
+};
+
+export function PrinciplesCut({ t, live }: { t: Pr; live: boolean }) {
+  const pin = useRef<HTMLDivElement>(null), box = useRef<HTMLDivElement>(null), glow = useRef<HTMLSpanElement>(null);
+  const geo = useRef<Geo | null>(null);
+  const els = useRef<Els | null>(null);
+  const prog = useRef(0);
+  const N = t.items.length;
+  const ax = useMemo(() => axis(N, H0, MOVE, HOLD), [N]);
+  const len = ax.len + END;
+
+  /** Rozmiar pisma każdego hasła = tyle, żeby wypełniło szerokość wrappera w jednej linii (tylko przy zmianie rozmiaru). */
+  const measure = useCallback((): Geo | null => {
+    const b = box.current, c = els.current;
+    if (!b || !c) return null;
+    const W = b.clientWidth - 48, H = b.clientHeight;
+    if (W <= 0 || !H) return null;
+    const narrow = W < 720;
+    const max = Math.min(narrow ? 64 : 168, H * (narrow ? 0.09 : 0.19)), min = narrow ? 24 : 40;
+    const lines = c.items.map((it, j) => {
+      const bx = c.boxes[j], lo = c.lo[j];
+      if (!bx || !lo) return { fs: 0, w: 0, ox: 0, oy: 0 };
+      bx.style.setProperty('--fs', '100px');
+      const w100 = lo.offsetWidth || 1;
+      const fs = Math.max(min, Math.min(max, (W / w100) * 100 * 0.985));
+      bx.style.setProperty('--fs', `${fs.toFixed(2)}px`);
+      return { fs, w: (w100 * fs) / 100, ox: it.offsetLeft + bx.offsetLeft, oy: it.offsetTop + bx.offsetTop };
+    });
+    return { boxW: b.clientWidth, lines };
+  }, []);
+
+  const paint = useCallback(() => {
+    const el = pin.current;
+    if (!el) return;
+    const c = (els.current ??= (() => {
+      const items = Array.from(el.querySelectorAll<HTMLElement>('.on-p6-it'));
+      const q = <T extends Element>(it: HTMLElement, s: string) => it.querySelector<T>(s);
+      return {
+        items,
+        boxes: items.map((it) => q<HTMLElement>(it, '.on-p6-title')),
+        lo: items.map((it) => q<HTMLElement>(it, '.on-p6-lo')),
+        hr: items.map((it) => q<HTMLElement>(it, '.on-p6-hr')),
+        hl: items.map((it) => q<HTMLElement>(it, '.on-p6-hl')),
+        mark: items.map((it) => q<SVGPathElement>(it, '.on-p6-mark path')),
+        rest: items.map((it) => Array.from(it.querySelectorAll<HTMLElement>('.on-p6-n, .on-p6-d'))),
+      };
+    })());
+    const g = (geo.current ??= measure());
+    if (!g) return;
+    const cam = ax.cam(prog.current * len);
+    let gx = -1, gy = -1; // kotwica blasku: gwiazda zasady na ekranie
+
+    c.items.forEach((it, j) => {
+      const L = g.lines[j];
+      // wejście (przejście, które wprowadza zasadę) i wyjście (przejście do następnej)
+      const qin = j === 0 ? 1 : clamp01(cam - (j - 1)), qout = clamp01(cam - j);
+      const on = qin > 0.001 && qout < 0.999;
+      css(it, 'visibility', on ? 'visible' : 'hidden');
+      if (!on) return;
+      const rise = sm(qin / 0.32), split = sm(qout / 0.5);
+      const a = 1 - sm(Math.abs(cam - j) / 0.2);
+      c.rest[j].forEach((x) => { css(x, 'opacity', a.toFixed(3)); });
+      if (j === 0 || !L.fs) {
+        // nagłówek sekcji: bez cięcia, odchodzi w górę
+        css(it, 'opacity', (1 - split).toFixed(3));
+        css(it, 'transform', split < 0.0005 ? 'none' : `translateY(${(-48 * split).toFixed(1)}px)`);
+        return;
+      }
+      const fs = L.fs, H = fs, cap = CAPH * fs, cutY = CUT * fs, k = KERF * fs, sh = SHIFT * fs, W = L.w;
+      // hasło wschodzi z dołu, potem gwiazda przelatuje przez nie od lewej i staje za ostatnią literą
+      const s = sm((qin - 0.26) / 0.74);
+      const end = W + 0.32 * cap;
+      let x = lerp(-0.6 * cap, end, s);
+      x = lerp(x, end + g.boxW * 0.7, sm(qout / 0.6)); // przy następnej zasadzie gwiazda odlatuje w prawo
+      css(c.boxes[j], 'opacity', (rise * (1 - split)).toFixed(3));
+      css(c.boxes[j], 'transform', rise >= 0.9995 ? 'none' : `translateY(${((1 - rise) * 0.5 * fs).toFixed(1)}px)`);
+      // trzy warstwy napisu: dół (prawdziwy nagłówek), góra przed gwiazdą (cała), góra za gwiazdą (przesunięta)
+      const cx = clamp01(x / W) * W;
+      css(c.lo[j], 'clip-path', `inset(${(cutY + k).toFixed(2)}px 0 0 0)`);
+      css(c.hr[j], 'clip-path', `inset(0 0 ${(H - cutY - k).toFixed(2)}px ${cx.toFixed(2)}px)`);
+      css(c.hl[j], 'clip-path', `inset(0 ${Math.max(0, W - cx + sh).toFixed(2)}px ${(H - cutY + k).toFixed(2)}px 0)`);
+      const up = -0.55 * fs * split, down = 0.4 * fs * split;
+      css(c.lo[j], 'transform', split < 0.0005 ? 'none' : `translateY(${down.toFixed(2)}px)`);
+      css(c.hr[j], 'transform', split < 0.0005 ? 'none' : `translateY(${up.toFixed(2)}px)`);
+      css(c.hl[j], 'transform', `translate(${sh.toFixed(2)}px, ${up.toFixed(2)}px)`);
+      // linia z gwiazdą (jeden kształt): czubek przed pierwszą literą, gwiazda na czole cięcia
+      const mk = c.mark[j];
+      attr(mk, 'd', markShape(-0.3 * cap, x, cutY, cap / 100));
+      css(mk, 'opacity', (sm(qin / 0.3) * (1 - sm(qout / 0.5))).toFixed(3));
+      if (Math.abs(cam - j) < 0.5 || (cam < j && qin > 0)) { gx = L.ox + x; gy = L.oy + cutY; }
+    });
+    // blask mgławicy przy gwieździe; przy nagłówku czeka tam, skąd wyleci pierwsza gwiazda
+    if (gx < 0 && g.lines[1]?.fs) { gx = g.lines[1].ox; gy = g.lines[1].oy + CUT * g.lines[1].fs; }
+    if (gx >= 0) css(glow.current, 'transform', `translate(${gx.toFixed(1)}px, ${gy.toFixed(1)}px)`);
+  }, [ax, len, measure]);
+
+  useEffect(() => {
+    if (!live) return;
+    const b = box.current;
+    if (!b) return;
+    const ro = new ResizeObserver(() => { geo.current = null; paint(); });
+    ro.observe(b);
+    let dead = false;
+    document.fonts?.ready.then(() => { if (!dead) { geo.current = null; paint(); } });
+    return () => { dead = true; ro.disconnect(); geo.current = null; els.current = null; };
+  }, [live, paint]);
+  usePin(pin, (p) => { prog.current = p; paint(); }, live);
+
+  return (
+    <section className="on-sec on-p6" aria-labelledby="on-p6-h">
+      <Scene pin={pin} len={len}>
+        <div ref={box} className="container mx-auto px-6 on-p6-box">
+          {/* kotwica blasku mgławicy podstrony (idzie za gwiazdą) */}
+          <span ref={glow} className="on-pk-fx on-p6-glow" data-sky="" aria-hidden="true" />
+          <header className="on-p6-it on-p6-head">
+            <h2 id="on-p6-h" className="on-pk-h">{t.heading} <span className="on-pk-acc">{t.headingAccent}</span></h2>
+            <p className="on-pk-lead on-p6-d">{t.lead}</p>
+          </header>
+          <ol className="on-pk-list on-p6-list">
+            {t.items.map((it, i) => (
+              <li key={i} className="on-p6-it">
+                <p className="on-pk-n on-p6-n" aria-hidden="true">{pad(i + 1)} / {pad(N)}</p>
+                <div className="on-p6-title">
+                  <h3 className="on-pk-t on-p6-t on-p6-lo">{it.title}</h3>
+                  <span className="on-pk-fx on-p6-t on-p6-hi on-p6-hr" aria-hidden="true">{it.title}</span>
+                  <span className="on-pk-fx on-p6-t on-p6-hi on-p6-hl" aria-hidden="true">{it.title}</span>
+                  <svg className="on-pk-fx on-p6-mark" aria-hidden="true" focusable="false"><path /></svg>
+                </div>
+                <p className="on-pk-d on-p6-d">{it.desc}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </Scene>
+    </section>
+  );
+}

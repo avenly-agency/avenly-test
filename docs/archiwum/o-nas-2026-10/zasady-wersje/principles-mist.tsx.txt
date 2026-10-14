@@ -1,0 +1,113 @@
+'use client';
+
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { axis, lerp, pad, sm, type Pr } from './principles-kit';
+import { Scene } from './scene-kit';
+import { css, usePin } from './shared';
+import './principles-mist.css'; // prefiks on-p9-
+
+// „W CO WIERZYMY” - PROPOZYCJA 5 „Z MGŁAWICY” (2026-10-14, „zrób 5 wersji tej sekcji zasady”). Zasady wyłaniają się
+// z mgławicy podstrony: ogromne hasło zgęszcza się z kilku mniejszych kłębów, które rosną i zlewają się od lewej do
+// prawej (rozejście - sposób pojawiania się przyjęty przez właściciela na podstronie CRM), a przy następnej zasadzie
+// rozpływa się z powrotem. Zasady stają na przemian przy lewej i prawej krawędzi wrappera, a blask mgławicy płynie za
+// nimi z boku na bok (kotwica data-sky w miejscu hasła). Pod hasłem numer i jedno zdanie. Bez kadru, kart i linii.
+// Bez JS / ograniczony ruch: nagłówek i lista. Technika: maska z pięciu gradientów sterowana jedną zmienną --b na
+// haśle (tylko przy zmianie), kotwica blasku przesuwana transformem; wymiary mierzone przy zmianie rozmiaru.
+
+const H0 = 18, MOVE = 44, HOLD = 30, END = 12;
+
+type A = { x: number; y: number; w: number; h: number };
+
+export function PrinciplesMist({ t, live }: { t: Pr; live: boolean }) {
+  const pin = useRef<HTMLDivElement>(null), stage = useRef<HTMLDivElement>(null), glow = useRef<HTMLSpanElement>(null);
+  const geo = useRef<A[] | null>(null);
+  const els = useRef<{ items: HTMLElement[]; titles: HTMLElement[]; rest: HTMLElement[][] } | null>(null);
+  const prog = useRef(0);
+  const N = t.items.length;
+  const ax = useMemo(() => axis(N, H0, MOVE, HOLD), [N]);
+  const len = ax.len + END;
+
+  /** Miejsca haseł w polu sceny (kotwica blasku) - tylko przy zmianie rozmiaru. */
+  const measure = useCallback((): A[] | null => {
+    const s = stage.current, c = els.current;
+    if (!s || !c || !s.clientWidth) return null;
+    return c.titles.map((ti, j) => {
+      const it = c.items[j];
+      return { x: it.offsetLeft + ti.offsetLeft, y: it.offsetTop + ti.offsetTop, w: ti.offsetWidth, h: ti.offsetHeight };
+    });
+  }, []);
+
+  const paint = useCallback(() => {
+    const el = pin.current;
+    if (!el) return;
+    const c = (els.current ??= (() => {
+      const items = Array.from(el.querySelectorAll<HTMLElement>('.on-p9-it'));
+      return {
+        items,
+        titles: items.map((it) => it.querySelector<HTMLElement>('.on-p9-t')!),
+        rest: items.map((it) => Array.from(it.querySelectorAll<HTMLElement>('.on-p9-n, .on-p9-d'))),
+      };
+    })());
+    const g = (geo.current ??= measure());
+    if (!g) return;
+    const cam = ax.cam(prog.current * len);
+    c.items.forEach((it, j) => {
+      // zgęszczanie: w drugiej części przejścia, które wprowadza zasadę; rozpływanie: w pierwszej części następnego
+      const b = j === 0
+        ? 1 - sm(cam / 0.45)
+        : sm((cam - (j - 1) - 0.35) / 0.65) * (1 - sm((cam - j) / 0.45));
+      css(it, 'visibility', b < 0.002 ? 'hidden' : 'visible');
+      const ti = c.titles[j];
+      css(ti, '--b', b.toFixed(4));
+      css(ti, 'transform', b >= 0.9995 ? 'none' : `scale(${(0.985 + 0.015 * b).toFixed(4)})`);
+      const a = 1 - sm(Math.abs(cam - j) / 0.2);
+      c.rest[j].forEach((r) => { css(r, 'opacity', a.toFixed(3)); });
+    });
+    // blask mgławicy płynie za zasadą (z boku na bok)
+    const k = Math.min(Math.floor(cam), N), q = cam - k;
+    const A0 = g[k], A1 = g[Math.min(k + 1, N)];
+    const x = lerp(A0.x + A0.w / 2, A1.x + A1.w / 2, q), y = lerp(A0.y + A0.h / 2, A1.y + A1.h / 2, q);
+    const w = lerp(A0.w, A1.w, q), h = lerp(A0.h, A1.h, q);
+    css(glow.current, 'transform', `translate(${(x - w / 2).toFixed(1)}px, ${(y - h / 2).toFixed(1)}px)`);
+    css(glow.current, 'width', `${w.toFixed(0)}px`);
+    css(glow.current, 'height', `${h.toFixed(0)}px`);
+  }, [ax, len, measure, N]);
+
+  useEffect(() => {
+    if (!live) return;
+    const s = stage.current;
+    if (!s) return;
+    const ro = new ResizeObserver(() => { geo.current = null; paint(); });
+    ro.observe(s);
+    let dead = false;
+    document.fonts?.ready.then(() => { if (!dead) { geo.current = null; paint(); } });
+    return () => { dead = true; ro.disconnect(); geo.current = null; els.current = null; };
+  }, [live, paint]);
+  usePin(pin, (p) => { prog.current = p; paint(); }, live);
+
+  return (
+    <section className="on-sec on-p9" aria-labelledby="on-p9-h">
+      <Scene pin={pin} len={len}>
+        <div className="container mx-auto px-6 on-p9-box">
+          <div ref={stage} className="on-p9-stage">
+            {/* kotwica blasku mgławicy podstrony (w miejscu hasła na ekranie) */}
+            <span ref={glow} className="on-pk-fx on-p9-glow" data-sky="" aria-hidden="true" />
+            <header className="on-p9-it on-p9-head">
+              <h2 id="on-p9-h" className="on-pk-h on-p9-t">{t.heading} <span className="on-pk-acc">{t.headingAccent}</span></h2>
+              <p className="on-pk-lead on-p9-d">{t.lead}</p>
+            </header>
+            <ol className="on-pk-list on-p9-list">
+              {t.items.map((it, i) => (
+                <li key={i} className="on-p9-it" data-side={i % 2 === 0 ? 'r' : 'l'}>
+                  <p className="on-pk-n on-p9-n" aria-hidden="true">{pad(i + 1)} / {pad(N)}</p>
+                  <h3 className="on-pk-t on-p9-t">{it.title}</h3>
+                  <p className="on-pk-d on-p9-d">{it.desc}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      </Scene>
+    </section>
+  );
+}

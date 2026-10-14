@@ -1,0 +1,79 @@
+'use client';
+
+import { useRef } from 'react';
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
+import { SectionLabel } from '@/components/ui/SectionLabel';
+import { LOGO_STAR } from '@/lib/brand/logo';
+import { localizeHref, type Locale } from '@/lib/i18n/locale';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { css, flag, seg, usePin } from './shared';
+import './sec.css';
+
+// SEKCJA PO PLAKACIE - PROPOZYCJA 3 „CO ROBIMY” (2026-10-13). Prefiks on-3w-.
+// Temat: czym się zajmujemy - sześć usług jako lista wielkich nazw (każda jest linkiem do swojej podstrony).
+// Przypięta 100svh + 250vh, tekst i CSS. Nazwy stoją jedna pod drugą jak bęben, a przez kadr biegnie linia z logo
+// z gwiazdą (stoi w miejscu). Przy przewijaniu bęben przesuwa się o jedną nazwę naraz, z postojem: nazwa nad linią
+// jest pełna i biała, sąsiednie są samym obrysem („negatyw”) i gasną z odległością. Pod linią jedno zdanie o usłudze
+// na linii (chwyty z Oferty - zatwierdzone przez właściciela), na dole link „Wszystkie usługi”.
+// Bez JS / ograniczony ruch: zwykła lista sześciu linków.
+
+const MOVE = 0.1, STEP = 0.165; // przejście między nazwami i odstęp między startami przejść (część przewijania sceny)
+
+export function SecWheel({ t, locale, live }: { t: ONasDict['offer']; locale: Locale; live: boolean }) {
+  const pin = useRef<HTMLDivElement>(null), strip = useRef<HTMLUListElement>(null);
+  const els = useRef<{ items: HTMLElement[]; hooks: HTMLElement[] } | null>(null);
+  const n = t.items.length;
+
+  usePin(pin, (p, el) => {
+    const c = (els.current ??= {
+      items: Array.from(el.querySelectorAll<HTMLElement>('.on-3w-item')),
+      hooks: Array.from(el.querySelectorAll<HTMLElement>('.on-3w-hook')),
+    });
+    let pos = 0; // która nazwa stoi nad linią (z ułamkiem w trakcie przejścia)
+    for (let i = 0; i < n - 1; i++) pos += seg(p, 0.07 + i * STEP, 0.07 + i * STEP + MOVE);
+    css(strip.current, '--c', pos.toFixed(4));
+    c.items.forEach((it, i) => {
+      const d = Math.abs(i - pos);
+      css(it, '--f', Math.max(0, 1 - d * 1.7).toFixed(3)); // wypełnienie liter (0 = sam obrys)
+      css(it, 'opacity', Math.max(0, 1 - 0.72 * Math.min(1, d) - Math.max(0, d - 1) * 0.28).toFixed(3));
+      flag(it, 'data-on', d < 0.4); // klikalna tylko nazwa nad linią
+    });
+    c.hooks.forEach((h, i) => {
+      const o = Math.max(0, 1 - Math.abs(i - pos) * 2.4);
+      css(h, 'opacity', o.toFixed(3));
+      css(h, 'visibility', o < 0.002 ? 'hidden' : 'visible');
+    });
+  }, live);
+
+  return (
+    <section className="on-sec on-3 on-3w" aria-labelledby="on-3-h">
+      <div ref={pin} className="on-pin on-3w-pin">
+        <div className="on-stick on-3w-stick">
+          <div className="container mx-auto px-6 on-3w-box">
+            <div className="on-label" aria-hidden="true"><SectionLabel align="start">{t.label}</SectionLabel></div>
+            <h2 id="on-3-h" className="sr-only">{t.heading}</h2>
+            <div className="on-3w-wheel">
+              <ul ref={strip} className="on-3w-strip">
+                {t.items.map((it) => (
+                  <li key={it.href} className="on-3w-item">
+                    <Link href={localizeHref(it.href, locale)} prefetch={false} className="on-3w-a">{it.name}</Link>
+                  </li>
+                ))}
+              </ul>
+              {/* linia z logo z gwiazdą: stoi w miejscu, nazwy przesuwają się nad nią */}
+              <svg className="on-3w-mark" viewBox="-32.5 -84 632.617 43" aria-hidden="true" focusable="false"><path d={LOGO_STAR} /></svg>
+              <div className="on-3w-hooks" aria-hidden="true">
+                {t.items.map((it) => <p key={it.href} className="on-3w-hook">{it.hook}</p>)}
+              </div>
+            </div>
+            <Link href={localizeHref('/uslugi', locale)} prefetch={false} className="on-3w-all">
+              {t.all}
+              <ArrowRight aria-hidden="true" />
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

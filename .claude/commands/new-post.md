@@ -102,8 +102,11 @@ Jeśli temat jest oczywisty (np. "WordPress vs Next.js") — pomijaj research, l
 ### 3. Outline (zatwierdzenie przed pisaniem)
 
 Pokaż user'owi krótko:
-- **Title** (60-90 znaków, z keywordem, najlepiej pytanie)
-- **Excerpt** (140-160 znaków, zaczyna od czasownika: "Dowiedz się", "Sprawdź", "Poznaj", "Analiza"; pokazuje się pod tytułem wpisu, na kartach i w opisie SEO - pełne zdanie)
+- **Title** (60-90 znaków, z keywordem, najlepiej pytanie; to nagłówek wpisu, tytuł na kartach i w podglądzie linku)
+- **Excerpt** (140-160 znaków, zaczyna od czasownika: "Dowiedz się", "Sprawdź", "Poznaj", "Analiza"; pokazuje się pod tytułem wpisu i na kartach - pełne zdanie)
+- **Meta title** (tytuł wyniku w Google: **do 51 znaków**, bo strona dokleja „ | Avenly” i razem ma być do 60; keyword na początku, sentence case także po dwukropku, bez „profesjonalna”, „nowoczesna” i nazw narzędzi)
+- **Meta description** (opis wyniku w Google: 140-160 znaków, głos korzyści „Ty”, konkret zamiast ogólników, bez „24/7” i „premium”; nie kopia excerptu)
+- Znaki obu pól meta **policz** (np. `node -e`), nie szacuj - dłuższe Google ucina
 - **Slug** (long-tail myślnikami, bez polskich znaków)
 - **Kategorie** (2 z istniejącej listy: `AI & Automatyzacja`, `Biznes`, `Performance`, `Strategia`, `Development`, `Design & UX`, `Marketing`, `News`, `Tech`; na `/blog` każda użyta kategoria = pigułka filtra, na stronie po polsku: „AI i automatyzacja”, „Wydajność”, „&” → „i”)
 - **Struktura sekcji:** dokładnie 2× h2 + 2-3× h3 (mapuj jak w istniejących postach)
@@ -165,6 +168,8 @@ Pola:
 - `id`: następny dostępny (post #3 ma id `'3'`, więc twój `'4'`)
 - `slug`: long-tail myślnikami
 - `title`: z outline
+- `metaTitle`: z outline, zaraz pod `title` (do 51 znaków)
+- `metaDescription`: z outline, pod `metaTitle` (do 160 znaków, wieloliniowy z indentem jak `excerpt`)
 - `excerpt`: z outline (wieloliniowy z indentem jak w istniejących)
 - `publishedAt`: dzisiejsza data YYYY-MM-DD
 - `readTime`: `Math.ceil(wordCount / 200)` min
@@ -211,6 +216,13 @@ Jeśli user prosi → uruchom `npm run build` żeby zweryfikować że nowa ście
 - "Konsultant AI i Voiceflow: Jak zautomatyzować obsługę klienta i zwiększyć sprzedaż?"
 - "Szybkość strony internetowej a SEO: Dlaczego milisekundy decydują o Twoim zysku?"
 - "Dlaczego profesjonalna strona WWW to konieczność dla firmy w 2026 roku?"
+
+**Meta titles (referencja, do 51 znaków):**
+- "Konsultant AI: jak zautomatyzować obsługę klienta"
+- "Szybkość strony a SEO: liczą się milisekundy"
+- "Dlaczego firma potrzebuje własnej strony WWW w 2026"
+
+Pola `metaTitle` i `metaDescription` idą tylko do wyniku w Google (`app/(pl)/blog/[slug]/page.tsx`); bez nich strona bierze `title` i `excerpt`, a tytuł 60-90 znaków Google ucina.
 
 **Excerpts (referencja):**
 - "Dowiedz się, jak wdrożenie inteligentnego konsultanta AI..."

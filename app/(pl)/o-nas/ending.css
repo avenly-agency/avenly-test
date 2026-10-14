@@ -1,0 +1,41 @@
+/* ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+   O NAS - ZAKOŃCZENIE „PRZEZ GWIAZDĘ” (ending.tsx, prefiks on-e2-; wybór właściciela 2026-10-14). Gwiazda z logo
+   otwiera się w okno z nagłówkiem i przyciskiem (raz, na czas). Pozostałe wersje („Linia z gwiazdą”, „Horyzont”):
+   docs/archiwum/o-nas-2026-10/zakonczenie-wersje/. Tło: mgławica podstrony (data-sky).
+   Style bez [data-live] = stan końcowy.
+   Kolejność arkuszy: o-nas.css ładuje się PO tym pliku, więc reguły z jedną klasą przegrywają z jego .on-h2 /
+   .on-lead - nadpisania zawsze przez .on-e2 (dwie klasy). Pismo nagłówka = .on-h2 (tak wyglądało przy wyborze).
+   ═══════════════════════════════════════════════════════════════════════════════════════════════════════════ */
+
+.on-e2-stage { position: relative; display: flex; min-height: min(88vh, 820px); min-height: min(88svh, 820px); }
+.on-e2-win { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; padding: clamp(110px, 15vh, 170px) 0 clamp(90px, 12vh, 140px); }
+/* światło w oknie: miękka poświata marki bez krawędzi (gaśnie do zera przed brzegami pola) */
+.on-e2-light {
+  position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(46% 44% at 50% 50%, rgb(59 130 246 / .2), rgb(59 130 246 / .06) 56%, rgb(59 130 246 / 0) 80%);
+}
+.on-e2-core { position: absolute; left: 25%; right: 25%; top: 25%; bottom: 25%; pointer-events: none; }
+.on-e2-in { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.on-e2 .on-e2-h { margin: 0 0 20px; }
+.on-e2 .on-lead { margin: 0 0 32px; max-width: 34rem; }
+.on-e2-rings, .on-e2-seed { display: none; }
+/* pełny ruch: przed wejściem na środku czeka gwiazdka, treść jest niewidoczna; okno (clip-path) i obrysy pisze JS */
+.on[data-live] .on-e2:not([data-in]) .on-e2-win { opacity: 0; }
+.on[data-live] .on-e2-rings { display: block; position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.on[data-live] .on-e2[data-done] .on-e2-rings { display: none; }
+.on-e2-rings path { fill: none; stroke: #60a5fa; stroke-width: 1.5; }
+.on-e2-rings path:nth-child(2) { stroke-width: 1; stroke-opacity: .55; }
+.on-e2-rings path:nth-child(3) { stroke-width: 1; stroke-opacity: .3; }
+.on[data-live] .on-e2-seed {
+  display: block; position: absolute; left: 50%; top: 50%; width: 28px; height: 28px; margin: -14px 0 0 -14px;
+  fill: var(--on-ac); pointer-events: none; transition: opacity .3s ease;
+}
+.on[data-live] .on-e2[data-in] .on-e2-seed { opacity: 0; }
+@media (max-width: 767px) {
+  .on-e2 .on-lead { margin-bottom: 26px; }
+}
+/* niski ekran (telefon poziomo): mniejsze odstępy nad i pod treścią okna */
+@media (max-height: 560px) {
+  .on-e2-win { padding: 76px 0 44px; }
+  .on-e2 .on-lead { margin-bottom: 22px; }
+}

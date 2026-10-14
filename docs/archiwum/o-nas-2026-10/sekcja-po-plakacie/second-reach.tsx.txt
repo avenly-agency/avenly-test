@@ -1,0 +1,51 @@
+'use client';
+
+import { useRef, type CSSProperties } from 'react';
+import { ArrowUpRight } from 'lucide-react';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { CONTACT } from '@/lib/seo-data';
+import { Comet } from './mark';
+import { Head } from './parts';
+import { useEnter } from './shared';
+import './second.css';
+
+// SEKCJA PO PLAKACIE - WERSJA 8 „BEZPOŚREDNIO” (2026-10-13, kierunek „zaskocz mnie”). Prefiks on-2b-.
+// Bez przypięcia i bez metafory: skoro „bez pośredników”, sekcja po prostu podaje bezpośredni kontakt - adres e-mail
+// i dwa numery telefonu wielkim pismem, jako klikalne wiersze (mailto / tel). Nad nimi prosta linia z logo z gwiazdą,
+// która przelatuje od lewej, gdy sekcja wejdzie na ekran (na czas, do końca - jak w zakończeniu strony), potem wiersze
+// wchodzą po kolei. Dane wyłącznie z lib/seo-data.ts (jak w stopce i na stronie Kontakt).
+// Bez JS / ograniczony ruch: wszystko od razu.
+
+export function SecondReach({ t, live }: { t: ONasDict['direct']; live: boolean }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEnter(ref, live, 0.15);
+  const rows = [
+    { k: t.reach.write, href: `mailto:${CONTACT.email}`, v: CONTACT.email },
+    { k: t.reach.call, href: `tel:${CONTACT.phone}`, v: CONTACT.phoneDisplay },
+    ...(CONTACT.phone2 ? [{ k: t.reach.call, href: `tel:${CONTACT.phone2}`, v: CONTACT.phone2Display }] : []),
+  ];
+  const d = (n: number) => ({ '--d': n }) as CSSProperties;
+  return (
+    <section className="on-sec on-2 on-2b" aria-labelledby="on-2-h">
+      <Head id="on-2-h" label={t.label} title={t.heading} accent={t.headingAccent} lead={t.leadShort} live={live} />
+      <div ref={ref} className="container mx-auto px-6 on-2b-box">
+        {/* sama linia z gwiazdą (kadr viewBox przycięty do linii, jak w zakończeniu strony) */}
+        <svg className="on-2b-mark" viewBox="-32.5 -84 632.617 43" aria-hidden="true" focusable="false">
+          <Comet className="on-2b-comet" />
+        </svg>
+        <ul className="on-2b-list">
+          {rows.map((r, i) => (
+            <li key={r.href} className="on-2b-row on-in" style={d(i + 3)}>
+              <span className="on-2b-k">{r.k}</span>
+              <a className="on-2b-a" href={r.href}>
+                <span>{r.v}</span>
+                <ArrowUpRight aria-hidden="true" />
+              </a>
+            </li>
+          ))}
+        </ul>
+        <p className="on-lead on-in on-2b-note" style={d(rows.length + 3)}>{t.reach.note}</p>
+      </div>
+    </section>
+  );
+}

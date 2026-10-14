@@ -1,0 +1,41 @@
+/* ═════════ SCENA 5 - ZASADY (principles.tsx) ═════════ */
+.on-pr-box { position: relative; }
+.on-pr-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 36px; }
+.on-pr-item { border-top: 1px solid rgba(255, 255, 255, .1); padding-top: 22px; }
+.on-pr-n { display: block; margin-bottom: 10px; font-size: 14px; font-weight: 600; color: #60a5fa; font-variant-numeric: tabular-nums; }
+.on-pr-t { margin: 0; font-weight: 700; font-size: clamp(34px, 6vw, 96px); line-height: 1.02; letter-spacing: -.04em; color: #f8fafc; text-wrap: balance; }
+.on-pr-d { margin: 14px 0 0; max-width: 36rem; font-size: 18px; line-height: 1.65; color: #94a3b8; text-wrap: pretty; }
+.on-pr-line, .on-pr-count { display: none; }
+/* nagłówek sekcji = pierwsza stacja na linii (runda 29): bez ruchu zwykły nagłówek nad listą zasad */
+.on-pr-intro { border-top: 0; padding-top: clamp(64px, 10vh, 120px); margin-bottom: 44px; }
+.on-pr-h { font-size: clamp(34px, 5vw, 80px); }
+.on[data-live] .on-pr-pin { height: calc(100vh + var(--n) * 62vh); height: calc(100svh + var(--n) * 62vh); }
+.on[data-live] .on-pr-box { --ly: 55%; height: 100%; }
+.on[data-live] .on-pr-list { display: block; position: absolute; inset: 0; }
+.on[data-live] .on-pr-item { position: absolute; inset: 0; margin: 0; padding: 0; border: 0; opacity: 0; visibility: hidden; }
+/* przed pierwszą klatką sceny widać nagłówek (potem krycie pisze JS) */
+.on[data-live] .on-pr-intro { opacity: 1; visibility: visible; }
+.on[data-live] .on-pr-count { transition: opacity .4s ease; }
+.on[data-live] .on-pr-top { position: absolute; left: 0; right: 0; bottom: calc(100% - var(--ly) + 28px); }
+.on[data-live] .on-pr-bot { position: absolute; left: 0; top: calc(var(--ly) + 30px); margin: 0; }
+.on[data-live] .on-pr-line { display: block; position: absolute; left: 0; right: 0; top: var(--ly); height: 6px; transform: translateY(-50%); }
+.on-pr-rail, .on-pr-fill, .on-pr-fill svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.on-pr-rail { fill: rgba(255, 255, 255, .26); }
+.on-pr-fill { clip-path: inset(0 100% 0 0); }
+.on-pr-fill svg { fill: var(--on-ac); }
+.on-pr-tick { position: absolute; top: 50%; width: 1px; height: 13px; transform: translate(-50%, -50%); background: rgba(255, 255, 255, .28); transition: background-color .5s ease; }
+.on-pr-tick[data-on] { background: #60a5fa; }
+.on-pr-gem { position: absolute; right: -10px; top: 50%; width: 30px; height: 30px; transform: translateY(-50%); fill: var(--on-ac); }
+.on[data-live] .on-pr-count { display: block; position: absolute; left: 0; bottom: 36px; margin: 0; font-size: 14px; color: #94a3b8; font-variant-numeric: tabular-nums; }
+.on-pr-count span { color: #f8fafc; }
+@media (max-width: 767px) {
+  .on-pr-t { font-size: clamp(32px, 9.4vw, 44px); }
+  .on-pr-h { font-size: clamp(30px, 8.6vw, 40px); }
+  .on-pr-intro .on-label { margin-bottom: 14px; }
+  .on-pr-d { font-size: 16.5px; }
+  .on[data-live] .on-pr-box { --ly: 50%; }
+  .on[data-live] .on-pr-top { bottom: calc(100% - var(--ly) + 22px); }
+  .on[data-live] .on-pr-bot { top: calc(var(--ly) + 24px); right: 0; }
+  .on-pr-gem { width: 24px; height: 24px; right: -6px; }
+}
+

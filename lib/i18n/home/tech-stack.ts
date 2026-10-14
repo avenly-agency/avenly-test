@@ -3,7 +3,8 @@ import type { Locale } from '@/lib/i18n/locale';
 /**
  * Słownik paska pod hero (TechStack, homepage marquee) - 2026-09-24.
  * Konkrety, które dostajesz (głos korzyści, pisownia zdaniowa, bez myślników em - PRODUCT.md).
- * WYŁĄCZNIE fakty z realizacji / oferty: PageSpeed 98/100 = liczba obronna z PRODUCT.md,
+ * WYŁĄCZNIE fakty z realizacji / oferty: szybkość bez liczb (od 2026-10-14 bez „PageSpeed 98/100” - właściciel: „fake
+ * info, bo nie zawsze będzie tyle”),
  * BLIK = Grawerstwo Kardyś, rezerwacje / zapisy = Mcentrum (Booksy) i RKS, panel do zarządzania
  * firmą = system CRM z oferty i aplikacja klubowa RKS (2026-09-28: zamiast "Panel do samodzielnej
  * edycji" - bez obietnicy CMS, PRODUCT.md "Co obiecujemy w ofercie"),
@@ -23,7 +24,7 @@ export const techStackDict: Record<Locale, TechStackDict> = {
   pl: {
     label: 'Co dostajesz',
     items: [
-      'Wynik PageSpeed 98/100',
+      'Strona, która ładuje się od razu',
       'Projekt pod telefon od pierwszego szkicu',
       'Sklep z płatnościami BLIK i kartą',
       'Asystent AI, który zna Twoją ofertę',
@@ -36,7 +37,7 @@ export const techStackDict: Record<Locale, TechStackDict> = {
   en: {
     label: 'What you get',
     items: [
-      'PageSpeed score of 98/100',
+      'A website that loads right away',
       'Designed for phones from the first sketch',
       'An online store with BLIK and card payments',
       'An AI assistant that knows your offer',

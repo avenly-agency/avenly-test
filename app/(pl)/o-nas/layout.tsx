@@ -4,31 +4,37 @@ import { faqPageSchema, breadcrumbSchema } from "@/lib/schemas";
 import { i18nAlternates } from "@/lib/i18n/locale";
 import { FAQS } from "./faq-data";
 
+// Głos „my” (jedyny wyjątek od głosu korzyści - PRODUCT.md). Opis z tego, co jest na podstronie w każdym układzie:
+// kim jesteśmy, co robimy, częste pytania. Zdanie openGraph = opis pod nagłówkiem podstrony (lib/i18n/o-nas.ts).
 export const metadata: Metadata = {
-  title: "O Avenly - Polska Agencja Interaktywna · Web, AI, Marketing",
+  title: "O nas - polska agencja interaktywna",
   description:
-    "Poznaj Avenly - polską agencję interaktywną. Łączymy strategię biznesową z technologią (Next.js, AI, automatyzacje), tworząc strony i systemy które realnie wspierają sprzedaż. Sprawdź nasze kompetencje, proces i odpowiedzi na częste pytania.",
+    "Avenly to polska agencja interaktywna. Projektujemy i piszemy strony WWW, sklepy internetowe, systemy CRM i chatboty AI. Zobacz, dla kogo i jak pracujemy.",
   alternates: i18nAlternates("/o-nas", "pl"),
   keywords: [
     "agencja interaktywna",
     "agencja stron internetowych",
-    "agencja marketingowa Polska",
     "agencja Next.js",
     "agencja AI",
     "Avenly o nas",
     "zespół Avenly",
   ],
+  // Blok openGraph strony ZASTĘPUJE blok z root layoutu (Next go nie łączy) - dlatego podany w całości (adres, typ, obrazek).
   openGraph: {
-    title: "O Avenly - Polska Agencja Interaktywna",
+    type: "website",
+    locale: "pl_PL",
+    siteName: "Avenly",
+    url: "/o-nas/",
+    title: "O Avenly - polska agencja interaktywna",
     description:
-      "Strategia, design, kod i AI w jednym miejscu. Poznaj zespół który zamienia Twój potencjał w realne wyniki online.",
-    url: "/o-nas",
-    type: "profile",
+      "Jesteśmy agencją interaktywną z Polski. Projektujemy i piszemy strony internetowe, sklepy, systemy CRM i chatboty AI.",
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Avenly - agencja interaktywna", type: "image/png" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "O Avenly - Agencja Interaktywna",
-    description: "Strategia · Design · Web · AI",
+    title: "O Avenly - polska agencja interaktywna",
+    description: "Jesteśmy agencją interaktywną z Polski. Projektujemy i piszemy strony internetowe, sklepy, systemy CRM i chatboty AI.",
+    images: ["/og-default.png"],
   },
 };
 

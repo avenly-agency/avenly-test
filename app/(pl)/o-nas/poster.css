@@ -1,0 +1,76 @@
+/* ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+   O NAS - „PLAKAT”: sekcja po wjeździe w gwiazdę, koniec wejścia „Panorama” (poster.tsx). Prefiks on-po-.
+   Wybór właściciela 2026-10-12 („wybieram plakat, dostosuj do mobile”).
+   Style bez [data-live] = zwykły blok: etykieta, nagłówek, opis, przycisk (bez JS / ograniczony ruch).
+   Pod [data-live] blok wypełnia pole treści wrappera w kompozycji 100svh; widoczność, słowa i stopkę pisze JS.
+   Nagłówek ma własną klasę (nie .on-h2 / dawne .on-h1): maski słów muszą zostać w wierszu.
+   ═══════════════════════════════════════════════════════════════════════════════════════════════════════════ */
+
+.on-po { max-width: 46rem; }
+.on-po-h {
+  margin: 0 0 22px; font-weight: 700; font-size: clamp(34px, 4.6vw, 72px); line-height: 1.04;
+  letter-spacing: -.038em; color: #f8fafc; text-wrap: balance;
+}
+.on-po-s { display: block; }
+.on-po .on-lead { margin: 0 0 30px; }
+
+/* ── pełny ruch ── */
+.on[data-live] .on-po {
+  position: absolute; left: 1.5rem; right: 1.5rem; top: 0; bottom: 0; max-width: none;
+  display: flex; flex-direction: column; justify-content: center; padding: 104px 0 56px;
+  visibility: hidden; pointer-events: none;
+}
+.on[data-live] .on-po[data-on] { pointer-events: auto; }
+.on[data-live] .on-po-h {
+  margin: 0; line-height: .98; letter-spacing: -.045em;
+  font-size: clamp(44px, min(7vw, 12vh), 140px); font-size: clamp(44px, min(7vw, 12svh), 140px);
+}
+.on[data-live] .on-po-s + .on-po-s { margin-top: .05em; }
+/* słowo przed wejściem schowane pod maską (JS wysuwa je przewijaniem) */
+.on[data-live] .on-po-w { transform: translateY(112%); }
+/* stopka kadru: opis przy lewej krawędzi wrappera, przycisk przy prawej */
+.on[data-live] .on-po-tail {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 24px 48px;
+  margin-top: clamp(28px, 7vh, 84px);
+}
+.on[data-live] .on-po-tail .on-lead { margin: 0; max-width: 34rem; }
+.on[data-live] .on-po-tail .on-cta { flex: none; }
+
+/* ── telefon ──
+   Pole między nawigacją (u góry) a bąblem czatu (prawy dolny róg). Nagłówek = stos krótkich linii: rozmiar z szerokości
+   (najdłuższe słowo mieści się w wierszu także na 320 px) i z wysokości małego okna (na niskim telefonie cały blok
+   nadal się mieści); gdyby jednak był wyższy niż pole, zaczyna się od góry, a nie wchodzi pod nawigację. */
+@media (max-width: 767px) {
+  .on[data-live] .on-po { padding: 72px 0 88px; justify-content: center; justify-content: safe center; }
+  .on[data-live] .on-po .on-label { margin-bottom: clamp(10px, 2.6vh, 20px); margin-bottom: clamp(10px, 2.6svh, 20px); }
+  .on[data-live] .on-po-h {
+    line-height: 1.03; letter-spacing: -.04em;
+    font-size: clamp(26px, min(10.6vw, 6vh), 48px); font-size: clamp(26px, min(10.6vw, 6svh), 48px);
+  }
+  .on[data-live] .on-po-s + .on-po-s { margin-top: .12em; }
+  /* opis i przycisk jedno pod drugim, przy lewej krawędzi wrappera */
+  .on[data-live] .on-po-tail {
+    flex-direction: column; align-items: flex-start;
+    gap: clamp(14px, 2.6vh, 20px); gap: clamp(14px, 2.6svh, 20px);
+    margin-top: clamp(16px, 3.4vh, 30px); margin-top: clamp(16px, 3.4svh, 30px);
+  }
+  .on[data-live] .on-po-tail .on-lead {
+    max-width: none; line-height: 1.6;
+    font-size: clamp(14.5px, 2.5vh, 16.5px); font-size: clamp(14.5px, 2.5svh, 16.5px);
+  }
+  .on[data-live] .on-po .on-cta { height: 54px; }
+}
+/* tablet pionowo: węższy opis, żeby przycisk został w jednym wierszu z nim */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .on[data-live] .on-po-tail { gap: 24px 32px; }
+  .on[data-live] .on-po-tail .on-lead { font-size: 17px; }
+}
+/* bardzo niski ekran (telefon bokiem): zwarty blok */
+@media (min-width: 768px) and (max-height: 520px) {
+  .on[data-live] .on-po { padding: 64px 0 20px; }
+  .on[data-live] .on-po .on-label { margin-bottom: 10px; }
+  .on[data-live] .on-po-h { font-size: clamp(28px, min(5vw, 11vh), 44px); font-size: clamp(28px, min(5vw, 11svh), 44px); }
+  .on[data-live] .on-po-tail { margin-top: 16px; }
+  .on[data-live] .on-po-tail .on-lead { font-size: 15.5px; line-height: 1.5; }
+  .on[data-live] .on-po .on-cta { height: 48px; }
+}

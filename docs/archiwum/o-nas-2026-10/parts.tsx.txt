@@ -1,0 +1,137 @@
+'use client';
+
+import { useRef, type CSSProperties, type Ref } from 'react';
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
+import { SectionLabel } from '@/components/ui/SectionLabel';
+import { localizeHref, type Locale } from '@/lib/i18n/locale';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { css, useEnter } from './shared';
+
+// Wspólne klocki O nas (przebudowa 2026-10-09): nagłówek sekcji (etykieta „Gwiazda” - gwiazdka jak w nowym logo,
+// h2 wysuwany spod maski, opis) i narrator sceny (jedno zdanie naraz, paski kroków).
+// Niżej klocki wersji-propozycji (Gwiazdozbiór / Orbita / Przelot): tekst pierwszego ekranu, „ujęcie” z treścią,
+// podpisy sceny, podpowiedź „Przewiń”.
+
+const d = (n: number) => ({ '--d': n }) as CSSProperties;
+
+export function Head({ id, label, title, accent, lead, live }: {
+  id: string; label: string; title: string; accent?: string; lead?: string; live: boolean;
+}) {
+  const ref = useRef<HTMLElement>(null);
+  useEnter(ref, live);
+  return (
+    <header ref={ref} className="container mx-auto px-6 on-head">
+      <div className="on-label on-in" style={d(0)}><SectionLabel align="start">{label}</SectionLabel></div>
+      <h2 id={id} className="on-h2">
+        <span className="on-mask"><span className="on-rise" style={d(1)}>{title}</span></span>
+        {accent && <>{' '}<span className="on-mask"><span className="on-rise im-accent" style={d(2)}>{accent}</span></span></>}
+      </h2>
+      {lead && <p className="on-lead on-in" style={d(4)}>{lead}</p>}
+    </header>
+  );
+}
+
+/** Narrator sceny: pod spodem jedno zdanie naraz, nad nim paski kroków. Bez JS / ograniczony ruch: zwykła lista. */
+export function Narrator({ items, label, ref }: { items: string[]; label: string; ref?: Ref<HTMLOListElement> }) {
+  return (
+    <ol ref={ref} className="on-narr" aria-label={label}>
+      {items.map((s, i) => (
+        <li key={i} className="on-narr-i" data-on={i === 0 ? '1' : '0'}>
+          <span className="on-narr-bar" style={{ gridColumn: String(i + 1) }} aria-hidden="true"><i /></span>
+          <span className="on-narr-t"><b aria-hidden="true">{i + 1}</b>{s}</span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+/** Aktywny krok narratora i wypełnienia pasków (0-1). Pisze tylko przy zmianie. */
+export const setNarrator = (ol: HTMLOListElement | null, active: number, fills: number[]) => {
+  if (!ol) return;
+  Array.from(ol.children).forEach((li, i) => {
+    const on = i === active ? '1' : i < active ? '2' : '0';
+    if ((li as HTMLElement).dataset.on !== on) (li as HTMLElement).dataset.on = on;
+    css(li.firstElementChild, '--f', (fills[i] ?? 0).toFixed(3));
+  });
+};
+
+/* ───────── Klocki wersji-propozycji (2026-10-09) ───────── */
+
+/** Tekst pierwszego ekranu: etykieta, h1, opis, przycisk. Rodzic daje klasę `on-i` (wejście na czas, CSS).
+    `part`: 'head' = sama etykieta z h1, 'tail' = sam opis z przyciskiem (układy z linią logo między nimi). */
+export function IntroText({ t, locale, part = 'all' }: { t: ONasDict['intro']; locale: Locale; part?: 'all' | 'head' | 'tail' }) {
+  return (
+    <>
+      {part !== 'tail' && (
+        <>
+          <div className="on-label on-i-a" style={d(0)}><SectionLabel align="start">{t.label}</SectionLabel></div>
+          <h1 id="on-h1" className="on-h1">
+            <span className="on-mask"><span className="on-i-r" style={d(1)}>{t.title}</span></span>{' '}
+            <span className="on-mask"><span className="on-i-r im-accent" style={d(2)}>{t.titleAccent}</span></span>
+          </h1>
+        </>
+      )}
+      {part !== 'head' && (
+        <>
+          <p className={part === 'tail' ? 'on-lead on-i-a on-i-lead on-i-lead--solo' : 'on-lead on-i-a on-i-lead'} style={d(4)}>{t.lead}</p>
+          <div className="on-i-a" style={d(5)}>
+            <Link href={localizeHref('/kontakt', locale)} prefetch={false} className="on-cta">
+              {t.cta}
+              <ArrowRight aria-hidden="true" />
+            </Link>
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
+/** Jedno „ujęcie” z treścią: mała etykieta (z numerem), tytuł, zdanie. */
+export type BeatData = { kicker: string; n?: string; title: string; accent?: string; desc?: string };
+
+/** Treść podstrony rozłożona na ujęcia (te same zdania co w wersji „Cięcie” - słownik bez zmian). */
+export const beatsOf = (t: ONasDict): { direct: BeatData; detail: BeatData; rules: BeatData[] } => {
+  const rules = t.principles.items.slice(0, 5);
+  const two = (n: number) => String(n).padStart(2, '0');
+  return {
+    direct: { kicker: t.direct.label, title: t.direct.heading, accent: t.direct.headingAccent, desc: t.direct.lead },
+    detail: { kicker: t.blueprint.label, title: t.blueprint.heading, accent: t.blueprint.headingAccent, desc: t.blueprint.lead },
+    rules: rules.map((it, i) => ({
+      kicker: t.principles.label, n: `${two(i + 1)} / ${two(rules.length)}`, title: it.title, desc: it.desc,
+    })),
+  };
+};
+
+/** Tekst ujęcia. Rodzic daje klasę `on-beat` i pisze na nim `--e` (0-1): tytuł wysuwa się spod maski. */
+export function BeatText({ b, tag = 'h2' }: { b: BeatData; tag?: 'h2' | 'h3' }) {
+  const Tag = tag;
+  return (
+    <>
+      <p className="on-b-k">{b.n && <b>{b.n}</b>}<span>{b.kicker}</span></p>
+      <Tag className="on-h2 on-b-t">
+        <span className="on-mask"><span className="on-b-r">{b.title}</span></span>
+        {b.accent && <>{' '}<span className="on-mask"><span className="on-b-r im-accent">{b.accent}</span></span></>}
+      </Tag>
+      {b.desc && <p className="on-lead">{b.desc}</p>}
+    </>
+  );
+}
+
+/** Podpisy sceny: jedno zdanie naraz (atrybut data-on). Bez JS / ograniczony ruch: zwykła lista. */
+export function Captions({ items, ref }: { items: string[]; ref?: Ref<HTMLOListElement> }) {
+  return (
+    <ol ref={ref} className="on-caps">
+      {items.map((s, i) => <li key={i} className="on-cap">{s}</li>)}
+    </ol>
+  );
+}
+
+/** Podpowiedź „Przewiń” na dole pierwszego ekranu (tylko pełny ruch). */
+export function Hint({ label }: { label: string }) {
+  return (
+    <div className="on-hint" aria-hidden="true">
+      <div className="on-cut-hint-in"><span>{label}</span><i /></div>
+    </div>
+  );
+}

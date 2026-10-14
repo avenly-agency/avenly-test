@@ -1,0 +1,326 @@
+'use client';
+
+import { useEffect, useRef, type CSSProperties } from 'react';
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
+import { GEM } from '@/lib/brand/logo';
+import { localizeHref, type Locale } from '@/lib/i18n/locale';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { Faq } from './faq';
+import { beatsOf, BeatText, Captions, Head, Hint, IntroText } from './parts';
+import { attr, css, flag, mix, seg, text, useEnter, usePin } from './shared';
+import './orbit.css';
+
+// O NAS - WERSJA „ORBITA” (propozycja 2026-10-09, prefiks on-o-). Świat hero strony głównej: planeta i gwiazda z logo.
+//   1. Wschód + Doba (jedna przypięta scena, 100svh + 330vh): gwiazda wschodzi zza krawędzi planety, nad horyzontem
+//      stoi h1; kamera odjeżdża, aż planeta staje się tarczą z 24 godzinami. Od „Ty” do gwiazdy Avenly biegnie jedna
+//      prosta linia (bez pośredników), gwiazda okrąża planetę raz (doba), po okrążeniu wraca odpowiedź.
+//   2. Zasady (100svh + 5 × 62vh): znów blisko horyzontu - planeta się obraca, a zasady wschodzą zza krawędzi po łuku
+//      orbity, stają poziomo nad szczytem i zachodzą po drugiej stronie. Jedna naraz, z postojem.
+//   3. FAQ, 4. zakończenie: wschód gwiazdy nad „Zacznijmy od rozmowy.”.
+// Wszystko w SVG w pikselach ekranu (geometria pisana atrybutami w klatce przewijania - zawsze ostre), bez WebGL.
+// Bez JS / ograniczony ruch: zwykłe sekcje z tekstem (rysunki schowane).
+
+const RAD = Math.PI / 180;
+const ORBIT = 1.9; // promień orbity gwiazdy w promieniach planety (ujęcie „doba”)
+const FINE = Array.from({ length: 180 }, (_, i) => i * 2);
+const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const BANDS = [0.984, 0.955, 0.91];
+const f1 = (n: number) => n.toFixed(1);
+
+function Globe({ id, dial = false, majors = 0, you, us }: { id: string; dial?: boolean; majors?: number; you?: string; us?: string }) {
+  return (
+    <svg className="on-o-svg" aria-hidden="true" focusable="false">
+      <defs>
+        {/* oświetlona strona krawędzi: wektor gradientu pisze JS (od środka planety w stronę gwiazdy) */}
+        <linearGradient id={`on-o-g-${id}`} gradientUnits="userSpaceOnUse" x1={0} y1={1} x2={0} y2={0}>
+          <stop offset=".93" stopColor="#3b82f6" stopOpacity="0" />
+          <stop offset=".975" stopColor="#3b82f6" stopOpacity=".95" />
+          <stop offset="1" stopColor="#ffffff" />
+        </linearGradient>
+      </defs>
+      {dial && (
+        <g className="on-o-dial">
+          <circle className="on-o-orbit" />
+          <circle className="on-o-sweep" pathLength={360} />
+          <g className="on-o-hours">
+            {HOURS.map((h) => {
+              const half = h % 6 ? 0.035 : 0.075;
+              return (
+                <line
+                  key={h} className="on-o-hour" x1={0} y1={-(ORBIT - half)} x2={0} y2={-(ORBIT + half)}
+                  transform={`rotate(${h * 15})`} vectorEffect="non-scaling-stroke"
+                />
+              );
+            })}
+          </g>
+          <line className="on-o-hand" />
+        </g>
+      )}
+      {/* gwiazda PRZED tarczą planety: pod horyzontem zasłania ją planeta (wschód) */}
+      <g className="on-o-star"><g className="on-o-star-in"><path className="on-o-gem" d={GEM} /></g></g>
+      <circle className="on-o-disc" />
+      <g className="on-o-fine">
+        {FINE.map((a) => <line key={a} x1={0} y1={-1} x2={0} y2={-0.992} transform={`rotate(${a})`} vectorEffect="non-scaling-stroke" />)}
+      </g>
+      <g className="on-o-majors">
+        {Array.from({ length: majors }, (_, i) => <line key={i} x1={0} y1={-1} x2={0} y2={-1.011} vectorEffect="non-scaling-stroke" />)}
+      </g>
+      {BANDS.map((b, i) => <circle key={b} className={`on-o-band on-o-band--${i}`} />)}
+      <circle className="on-o-edge" />
+      <circle className="on-o-rim" stroke={`url(#on-o-g-${id})`} />
+      {dial && (
+        <>
+          <circle className="on-o-reply" r={3.5} />
+          <text className="on-o-lbl on-o-lbl--you" textAnchor="middle" dominantBaseline="central">{you}</text>
+          <text className="on-o-lbl on-o-lbl--us">{us}</text>
+          <text className="on-o-read" textAnchor="middle" />
+        </>
+      )}
+    </svg>
+  );
+}
+
+type Geo = { cx: number; cy: number; R: number; sx: number; sy: number; sk: number; rot: number; fine: number };
+
+/** Planeta (środek, promień), gwiazda (miejsce, skala), obrót podziałki, krycie drobnej podziałki. */
+function paintGlobe(svg: SVGSVGElement, g: Geo) {
+  const { cx, cy, R } = g;
+  const X = f1(cx), Y = f1(cy);
+  svg.querySelectorAll('.on-o-disc, .on-o-edge, .on-o-rim').forEach((c) => { attr(c, 'cx', X); attr(c, 'cy', Y); attr(c, 'r', f1(R)); });
+  svg.querySelectorAll('.on-o-band').forEach((c, i) => { attr(c, 'cx', X); attr(c, 'cy', Y); attr(c, 'r', f1(R * BANDS[i])); });
+  const tf = `translate(${X} ${Y}) rotate(${g.rot.toFixed(3)}) scale(${R.toFixed(2)})`;
+  const fine = svg.querySelector('.on-o-fine');
+  attr(fine, 'transform', tf);
+  css(fine, 'opacity', g.fine.toFixed(3));
+  css(fine, 'visibility', g.fine < 0.002 ? 'hidden' : 'visible');
+  attr(svg.querySelector('.on-o-majors'), 'transform', tf);
+  attr(svg.querySelector('.on-o-star'), 'transform', `translate(${f1(g.sx)} ${f1(g.sy)})`);
+  attr(svg.querySelector('.on-o-gem'), 'transform', `scale(${g.sk.toFixed(3)})`);
+  const dx = g.sx - cx, dy = g.sy - cy, dl = Math.hypot(dx, dy) || 1;
+  const grad = svg.querySelector('linearGradient');
+  attr(grad, 'x1', f1(cx - (dx / dl) * R)); attr(grad, 'y1', f1(cy - (dy / dl) * R));
+  attr(grad, 'x2', f1(cx + (dx / dl) * R)); attr(grad, 'y2', f1(cy + (dy / dl) * R));
+}
+
+/** Kadr „blisko horyzontu”: szczyt planety pod środkiem kolumny tekstu, gwiazda po prawej nad krawędzią. */
+const closeUp = (W: number, H: number, bl: number, bw: number, colMax: number, colVw: number, apex: number) => {
+  const mob = W < 768;
+  const colW = mob ? bw : Math.min(colMax, W * colVw);
+  const R = mob ? W * 1.35 : Math.max(W * 1.2, 1400);
+  const cx = bl + colW / 2, cy = H * apex + R;
+  const al = (mob ? 14 : 20) * RAD, rho = R + (mob ? 46 : 96);
+  return { mob, R, cx, cy, al, rho, sx: cx + rho * Math.sin(al), sy: cy - rho * Math.cos(al), sk: mob ? 0.8 : 1.1 };
+};
+
+type Props = { t: ONasDict; locale: Locale; live: boolean; ready: boolean };
+
+/* ───────── 1. Wschód + Doba ───────── */
+function Sunrise({ t, locale, live }: Omit<Props, 'ready'>) {
+  const pin = useRef<HTMLDivElement>(null);
+  const stage = useRef<HTMLDivElement>(null);
+  const box = useRef<HTMLDivElement>(null);
+  const intro = useRef<HTMLDivElement>(null);
+  const dirRef = useRef<HTMLDivElement>(null);
+  const caps = useRef<HTMLOListElement>(null);
+  const beats = beatsOf(t);
+
+  usePin(pin, (p, el) => {
+    const st = stage.current, bx = box.current;
+    const svg = el.querySelector<SVGSVGElement>('.on-o-svg');
+    if (!st || !bx || !svg) return;
+    // odczyty przed zapisami
+    const W = st.clientWidth, H = st.clientHeight;
+    const bl = bx.offsetLeft + 24, bw = Math.max(1, bx.clientWidth - 48);
+    const a = closeUp(W, H, bl, bw, 736, 0.52, W < 768 ? 0.86 : 0.76);
+    const { mob } = a;
+    const e = seg(p, 0.1, 0.4); // odjazd kamery: horyzont -> tarcza
+    const R1 = mob ? W * 0.16 : Math.min(W * 0.11, H * 0.17);
+    const c1x = mob ? W / 2 : bl + bw - ORBIT * R1 - 8, c1y = H * (mob ? 0.29 : 0.5);
+    const R = a.R * Math.pow(R1 / a.R, e);
+    const cx = mix(a.cx, c1x, e), cy = mix(a.cy - a.R, c1y - R1, e) + R; // szczyt planety jedzie po prostej
+    const w = seg(p, 0.58, 0.86); // jedno okrążenie = doba
+    const al = a.al + 360 * w * RAD;
+    const rho = mix(a.rho / a.R, ORBIT, e) * R;
+    const sx = cx + rho * Math.sin(al), sy = cy - rho * Math.cos(al);
+    paintGlobe(svg, { cx, cy, R, sx, sy, sk: mix(a.sk, mob ? 0.6 : 0.75, e), rot: -40 * e, fine: 1 - seg(p, 0.14, 0.3) });
+
+    // tarcza: orbita, godziny, linia Ty -> Avenly, okrążenie, odpowiedź
+    const X = f1(cx), Y = f1(cy);
+    const q = (s: string) => svg.querySelector(s);
+    const dialO = seg(p, 0.32, 0.42);
+    css(q('.on-o-dial'), 'opacity', dialO.toFixed(3));
+    css(q('.on-o-dial'), 'visibility', dialO < 0.002 ? 'hidden' : 'visible');
+    const orbit = q('.on-o-orbit'), sweep = q('.on-o-sweep');
+    attr(orbit, 'cx', X); attr(orbit, 'cy', Y); attr(orbit, 'r', f1(rho));
+    attr(sweep, 'cx', X); attr(sweep, 'cy', Y); attr(sweep, 'r', f1(rho));
+    const a0 = a.al / RAD;
+    attr(sweep, 'transform', `rotate(${(a0 - 90).toFixed(2)} ${X} ${Y})`);
+    css(sweep, 'stroke-dasharray', `${(360 * w).toFixed(2)} 360`);
+    attr(q('.on-o-hours'), 'transform', `translate(${X} ${Y}) rotate(${a0.toFixed(2)}) scale(${(rho / ORBIT).toFixed(3)})`);
+    svg.querySelectorAll('.on-o-hour').forEach((h, i) => flag(h, 'data-on', w > 0 && i * 15 <= 360 * w + 0.01));
+    const hs = seg(p, 0.46, 0.56); // linia od „Ty” do gwiazdy
+    const sn = Math.sin(al), cs = Math.cos(al);
+    const hand = q('.on-o-hand');
+    const far = R + Math.max(0, rho - R - 14) * hs;
+    attr(hand, 'x1', f1(cx + R * sn)); attr(hand, 'y1', f1(cy - R * cs));
+    attr(hand, 'x2', f1(cx + far * sn)); attr(hand, 'y2', f1(cy - far * cs));
+    css(hand, 'opacity', hs > 0.001 ? '1' : '0');
+    const rp = seg(p, 0.87, 0.93); // odpowiedź wraca od gwiazdy
+    const back = rho - 14 - Math.max(0, rho - 14 - R) * rp;
+    const reply = q('.on-o-reply');
+    attr(reply, 'cx', f1(cx + back * sn)); attr(reply, 'cy', f1(cy - back * cs));
+    css(reply, 'opacity', rp > 0.001 && rp < 0.999 ? '1' : '0');
+    const you = q('.on-o-lbl--you'), us = q('.on-o-lbl--us'), read = q('.on-o-read');
+    const lblO = seg(p, 0.38, 0.46).toFixed(3);
+    attr(you, 'x', X); attr(you, 'y', Y); css(you, 'opacity', lblO);
+    attr(us, 'x', f1(sx + 16)); attr(us, 'y', f1(sy - 14)); css(us, 'opacity', lblO);
+    attr(read, 'x', X); attr(read, 'y', f1(cy + rho + (mob ? 30 : 42)));
+    text(read, rp >= 0.999 ? t.direct.reply : `${Math.round(24 * w)} h`);
+    css(read, 'opacity', seg(p, 0.56, 0.6).toFixed(3));
+
+    // tekst: pierwszy ekran wychodzi przy odjeździe, potem „Bez pośredników” i jedno zdanie naraz
+    const out = seg(p, 0.1, 0.22);
+    css(intro.current, 'opacity', (1 - out).toFixed(3));
+    css(intro.current, 'visibility', out > 0.998 ? 'hidden' : 'visible');
+    css(intro.current, 'transform', `translate3d(0, ${(-out * 30).toFixed(2)}px, 0)`);
+    const inn = seg(p, 0.34, 0.46);
+    css(dirRef.current, 'opacity', inn.toFixed(3));
+    css(dirRef.current, '--e', inn.toFixed(3));
+    const cp = caps.current?.children;
+    if (cp) { flag(cp[0], 'data-on', p >= 0.44 && p < 0.6); flag(cp[1], 'data-on', p >= 0.6); }
+    css(el.querySelector('.on-hint .on-cut-hint-in'), 'opacity', (1 - seg(p, 0, 0.05)).toFixed(3));
+  }, live);
+
+  return (
+    <section className="on-o1" aria-labelledby="on-h1">
+      <div ref={pin} className="on-o1-pin">
+        <div ref={stage} className="on-o-stick on-o1-stick">
+          <Globe id="a" dial you={t.direct.you} us={t.direct.us} />
+          <div ref={box} className="container mx-auto px-6 on-o-box">
+            <div ref={intro} className="on-o-intro on-i"><IntroText t={t.intro} locale={locale} /></div>
+            <div ref={dirRef} className="on-o-dir on-beat">
+              <BeatText b={{ ...beats.direct, desc: undefined }} />
+              <Captions ref={caps} items={[t.direct.steps[1], t.direct.steps[2]]} />
+            </div>
+          </div>
+          <Hint label={t.intro.hint} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ───────── 2. Zasady na orbicie ───────── */
+function Rules({ t, live }: { t: ONasDict['principles']; live: boolean }) {
+  const pin = useRef<HTMLDivElement>(null);
+  const stage = useRef<HTMLDivElement>(null);
+  const box = useRef<HTMLDivElement>(null);
+  const list = useRef<HTMLOListElement>(null);
+  const count = useRef<HTMLSpanElement>(null);
+  const items = t.items;
+  const N = items.length;
+  const two = (n: number) => String(n).padStart(2, '0');
+
+  usePin(pin, (p, el) => {
+    const st = stage.current, bx = box.current;
+    const svg = el.querySelector<SVGSVGElement>('.on-o-svg');
+    if (!st || !bx || !svg) return;
+    const W = st.clientWidth, H = st.clientHeight;
+    const bl = bx.offsetLeft + 24, bw = Math.max(1, bx.clientWidth - 48);
+    const a = closeUp(W, H, bl, bw, 640, 0.46, 0.72);
+    const D = a.mob ? 34 : 44; // odstęp zasad na orbicie (stopnie)
+    // postój przy zasadzie (1), przejazd do następnej (0,8)
+    const tt = p * (N + (N - 1) * 0.8);
+    const idx = Math.min(N - 1, Math.floor(tt / 1.8));
+    const rest = tt - idx * 1.8;
+    const pos = idx + (idx === N - 1 || rest <= 1 ? 0 : seg(rest, 1, 1.8));
+    paintGlobe(svg, { cx: a.cx, cy: a.cy, R: a.R, sx: a.sx, sy: a.sy, sk: a.sk, rot: -pos * D, fine: 1 });
+    svg.querySelectorAll('.on-o-majors line').forEach((ln, i) => attr(ln, 'transform', `rotate(${i * D})`));
+    css(list.current, '--on-o-or', `${(a.R + (a.mob ? 30 : 44)).toFixed(0)}px`);
+    let active = 0;
+    el.querySelectorAll<HTMLElement>('.on-o-item').forEach((it, i) => {
+      const off = i - pos;
+      const o = 1 - seg(Math.abs(off), 0.06, 0.66);
+      css(it, 'opacity', o.toFixed(3));
+      css(it, 'visibility', o < 0.002 ? 'hidden' : 'visible');
+      css(it, 'transform', Math.abs(off) < 0.0005 ? 'none' : `rotate(${(off * D).toFixed(3)}deg)`);
+      if (o > 0.5) active = i;
+    });
+    text(count.current, two(active + 1));
+  }, live);
+
+  return (
+    <section className="on-sec on-o3" aria-labelledby="on-o3-h">
+      <Head id="on-o3-h" label={t.label} title={t.heading} accent={t.headingAccent} live={live} />
+      <div ref={pin} className="on-o3-pin" style={{ '--n': N } as CSSProperties}>
+        <div ref={stage} className="on-o-stick on-o3-stick">
+          <Globe id="b" majors={N} />
+          <div ref={box} className="container mx-auto px-6 on-o-box">
+            <ol ref={list} className="on-o-list">
+              {items.map((it, i) => (
+                <li key={i} className="on-o-item">
+                  <p className="on-o-n" aria-hidden="true"><b>{two(i + 1)}</b> / {two(N)}</p>
+                  <h3 className="on-o-t">{it.title}</h3>
+                  <p className="on-o-d">{it.desc}</p>
+                </li>
+              ))}
+            </ol>
+            <p className="on-o-count" aria-hidden="true"><span ref={count}>01</span> / {two(N)}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ───────── 4. Zakończenie: wschód ───────── */
+function Dawn({ t, locale, live }: { t: ONasDict['ending']; locale: Locale; live: boolean }) {
+  const ref = useRef<HTMLElement>(null);
+  useEnter(ref, live, 0.3);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !live) return;
+    const svg = el.querySelector<SVGSVGElement>('.on-o-svg'), bx = el.querySelector<HTMLElement>('.on-o-box');
+    if (!svg || !bx) return;
+    const paint = () => {
+      const a = closeUp(el.clientWidth, el.clientHeight, bx.offsetLeft + 24, Math.max(1, bx.clientWidth - 48), 640, 0.46, 0.74);
+      paintGlobe(svg, { cx: a.cx, cy: a.cy, R: a.R, sx: a.sx, sy: a.sy, sk: a.sk, rot: 0, fine: 1 });
+    };
+    paint();
+    const ro = new ResizeObserver(paint);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [live]);
+  const d = (n: number) => ({ '--d': n }) as CSSProperties;
+  return (
+    <section ref={ref} className="on-sec on-o-end" aria-labelledby="on-end-h">
+      <Globe id="c" />
+      <div className="container mx-auto px-6 on-o-box">
+        <div className="on-o-end-text">
+          <h2 id="on-end-h" className="on-h2">
+            <span className="on-mask"><span className="on-rise" style={d(0)}>{t.heading}</span></span>
+          </h2>
+          <p className="on-lead on-in" style={d(3)}>{t.text}</p>
+          <div className="on-in" style={d(4)}>
+            <Link href={localizeHref('/kontakt', locale)} prefetch={false} className="on-cta">
+              {t.cta}
+              <ArrowRight aria-hidden="true" />
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function Orbit({ t, locale, live, ready }: Props) {
+  return (
+    <>
+      <Sunrise t={t} locale={locale} live={live} />
+      <Rules t={t.principles} live={live} />
+      <Faq t={t.faqSection} faq={t.faq} live={live} ready={ready} />
+      <Dawn t={t.ending} locale={locale} live={live} />
+    </>
+  );
+}

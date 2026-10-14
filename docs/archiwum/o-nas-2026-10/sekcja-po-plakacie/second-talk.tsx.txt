@@ -1,0 +1,96 @@
+'use client';
+
+import { useRef, type Ref } from 'react';
+import { GEM } from '@/lib/brand/logo';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { Head } from './parts';
+import { css, flag, lin, seg, usePin } from './shared';
+import './second.css';
+
+// SEKCJA PO PLAKACIE - WERSJA 6 „ROZMOWA” (2026-10-13, kierunek „zaskocz mnie”). Prefiks on-2r-.
+// Przypięta 100svh + 210vh, sam HTML i CSS. Zamiast metafory - przykład: krótka rozmowa, która pokazuje „bez
+// pośredników” wprost. Wieczorem piszesz wiadomość (pisze się razem z przewijaniem), gwiazda niesie ją przez noc
+// na naszą stronę ekranu, rano odpowiada osoba, która zaprojektuje stronę, i od razu umawia rozmowę.
+// Pory przy wiadomościach pokazują obietnicę „odpowiedź w 24 h” (wieczór -> następny ranek). Rozmowa jest podpisana
+// jako przykładowa (PRODUCT.md: treści w kadrach nie mogą wyglądać jak cytat klienta ani wynik).
+// Twoje wiadomości stoją przy prawej krawędzi wrappera, nasze przy lewej (jak w komunikatorze).
+// Dla czytników każda wiadomość jest zwykłym tekstem (warstwa „pisana” jest aria-hidden).
+// Bez JS / ograniczony ruch: cała rozmowa od razu.
+
+/** Wejście bloku: krycie i lekki wjazd z dołu, bez przestrzelenia. */
+const rise = (el: Element | null, o: number) => {
+  css(el, 'opacity', o.toFixed(3));
+  css(el, 'visibility', o < 0.002 ? 'hidden' : 'visible');
+  css(el, 'transform', o >= 0.9995 ? 'none' : `translate3d(0, ${((1 - o) * 16).toFixed(2)}px, 0)`);
+};
+
+function Msg({ side, who, time, text, root, typed }: {
+  side: 'you' | 'us'; who: string; time: string; text: string;
+  root?: Ref<HTMLDivElement>; typed?: Ref<HTMLSpanElement>;
+}) {
+  return (
+    <div ref={root} className={`on-2r-msg on-2r-msg--${side}${typed ? ' on-2r-msg--typed' : ''}`}>
+      <p className="on-2r-meta">
+        {side === 'us' && <svg viewBox="-20 -20 40 40" aria-hidden="true" focusable="false"><path d={GEM} /></svg>}
+        <b>{who}</b><span>{time}</span>
+      </p>
+      <p className="on-2r-bubble">
+        <span className="on-2r-ghost">{text}</span>
+        {typed && <span ref={typed} className="on-2r-typed" aria-hidden="true" />}
+      </p>
+    </div>
+  );
+}
+
+export function SecondTalk({ t, live }: { t: ONasDict['direct']; live: boolean }) {
+  const pin = useRef<HTMLDivElement>(null);
+  const m1 = useRef<HTMLDivElement>(null), m2 = useRef<HTMLDivElement>(null), m3 = useRef<HTMLDivElement>(null);
+  const t1 = useRef<HTMLSpanElement>(null), t2 = useRef<HTMLSpanElement>(null);
+  const gap = useRef<HTMLDivElement>(null), when = useRef<HTMLSpanElement>(null);
+  const shown = useRef([-1, -1]); // ile znaków wiadomości 1 i 2 jest na ekranie (tekst piszemy tylko przy zmianie)
+  const { tag, times, lines, gap: gapLabel } = t.talk;
+
+  usePin(pin, (p) => {
+    /** Tekst pisany razem z przewijaniem: `v` 0-1 = część wiadomości. */
+    const type = (node: HTMLSpanElement | null, k: number, full: string, v: number) => {
+      const n = Math.round(v * full.length);
+      if (!node || shown.current[k] === n) return;
+      shown.current[k] = n;
+      node.textContent = full.slice(0, n);
+      flag(node, 'data-typing', n > 0 && n < full.length);
+    };
+    rise(m1.current, seg(p, 0.01, 0.06));
+    type(t1.current, 0, lines[0], lin(p, 0.06, 0.3));
+    // noc: gwiazda niesie wiadomość od Twojej strony (prawa) na naszą (lewa)
+    const g = seg(p, 0.32, 0.48);
+    css(gap.current, '--g', g.toFixed(4));
+    css(gap.current, 'visibility', g < 0.002 ? 'hidden' : 'visible');
+    css(when.current, 'opacity', seg(p, 0.4, 0.5).toFixed(3));
+    rise(m2.current, seg(p, 0.48, 0.55));
+    type(t2.current, 1, lines[1], lin(p, 0.54, 0.82));
+    rise(m3.current, seg(p, 0.86, 0.93));
+  }, live);
+
+  return (
+    <section className="on-sec on-2 on-2r" aria-labelledby="on-2-h">
+      <Head id="on-2-h" label={t.label} title={t.heading} accent={t.headingAccent} lead={t.leadShort} live={live} />
+      <div ref={pin} className="on-pin on-2r-pin">
+        <div className="on-stick on-2-stick">
+          <div className="container mx-auto px-6 on-2r-box">
+            <p className="on-2r-tag">{tag}</p>
+            <div className="on-2r-thread">
+              <Msg side="you" who={t.you} time={times[0]} text={lines[0]} root={m1} typed={t1} />
+              <div ref={gap} className="on-2r-gap" aria-hidden="true">
+                <i className="on-2r-line" />
+                <svg className="on-2r-star" viewBox="-20 -20 40 40" focusable="false"><path d={GEM} /></svg>
+                <span ref={when} className="on-2r-when">{gapLabel}</span>
+              </div>
+              <Msg side="us" who={t.us} time={times[1]} text={lines[1]} root={m2} typed={t2} />
+              <Msg side="you" who={t.you} time={times[2]} text={lines[2]} root={m3} />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

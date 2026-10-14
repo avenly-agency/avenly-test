@@ -348,9 +348,11 @@ const Constellation = ({ viz, labels, frameRef }: { viz: CViz; labels: readonly 
 );
 
 // Łuk wydajności (kafel 3): kropki równo po długości łuku (próbkowanie krzywej), bo wypełnienie
-// (stroke-dasharray z pathLength) też biegnie po długości; gwiazda na 98%.
+// (stroke-dasharray z pathLength) też biegnie po długości; gwiazda tuż przed końcem łuku (98% długości).
+// Od 2026-10-14 BEZ LICZB (właściciel o „98/100”: „fake info, bo nie zawsze będzie tyle”, „zmienić na uniwersalną
+// szybkość”): bez skali 0 / 100 na końcach łuku, gwiazda podpisana słowem (card3Goal - „Od razu”), nie wynikiem.
 const ARC = { w: 320, h: 118, cycle: 8, fill: 0.4, p0: [16, 104], p1: [160, -14], p2: [304, 104] } as const;
-/** Kafel 3: pomiar (łuk wypełnia się do 98%) → wynik 98 na 100. */
+/** Kafel 3: Google sprawdza szybkość (łuk się wypełnia) → strona ładuje się od razu. */
 const ARC_STEPS = [0, ARC.cycle * ARC.fill] as const;
 const ARC_PATH = `M${ARC.p0.join(' ')} Q${ARC.p1.join(' ')} ${ARC.p2.join(' ')}`;
 const arcPoint = (t: number): [number, number] => {
@@ -381,7 +383,7 @@ const ARC_AT = (() => {
 const ARC_TICKS = Array.from({ length: 10 }, (_, i) => ({ f: i / 10, p: ARC_AT(i / 10) }));
 const ARC_GOAL = ARC_AT(0.98);
 
-const GaugeArc = ({ frameRef }: { frameRef?: Ref<HTMLDivElement> }) => {
+const GaugeArc = ({ frameRef, goal }: { frameRef?: Ref<HTMLDivElement>; goal: string }) => {
   const fillTime = ARC.cycle * ARC.fill;
   return (
     <Frame w={ARC.w} h={ARC.h} cycle={ARC.cycle} frameRef={frameRef}>
@@ -398,10 +400,8 @@ const GaugeArc = ({ frameRef }: { frameRef?: Ref<HTMLDivElement> }) => {
           <span className="im-flow-dot" />
         </span>
       ))}
-      {/* Skala jak na liczniku: 0 i 100 na końcach łuku, gwiazda z wynikiem na 98. */}
-      <span className="im-flow-scale" style={{ left: pct(ARC.p0[0], ARC.w), top: pct(ARC.p0[1], ARC.h) }}>0</span>
-      <span className="im-flow-scale" style={{ left: pct(ARC.p2[0], ARC.w), top: pct(ARC.p2[1], ARC.h) }}>100</span>
-      <VNode x={ARC_GOAL[0]} y={ARC_GOAL[1]} w={ARC.w} h={ARC.h} kind="star" label="98" place="tl" flash={fillTime * 0.98} cycle={ARC.cycle} lk={0} />
+      {/* gwiazda na końcu wypełnienia, podpisana słowem (bez skali i wyniku) */}
+      <VNode x={ARC_GOAL[0]} y={ARC_GOAL[1]} w={ARC.w} h={ARC.h} kind="star" label={goal} place="tl" flash={fillTime * 0.98} cycle={ARC.cycle} lk={0} />
     </Frame>
   );
 };
@@ -462,7 +462,7 @@ export const SCENES: Record<1 | 2 | 3 | 4, ShaderScene> = {
 // HISTORIA KAFLA - kroki (chwila startu = dotarcie do węzła) i podpisy, które się wtedy
 // rozjaśniają (indeksy `lk` w nakładkach: kolejność tekstów cardNFlow w słowniku).
 // `nums`: numer kroku na podpisie (Cloudflare w kaflu 4 bierze udział w dwóch krokach - bez
-// numeru; w kaflu 3 podpis "98" = krok 2).
+// numeru; w kaflu 3 podpis gwiazdy „Od razu” = krok 2).
 // =====================================================================================
 type Card = 1 | 2 | 3 | 4;
 const STORY: Record<Card, { cycle: number; at: readonly number[]; labels: number[][]; nums: Partial<Record<number, number>> }> = {
@@ -484,7 +484,7 @@ export const CardViz = ({ card, t, frameRef }: { card: Card; t: ImpactDict; fram
     <figure className={`iv-fig${card === 3 ? ' im-flow--arc' : ''}`} aria-hidden="true">
       {card === 1 && <Constellation viz={C_GROWTH} labels={t.card1Flow} frameRef={frameRef} />}
       {card === 2 && <Constellation viz={C_ASSISTANT} labels={t.card2Flow} frameRef={frameRef} />}
-      {card === 3 && <GaugeArc frameRef={frameRef} />}
+      {card === 3 && <GaugeArc frameRef={frameRef} goal={t.card3Goal} />}
       {card === 4 && <Constellation viz={C_SHIELD} labels={t.card4Flow} frameRef={frameRef} />}
       <VizStory story={storyFor(card, t)} />
     </figure>

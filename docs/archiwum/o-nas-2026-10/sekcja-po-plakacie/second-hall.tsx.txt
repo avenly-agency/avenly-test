@@ -1,0 +1,148 @@
+'use client';
+
+import { useCallback, useEffect, useRef } from 'react';
+import { GEM, LOGO_STAR } from '@/lib/brand/logo';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { Head, Narrator, setNarrator } from './parts';
+import { attr, css, lin, mix, seg, usePin } from './shared';
+import './second.css';
+
+// SEKCJA PO PLAKACIE - WERSJA 5 „KORYTARZ” (2026-10-13; właściciel: „daj jeszcze kilka propozycji tej sekcji”,
+// kierunek „zaskocz mnie”). Prefiks on-2h-. Przypięta 100svh + 240vh, SVG w pikselach ekranu, bez WebGL.
+// Ruch: LOT W GŁĄB, widok z miejsca wiadomości. Przed nami prosta droga do gwiazdy w punkcie zbiegu; po bokach
+// z głębi wyłaniają się drzwi działów (opiekun klienta, kierownik projektu…) - same obrysy („negatywy”), mijamy je
+// bez zatrzymywania i przygasają za nami. Na końcu gwiazda jest blisko: wiadomość doszła prosto do nas, po drodze
+// wraca odpowiedź. Głębia liczona wykładniczo (2^(-odległość · DEPTH)) - drzwi nie „uderzają” przy kamerze.
+// Jedno zdanie narratora naraz („Nikt nie odsyła Cię od drzwi do drzwi.”).
+// Bez JS / ograniczony ruch: nagłówek, gotowy znak między „Ty” a „Avenly”, lista kroków.
+
+const DEPTH = 1.25;
+
+type Geo = { W: number; H: number };
+type Els = {
+  doors: SVGGElement[]; labels: SVGGElement[]; road: SVGPolygonElement | null; grad: SVGLinearGradientElement | null;
+  star: SVGPathElement | null; ans: SVGCircleElement | null; reply: SVGTextElement | null;
+};
+const collect = (el: HTMLElement): Els => ({
+  doors: Array.from(el.querySelectorAll<SVGGElement>('.on-2h-door')),
+  labels: Array.from(el.querySelectorAll<SVGGElement>('.on-2h-label')),
+  road: el.querySelector<SVGPolygonElement>('.on-2h-road'), grad: el.querySelector<SVGLinearGradientElement>('#on-2h-roadg'),
+  star: el.querySelector<SVGPathElement>('.on-2h-star'), ans: el.querySelector<SVGCircleElement>('.on-2h-ans'),
+  reply: el.querySelector<SVGTextElement>('.on-2h-reply'),
+});
+
+export function SecondHall({ t, live, stepsLabel }: { t: ONasDict['direct']; live: boolean; stepsLabel: string }) {
+  const pin = useRef<HTMLDivElement>(null), stage = useRef<HTMLDivElement>(null);
+  const narr = useRef<HTMLOListElement>(null);
+  const geo = useRef<Geo | null>(null), els = useRef<Els | null>(null);
+  const memo = useRef({ p: 0, key: '' });
+
+  const paint = useCallback(() => {
+    const el = pin.current, st = stage.current;
+    if (!el || !st) return;
+    const { W, H } = (geo.current ??= { W: st.clientWidth, H: st.clientHeight });
+    if (!W || !H) return;
+    const c = (els.current ??= collect(el));
+    const p = memo.current.p, mob = W < 768, n = c.doors.length;
+    // pole sceny: pod nawigacją, nad narratorem; punkt zbiegu (gwiazda) nieco nad jego środkiem
+    const top = mob ? 84 : 100, low = mob ? 200 : 180;
+    const ah = Math.max(180, H - top - low), cx = W / 2, cy = top + ah * 0.46, yB = H - low + 8;
+    // drzwi przy kamerze (skala 1): szerokość, wysokość i odsunięcie środka od osi drogi
+    const w0 = W * (mob ? 0.56 : 0.3), h0 = ah * 0.92, d0 = W * (mob ? 0.56 : 0.44), rw = mob ? 4 : 6;
+
+    // części zależne tylko od wymiarów - raz na zmianę rozmiaru
+    const key = `${W}|${H}`;
+    if (memo.current.key !== key) {
+      memo.current.key = key;
+      c.doors.forEach((d, i) => {
+        const side = i % 2 ? 1 : -1, r = d.querySelectorAll('rect');
+        attr(r[0], 'x', (-w0 / 2).toFixed(1)); attr(r[0], 'y', (-h0 / 2).toFixed(1));
+        attr(r[0], 'width', w0.toFixed(1)); attr(r[0], 'height', h0.toFixed(1));
+        attr(r[1], 'x', (-w0 * 0.36).toFixed(1)); attr(r[1], 'y', (-h0 * 0.42).toFixed(1));
+        attr(r[1], 'width', (w0 * 0.72).toFixed(1)); attr(r[1], 'height', (h0 * 0.84).toFixed(1));
+        // klamka po stronie drogi
+        const knob = d.querySelector('circle');
+        attr(knob, 'cx', (-side * w0 * 0.27).toFixed(1)); attr(knob, 'cy', (h0 * 0.04).toFixed(1));
+        attr(knob, 'r', (w0 * 0.022).toFixed(1));
+      });
+      attr(c.road, 'points', `${cx.toFixed(1)},${cy.toFixed(1)} ${(cx - rw).toFixed(1)},${yB.toFixed(1)} ${(cx + rw).toFixed(1)},${yB.toFixed(1)}`);
+      attr(c.grad, 'y1', cy.toFixed(1)); attr(c.grad, 'y2', yB.toFixed(1));
+    }
+
+    // lot: kamera mija kolejne drzwi (naprzemiennie po lewej i prawej)
+    const cam = seg(p, 0.05, 0.76) * (n + 0.9);
+    c.doors.forEach((d, i) => {
+      const s = Math.pow(2, -(i + 1 - cam) * DEPTH), side = i % 2 ? 1 : -1;
+      const o = seg(s, 0.05, 0.17) * (1 - 0.55 * seg(s, 0.6, 1.1)); // wyłania się z punktu zbiegu, mijane przygasa
+      const vis = o > 0.004 && s < 2.4;
+      css(d, 'visibility', vis ? 'visible' : 'hidden');
+      if (!vis) return;
+      attr(d, 'transform', `translate(${(cx + side * d0 * s).toFixed(1)} ${cy.toFixed(1)}) scale(${s.toFixed(4)})`);
+      css(d, 'opacity', o.toFixed(3));
+      // podpis nad drzwiami ma stałą wielkość na ekranie
+      attr(c.labels[i], 'transform', `translate(0 ${(-h0 / 2 - 14 / s).toFixed(1)}) scale(${(1 / s).toFixed(4)})`);
+    });
+    // gwiazda w punkcie zbiegu rośnie, gdy się zbliżamy, i staje
+    const ss = mix(0.5, 1.7, seg(p, 0.05, 0.8)) * (mob ? 0.75 : 1), sr = 20 * ss;
+    attr(c.star, 'transform', `translate(${cx.toFixed(1)} ${cy.toFixed(1)}) scale(${ss.toFixed(4)})`);
+    // odpowiedź wraca drogą do nas
+    const r = seg(p, 0.82, 0.93);
+    attr(c.ans, 'cx', cx.toFixed(1)); attr(c.ans, 'cy', mix(cy + sr, yB - 26, r).toFixed(1));
+    attr(c.ans, 'r', mix(2, rw, r).toFixed(2));
+    css(c.ans, 'opacity', r > 0.004 && r < 0.99 ? '1' : '0');
+    attr(c.reply, 'x', cx.toFixed(1)); attr(c.reply, 'y', (cy - sr - 18).toFixed(1));
+    css(c.reply, 'opacity', seg(p, 0.84, 0.92).toFixed(3));
+
+    setNarrator(narr.current, p < 0.4 ? 0 : p < 0.8 ? 1 : 2, [lin(p, 0, 0.4), lin(p, 0.4, 0.8), lin(p, 0.8, 0.94)]);
+  }, []);
+
+  useEffect(() => {
+    if (!live) return;
+    const st = stage.current;
+    if (!st) return;
+    const ro = new ResizeObserver(() => { geo.current = null; paint(); });
+    ro.observe(st);
+    return () => { ro.disconnect(); geo.current = null; els.current = null; memo.current.key = ''; };
+  }, [live, paint]);
+  usePin(pin, (p) => { memo.current.p = p; paint(); }, live);
+
+  return (
+    <section className="on-sec on-2 on-2h" aria-labelledby="on-2-h">
+      <Head id="on-2-h" label={t.label} title={t.heading} accent={t.headingAccent} lead={t.leadShort} live={live} />
+      <div ref={pin} className="on-pin on-2-pin on-2h-pin">
+        <div ref={stage} className="on-stick on-2-stick">
+          <svg className="on-2-svg" aria-hidden="true" focusable="false">
+            <defs>
+              {/* droga: pełna przy gwieździe, gaśnie przy dolnej krawędzi pola sceny (nad narratorem) */}
+              <linearGradient id="on-2h-roadg" gradientUnits="userSpaceOnUse" x1={0} y1={0} x2={0} y2={1}>
+                <stop offset="0" stopColor="#3b82f6" />
+                <stop offset=".7" stopColor="#3b82f6" stopOpacity=".7" />
+                <stop offset="1" stopColor="#3b82f6" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <polygon className="on-2h-road" fill="url(#on-2h-roadg)" />
+            {t.hall.doors.slice(0, 4).map((name, i) => (
+              <g key={i} className="on-2h-door">
+                <rect vectorEffect="non-scaling-stroke" />
+                <rect className="on-2h-panel" vectorEffect="non-scaling-stroke" />
+                <circle />
+                <g className="on-2h-label"><text textAnchor="middle">{name}</text></g>
+              </g>
+            ))}
+            <path className="on-2h-star" d={GEM} />
+            <circle className="on-2h-ans" />
+            <text className="on-2h-reply" textAnchor="middle">{t.reply}</text>
+          </svg>
+          <div className="container mx-auto px-6 on-2-box">
+            {/* bez JS / ograniczony ruch: gotowy znak między „Ty” a „Avenly” */}
+            <div className="on-2-still on-2s-still" aria-hidden="true">
+              <svg viewBox="-32.5 -84 632.617 43" focusable="false"><path d={LOGO_STAR} /></svg>
+              <p><span>{t.you}</span><span>{t.reply}</span><span>{t.us}</span></p>
+            </div>
+            <Narrator ref={narr} items={t.hall.steps} label={stepsLabel} />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

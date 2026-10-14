@@ -1,0 +1,140 @@
+'use client';
+
+import { useEffect, useRef, type CSSProperties } from 'react';
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
+import { GEM } from '@/lib/brand/logo';
+import { localizeHref, type Locale } from '@/lib/i18n/locale';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { seg, useEnter } from './shared';
+import './ending-alt.css'; // prefiksy on-e2- i on-e3-
+
+// ZAKOŃCZENIE - PROPOZYCJE 2026-10-13 (właściciel: „teraz wszystkie następne sekcje daj kilka propozycji dla każdej”).
+// Obecna wersja („Linia z gwiazdą”, ending.tsx) zostaje domyślna; przełącznik w panelu na dole ekranu (tylko dev).
+// Teksty bez zmian (słownik: „Zacznijmy od rozmowy.”, opis, „Bezpłatna konsultacja”).
+//   EndingStar    „Przez gwiazdę” - strona kończy się tak, jak się zaczęła: na środku czeka mała gwiazda z logo; gdy
+//                 sekcja wejdzie na ekran, gwiazda otwiera się w okno (jak w „Portalu” i we wjeździe wejścia), przed
+//                 nią lecą dwa obrysy-powidoki, a w oknie stoi wyśrodkowany nagłówek z przyciskiem. Raz, na czas.
+//   EndingHorizon „Horyzont” - nawiązanie do planety ze strony głównej: zza krawędzi planety na dole sekcji wschodzi
+//                 gwiazda z logo, nagłówek przy lewej krawędzi, przycisk przy prawej; planeta przechodzi w stopkę.
+// Tło: mgławica podstrony (data-sky na środku okna / na horyzoncie). Po wyborze niewybrane usunąć.
+
+type Props = { t: ONasDict['ending']; locale: Locale; live: boolean };
+const d = (n: number) => ({ '--d': n }) as CSSProperties;
+
+function Cta({ t, locale }: { t: Props['t']; locale: Locale }) {
+  return (
+    <Link href={localizeHref('/kontakt', locale)} prefetch={false} className="on-cta">
+      {t.cta}
+      <ArrowRight aria-hidden="true" />
+    </Link>
+  );
+}
+
+/* ───────── PRZEZ GWIAZDĘ ───────── */
+
+const STAR_WAIST = 7.884;      // wcięcie gwiazdy (promień 20): okno zakrywa pole, gdy wcięcia wyjdą poza jego rogi
+const STAR_FROM = 0.7;         // skala gwiazdy na starcie = czekająca gwiazdka 28 px
+const ECHO = [1, 1.22, 1.5];   // obrys okna i dwa powidoki przed nim
+const OPEN_MS = 1500;
+/** Gwiazda logo (GEM) jako ścieżka w pikselach pola: środek (cx, cy), skala s. */
+const starD = (cx: number, cy: number, s: number) => {
+  const P = (x: number, y: number) => `${(cx + x * s).toFixed(1)} ${(cy + y * s).toFixed(1)}`;
+  return `M${P(0, -20)}C${P(1.4, -6.8)} ${P(6.8, -1.4)} ${P(20, 0)}C${P(6.8, 1.4)} ${P(1.4, 6.8)} ${P(0, 20)}` +
+    `C${P(-1.4, 6.8)} ${P(-6.8, 1.4)} ${P(-20, 0)}C${P(-6.8, -1.4)} ${P(-1.4, -6.8)} ${P(0, -20)}Z`;
+};
+
+export function EndingStar({ t, locale, live }: Props) {
+  const ref = useRef<HTMLElement>(null);
+  const win = useRef<HTMLDivElement>(null);
+  const rings = useRef<SVGSVGElement>(null);
+
+  useEffect(() => {
+    const sec = ref.current, w = win.current, rg = rings.current;
+    if (!sec || !w || !rg || !live) return;
+    const paths = Array.from(rg.querySelectorAll('path'));
+    let raf = 0, t0 = -1;
+    const run = (now: number) => {
+      if (t0 < 0) t0 = now;
+      const x = Math.min(1, (now - t0) / OPEN_MS);
+      if (x >= 1) {
+        // okno otwarte: bez przycięcia (zmiana rozmiaru okna niczego nie utnie), obrysy zgaszone
+        w.style.clipPath = 'none';
+        paths.forEach((ph) => { ph.style.opacity = '0'; });
+        return;
+      }
+      const W = w.clientWidth, H = w.clientHeight, cx = W / 2, cy = H / 2;
+      const full = (Math.hypot(W / 2, H / 2) / STAR_WAIST) * 1.04;
+      // wzrost wykładniczy = równy „najazd”; miękki start i koniec
+      const s = STAR_FROM * Math.pow(full / STAR_FROM, x * x * (3 - 2 * x));
+      w.style.clipPath = `path("${starD(cx, cy, s)}")`;
+      const fade = (1 - seg(x, 0.62, 1)).toFixed(3);
+      paths.forEach((ph, i) => {
+        ph.setAttribute('d', starD(cx, cy, s * ECHO[i]));
+        ph.style.opacity = fade;
+      });
+      raf = requestAnimationFrame(run);
+    };
+    const io = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return;
+      io.disconnect();
+      sec.setAttribute('data-in', '');
+      run(performance.now()); // pierwsza klatka od razu - okno nigdy nie pokaże się bez przycięcia
+    }, { threshold: 0.3 });
+    io.observe(sec);
+    return () => {
+      io.disconnect();
+      cancelAnimationFrame(raf);
+      w.style.clipPath = '';
+      sec.removeAttribute('data-in');
+    };
+  }, [live]);
+
+  return (
+    <section ref={ref} className="on-sec on-e2" aria-labelledby="on-end-h">
+      <div className="on-e2-stage">
+        <div ref={win} className="on-e2-win">
+          <div className="on-e2-light" aria-hidden="true" />
+          <span className="on-e2-core" data-sky="" aria-hidden="true" />
+          <div className="container mx-auto px-6 on-e2-in">
+            <h2 id="on-end-h" className="on-h2 on-e2-h">
+              <span className="on-mask"><span className="on-rise" style={d(7)}>{t.heading}</span></span>
+            </h2>
+            <p className="on-lead on-in" style={d(10)}>{t.text}</p>
+            <div className="on-in" style={d(11)}><Cta t={t} locale={locale} /></div>
+          </div>
+        </div>
+        <svg ref={rings} className="on-e2-rings" aria-hidden="true" focusable="false">
+          {ECHO.map((e) => <path key={e} />)}
+        </svg>
+        <svg className="on-e2-seed" viewBox="-20 -20 40 40" aria-hidden="true" focusable="false"><path d={GEM} /></svg>
+      </div>
+    </section>
+  );
+}
+
+/* ───────── HORYZONT ───────── */
+
+export function EndingHorizon({ t, locale, live }: Props) {
+  const ref = useRef<HTMLElement>(null);
+  useEnter(ref, live, 0.3);
+  return (
+    <section ref={ref} className="on-sec on-e3" aria-labelledby="on-end-h">
+      {/* gwiazda na orbicie stoi POD planetą (wschodzi zza jej krawędzi), planeta zakrywa mgławicę aż do stopki */}
+      <div className="on-e3-orbit" aria-hidden="true">
+        <svg className="on-e3-star" viewBox="-20 -20 40 40" focusable="false"><path d={GEM} /></svg>
+      </div>
+      <div className="on-e3-planet" aria-hidden="true" />
+      <span className="on-e3-glow" data-sky="" aria-hidden="true" />
+      <div className="container mx-auto px-6 on-e3-in">
+        <h2 id="on-end-h" className="on-h2 on-e3-h">
+          <span className="on-mask"><span className="on-rise" style={d(0)}>{t.heading}</span></span>
+        </h2>
+        <div className="on-e3-row">
+          <p className="on-lead on-in" style={d(3)}>{t.text}</p>
+          <div className="on-in" style={d(4)}><Cta t={t} locale={locale} /></div>
+        </div>
+      </div>
+    </section>
+  );
+}

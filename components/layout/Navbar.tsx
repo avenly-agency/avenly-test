@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence, Variants } from 'framer-motion'
+import { useState, useEffect, useLayoutEffect, useRef, useCallback, type ReactNode, type RefObject } from 'react'
+import { motion, AnimatePresence, usePresence, Variants } from 'framer-motion'
 import { ArrowRight, Github, Facebook, Instagram } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useLenis } from 'lenis/react'
 import { cn } from '@/lib/utils'
+import { AvenlyLogo } from '@/components/ui/AvenlyLogo'
+import { LOGO_BOX, LOGO_STAR_CENTER } from '@/lib/brand/logo'
 import { localeFromPathname, localizeHref, switchLocalePath, type Locale } from '@/lib/i18n/locale'
 // 1. DODANO IMPORTY GSAP
 import gsap from 'gsap'
@@ -48,17 +50,166 @@ const SOCIAL_LINKS = [
     { icon: Github, href: 'https://github.com/avenly-agency' },
 ]
 
-// --- ANIMACJE (VARIANTS) ---
-const menuVars: Variants = {
-    initial: { scaleY: 0 },
-    animate: {
-        scaleY: 1,
-        transition: { duration: 0.5, ease: [0.12, 0, 0.39, 0] as const },
-    },
-    exit: {
-        scaleY: 0,
-        transition: { delay: 0.5, duration: 0.5, ease: [0.22, 1, 0.36, 1] as const },
-    },
+// --- MENU MOBILNE: OTWARCIE PRZEZ GWIAZDĘ Z LOGO (2026-10-13) ---
+// Właściciel po przejściu „Portal” na /o-nas: „portal zajebisty, gdzie można jeszcze ten efekt użyć zmiany
+// z gwiazdami?” i polecenie „wykonaj”. Menu nie rozwija się już z góry (dawne scaleY): gwiazda z logo w nawigacji
+// rośnie, aż zakryje cały ekran (z cienką krawędzią w kolorze podstrony); treść menu pojawia się, gdy gwiazda
+// zakrywa ekran. Zamknięcie = to samo wstecz (gwiazda zwija się do gwiazdy logo).
+// WYDAJNOŚĆ - trzecia wersja (właściciel: „menu na telefonie laguje strasznie”, potem „dalej laguje przy
+// pojawianiu się”): (1) clip-path pisany co klatkę przemalowywał całe menu; (2) gwiazda na płótnie 2D była tania,
+// ale rysowana w klatce głównego wątku - a ten przy otwieraniu jest zajęty (montaż menu, układ strony po blokadzie
+// przewijania, animacje linków), więc gubiła klatki. Teraz ruch robi KOMPOZYTOR: gwiazda to osiem warstw w jednym
+// kolorze (romby = obrócone kwadraty), skalowanych animacją Web Animations na samym transform - bez JS w klatce,
+// bez rastrowania (jednolity kolor jest ostry w każdej skali), niezależnie od obciążenia głównego wątku. Treść menu
+// zmienia tylko krycie (też na kompozytorze). Skala rośnie wykładniczo (klatki kluczowe próbkują krzywą).
+// Ograniczony ruch: menu pojawia się i znika od razu.
+const MENU_OPEN_MS = 620
+const MENU_CLOSE_MS = 460
+/** Zamykanie zaczyna się po krótkim zjeździe linków (ich wyjście: containerVars / mobileLinkVars). */
+const MENU_CLOSE_WAIT = 240
+/** Wcięcie gwiazdy leży 7,884 jedn. od jej środka - gwiazda zakrywa ekran, gdy wcięcia wyjdą poza najdalszy róg. */
+const MENU_WAIST = 7.884
+/** Tło menu (to samo co tło strony). */
+const MENU_BG = '#050505'
+/** Gwiazda logo (promień 20 jedn.) złożona z rombów: półprzekątne [pozioma, pionowa]. Dwa smukłe i dwa szersze
+    dają ramiona z wcięciem jak krzywa gwiazdy logo (łamana przez jej punkty: czubek, (11,5; 1,86), wcięcie
+    (5,575; 5,575)). */
+const MENU_RHOMBI: [number, number][] = [[20, 4.376], [4.376, 20], [14.47, 9.07], [9.07, 14.47]]
+/** O ile (w jednostkach skali) romby krawędzi są większe od rombów gwiazdy - krawędź ok. 1,5 px. */
+const MENU_RIM = [0.35, 0.35, 0.195, 0.195]
+/** Bok kwadratu, z którego powstaje romb, i jego półprzekątna po obrocie o 45°. */
+const MENU_BOX = 100
+const MENU_HALF = MENU_BOX / Math.SQRT2
+/** Liczba klatek kluczowych krzywej wzrostu (między nimi przeglądarka liczy liniowo). */
+const MENU_STEPS = 28
+
+type MenuGeo = { cx: number; cy: number; s0: number; full: number; w: number; h: number }
+const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+function MobileMenuShell({ logoRef, accent, children }: {
+    logoRef: RefObject<HTMLAnchorElement | null>
+    /** Kolor krawędzi gwiazdy (kolor podstrony jako hex). */
+    accent: string
+    children: ReactNode
+}) {
+    const [isPresent, safeToRemove] = usePresence()
+    const shell = useRef<HTMLDivElement>(null)
+    const stage = useRef<HTMLDivElement>(null)
+    const geo = useRef<MenuGeo | null>(null)
+    const anims = useRef<Animation[]>([])
+    const removeRef = useRef(safeToRemove)
+    useEffect(() => { removeRef.current = safeToRemove }, [safeToRemove])
+
+    // Środek i wielkość gwiazdy w logo nawigacji (stąd rośnie gwiazda menu) + skala, przy której zakrywa ekran.
+    const measure = useCallback((): MenuGeo => {
+        const st = stage.current
+        const w = st?.clientWidth || window.innerWidth, h = st?.clientHeight || window.innerHeight
+        let cx = w * 0.3, cy = 36, s0 = 0.16
+        const r = logoRef.current?.querySelector('svg')?.getBoundingClientRect()
+        if (r && r.width > 0 && r.height > 0) {
+            s0 = Math.min(r.width / LOGO_BOX.w, r.height / LOGO_BOX.h)
+            cx = r.left + (r.width - LOGO_BOX.w * s0) / 2 + (LOGO_STAR_CENTER.x - LOGO_BOX.x) * s0
+            cy = r.top + (r.height - LOGO_BOX.h * s0) / 2 + (LOGO_STAR_CENTER.y - LOGO_BOX.y) * s0
+        }
+        const far = Math.hypot(Math.max(cx, w - cx), Math.max(cy, h - cy))
+        return { cx, cy, s0, full: Math.max(s0 * 2, (far * 1.08) / MENU_WAIST), w, h }
+    }, [logoRef])
+
+    /** Tworzy animacje gwiazdy i krycia menu (zatrzymane na początku albo na końcu). Oś czasu = otwieranie;
+        zamykanie odtwarza ją wstecz. */
+    const build = useCallback((atEnd: boolean) => {
+        const st = stage.current, el = shell.current
+        if (!st || !el) return
+        anims.current.forEach((a) => a.cancel())
+        const g = (geo.current = measure())
+        const at = 'translate(' + g.cx.toFixed(1) + 'px, ' + g.cy.toFixed(1) + 'px)'
+        const list: Animation[] = []
+        Array.from(st.children).forEach((part, i) => {
+            const [a, b] = MENU_RHOMBI[i % 4]
+            const extra = i < 4 ? MENU_RIM[i % 4] : 0 // pierwsze cztery warstwy = krawędź (pod gwiazdą)
+            const frames: Keyframe[] = []
+            for (let j = 0; j <= MENU_STEPS; j++) {
+                // szybko przez etap małej gwiazdy, miękko na końcu (domknięcie rogów ekranu)
+                const v = 1 - Math.pow(1 - j / MENU_STEPS, 1.6)
+                const s = g.s0 * Math.pow(g.full / g.s0, v) + extra * Math.min(1, v * 8)
+                frames.push({
+                    transform: at + ' scale(' + ((a * s) / MENU_HALF).toFixed(4) + ', ' + ((b * s) / MENU_HALF).toFixed(4) + ') rotate(45deg)',
+                })
+            }
+            list.push(part.animate(frames, { duration: MENU_OPEN_MS, fill: 'both', easing: 'linear' }))
+        })
+        // treść menu pokazuje się dopiero, gdy gwiazda zakrywa ekran (nic nie wisi nad stroną poza gwiazdą)
+        list.push(el.animate([{ opacity: 0 }, { opacity: 0, offset: 0.62 }, { opacity: 1 }], { duration: MENU_OPEN_MS, fill: 'both', easing: 'linear' }))
+        list.forEach((an) => { an.pause(); an.currentTime = atEnd ? MENU_OPEN_MS : 0 })
+        anims.current = list
+    }, [measure])
+
+    // Stan startowy przed pierwszym malowaniem (menu nie mignie w całości): gwiazda wielkości gwiazdy logo, treść ukryta.
+    useLayoutEffect(() => {
+        const st = stage.current
+        if (reduced()) { if (st) st.style.visibility = 'hidden'; return }
+        build(false)
+        return () => { anims.current.forEach((a) => a.cancel()); anims.current = [] }
+    }, [build])
+
+    useEffect(() => {
+        const el = shell.current, st = stage.current
+        if (!el || !st) return
+        // po zakryciu ekranu menu ma własne tło, a warstwy gwiazdy znikają; w ruchu tłem menu jest gwiazda
+        const settle = () => { el.style.backgroundColor = MENU_BG; st.style.visibility = 'hidden' }
+        const unsettle = () => { el.style.backgroundColor = 'transparent'; st.style.visibility = 'visible' }
+        if (reduced()) {
+            if (isPresent) settle(); else removeRef.current?.()
+            return
+        }
+        let timer = 0
+        const run = (rate: number, done: () => void) => {
+            unsettle()
+            const lead = anims.current[0]
+            if (!lead) { done(); return }
+            lead.onfinish = done
+            anims.current.forEach((an) => { an.updatePlaybackRate(rate); an.play() })
+        }
+        if (isPresent) {
+            if (!anims.current.length) build(false)
+            el.style.pointerEvents = ''
+            // ponowne otwarcie, zanim gwiazda zaczęła się zwijać: menu już stoi - bez odtwarzania od początku
+            if (Number(anims.current[0]?.currentTime ?? 0) >= MENU_OPEN_MS - 1) settle()
+            else run(1, settle)
+        } else {
+            el.style.pointerEvents = 'none' // zamykane menu nie łapie już dotyku
+            timer = window.setTimeout(() => {
+                // ekran mógł się zmienić, gdy menu było otwarte (obrót telefonu) - gwiazda zwija się w aktualne logo
+                const g = geo.current, n = measure()
+                if (!g || Math.abs(g.w - n.w) > 1 || Math.abs(g.h - n.h) > 1 || Math.abs(g.cx - n.cx) > 1 || Math.abs(g.cy - n.cy) > 1) build(true)
+                const lead = anims.current[0]
+                // zamknięcie w tej samej chwili co otwarcie (oś czasu jeszcze na zerze) - nie ma czego zwijać
+                if (!lead || Number(lead.currentTime ?? 0) < 1) { removeRef.current?.(); return }
+                run(-MENU_OPEN_MS / MENU_CLOSE_MS, () => removeRef.current?.())
+            }, MENU_CLOSE_WAIT)
+        }
+        return () => window.clearTimeout(timer)
+    }, [isPresent, build, measure])
+
+    return (
+        <>
+            {/* gwiazda: cztery romby krawędzi (kolor podstrony) i na nich cztery romby w kolorze tła menu */}
+            <div ref={stage} className="fixed inset-0 z-40 overflow-hidden pointer-events-none" aria-hidden="true">
+                {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+                    <div
+                        key={i}
+                        className="absolute left-0 top-0 will-change-transform"
+                        style={{ width: MENU_BOX, height: MENU_BOX, margin: -MENU_BOX / 2, backgroundColor: i < 4 ? accent : MENU_BG }}
+                    />
+                ))}
+            </div>
+            {/* bez przewijania w bok; w pionie tylko gdy treść naprawdę się nie mieści (bardzo niski ekran) -
+                rozmiary linków liczą się z wysokości ekranu, żeby menu mieściło się w całości */}
+            <div ref={shell} className="fixed inset-0 w-full h-[100dvh] z-40 overflow-x-hidden overflow-y-auto overscroll-contain touch-pan-y">
+                {children}
+            </div>
+        </>
+    )
 }
 
 const containerVars: Variants = {
@@ -83,14 +234,14 @@ const mobileLinkVars: Variants = {
 // oraz components/utils/ScrollbarTheme.tsx (jeden brand color na podstronę).
 type NavTheme = {
     shell: string          // tło + border po scrollu
-    dot: string            // kropka przy AVENLY (fallback SSR / no-JS)
-    dotHex: string         // kropka przy AVENLY (Framer color tween przy zmianie podstrony)
+    dot: string            // linia z gwiazdą w logo (kolor podstrony; przejście koloru w CSS)
+    dotHex: string         // ten sam kolor jako hex (krawędź gwiazdy przy otwieraniu menu mobilnego i poświata w jego tle)
     underline: string      // podkreślenie linku (hover)
     glow: string           // halo blur pod linkiem (hover)
     hamburgerHover: string // hover ikony hamburgera (mobile)
     mobileDot: string      // kropka przy linkach w menu mobile
     mobileLinkHover: string// hover tekstu linku (mobile)
-    blob: string           // dekoracyjny blob w tle menu mobile
+    blob: string           // dawny rozmyty blob w tle menu mobile (od 2026-10-13 poświata to gradient z dotHex - pole nieużywane)
     socialHover: string    // hover ikon social (mobile)
     ctaHover: string       // hover przycisku "Darmowa Wycena" (mobile)
 }
@@ -163,6 +314,9 @@ export const Navbar = () => {
     const [isScrolled, setIsScrolled] = useState(false)
     const [isVisible, setIsVisible] = useState(true)
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+    // Menu mobilne jest na ekranie - od otwarcia do końca zamykania (dłużej niż isMobileMenuOpen: obejmuje animację
+    // wyjścia). W tym czasie pasek nawigacji nie ma własnego tła ani rozmycia - patrz navbarClasses.
+    const [menuOnScreen, setMenuOnScreen] = useState(false)
 
     const pathname = usePathname()
     const router = useRouter()
@@ -174,6 +328,8 @@ export const Navbar = () => {
 
     const lastScrollY = useRef(0)
     const scrollDownAccumulator = useRef(0)
+    // Logo w nawigacji: z jego gwiazdy rośnie okno menu mobilnego (MobileMenuShell).
+    const logoRef = useRef<HTMLAnchorElement>(null)
 
     // 2. REJESTRACJA GSAP (Aby Navbar widział ScrollTrigger)
     useEffect(() => {
@@ -284,11 +440,20 @@ export const Navbar = () => {
     const navTheme = getNavbarTheme(pathname);
 
     // FIX ANIMACJI: Używamy transition-all, aby zmiana z py-6 na py-4 animowała się płynnie
+    // Menu mobilne na ekranie (2026-10-13, właściciel: menu „działa dobrze, jak jest pierwszy ekran bez ruszenia, ale
+    // jak już jest ruszony i pojawia się nawigacja przylepiona, to już jest lipa”): po przewinięciu pasek ma ciemne tło
+    // z rozmyciem - gwiazda menu rosła POD nim, więc pasek ucinał ją prostą krawędzią i rozmywał, a rozmycie tła paska
+    // liczyło się od nowa w każdej klatce animacji. Dopóki menu jest na ekranie, pasek jest więc goły (bez tła, linii,
+    // cienia i rozmycia) - tak jak na górze strony; rozmycie znika od razu (nie jest na liście przejść), tło gaśnie
+    // w 0,2 s. Odstępy paska zostają, więc logo i przycisk nie drgną. Po zamknięciu pasek wraca jak dotąd.
+    const menuUp = isMobileMenuOpen || menuOnScreen
     const navbarClasses = cn(
-        'fixed top-0 left-0 w-full z-50 transition-all duration-500 ease-in-out border-b',
-        isScrolled
-            ? `${navTheme.shell} backdrop-blur-xl py-4 shadow-lg`
-            : 'bg-transparent border-transparent py-6',
+        'fixed top-0 left-0 w-full z-50 border-b',
+        menuUp
+            ? cn('bg-transparent border-transparent shadow-none transition-[background-color,border-color,box-shadow,padding,translate] duration-200 ease-out', isScrolled ? 'py-4' : 'py-6')
+            : cn('transition-all duration-500 ease-in-out', isScrolled
+                ? `${navTheme.shell} backdrop-blur-xl py-4 shadow-lg`
+                : 'bg-transparent border-transparent py-6'),
         isVisible && !isMobileMenuOpen ? 'translate-y-0' : !isMobileMenuOpen ? '-translate-y-full' : 'translate-y-0'
     )
 
@@ -296,10 +461,12 @@ export const Navbar = () => {
         <>
             <nav className={navbarClasses}>
                 <div className="container mx-auto px-6 flex items-center justify-between relative">
-                    {/* LOGO */}
+                    {/* LOGO (od 2026-10-09 nowe logo „cięcie”: AVENLY przecięte linią z gwiazdą). Linia z gwiazdą
+                        w kolorze podstrony, płynne przejście koloru przy zmianie podstrony (CSS, jak dawna kropka). */}
                     <Link
+                        ref={logoRef}
                         href={homeHref}
-                        className="text-xl font-bold tracking-tighter text-white z-50 hover:opacity-80 transition-opacity cursor-pointer flex items-center gap-1 relative flex-shrink-0"
+                        className="text-white z-50 hover:opacity-80 transition-opacity cursor-pointer flex items-center relative flex-shrink-0 py-1"
                         onClick={e => {
                             setIsMobileMenuOpen(false)
                             if (isHome) {
@@ -307,15 +474,11 @@ export const Navbar = () => {
                                 lenis?.scrollTo(0, { duration: 1.5, easing: t => (t === 1 ? 1 : 1 - Math.pow(2, -10 * t)) })
                             }
                         }}>
-                        AVENLY
-                        <motion.span
-                            initial={false}
-                            animate={{ color: navTheme.dotHex }}
-                            transition={{ duration: 0.6, ease: 'easeInOut' }}
-                            className={navTheme.dot}
-                        >
-                            .
-                        </motion.span>
+                        <span className="sr-only">Avenly</span>
+                        <AvenlyLogo
+                            className="block h-[16px] w-[101px] lg:h-[18px] lg:w-[114px]"
+                            accentClassName={cn(navTheme.dot, 'transition-colors duration-[600ms] ease-in-out')}
+                        />
                     </Link>
 
                     {/* DESKTOP MENU - linki DOKŁADNIE w osi strony (absolute + translate; kontener jest
@@ -367,7 +530,10 @@ export const Navbar = () => {
                     </a>
                     <button
                         className={cn('text-white cursor-pointer transition-colors p-2 active:scale-90', navTheme.hamburgerHover)}
-                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        onClick={() => {
+                            if (!isMobileMenuOpen) setMenuOnScreen(true)
+                            setIsMobileMenuOpen(!isMobileMenuOpen)
+                        }}
                         aria-label={isMobileMenuOpen ? nav.menuClose : nav.menuOpen}>
                         <div className="relative w-6 h-6 flex flex-col justify-center items-center gap-[5px]">
                             <motion.span
@@ -389,20 +555,21 @@ export const Navbar = () => {
             </nav>
 
             {/* MOBILE MENU */}
-            <AnimatePresence>
+            <AnimatePresence onExitComplete={() => setMenuOnScreen(false)}>
                 {isMobileMenuOpen && (
-                    <motion.div
-                        key="mobile-menu"
-                        variants={menuVars}
-                        initial="initial"
-                        animate="animate"
-                        exit="exit"
-                        className="fixed inset-0 w-full h-[100dvh] bg-[#050505] z-40 origin-top overflow-y-auto"
-                    >
+                    <MobileMenuShell key="mobile-menu" logoRef={logoRef} accent={navTheme.dotHex}>
 
-                        <div className={cn('absolute top-[-20%] right-[-20%] w-[80vw] h-[80vw] blur-[100px] rounded-full pointer-events-none', navTheme.blob)} />
+                        {/* Poświata w rogu menu: gradient zamiast koła z rozmyciem 100 px (filtr blur na dużej warstwie
+                            kosztował na telefonie przy każdej klatce pojawiania się menu); ten sam środek i zasięg. */}
+                        <div
+                            className="absolute rounded-full pointer-events-none w-[180vw] h-[180vw] top-[calc(-20%-50vw)] right-[calc(-20%-50vw)]"
+                            style={{ background: `radial-gradient(closest-side, ${navTheme.dotHex}12, ${navTheme.dotHex}09 45%, transparent)` }}
+                        />
 
-                        <div className="flex flex-col min-h-[100dvh] container mx-auto px-6 pb-48 pt-24 relative z-10">
+                        {/* Menu mieści się na ekranie bez przewijania (2026-10-13 - właściciel: „mogę menu scrollować w bok
+                            i do dołu”): dawne pb-48 i linki 48 px z kropką 60 px dawały treść wyższą od ekranu. Linki mają
+                            teraz wielkość z wysokości ekranu (pełne 48 px od ok. 840 px wysokości), kropka nie podbija linii. */}
+                        <div className="flex flex-col min-h-[100dvh] container mx-auto px-6 pb-6 pt-24 relative z-10">
                             
                             {/* LINKI */}
                             <motion.div
@@ -410,7 +577,7 @@ export const Navbar = () => {
                                 initial="initial"
                                 animate="open"
                                 exit="initial"
-                                className="flex flex-col gap-2 flex-1 justify-center">
+                                className="flex flex-col gap-1.5 flex-1 justify-center">
                                 {nav.links.map((link, index) => {
                                     const href = localizeHref(link.href, locale)
                                     return (
@@ -419,9 +586,9 @@ export const Navbar = () => {
                                             <a
                                                 href={href}
                                                 onClick={e => handleLinkClick(e, href)}
-                                                className={cn('text-5xl font-bold text-white tracking-tight transition-colors block py-2 cursor-pointer', navTheme.mobileLinkHover)}>
+                                                className={cn('text-[length:clamp(1.875rem,5.1vh,3rem)] supports-[height:1svh]:text-[length:clamp(1.875rem,5.7svh,3rem)] leading-[1.05] font-bold text-white tracking-tight transition-colors block py-1.5 cursor-pointer', navTheme.mobileLinkHover)}>
                                                 {link.title}
-                                                <span className={cn('text-6xl leading-none', navTheme.mobileDot)}>.</span>
+                                                <span className={cn('text-[1.25em] leading-[0]', navTheme.mobileDot)}>.</span>
                                             </a>
                                         </motion.div>
                                     </div>
@@ -434,8 +601,8 @@ export const Navbar = () => {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0, transition: { delay: 0.5 } }}
                                 exit={{ opacity: 0, transition: { duration: 0.2 } }}
-                                className="border-t border-white/10 pt-8 mt-8 shrink-0">
-                                <div className="flex flex-col gap-6">
+                                className="border-t border-white/10 pt-5 mt-5 shrink-0">
+                                <div className="flex flex-col gap-4">
                                     {/* TOGGLE JĘZYKA (mobile) */}
                                     <div className="flex justify-between items-center">
                                         <span className="text-slate-400 text-sm uppercase tracking-widest">{locale === 'pl' ? 'Język' : 'Language'}</span>
@@ -472,7 +639,7 @@ export const Navbar = () => {
                                 </div>
                             </motion.div>
                         </div>
-                    </motion.div>
+                    </MobileMenuShell>
                 )}
             </AnimatePresence>
         </>

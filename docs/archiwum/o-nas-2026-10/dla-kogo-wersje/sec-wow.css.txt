@@ -1,0 +1,158 @@
+/* ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+   O NAS - „DLA KOGO PRACUJEMY”, wersje 5-7 z warstwą „wow” (2026-10-13; właściciel o wersjach 1-4: „niby spoko, ale
+   potrzebuję czegoś pasującego i oddającego taki efekt wow jak wszędzie”). Prefiks on-4:
+     on-4   wspólne: przypięta scena z mgławicą w barwie klienta (sec-wow.tsx), kadr w ciemnym szkle, akcent klienta,
+     on-4p  5. „Portal”   (sec-clients-portal.tsx)  - gwiazda z logo otwiera w kadrze stronę następnego klienta,
+     on-4t  6. „Plansze”  (sec-clients-plates.tsx)  - ogromny napis-plansza, odjazd, kadr wjeżdża od dołu,
+     on-4g  7. „Galeria”  (sec-clients-gallery.tsx) - kadry w perspektywie, galeria obraca się o jedno miejsce.
+   Tekst pozycji i wysokości korzystają z klas on-3c- (sec.css). --kc = akcent klienta na ekranie („r g b”, pisze JS).
+   Style bez [data-live] = stan końcowy (bez JS / ograniczony ruch: bez mgławicy, lista pozycji z kadrami).
+   Po wyborze: usunąć pozostałe wersje i ich bloki; gdy zostanie wersja 1-4, cały ten plik i sec-wow.tsx.
+   ═══════════════════════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* ═════════ WSPÓLNE ═════════ */
+.on-4 { --kc: 59 130 246; }
+.on-4-pin, .on-4-fit { position: relative; }
+.on-4-stick { position: relative; padding: 32px 0 72px; }
+.on-4-sky, .on-4-fade { display: none; }
+/* przypięty ekran 100lvh z własną czernią (po schowaniu paska adresu na telefonie tło sięga do dołu okna),
+   kompozycja .on-4-fit w 100svh - jak wejście „Panorama” */
+.on[data-live] .on-4-pin { height: calc(100vh + var(--len) * 1vh); height: calc(100lvh + var(--len) * 1vh); }
+.on[data-live] .on-4-stick {
+  position: sticky; top: 0; height: 100vh; height: 100lvh; padding: 0;
+  overflow: hidden; overflow: clip; background: #050505;
+}
+.on[data-live] .on-4-fit { position: absolute; left: 0; right: 0; top: 0; height: 100vh; height: 100svh; }
+/* mgławica (płótno tworzy moduł); bez WebGL / Save-Data: poświata w barwie klienta */
+.on[data-live] .on-4-sky { display: block; position: absolute; inset: 0; pointer-events: none; }
+.on-4-neb { position: absolute; inset: 0; }
+.on-4-neb canvas { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity .6s ease; }
+.on-4-neb[data-ready] canvas { opacity: 1; }
+.on-4-neb[data-fail] { background: radial-gradient(60% 45% at 60% 55%, rgb(var(--kc) / .16), transparent 70%); }
+/* wygaszenia krawędzi sceny: góra na początku, dół na końcu (krycie pisze JS) - mgławica bez prostego ucięcia */
+.on[data-live] .on-4-fade { display: block; position: absolute; left: 0; right: 0; height: 46%; pointer-events: none; }
+.on-4-fade--top { top: 0; background: linear-gradient(0deg, rgba(5, 5, 5, 0), rgba(5, 5, 5, .5) 40%, #050505 86%); }
+.on-4-fade--bot { bottom: 0; opacity: 0; background: linear-gradient(180deg, rgba(5, 5, 5, 0), rgba(5, 5, 5, .5) 40%, #050505 86%); }
+/* kadr w ciemnym szkle: mgławica lekko przebija (bez rozmycia), ostry refleks u góry, cienka obwódka w akcencie klienta */
+.on-4-frame {
+  width: 100%; aspect-ratio: 16 / 10; padding: 8px; border-radius: 20px; background: rgb(9 9 12 / .66);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), 0 0 0 1px rgb(var(--kc) / .34); transition: box-shadow .8s ease;
+}
+.on-4-frame picture, .on-4-frame img { display: block; width: 100%; height: 100%; }
+.on-4-frame img { object-fit: cover; object-position: 50% 0; border-radius: 13px; }
+.on-4-frame--you {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  background: rgb(6 6 8 / .5); box-shadow: none; border: 1px dashed rgb(255 255 255 / .3);
+  font-size: 15px; color: #cbd5e1;
+}
+.on-4-frame--you svg, .on-4p-slot svg { width: 30px; height: 30px; fill: var(--on-ac); }
+/* strzałka linku „Zobacz realizację” w akcencie klienta */
+.on-4 .on-3c-more svg { color: rgb(var(--kc)); transition: color .8s ease, transform .45s var(--on-ease); }
+
+/* ═════════ 5. PORTAL ═════════ */
+/* bez ruchu: siatka kadrów (każda warstwa osobno) */
+.on-4p-frame { aspect-ratio: auto; padding: 0; background: none; box-shadow: none; }
+.on-4p-glass { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.on-4p-layer { aspect-ratio: 16 / 10; overflow: hidden; border-radius: 14px; background: #0a0a0c; box-shadow: 0 0 0 1px rgba(255, 255, 255, .1); }
+.on-4p-layer--you { display: flex; align-items: center; justify-content: center; }
+.on-4p-slot { display: flex; flex-direction: column; align-items: center; gap: 14px; font-size: 15px; color: #cbd5e1; }
+.on-4p-rings { display: none; }
+/* pełny ruch: jeden duży kadr, w nim strony klientów jedna na drugiej; okno-gwiazdę (clip-path) pisze JS */
+.on[data-live] .on-4p .on-4p-box { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+.on[data-live] .on-4p-frame {
+  aspect-ratio: 16 / 10; max-height: 72vh; max-height: 72svh; padding: 8px; background: rgb(9 9 12 / .66);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), 0 0 0 1px rgb(var(--kc) / .34);
+}
+.on[data-live] .on-4p-glass { display: block; position: relative; width: 100%; height: 100%; overflow: hidden; border-radius: 13px; background: #060607; }
+.on[data-live] .on-4p-layer { position: absolute; inset: 0; aspect-ratio: auto; border-radius: 0; box-shadow: none; background: #060607; }
+.on[data-live] .on-4p-layer picture { transform-origin: 50% 30%; }
+.on[data-live] .on-4p-layer img { border-radius: 0; }
+.on[data-live] .on-4p-slot { padding: 24px 36px; border: 1px dashed rgb(255 255 255 / .3); border-radius: 12px; }
+/* obrys okna i dwa powidoki przed nim - w akcencie klienta, który się otwiera (--kn pisze JS na kadrze) */
+.on[data-live] .on-4p-rings { display: block; position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.on-4p-ring { fill: none; stroke: rgb(var(--kn, 96 165 250)); stroke-width: 1.5; visibility: hidden; }
+.on-4p-ring:nth-child(2) { stroke-width: 1; stroke-opacity: .55; }
+.on-4p-ring:nth-child(3) { stroke-width: 1; stroke-opacity: .3; }
+
+/* ═════════ 6. PLANSZE ═════════ */
+/* bez ruchu: lista pozycji - nazwa rodzaju firmy, podpis, kadr */
+.on-4t-list, .on-4g-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 44px; }
+.on-4t-word { margin: 0 0 14px; font-weight: 700; font-size: clamp(30px, 3.4vw, 54px); line-height: 1.02; letter-spacing: -.04em; color: #f8fafc; }
+.on-4t-cap { margin-bottom: 18px; }
+.on-4t-cap .on-3c-name { margin-top: 0; }
+.on-4t-frame, .on-4g-frame { max-width: 46rem; }
+/* pełny ruch: napis, podpis i kadr każdej pozycji stoją w polu sceny; miejsce, skalę i krycie pisze JS */
+.on[data-live] .on-4t-box { height: 100%; }
+.on[data-live] .on-4t-list { display: block; position: relative; height: 100%; }
+.on[data-live] .on-4t-item { display: contents; }
+.on[data-live] .on-4t-word {
+  position: absolute; left: 0; top: 0; margin: 0; width: max-content; white-space: nowrap; transform-origin: 0 0;
+  opacity: 0; visibility: hidden;
+}
+.on[data-live] .on-4t-cap {
+  position: absolute; left: 0; top: 0; margin: 0; max-width: min(30rem, 40%);
+  opacity: 0; visibility: hidden; pointer-events: none;
+}
+.on[data-live] .on-4t-cap[data-on] { pointer-events: auto; }
+.on[data-live] .on-4t-frame {
+  position: absolute; left: 0; top: 0; width: var(--fw, 56%); max-width: none; transform-origin: 50% 50%;
+  opacity: 0; visibility: hidden;
+}
+
+/* ═════════ 7. GALERIA ═════════ */
+/* bez ruchu: lista pozycji - nazwa rodzaju firmy, kadr, podpis */
+.on-4g-word { margin: 0 0 16px; font-weight: 700; font-size: clamp(32px, 5vw, 80px); line-height: 1.04; letter-spacing: -.04em; color: #f8fafc; }
+.on-4g-word > span { display: inline-block; }
+.on-4g-cap { margin-top: 16px; }
+.on-4g-cap .on-3c-name { margin-top: 0; }
+.on-4g-flow { display: none; }
+/* pełny ruch: trzy wiersze (słowo, galeria, podpis); elementy wszystkich pozycji stoją w tych samych komórkach.
+   Lista daje perspektywę; kadry środkuje siatka, a w bok, w głąb i bokiem ustawia je JS (--fw = szerokość kadru) */
+.on[data-live] .on-4g-box { height: 100%; padding-top: 88px; padding-bottom: 36px; }
+.on[data-live] .on-4g-list {
+  height: 100%; gap: 0; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto;
+  perspective: 1500px;
+}
+.on[data-live] .on-4g-item { display: contents; }
+.on[data-live] .on-4g-word {
+  grid-area: 1 / 1; align-self: end; margin: 0 0 clamp(10px, 2vh, 22px); padding-bottom: .13em;
+  overflow: hidden; overflow: clip; white-space: nowrap; line-height: 1.02;
+  font-size: clamp(36px, min(6vw, 10vh), 100px); font-size: clamp(36px, min(6vw, 10svh), 100px);
+}
+.on[data-live] .on-4g-flow { display: block; grid-area: 2 / 1; }
+.on[data-live] .on-4g-frame {
+  grid-area: 2 / 1; justify-self: center; align-self: center; width: var(--fw, 50%); max-width: none;
+  visibility: hidden; will-change: transform; backface-visibility: hidden;
+}
+.on[data-live] .on-4g-cap {
+  grid-area: 3 / 1; display: flex; align-items: baseline; gap: 12px 32px; margin-top: clamp(10px, 2vh, 22px);
+  opacity: 0; visibility: hidden; pointer-events: none;
+}
+.on[data-live] .on-4g-cap[data-on] { pointer-events: auto; }
+.on[data-live] .on-4g-cap .on-3c-name { flex: none; }
+.on[data-live] .on-4g-cap .on-3c-line { flex: 1 1 auto; margin: 0; max-width: 36rem; }
+.on[data-live] .on-4g-cap .on-3c-more, .on[data-live] .on-4g-cap .on-cta { flex: none; margin-left: auto; }
+
+/* ═════════ TELEFON I TABLET ═════════ */
+@media (max-width: 1023px) {
+  /* Portal: tekst u góry, kadr pod nim (układ kolumny z sec.css) */
+  .on[data-live] .on-4p-frame { flex: none; max-height: 44vh; max-height: 44svh; }
+}
+@media (max-width: 767px) {
+  .on-4-frame { padding: 6px; border-radius: 16px; }
+  .on-4-frame img { border-radius: 10px; }
+  .on-4p-glass { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .on[data-live] .on-4p-glass { border-radius: 10px; }
+  /* Plansze: nazwa rodzaju firmy w dwóch liniach (słowo pod słowem) - plansza może być naprawdę duża */
+  .on[data-live] .on-4t-word { width: min-content; white-space: normal; font-size: clamp(24px, 6.8vw, 30px); line-height: 1.04; }
+  .on[data-live] .on-4t-cap { right: 0; max-width: none; }
+  /* Galeria: słowo może mieć dwie linie, podpis jedno pod drugim, całość nad bąblem czatu */
+  .on[data-live] .on-4g-box { padding-top: 76px; padding-bottom: 88px; }
+  .on[data-live] .on-4g-word {
+    white-space: normal; text-wrap: balance; margin-bottom: 8px;
+    font-size: clamp(28px, min(8.2vw, 5.6vh), 44px); font-size: clamp(28px, min(8.2vw, 5.6svh), 44px);
+  }
+  .on[data-live] .on-4g-cap { flex-direction: column; align-items: flex-start; gap: 4px; margin-top: 8px; }
+  .on[data-live] .on-4g-cap .on-3c-more, .on[data-live] .on-4g-cap .on-cta { margin-left: 0; }
+  .on[data-live] .on-4g-cap .on-cta { margin-top: 8px; }
+}

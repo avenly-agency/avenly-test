@@ -1,0 +1,88 @@
+/* ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+   O NAS - „PYTANIA”: PROPOZYCJA „PÓŁKA” (faq-shelf.tsx, prefiks on-f5-; 2026-10-14).
+   Pięć tafli ciemnego szkła od krawędzi do krawędzi wrappera (nagłówek, trzy pytania, „Inne pytanie?”); przewijanie
+   otwiera je po kolei, zamknięta tafla = grzbiet z pytaniem w pionie. Na telefonie pionowo tafle są wierszami
+   (data-axis="y" na półce). Położenia i wymiary pisze JS. Bez własnego tła (mgławica podstrony, data-sky).
+   Style bez [data-live] = stan końcowy: nagłówek, pytania z odpowiedziami i „Inne pytanie?” jeden pod drugim.
+   ═══════════════════════════════════════════════════════════════════════════════════════════════════════════ */
+
+.on-f5-shelf { display: grid; gap: 34px; }
+.on-f5-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 34px; }
+.on-f5-spine, .on-f5-core { display: none; }
+.on-f5-p { padding-top: 28px; border-top: 1px solid rgba(255, 255, 255, .1); }
+.on-f5-p--head { padding-top: 0; border-top: 0; }
+.on-f5-open { display: grid; gap: 14px; }
+.on-f5-top.on-label { margin: 0; }
+.on-f5-n { margin: 0; font-size: 14px; font-weight: 600; color: #60a5fa; font-variant-numeric: tabular-nums; }
+.on-f5-gem { display: block; }
+.on-f5-gem svg { display: block; width: 18px; height: 18px; fill: var(--on-ac); }
+.on-f5-t { margin: 0; max-width: 15em; font-weight: 700; font-size: clamp(30px, 3.6vw, 60px); line-height: 1.04; letter-spacing: -.04em; color: #f8fafc; text-wrap: balance; }
+.on-f5-a { margin: 16px 0 0; max-width: 34rem; font-size: clamp(16.5px, 1.25vw, 20px); line-height: 1.6; color: #cbd5e1; text-wrap: pretty; }
+.on-f5-btn { margin-top: 24px; }
+
+/* ── PEŁNY RUCH: półka w przypiętej scenie ── */
+.on[data-live] .on-f5-box { height: 100%; }
+.on[data-live] .on-f5-box:not([data-in]) .on-f5-shelf { opacity: 0; }
+.on[data-live] .on-f5-box[data-in] .on-f5-shelf { opacity: 1; transition: opacity 1.1s ease; }
+.on[data-live] .on-f5-shelf { position: relative; display: block; height: 100%; }
+.on[data-live] .on-f5-list { display: contents; }
+/* tafla: ciemne szkło (mgławica delikatnie przebija), obwódka i światło od dołu rosną z otwarciem (--o 0-1) */
+.on[data-live] .on-f5-p {
+  position: absolute; left: 0; top: 0; padding: 0; border: 0; border-radius: 22px; overflow: hidden; overflow: clip;
+  background: radial-gradient(130% 55% at 26% 100%, rgb(59 130 246 / calc(var(--o, 0) * .16)), rgb(59 130 246 / 0) 72%), rgb(9 9 12 / .62);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 0 0 1px rgb(96 165 250 / calc(.1 + var(--o, 0) * .45));
+}
+.on[data-live] .on-f5-shelf:not([data-axis]) .on-f5-p { visibility: hidden; }
+.on[data-live] .on-f5-core { display: block; position: absolute; left: 0; top: 0; pointer-events: none; }
+
+/* grzbiet (zamknięta tafla) */
+.on[data-live] .on-f5-spine { position: absolute; display: flex; align-items: center; color: #cbd5e1; }
+.on-f5-sn { flex: none; font-size: 14px; font-weight: 600; color: #60a5fa; font-variant-numeric: tabular-nums; }
+.on-f5-sn svg, .on-f5-sg svg { display: block; width: 14px; height: 14px; fill: var(--on-ac); }
+.on-f5-sg { flex: none; }
+.on-f5-st { min-width: 0; min-height: 0; font-weight: 700; letter-spacing: -.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* półka pozioma: grzbiet pionowy, pytanie czytane od dołu do góry tuż nad gwiazdą */
+.on[data-live] [data-axis="x"] .on-f5-spine { left: 0; top: 0; bottom: 0; width: var(--s); flex-direction: column; gap: 18px; padding: 24px 0 22px; }
+.on[data-live] [data-axis="x"] .on-f5-st { flex: 1; writing-mode: vertical-rl; transform: rotate(180deg); font-size: clamp(18px, 1.5vw, 26px); line-height: 1.1; }
+/* półka pionowa (telefon / tablet pionowo): grzbiet = wiersz z numerem i pytaniem */
+.on[data-live] [data-axis="y"] .on-f5-spine { left: 0; right: 0; top: 0; height: var(--s); flex-direction: row; gap: 14px; padding: 0 18px; }
+.on[data-live] [data-axis="y"] .on-f5-st {
+  flex: 1; white-space: normal; font-size: 15.5px; line-height: 1.25;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2;
+}
+.on[data-live] [data-axis="y"] .on-f5-sg { display: none; }
+
+/* otwarta tafla: treść o stałym wymiarze (otwarta szerokość / wysokość) - przy ruchu tylko się odsłania */
+.on[data-live] .on-f5-open {
+  position: absolute; left: 0; top: 0; width: var(--ow); height: var(--oh);
+  display: flex; flex-direction: column; justify-content: space-between; gap: 20px;
+  padding: clamp(26px, 3vw, 48px);
+}
+.on[data-live] .on-f5-t { font-size: clamp(32px, 3.6vw, 66px); line-height: 1.02; }
+.on[data-live] [data-axis="y"] .on-f5-open { padding: 20px 20px 22px; gap: 14px; }
+.on[data-live] [data-axis="y"] .on-f5-t { font-size: clamp(25px, 7vw, 34px); }
+.on[data-live] [data-axis="y"] .on-f5-a { margin-top: 12px; font-size: 15.5px; line-height: 1.55; }
+.on[data-live] [data-axis="y"] .on-f5-btn { margin-top: 18px; }
+
+/* niski ekran poziomo (telefon bokiem, niski laptop) */
+@media (max-height: 560px) {
+  .on[data-live] .on-f5-open { padding: 20px 22px; gap: 10px; }
+  .on[data-live] .on-f5-t { font-size: clamp(22px, 3.4vw, 30px); }
+  .on[data-live] .on-f5-a { margin-top: 8px; font-size: 14.5px; line-height: 1.5; }
+  .on[data-live] [data-axis="x"] .on-f5-st { font-size: 17px; }
+  .on[data-live] .on-f5-btn { margin-top: 12px; height: 44px; }
+}
+/* mały telefon pionowo: grzbiety w jednej linii, bez numeru w otwartej tafli, mniejsze pismo */
+@media (max-height: 639px) {
+  .on[data-live] [data-axis="y"] .on-f5-st { -webkit-line-clamp: 1; line-clamp: 1; font-size: 14.5px; }
+  .on[data-live] [data-axis="y"] .on-f5-open .on-f5-n { display: none; }
+  .on[data-live] [data-axis="y"] .on-f5-open { padding: 16px 16px 18px; }
+  .on[data-live] [data-axis="y"] .on-f5-t { font-size: 22px; }
+  .on[data-live] [data-axis="y"] .on-f5-a { margin-top: 8px; font-size: 14.5px; line-height: 1.5; }
+}
+@media (max-width: 767px) {
+  .on-f5-shelf, .on-f5-list { gap: 28px; }
+  .on-f5-t { font-size: clamp(28px, 8vw, 38px); }
+  .on-f5-a { font-size: 16px; }
+  .on[data-live] .on-f5-p { border-radius: 18px; }
+}

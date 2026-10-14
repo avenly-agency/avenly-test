@@ -32,13 +32,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!post) return { title: 'Artykuł nie znaleziony' };
 
   return {
-    title: post.title,
-    description: post.excerpt,
+    // wynik w Google: krótszy tytuł i opis z danych wpisu, jeśli są (pełny tytuł artykułu zostaje w podglądzie linku)
+    title: post.metaTitle ?? post.title,
+    description: post.metaDescription ?? post.excerpt,
     alternates: { canonical: `/blog/${post.slug}` },
     keywords: post.categories,
     authors: [{ name: post.author.name }],
     openGraph: {
       type: 'article',
+      locale: 'pl_PL',
+      siteName: 'Avenly',
       title: post.title,
       description: post.excerpt,
       url: `/blog/${post.slug}`,

@@ -1,0 +1,50 @@
+/* ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+   O NAS - „W CO WIERZYMY”, scena „ŚWIATŁO” (principles-light.tsx, prefiks on-p7-) - wybór właściciela 2026-10-14
+   („światło jest git”). Ściana ogromnych ciemnych słów, gwiazda z logo przesuwa się po niej i zapala litery.
+   Światło = dwa gradienty pod literami (background-clip: text): blask wokół gwiazdy (--lx / --ly, promień --lr)
+   i jasny ślad do miejsca gwiazdy (--sx, kolor --lit). Zmienne, położenia ściany i gwiazdy pisze JS.
+   Bez ruchu: principles-kit.css (białe litery, akcent nagłówka w kolorze marki).
+   ═══════════════════════════════════════════════════════════════════════════════════════════════════════════ */
+
+.on[data-live] .on-p7-box { position: relative; height: 100%; }
+/* ściana zaczyna się przy lewej krawędzi wrappera i wychodzi poza ekran (kamera = przesunięcie ściany). Własna warstwa
+   kompozytora: kamera tylko przesuwa ścianę (bez skali), więc litery zostają ostre, a przesunięcie nie przemalowuje
+   ściany - malowane są tylko napisy, na które pada światło. */
+.on[data-live] .on-p7-strip { position: absolute; left: 1.5rem; top: 0; width: 0; height: 0; will-change: transform; }
+.on[data-live] .on-p7-list { margin: 0; }
+.on[data-live] .on-p7-it { position: absolute; left: 0; top: 0; width: max-content; max-width: none; }
+.on[data-live] .on-p7-t {
+  --lx: -9999px; --ly: 0px; --lr: 160px; --sx: -40px; --lit: 23 25 31;
+  /* długie hasła łamią się na dwie linie (cały napis zawsze mieści się w kadrze kamery) */
+  display: inline-block; max-width: min(11em, calc(100vw - 96px)); white-space: normal; margin: 0; text-wrap: balance;
+  font-size: clamp(48px, min(6.4vw, 11vh), 128px); font-size: clamp(48px, min(6.4vw, 11svh), 128px);
+  line-height: 1; letter-spacing: -.045em;
+  background:
+    radial-gradient(calc(var(--lr) * 1.5) var(--lr) at var(--lx) var(--ly), rgb(255 255 255 / .95), rgb(170 200 255 / .5) 32%, rgb(170 200 255 / 0) 68%),
+    linear-gradient(90deg, rgb(var(--lit)) var(--sx), rgb(23 25 31) calc(var(--sx) + 1.4em));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  -webkit-text-stroke: 1px rgb(255 255 255 / .08); /* krawędź sylwetki - ciemne słowa czytają się na mgławicy */
+}
+.on[data-live] .on-p7-head .on-p7-t { max-width: min(9em, calc(100vw - 96px)); }
+/* akcent nagłówka: bez ruchu w kolorze marki, w scenie bierze światło gwiazdy jak reszta liter */
+.on[data-live] .on-p7-t .on-pk-acc { color: inherit; }
+.on[data-live] .on-p7-n { margin-bottom: 14px; }
+.on[data-live] .on-p7-d { margin-top: 22px; max-width: 34rem; white-space: normal; }
+.on[data-live] .on-p7-it:not(.on-p7-head) :is(.on-p7-n, .on-p7-d) { opacity: 0; }
+/* gwiazda: środek w punkcie z JS (rozmiar --sz z wysokości liter) */
+.on[data-live] .on-p7-star {
+  position: absolute; left: 0; top: 0; z-index: 2; width: var(--sz, 26px); height: var(--sz, 26px);
+  margin: calc(var(--sz, 26px) / -2) 0 0 calc(var(--sz, 26px) / -2); pointer-events: none;
+}
+.on-p7-star svg { display: block; width: 100%; height: 100%; fill: var(--brand, #3b82f6); }
+
+/* telefon: ściana pionowa - napisy łamią się w kilku liniach na szerokość wrappera */
+@media (max-width: 767px) {
+  .on[data-live] .on-p7-it { width: calc(100vw - 48px); }
+  .on[data-live] .on-p7-t, .on[data-live] .on-p7-head .on-p7-t { max-width: 100%; font-size: clamp(34px, 10.4vw, 52px); }
+  .on[data-live] .on-p7-d { margin-top: 14px; max-width: none; }
+}
+@media (max-width: 1023px) and (orientation: landscape) and (max-height: 560px) {
+  .on[data-live] .on-p7-t { font-size: clamp(30px, min(5.4vw, 11vh), 52px); font-size: clamp(30px, min(5.4vw, 11svh), 52px); }
+  .on[data-live] .on-p7-d { margin-top: 10px; font-size: 14.5px; line-height: 1.5; max-width: 26rem; }
+}

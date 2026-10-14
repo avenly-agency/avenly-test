@@ -1,0 +1,670 @@
+'use client';
+
+import { useCallback, useEffect, useRef, type CSSProperties, type ReactNode, type RefObject } from 'react';
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
+import { AvenlyLogo } from '@/components/ui/AvenlyLogo';
+import { SectionLabel } from '@/components/ui/SectionLabel';
+import {
+  GEM, LOGO_CUT_SHIFT, LOGO_LETTERS, LOGO_LETTERS_BOX, LOGO_PIECES, LOGO_STAR, LOGO_WHOLE_FILLS, type LogoPiece,
+} from '@/lib/brand/logo';
+import { localizeHref, type Locale } from '@/lib/i18n/locale';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { Sky as NebulaSky } from '../uslugi/_usluga/sky';
+import type { SkyTint } from '../uslugi/_usluga/theme';
+import { Comet, fillPoints } from './mark';
+import { Hint, IntroText } from './parts';
+import { attr, css, flag, mix, seg, usePin } from './shared';
+import './heroes.css';
+
+// O NAS - PIĘĆ PEŁNOEKRANOWYCH WEJŚĆ Z LOGO (propozycje 2026-10-09, runda 4; właściciel: „weź jakieś ciekawe
+// fullscreen sekcje hero z avenly logiem, animacjami, scrollem itp., dodaj 5”). Prefiks on-x-. Każde wejście to inny
+// ruch (nie odmiana jednej sceny), wszystko w SVG / CSS, przypięte i sterowane przewijaniem, bez WebGL:
+//   1. Okno         - logo jest oknem na gęste niebo; kamera wlatuje przez literę, aż niebo wypełni ekran,
+//   2. Odjazd       - zaczynamy wewnątrz gwiazdy logo (sam obrys); kamera odjeżdża do całego znaku, obrysy wypełniają się,
+//   3. Panorama     - WYBÓR WŁAŚCICIELA (z poprawką): przejazd wzdłuż ogromnego logo razem z gwiazdą, która tnie litery
+//                     po kolei; na końcu przewijanie wjeżdża w gwiazdę (obrys większy niż ekran) i wchodzi nagłówek,
+//   4. Przesunięcie - dwie taśmy połówek liter jadą w przeciwne strony wzdłuż cięcia i co okres znów składają się w AVENLY,
+//   5. Klapka       - tablica z klapką na zawiasie = linii cięcia: górna połowa logo opada i odsłania nagłówek.
+// Zasada jak w „Przelocie”: z bliska / w ruchu sam obrys („negatyw”), na miejscu pełna litera.
+// Bez JS / ograniczony ruch: zwykłe logo, pod nim nagłówek, opis i przycisk.
+
+export const HERO_KINDS = ['okno', 'odjazd', 'panorama', 'przesuniecie', 'klapka'] as const;
+export type HeroKind = (typeof HERO_KINDS)[number];
+
+type P = { t: ONasDict['intro']; locale: Locale; live: boolean };
+type DivRef = RefObject<HTMLDivElement | null>;
+const LETTERS: LogoPiece['letter'][] = ['A', 'V', 'E', 'N', 'L', 'Y'];
+const piecesOf = (part: LogoPiece['part']) => LOGO_PIECES.filter((pc) => pc.part === part);
+
+/** Rama wejścia: sekcja, przypięty ekran, zwykłe logo dla trybu bez ruchu. `len` = długość przewijania w vh. */
+function Shell({ n, len, pin, stage, children }: { n: number; len: number; pin: DivRef; stage: DivRef; children: ReactNode }) {
+  return (
+    <section className={`on-x on-x--${n}`} aria-labelledby="on-h1">
+      <div ref={pin} className="on-x-pin" style={{ '--len': len } as CSSProperties}>
+        <div ref={stage} className="on-x-stick">{children}</div>
+      </div>
+    </section>
+  );
+}
+const StillLogo = () => <div className="container mx-auto px-6 on-x-still"><AvenlyLogo /></div>;
+
+/** Tekst odsłaniany przewijaniem: krycie, lekki wjazd, tytuł spod maski (--e), klikalność dopiero na miejscu. */
+const reveal = (el: HTMLElement | null, v: number, dy = 22) => {
+  css(el, 'opacity', v.toFixed(3));
+  css(el, 'visibility', v < 0.002 ? 'hidden' : 'visible');
+  css(el, 'transform', `translate3d(0, ${((1 - v) * dy).toFixed(2)}px, 0)`);
+  css(el, '--e', v.toFixed(3));
+  flag(el, 'data-on', v > 0.9);
+};
+const hintOut = (el: HTMLElement, p: number) =>
+  css(el.querySelector('.on-hint .on-cut-hint-in'), 'opacity', (1 - seg(p, 0, 0.05)).toFixed(3));
+/** Wymiary sceny i wrappera (odczyty przed zapisami). */
+const measure = (st: HTMLElement, bx: HTMLElement) => {
+  const W = st.clientWidth, H = st.clientHeight;
+  return { W, H, mob: W < 768, bl: bx.offsetLeft + 24, bw: Math.max(1, bx.clientWidth - 48) };
+};
+
+/* ───────── 1. OKNO ───────── */
+// Gęste niebo widać tylko przez litery (clipPath z konturu logo). Kamera wlatuje w lewą nogę litery N (prosty,
+// pełny prostokąt 27,9 × 59,3 jednostki pod linią cięcia), aż okno przykryje cały ekran.
+const STEM = { x: 302.07, y: -29.65, w: 27.9, h: 59.3 };
+let seed = 7001;
+const rnd = () => {
+  seed = (seed + 0x6d2b79f5) | 0;
+  let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+};
+// kropki w układzie 0-1000 (skalowane do okna); stała wielkość na ekranie (odcinek zerowej długości, okrągły koniec)
+const DENSE = [700, 300, 100].map((n) => {
+  let d = '';
+  for (let i = 0; i < n; i++) d += `M${(rnd() * 1000).toFixed(1)} ${(rnd() * 1000).toFixed(1)}h.01`;
+  return d;
+});
+
+function HeroWindow({ t, locale, live }: P) {
+  const pin = useRef<HTMLDivElement>(null), stage = useRef<HTMLDivElement>(null), box = useRef<HTMLDivElement>(null);
+  const txt = useRef<HTMLDivElement>(null);
+  usePin(pin, (p, el) => {
+    const st = stage.current, bx = box.current;
+    if (!st || !bx) return;
+    const { W, H, mob, bl, bw } = measure(st, bx);
+    const k0 = Math.min(bw, 1180) / 632.617;
+    const k1 = Math.max(W / STEM.w, H / STEM.h) * 1.12;
+    const e = seg(p, 0.08, 0.78);
+    const k = k0 * Math.pow(k1 / k0, e); // stałe tempo powiększania
+    const fx = mix(bl + (STEM.x + 32.5) * k0, W / 2, e);
+    const fy = mix(H * (mob ? 0.4 : 0.46) + (STEM.y + 62.5) * k0, H / 2, e);
+    const tf = `translate(${(fx - STEM.x * k).toFixed(2)} ${(fy - STEM.y * k).toFixed(2)}) scale(${k.toFixed(5)})`;
+    const logo = el.querySelector('.on-x1-logo');
+    attr(el.querySelector('.on-x1-hole'), 'transform', tf);
+    attr(logo, 'transform', tf);
+    attr(el.querySelector('.on-x1-out'), 'stroke-width', (1.2 / k).toFixed(4));
+    css(logo, 'opacity', (1 - seg(e, 0.72, 1)).toFixed(3));
+    attr(el.querySelector('.on-x1-sky'), 'transform', `scale(${(W / 1000).toFixed(4)} ${(H / 1000).toFixed(4)})`);
+    reveal(txt.current, seg(p, 0.76, 0.94));
+    hintOut(el, p);
+  }, live);
+  return (
+    <Shell n={1} len={190} pin={pin} stage={stage}>
+      <svg className="on-x-svg" aria-hidden="true" focusable="false">
+        <defs>
+          <clipPath id="on-x1-clip"><path className="on-x1-hole" d={LOGO_LETTERS} /></clipPath>
+          {/* noc w oknie: ciemny granat u góry gaśnie do czerni strony (dół ekranu bez szwu przy wyjściu z sekcji) */}
+          <linearGradient id="on-x1-night" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#0b1430" />
+            <stop offset=".62" stopColor="#050505" />
+          </linearGradient>
+        </defs>
+        <g className="on-x1-win" clipPath="url(#on-x1-clip)">
+          <rect width="100%" height="100%" fill="url(#on-x1-night)" />
+          <g className="on-x1-sky">
+            {DENSE.map((dd, i) => <path key={i} className={`on-x1-dot on-x1-dot--${i}`} d={dd} vectorEffect="non-scaling-stroke" />)}
+          </g>
+        </g>
+        <g className="on-x1-logo">
+          <path className="on-x1-out" d={LOGO_LETTERS} pathLength={1} />
+          <path className="on-x1-line" d={LOGO_STAR} />
+        </g>
+      </svg>
+      <StillLogo />
+      <div ref={box} className="container mx-auto px-6 on-x-box">
+        <div ref={txt} className="on-x-text on-x-sc"><IntroText t={t} locale={locale} /></div>
+      </div>
+      <Hint label={t.hint} />
+    </Shell>
+  );
+}
+
+/* ───────── 2. ODJAZD ───────── */
+// Start: gwiazda logo większa niż ekran (sam obrys). Kamera odjeżdża: gwiazda maleje i wypełnia się kolorem marki,
+// z lewej wsuwa się linia i litery (najpierw obrys, potem pełne), na końcu całe logo na szerokość wrappera.
+function HeroPullback({ t, locale, live }: P) {
+  const pin = useRef<HTMLDivElement>(null), stage = useRef<HTMLDivElement>(null), box = useRef<HTMLDivElement>(null);
+  const txt = useRef<HTMLDivElement>(null);
+  usePin(pin, (p, el) => {
+    const st = stage.current, bx = box.current;
+    if (!st || !bx) return;
+    const { W, H, mob, bl, bw } = measure(st, bx);
+    const k1 = bw / 632.617;
+    const k0 = (Math.max(W, H) * 1.5) / 40; // gwiazda (40 jednostek) = 1,5 dłuższego boku ekranu
+    const e = seg(p, 0.06, 0.66);
+    const k = k0 * Math.pow(k1 / k0, e);
+    const yL = H * (mob ? 0.22 : 0.3); // linia cięcia w kadrze końcowym
+    const sx = mix(W / 2, bl + 612.617 * k1, e), sy = mix(H / 2, yL, e); // środek gwiazdy na ekranie
+    const g = el.querySelector('.on-x2-logo');
+    attr(g, 'transform', `translate(${(sx - 580.117 * k).toFixed(2)} ${(sy + 62.5 * k).toFixed(2)}) scale(${k.toFixed(5)})`);
+    attr(g, 'stroke-width', (1.3 / k).toFixed(4));
+    css(el.querySelector('.on-x2-star'), 'fill-opacity', seg(e, 0.25, 0.6).toFixed(3));
+    css(el.querySelector('.on-x2-letters'), 'fill-opacity', seg(e, 0.55, 0.9).toFixed(3));
+    css(txt.current, 'top', `${(yL + 62.5 * k1 + (mob ? 34 : 48)).toFixed(0)}px`);
+    reveal(txt.current, seg(p, 0.66, 0.88));
+    hintOut(el, p);
+  }, live);
+  return (
+    <Shell n={2} len={180} pin={pin} stage={stage}>
+      <svg className="on-x-svg" aria-hidden="true" focusable="false">
+        <g className="on-x2-logo" strokeWidth={1}>
+          <path className="on-x2-letters" d={LOGO_LETTERS} />
+          <path className="on-x2-star" d={LOGO_STAR} />
+        </g>
+      </svg>
+      <StillLogo />
+      <div ref={box} className="container mx-auto px-6 on-x-box">
+        <div ref={txt} className="on-x-text on-x-sc"><IntroText t={t} locale={locale} /></div>
+      </div>
+      <Hint label={t.hint} />
+    </Shell>
+  );
+}
+
+/* ───────── 3. PANORAMA Z CIĘCIEM ───────── */
+// Wybór właściciela (2026-10-09): „chcę panoramę, ale idziemy wraz z przecinaniem i potem jest zoom na scroll
+// w gwiazdę, tak jak jest w odjeździe”. Runda 6-7 (2026-10-12): „bardziej premium, cinematic, bo jest tanio trochę”,
+// potem zrzuty: biały prostokąt przed gwiazdą, krzyż promieni przez cały ekran, płaskie szare litery, nudne tło,
+// tło pojawiające się kilka razy. Obecna reżyseria:
+//   - TŁO: mgławica marki (ten sam moduł co na podstronach usług), jej blask idzie za gwiazdą; rzadkie bliskie gwiazdy
+//     przesuwają się z kamerą (paralaksa),
+//   - LITERY: ciemne bryły na tle mgławicy z krawędziami oświetlonymi przez gwiazdę (białe przy niej, chłodny błękit
+//     dalej, ciemny grafit daleko) - sylwetki zamiast płaskich białych plam; krawędź = obrys POD bryłą, więc widać tylko
+//     zewnętrzną połowę, a krawędzie przyszłego cięcia są przykryte wypełnieniem szczeliny,
+//   - CIĘCIE: na czole gwiazdy otwiera się szczelina, świeże krawędzie świecą i stygną; linia za gwiazdą ma kształt
+//     linii z logo (włosowa, rozszerza się dopiero przy gwieździe i wchodzi w jej ramię - bez prostokątów), tuż przy
+//     gwieździe rozgrzana do bieli; górne połówki zsuwają się o 3u,
+//   - GWIAZDA: kolor marki z miękko rozgrzanym środkiem (gradient, bez drugiej gwiazdy w środku), krótkie promienie
+//     tylko w locie, rozbłysk przy lądowaniu, potem bez promieni,
+//   - WEJŚCIE (na czas): gwiazda wpada z lewej i staje przed A; WJAZD W GWIAZDĘ jak wcześniej (obrys, echa).
+const PAN_IN = -32.5 - 160;  // skąd wpada gwiazda (jednostki logo, poza ekranem)
+const PAN_REST = -12;        // gdzie czeka po wejściu: na linii tuż przed A
+const PAN_STAR = 580.117;    // miejsce gwiazdy w logo
+const PAN_SLIDE = 45;        // droga gwiazdy, na której górna połówka minionej litery zsuwa się o 3u
+// wejście (runda 11: „daj animację pojawiania się … od razu niech animacja”): od pierwszej klatki kamera powoli
+// najeżdża (PAN_DOLLY ms), po PAN_ENTRY_AT ms gwiazda wpada z lewej, a jej światło zapala litery z ciemności
+const PAN_ENTRY_AT = 250, PAN_ENTRY = 1600, PAN_DOLLY = 2800;
+const PAN_INTRO_END = PAN_ENTRY_AT + Math.max(PAN_ENTRY, PAN_DOLLY) + 40;
+// refleks światła przebiegający po krawędziach liter w spoczynku (życie sceny bez przewijania): co PAN_GLINT_EVERY ms
+const PAN_GLINT_AT = 2700, PAN_GLINT_EVERY = 5600, PAN_GLINT = 1500;
+const PAN_GROW_FROM = 300;   // od tego miejsca gwiazda rośnie stopniowo do wielkości gwiazdy logo (runda 8: „nagle rośnie”)
+// ISKRY spod gwiazdy, gdy tnie literę (runda 8: „samo przecinanie jest mało immersyjne”): jednostki logo i sekundy
+const SPARK_MAX = 220, SPARK_RATE = 1.3, SPARK_G = 300, SPARK_DRAG = 1.8;
+type Spark = { x: number; y: number; vx: number; vy: number; age: number; life: number };
+/** Czy w tym miejscu linii jest litera (gwiazda tnie materiał) - prostokąty liter, z marginesem. */
+const inLetter = (x: number) => LETTERS.some((l) => { const b = LOGO_LETTERS_BOX[l]; return x > 2 * b.cx - b.right + 2 && x < b.right - 1; });
+/** Nowa iskra na linii cięcia: leci do tyłu i na boki (wyrzut przy wyjściu z litery - bardziej w górę i w przód). */
+const spawnSpark = (list: Spark[], x: number, burst: boolean) => {
+  if (list.length >= SPARK_MAX) list.shift();
+  const r = Math.random, back = burst ? 0.35 : 1;
+  list.push({
+    x, y: -62.5 + (r() - 0.5) * 3,
+    vx: -(25 + r() * 160) * back + (burst ? (r() - 0.3) * 130 : 0),
+    vy: (r() - 0.62) * (burst ? 280 : 200),
+    age: 0, life: 0.35 + r() * 0.55,
+  });
+};
+/** Krok fizyki iskier i rysunek (smuga = droga z ostatnich ~22 ms, od bieli do koloru marki, „lighter”). */
+const drawSparks = (cv: HTMLCanvasElement | null, list: Spark[], cam: { k: number; tx: number; ty: number }, dt: number) => {
+  if (!cv) return;
+  for (let i = list.length - 1; i >= 0; i--) {
+    const s = list[i];
+    s.age += dt;
+    if (s.age >= s.life) { list.splice(i, 1); continue; }
+    const drag = Math.max(0, 1 - SPARK_DRAG * dt);
+    s.vx *= drag; s.vy = s.vy * drag + SPARK_G * dt;
+    s.x += s.vx * dt; s.y += s.vy * dt;
+  }
+  const W = cv.clientWidth, H = cv.clientHeight;
+  if (!W || !H) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+  const pw = Math.round(W * dpr), ph = Math.round(H * dpr);
+  if (cv.width !== pw || cv.height !== ph) { cv.width = pw; cv.height = ph; }
+  const ctx = cv.getContext('2d');
+  if (!ctx) return;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  if (!list.length) return;
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.lineCap = 'round';
+  ctx.lineWidth = 1.4;
+  for (const s of list) {
+    const t = s.age / s.life, w = Math.min(1, t * 1.6);
+    const x = cam.tx + s.x * cam.k, y = cam.ty + s.y * cam.k;
+    ctx.strokeStyle = `rgba(${Math.round(255 - 159 * w)},${Math.round(255 - 90 * w)},${Math.round(255 - 5 * w)},${(Math.pow(1 - t, 1.4) * 0.95).toFixed(3)})`;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x - s.vx * cam.k * 0.022, y - s.vy * cam.k * 0.022);
+    ctx.stroke();
+  }
+  ctx.globalCompositeOperation = 'source-over';
+};
+/** Powidoki przy wjeździe w gwiazdę: obrysy gwiazdy w tych skalach; kamera przelatuje przez wszystkie. */
+const ECHOES = [0.82, 0.66, 0.5];
+const ECHO_MIN = Math.min(...ECHOES);
+const PAN_TINT: SkyTint =[[0.23, 0.51, 0.96], [0.08, 0.12, 0.42]]; // mgławica w kolorze marki (jak podstrony „blue”)
+const outCubic = (v: number) => { const x = v < 0 ? 0 : v > 1 ? 1 : v; return 1 - Math.pow(1 - x, 3); };
+/** Gładkie min(d, 0) o promieniu m: kamera stoi, dopóki gwiazda nie dojdzie do swojego miejsca na ekranie,
+    potem jedzie razem z nią (bez szarpnięcia w chwili ruszenia). */
+const follow = (d: number, m: number) => (d >= m ? 0 : d <= -m ? d : -((m - d) * (m - d)) / (4 * m));
+/** Linia z gwiazdą jako JEDEN kształt - ten sam przebieg co LOGO_STAR (linia włosowa wchodzi łagodnym łukiem w ramię
+    gwiazdy, bez szwu i bez zakładki), tylko gwiazda w skali `sz` i linia rozciągnięta od czubka (-32,5) do gwiazdy.
+    Punkty z pliku logo względem środka gwiazdy (580,117; -62,5). Przed czubkiem linii (start) - sama gwiazda.
+    Po lądowaniu (sz = 1, hx = 580,117) = dokładnie znak z logo. */
+const markPath = (hx: number, sz: number) => {
+  const cy = -62.5;
+  const P = (x: number, y: number) => `${(hx + x * sz).toFixed(3)} ${(cy + y * sz).toFixed(3)}`;
+  const jx = hx - 6.705 * sz, S = jx + 32.5; // wejście linii w ramię gwiazdy, długość linii od czubka
+  if (S < 0.5) {
+    return `M${P(0, -20)}C${P(1.4, -6.8)} ${P(6.8, -1.4)} ${P(20, 0)}C${P(6.8, 1.4)} ${P(1.4, 6.8)} ${P(0, 20)}` +
+      `C${P(-1.4, 6.8)} ${P(-6.8, 1.4)} ${P(-20, 0)}C${P(-6.8, -1.4)} ${P(-1.4, -6.8)} ${P(0, -20)}Z`;
+  }
+  const lx = S / 605.912; // linia logo ma 605,912 jednostki od czubka do wejścia w gwiazdę
+  const L = (dx: number, y: number) => `${(jx - dx * lx).toFixed(3)} ${(cy + y * sz).toFixed(3)}`;
+  return `M${P(-6.705, -4.557)}C${P(-2.795, -7.727)} ${P(-0.778, -12.656)} ${P(0, -20)}` +
+    `C${P(1.4, -6.8)} ${P(6.8, -1.4)} ${P(20, 0)}C${P(6.8, 1.4)} ${P(1.4, 6.8)} ${P(0, 20)}` +
+    `C${P(-0.778, 12.656)} ${P(-2.795, 7.727)} ${P(-6.705, 4.557)}` +
+    `C${L(51.897, 1.578)} ${L(220.18, 0.334)} ${L(605.912, 0)}` +
+    `C${L(220.18, -0.334)} ${L(51.897, -1.578)} ${P(-6.705, -4.557)}Z`;
+};
+// bliskie gwiazdy (paralaksa przy przejeździe): układ 0-4000 × 0-1000 skalowany do wysokości ekranu
+const PAN_NEAR = (() => {
+  let d = '';
+  for (let i = 0; i < 64; i++) d += `M${Math.round(rnd() * 4000)} ${Math.round(rnd() * 1000)}h.01`;
+  return d;
+})();
+
+type PanEls = {
+  strip: SVGGElement | null; lettersG: SVGGElement | null; kerfG: SVGGElement | null; near: SVGGElement | null;
+  ups: SVGGElement[][]; uncut: SVGRectElement | null; kerfc: SVGRectElement | null;
+  rim: SVGRadialGradientElement | null; body: SVGRadialGradientElement | null;
+  edge: SVGLinearGradientElement | null; hotg: SVGLinearGradientElement | null;
+  mark: SVGPathElement | null; hot: SVGPathElement | null; echo: SVGGElement | null;
+  glintG: SVGGElement | null; glintg: SVGLinearGradientElement | null;
+  glow: HTMLElement | null;
+};
+const collectPan = (el: HTMLElement): PanEls => {
+  const one = <T extends Element>(s: string) => el.querySelector<T>(s);
+  const groups = ['.on-x3-rims', '.on-x3-glints', '.on-x3-bodies', '.on-x3-kerf'].map((s) => Array.from(el.querySelectorAll<SVGGElement>(`${s} > g`)));
+  return {
+    strip: one('.on-x3-strip'), lettersG: one('.on-x3-letters'), kerfG: one('.on-x3-kerf'), near: one('.on-x3-near'),
+    // górne połówki litery i: w krawędzi, w bryle i w świeżym cięciu - zsuwają się razem
+    ups: LETTERS.map((_, i) => groups.map((g) => g[i]?.querySelector<SVGGElement>('.on-x3-up')).filter((u): u is SVGGElement => !!u)),
+    uncut: one('#on-x3-uncut rect'), kerfc: one('#on-x3-kerfc rect'),
+    rim: one('#on-x3-rim'), body: one('#on-x3-body'), edge: one('#on-x3-edge'), hotg: one('#on-x3-hotg'),
+    mark: one('.on-x3-mark'), hot: one('.on-x3-hot'), echo: one('.on-x3-echo'),
+    glintG: one('.on-x3-glints'), glintg: one('#on-x3-glintg'),
+    glow: one('.on-x3-glow'),
+  };
+};
+
+function HeroPan({ t, locale, live }: P) {
+  const pin = useRef<HTMLDivElement>(null), stage = useRef<HTMLDivElement>(null), box = useRef<HTMLDivElement>(null);
+  const txt = useRef<HTMLDivElement>(null);
+  const cache = useRef<PanEls | null>(null);
+  const state = useRef({ p: 0, ms: 0, glint: -1 }); // postęp przewijania, ms od pokazania sceny, faza refleksu (-1 = brak)
+  const sparksCv = useRef<HTMLCanvasElement>(null);
+  const sparks = useRef<Spark[]>([]);
+  // poprzednie czoło (emisja iskier), kamera ostatniej klatki (rysowanie iskier), ułamek emisji, budzik pętli klatek
+  const memo = useRef({ hv: NaN, k: 1, tx: 0, ty: 0, carry: 0, heat: 0, kick: () => {} });
+
+  const paint = useCallback(() => {
+    const el = pin.current, st = stage.current, bx = box.current;
+    if (!el || !st || !bx) return;
+    const { W, H, mob, bl } = measure(st, bx);
+    const c = (cache.current ??= collectPan(el));
+    const { p, ms, glint } = state.current;
+    const dolly = outCubic(ms / PAN_DOLLY);      // najazd kamery na wejściu (od pierwszej klatki)
+    const k0 = ((H * (mob ? 0.46 : 0.7)) / 100) * mix(0.84, 1, dolly); // px na jednostkę logo (kamera blisko cięcia)
+    const yL = H * (mob ? 0.4 : 0.5) + (1 - dolly) * H * 0.03;        // linia cięcia (na wejściu lekko unosi się)
+    const a = seg(p, 0.04, 0.58);               // przejazd z cięciem (gwiazda ląduje przy p ≈ 0,47)
+    const z = seg(p, 0.5, 0.9);                 // wjazd w gwiazdę - zaczyna się zaraz po lądowaniu, bez postoju
+    const entry = outCubic((ms - PAN_ENTRY_AT) / PAN_ENTRY); // gwiazda wpada i hamuje przed A
+    const hv = mix(mix(PAN_IN, PAN_REST, entry), PAN_STAR + PAN_SLIDE + 6, a); // czoło „z zapasem” (zsunięcie Y)
+    const hx = Math.min(hv, PAN_STAR);                                         // czoło gwiazdy
+    const sz = mix(0.3, 1, seg(hv, PAN_GROW_FROM, PAN_STAR)); // rośnie stopniowo przez drugą połowę napisu
+    const cool = seg(hv, PAN_STAR, PAN_STAR + 40);             // po lądowaniu gwiazda i linia stygną
+
+    // kamera: na starcie gwiazda czeka przy lewej krawędzi wrappera, potem trzyma 60% szerokości ekranu;
+    // w przejeździe powolny najazd wokół gwiazdy, potem wjazd w gwiazdę ze stałym tempem powiększania
+    const tx0 = bl + 40 - PAN_REST * k0;
+    const sx0 = tx0 + follow(W * 0.6 - hx * k0 - tx0, W * 0.25) + hx * k0; // gwiazda na ekranie w przejeździe
+    const kP = k0 * (1 + 0.08 * a);
+    // koniec wjazdu: kamera przelatuje przez obrys gwiazdy i wszystkie powidoki - nawet najmniejszy (skala ECHO_MIN)
+    // wychodzi poza rogi ekranu (wcięcia gwiazdy leżą 7,884 jednostki od środka po przekątnej); dopiero potem nagłówek
+    const kIn = (Math.hypot(W, H) * 0.5 * 1.08) / (7.884 * ECHO_MIN);
+    const zr = z > 0 ? Math.pow(kIn / kP, z) : 1;
+    const k = kP * zr;
+    const sx = mix(sx0, W / 2, z), sy = mix(yL, H / 2, z);
+    const tx = sx - hx * k, ty = sy + 62.5 * k;
+    attr(c.strip, 'transform', `translate(${tx.toFixed(2)} ${ty.toFixed(2)}) scale(${k.toFixed(5)})`);
+    // iskry: tylko gdy gwiazda tnie literę w przód; przy wyjściu z litery krótki wyrzut; wjazd w gwiazdę je gasi
+    const m = memo.current;
+    m.k = k; m.tx = tx; m.ty = ty;
+    if (z > 0) sparks.current.length = 0;
+    else if (Number.isFinite(m.hv) && hv > m.hv) {
+      const dh = Math.min(hv, PAN_STAR) - Math.min(m.hv, PAN_STAR);
+      if (dh > 0) { m.heat = Math.min(1, m.heat + dh * 0.09); m.kick(); } // jedzie = rozgrzewa się (stygnie w pętli)
+      if (dh > 0 && inLetter(hx)) {
+        m.carry += dh * SPARK_RATE;
+        const n = Math.min(18, Math.floor(m.carry));
+        m.carry -= n;
+        for (let i = 0; i < n; i++) spawnSpark(sparks.current, hx - 3 * sz, false);
+      }
+      const prevHv = m.hv;
+      LETTERS.forEach((l) => { const r = LOGO_LETTERS_BOX[l].right; if (prevHv < r && hv >= r) for (let i = 0; i < 12; i++) spawnSpark(sparks.current, r, true); });
+      if (sparks.current.length) m.kick();
+    }
+    m.hv = hv;
+
+    // blask mgławicy idzie za gwiazdą (moduł mgławicy mierzy element z data-sky); bliskie gwiazdy - paralaksa
+    if (c.glow) {
+      const gw = mix(Math.min(W * 0.5, 720), W, z), gh = mix(H * 0.62, H, z);
+      css(c.glow, 'transform', `translate3d(${(sx - gw / 2).toFixed(1)}px, ${(sy - gh / 2).toFixed(1)}px, 0)`);
+      css(c.glow, 'width', `${gw.toFixed(0)}px`);
+      css(c.glow, 'height', `${gh.toFixed(0)}px`);
+    }
+    const pan = Math.max(0, tx0 + hx * k0 - sx0), ns = Math.pow(zr, 0.42);
+    attr(c.near, 'transform', `translate(${sx.toFixed(1)} ${sy.toFixed(1)}) scale(${ns.toFixed(4)}) translate(${(-sx - pan * 0.42).toFixed(1)} ${(-sy).toFixed(1)}) scale(${(H / 1000).toFixed(4)})`);
+
+    // światło gwiazdy: krawędzie liter i bryły (elipsa wokół gwiazdy), świeże krawędzie cięcia, rozgrzana linia
+    // zasięg światła rośnie, gdy gwiazda wpada - litery zapalają się z ciemności
+    const lr = mix(0.3, 1, seg(entry, 0, 0.9));
+    const lt = `translate(${hx.toFixed(2)} -62.5) scale(${(520 * lr).toFixed(1)} ${(300 * lr).toFixed(1)})`;
+    attr(c.rim, 'gradientTransform', lt);
+    attr(c.body, 'gradientTransform', lt);
+    attr(c.edge, 'x1', (hx - 320).toFixed(2)); attr(c.edge, 'x2', hx.toFixed(2));
+    attr(c.hotg, 'x1', (hx - 90).toFixed(2)); attr(c.hotg, 'x2', hx.toFixed(2));
+    attr(c.uncut, 'x', hx.toFixed(2)); // szczelina otwiera się dokładnie na czole gwiazdy
+    attr(c.kerfc, 'width', Math.max(0, hx + 40).toFixed(2));
+    const d = markPath(hx, sz);
+    attr(c.mark, 'd', d);
+    attr(c.hot, 'd', d);
+    css(c.hot, 'opacity', (m.heat * (1 - cool) * (1 - seg(z, 0, 0.2))).toFixed(3));
+
+    // litery: górne połówki zsuwają się po cięciu (bez przestrzelenia)
+    c.ups.forEach((ups, i) => {
+      const sl = outCubic((hv - LOGO_LETTERS_BOX[LETTERS[i]].right) / PAN_SLIDE);
+      const tf = sl >= 1 ? 'none' : `translateX(${(-LOGO_CUT_SHIFT * (1 - sl)).toFixed(3)}px)`;
+      ups.forEach((u) => css(u, 'transform', tf));
+    });
+    const lo = 1 - seg(z, 0, 0.4);
+    [c.lettersG, c.kerfG].forEach((g) => { css(g, 'opacity', lo.toFixed(3)); css(g, 'visibility', lo < 0.002 ? 'hidden' : 'visible'); });
+
+    // znak (linia z gwiazdą) ten sam przez cały przejazd i wjazd; przy wjeździe cały naraz traci wypełnienie
+    // i zostaje ostry obrys - linia i gwiazda jako jedno (runda 12)
+    css(c.mark, 'opacity', seg(entry, 0, 0.06).toFixed(3));
+    css(c.mark, 'fill-opacity', (1 - seg(z, 0.04, 0.3)).toFixed(3));
+    css(c.mark, 'stroke-opacity', seg(z, 0, 0.12).toFixed(3));
+    // powidoki: przy wjeździe przez środek gwiazdy przelatują jej obrysy (runda 12: „te powidoki mi się podobały”)
+    // powidoki nie gasną (runda 13: „nie chcę, żeby znikały”) - zostają i po kolei wylatują poza ekran
+    const eo = seg(z, 0.1, 0.25);
+    css(c.echo, 'opacity', eo.toFixed(3));
+    css(c.echo, 'visibility', eo < 0.002 ? 'hidden' : 'visible');
+
+    // refleks na krawędziach liter (tylko w przejeździe, nie przy wjeździe w gwiazdę)
+    const gOn = glint >= 0 && z <= 0;
+    css(c.glintG, 'visibility', gOn ? 'visible' : 'hidden');
+    if (gOn) {
+      const L = -tx / k, R = (W - tx) / k, g = outCubic(glint) * 0.4 + glint * 0.6;
+      const gx = mix(L - 90, R + 90, g);
+      attr(c.glintg, 'x1', (gx - 70).toFixed(1)); attr(c.glintg, 'x2', (gx + 70).toFixed(1));
+      css(c.glintG, 'opacity', (seg(glint, 0, 0.12) * (1 - seg(glint, 0.85, 1))).toFixed(3));
+    }
+    reveal(txt.current, seg(p, 0.9, 0.97)); // nagłówek dopiero po przelocie przez ostatni powidok
+    // koniec sceny: dół kadru gaśnie do czerni strony (bez ucięcia mgławicy, gdy scena odjeżdża w górę)
+    css(el.querySelector('.on-x3-fade'), 'opacity', seg(p, 0.9, 1).toFixed(3));
+    hintOut(el, p);
+  }, []);
+
+  // pętla klatek tylko wtedy, gdy coś żyje na czas: wejście gwiazdy (ok. 2 s) i iskry (do ich zgaśnięcia)
+  useEffect(() => {
+    if (!live) return;
+    let raf = 0, prev = 0, timer = 0;
+    const t0 = performance.now();
+    const tick = (now: number) => {
+      raf = -1; // w trakcie klatki: budzik z paint() nie dokłada drugiej pętli
+      const dt = prev ? Math.min(0.05, (now - prev) / 1000) : 1 / 60;
+      prev = now;
+      const m = memo.current, st = state.current;
+      const t = now - t0;
+      const intro = t < PAN_INTRO_END;
+      // refleks: co PAN_GLINT_EVERY ms, tylko gdy scena stoi na początku przejazdu albo w jego trakcie (bez wjazdu)
+      const gt = t - PAN_GLINT_AT, ph = gt >= 0 ? gt % PAN_GLINT_EVERY : -1;
+      const glint = ph >= 0 && ph < PAN_GLINT && st.p < 0.5 ? ph / PAN_GLINT : -1;
+      const hot = m.heat > 0;
+      m.heat = m.heat > 0.01 ? m.heat * Math.exp(-dt / 0.4) : 0; // stygnięcie (~0,4 s), gdy gwiazda stoi
+      const glintChanged = glint !== st.glint;
+      st.glint = glint;
+      if (intro) st.ms = t;
+      if (intro || hot || glintChanged) paint();
+      drawSparks(sparksCv.current, sparks.current, m, dt);
+      if (intro || m.heat > 0 || sparks.current.length || glint >= 0) raf = requestAnimationFrame(tick);
+      else {
+        raf = 0; prev = 0;
+        // następny refleks: obudź pętlę, gdy przyjdzie jego pora
+        const wait = gt < 0 ? -gt : PAN_GLINT_EVERY - (gt % PAN_GLINT_EVERY);
+        window.clearTimeout(timer);
+        timer = window.setTimeout(() => m.kick(), Math.max(16, wait));
+      }
+    };
+    const m = memo.current;
+    m.kick = () => { if (!raf) raf = requestAnimationFrame(tick); };
+    raf = requestAnimationFrame(tick);
+    return () => { cancelAnimationFrame(raf); window.clearTimeout(timer); m.kick = () => {}; };
+  }, [live, paint]);
+  usePin(pin, (p) => { state.current.p = p; paint(); }, live);
+
+  // jedna litera: dolna połówka, górna (zsuwana), wypełnienie szczeliny przed gwiazdą
+  const letter = (l: LogoPiece['letter'], fill: boolean) => {
+    const dn = LOGO_PIECES.find((pc) => pc.letter === l && pc.part === 'down');
+    const up = LOGO_PIECES.find((pc) => pc.letter === l && pc.part === 'up');
+    if (!dn || !up) return null;
+    return (
+      <g key={l}>
+        <path d={dn.d} vectorEffect="non-scaling-stroke" />
+        <g className="on-x3-up"><path d={up.d} vectorEffect="non-scaling-stroke" /></g>
+        {fill && (
+          <g clipPath="url(#on-x3-uncut)">
+            {LOGO_WHOLE_FILLS[l].map((poly, j) => <polygon key={j} points={fillPoints(poly)} vectorEffect="non-scaling-stroke" />)}
+          </g>
+        )}
+      </g>
+    );
+  };
+  return (
+    <Shell n={3} len={300} pin={pin} stage={stage}>
+      <NebulaSky tint={PAN_TINT} />
+      <div className="on-x3-glow" data-sky="" aria-hidden="true" />
+      <svg className="on-x-svg" aria-hidden="true" focusable="false">
+        <defs>
+          {/* przycięcia w jednostkach logo: wypełnienie szczeliny przed czołem gwiazdy, pas krawędzi cięcia za gwiazdą */}
+          <clipPath id="on-x3-uncut"><rect x={PAN_IN} y={-74} width={900} height={24} /></clipPath>
+          <clipPath id="on-x3-kerfc"><rect x={-40} y={-68.9} width={0} height={12.8} /></clipPath>
+          {/* światło gwiazdy: elipsa 520 × 300 jednostek wokół gwiazdy (środek pisze JS) - krawędzie i bryły liter */}
+          <radialGradient id="on-x3-rim" gradientUnits="userSpaceOnUse" cx={0} cy={0} r={1} gradientTransform="translate(0 -62.5) scale(520 300)">
+            <stop offset="0" stopColor="#ffffff" />
+            <stop offset=".2" stopColor="#e6edf8" />
+            <stop offset=".42" stopColor="#6f95d8" />
+            <stop offset=".66" stopColor="#2c3a58" stopOpacity=".55" />
+            <stop offset=".9" stopColor="#1c2333" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="on-x3-body" gradientUnits="userSpaceOnUse" cx={0} cy={0} r={1} gradientTransform="translate(0 -62.5) scale(520 300)">
+            <stop offset="0" stopColor="#1d2433" />
+            <stop offset=".35" stopColor="#11151d" />
+            <stop offset=".7" stopColor="#0a0c11" />
+            <stop offset="1" stopColor="#08090c" />
+          </radialGradient>
+          <linearGradient id="on-x3-edge" gradientUnits="userSpaceOnUse" x1={-320} y1={0} x2={0} y2={0}>
+            <stop offset="0" stopColor="#3b82f6" stopOpacity="0" />
+            <stop offset=".55" stopColor="#3b82f6" stopOpacity=".85" />
+            <stop offset=".88" stopColor="#60a5fa" />
+            <stop offset="1" stopColor="#ffffff" />
+          </linearGradient>
+          {/* rozgrzanie linii tuż za gwiazdą: jaśniejszy błękit marki, bez bieli (runda 11: „kontrast dziwny”) */}
+          <linearGradient id="on-x3-hotg" gradientUnits="userSpaceOnUse" x1={-90} y1={0} x2={0} y2={0}>
+            <stop offset="0" stopColor="#60a5fa" stopOpacity="0" />
+            <stop offset=".6" stopColor="#60a5fa" stopOpacity=".35" />
+            <stop offset="1" stopColor="#60a5fa" stopOpacity=".75" />
+          </linearGradient>
+          {/* refleks: wąski pas światła przebiegający po krawędziach liter (położenie pisze JS) */}
+          <linearGradient id="on-x3-glintg" gradientUnits="userSpaceOnUse" x1={-70} y1={0} x2={70} y2={0}>
+            <stop offset="0" stopColor="#ffffff" stopOpacity="0" />
+            <stop offset=".5" stopColor="#ffffff" stopOpacity=".95" />
+            <stop offset="1" stopColor="#ffffff" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <g className="on-x3-near"><path className="on-x3-dot" d={PAN_NEAR} vectorEffect="non-scaling-stroke" /></g>
+        <g className="on-x3-strip">
+          <g className="on-x3-letters">
+            {/* krawędź POD bryłą: widać tylko jej zewnętrzną połowę, krawędzie przyszłego cięcia przykrywa szczelina */}
+            <g className="on-x3-rims" stroke="url(#on-x3-rim)">{LETTERS.map((l) => letter(l, true))}</g>
+            <g className="on-x3-glints" stroke="url(#on-x3-glintg)">{LETTERS.map((l) => letter(l, true))}</g>
+            <g className="on-x3-bodies" fill="url(#on-x3-body)">{LETTERS.map((l) => letter(l, true))}</g>
+          </g>
+          {/* świeże krawędzie cięcia: te same połówki, sam obrys w pasie cięcia za gwiazdą */}
+          <g className="on-x3-kerf" clipPath="url(#on-x3-kerfc)" stroke="url(#on-x3-edge)">{LETTERS.map((l) => letter(l, false))}</g>
+          {/* linia z gwiazdą = jeden kształt (ścieżkę pisze JS), rozgrzanie tym samym kształtem */}
+          <path className="on-x3-mark" vectorEffect="non-scaling-stroke" />
+          <path className="on-x3-hot" fill="url(#on-x3-hotg)" />
+          {/* powidoki przy wjeździe w gwiazdę */}
+          <g className="on-x3-echo" transform={`translate(${PAN_STAR} -62.5)`}>
+            {ECHOES.map((e) => <path key={e} d={GEM} transform={`scale(${e})`} vectorEffect="non-scaling-stroke" />)}
+          </g>
+        </g>
+      </svg>
+      <canvas ref={sparksCv} className="on-x3-sparks" aria-hidden="true" />
+      <div className="on-x3-fade" aria-hidden="true" />
+      <StillLogo />
+      <div ref={box} className="container mx-auto px-6 on-x-box">
+        <div ref={txt} className="on-x-text on-x-sc"><IntroText t={t} locale={locale} /></div>
+      </div>
+      <Hint label={t.hint} />
+    </Shell>
+  );
+}
+
+/* ───────── 4. PRZESUNIĘCIE ───────── */
+// Przesunięcie połówek z logo (3u) doprowadzone do skrajności: rząd górnych połówek jedzie w prawo, rząd dolnych
+// w lewo - każdy o cały okres - i znów składają się w AVENLY w tym samym miejscu. W ruchu obrys, złożone = pełne.
+const PERIOD = 632.617 + 110; // logo + odstęp (jednostki logo)
+const UP_COPIES = [-3, -2, -1, 0], DOWN_COPIES = [0, 1, 2, 3];
+
+function HeroShear({ t, locale, live }: P) {
+  const pin = useRef<HTMLDivElement>(null), stage = useRef<HTMLDivElement>(null), box = useRef<HTMLDivElement>(null);
+  const head = useRef<HTMLDivElement>(null), tail = useRef<HTMLDivElement>(null);
+  usePin(pin, (p, el) => {
+    const st = stage.current, bx = box.current;
+    if (!st || !bx) return;
+    const { H, mob, bl, bw } = measure(st, bx);
+    const k = bw / 632.617; // złożone logo = szerokość wrappera
+    const yL = H * (mob ? 0.44 : 0.5);
+    const x0 = bl + 32.5 * k, ty = (yL + 62.5 * k).toFixed(2);
+    const m = seg(p, 0.12, 0.46) + seg(p, 0.58, 0.92); // dwa przesunięcia z postojami
+    const fr = m % 1;
+    const fo = (1 - 0.94 * seg(fr, 0, 0.22) * (1 - seg(fr, 0.78, 1))).toFixed(3);
+    const up = el.querySelector('.on-x4-up'), dn = el.querySelector('.on-x4-dn');
+    attr(up, 'transform', `translate(${(x0 + m * PERIOD * k).toFixed(2)} ${ty}) scale(${k.toFixed(5)})`);
+    attr(dn, 'transform', `translate(${(x0 - m * PERIOD * k).toFixed(2)} ${ty}) scale(${k.toFixed(5)})`);
+    css(up, 'fill-opacity', fo);
+    css(dn, 'fill-opacity', fo);
+    attr(el.querySelector('.on-x4-mid'), 'transform', `translate(${x0.toFixed(2)} ${ty}) scale(${k.toFixed(5)})`);
+    // nagłówek nad logo, opis pod nim (odstępy od rzeczywistej wysokości połówek)
+    css(head.current, 'bottom', `${(H - (yL - 37.5 * k) + (mob ? 26 : 36)).toFixed(0)}px`);
+    css(tail.current, 'top', `${(yL + 62.5 * k + (mob ? 30 : 40)).toFixed(0)}px`);
+    hintOut(el, p);
+  }, live);
+  const row = (part: LogoPiece['part'], copies: number[]) => copies.map((j) => (
+    <g key={j} transform={`translate(${(j * PERIOD).toFixed(3)} 0)`}>
+      {piecesOf(part).map((pc) => <path key={pc.letter} d={pc.d} vectorEffect="non-scaling-stroke" />)}
+    </g>
+  ));
+  return (
+    <Shell n={4} len={200} pin={pin} stage={stage}>
+      <svg className="on-x-svg" aria-hidden="true" focusable="false">
+        <g className="on-x4-row on-x4-up"><g className="on-x4-in on-x4-in--u">{row('up', UP_COPIES)}</g></g>
+        <g className="on-x4-row on-x4-dn"><g className="on-x4-in on-x4-in--d">{row('down', DOWN_COPIES)}</g></g>
+        <g className="on-x4-mid"><Comet /></g>
+      </svg>
+      <StillLogo />
+      <div ref={box} className="container mx-auto px-6 on-x-box">
+        <div ref={head} className="on-x-head on-i"><IntroText t={t} locale={locale} part="head" /></div>
+        <div ref={tail} className="on-x-tail on-i"><IntroText t={t} locale={locale} part="tail" /></div>
+      </div>
+      <Hint label={t.hint} />
+    </Shell>
+  );
+}
+
+/* ───────── 5. KLAPKA ───────── */
+// Tablica z jedną klapką. Zawias = linia cięcia z gwiazdą. Przód klapki niesie górne połówki liter, tył drugie zdanie
+// nagłówka; pod klapką czeka pierwsze zdanie, w dolnej połowie tablicy stoją dolne połówki liter. Przewijanie obraca
+// klapkę o 180° wokół zawiasu: logo zamienia się w nagłówek (zdanie nad linią, zdanie pod linią).
+function HeroFlap({ t, locale, live }: P) {
+  const pin = useRef<HTMLDivElement>(null), stage = useRef<HTMLDivElement>(null);
+  const flap = useRef<HTMLSpanElement>(null), tail = useRef<HTMLDivElement>(null);
+  usePin(pin, (p, el) => {
+    const th = 180 * seg(p, 0.14, 0.62);
+    css(flap.current, 'transform', th < 0.05 ? 'none' : `rotateX(${(-th).toFixed(2)}deg)`);
+    reveal(tail.current, seg(p, 0.6, 0.8));
+    hintOut(el, p);
+  }, live);
+  const d = (n: number) => ({ '--d': n }) as CSSProperties;
+  return (
+    <Shell n={5} len={170} pin={pin} stage={stage}>
+      <StillLogo />
+      <div className="container mx-auto px-6 on-x-box">
+        <div className="on-x5-wrap">
+          <div className="on-label on-x5-label"><SectionLabel align="start">{t.label}</SectionLabel></div>
+          <h1 id="on-h1" className="on-x5-board">
+            <span className="on-x5-half on-x5-top"><span className="on-x5-s on-x5-s1">{t.title}</span></span>{' '}
+            <span className="on-x5-half on-x5-bot" aria-hidden="true">
+              <svg viewBox="-32.5 -62.5 632.617 62.5" focusable="false">{piecesOf('down').map((pc) => <path key={pc.letter} d={pc.d} />)}</svg>
+            </span>
+            <span ref={flap} className="on-x5-half on-x5-flap">
+              <span className="on-x5-face on-x5-front" aria-hidden="true">
+                <svg viewBox="-32.5 -100 632.617 37.5" focusable="false">{piecesOf('up').map((pc) => <path key={pc.letter} d={pc.d} />)}</svg>
+              </span>
+              <span className="on-x5-face on-x5-back"><span className="on-x5-s on-x5-s2 im-accent">{t.titleAccent}</span></span>
+            </span>
+            <svg className="on-x5-hinge" viewBox="-32.5 -84 632.617 43" aria-hidden="true" focusable="false"><Comet /></svg>
+          </h1>
+          <div ref={tail} className="on-x5-tail on-x-sc">
+            <p className="on-lead" style={d(0)}>{t.lead}</p>
+            <Link href={localizeHref('/kontakt', locale)} prefetch={false} className="on-cta">
+              {t.cta}
+              <ArrowRight aria-hidden="true" />
+            </Link>
+          </div>
+        </div>
+      </div>
+      <Hint label={t.hint} />
+    </Shell>
+  );
+}
+
+export function Hero({ kind, ...p }: P & { kind: HeroKind }) {
+  if (kind === 'okno') return <HeroWindow {...p} />;
+  if (kind === 'odjazd') return <HeroPullback {...p} />;
+  if (kind === 'panorama') return <HeroPan {...p} />;
+  if (kind === 'przesuniecie') return <HeroShear {...p} />;
+  return <HeroFlap {...p} />;
+}

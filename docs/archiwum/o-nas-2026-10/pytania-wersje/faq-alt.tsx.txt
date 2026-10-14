@@ -1,0 +1,115 @@
+'use client';
+
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { MessageCircle } from 'lucide-react';
+import { GEM } from '@/lib/brand/logo';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { Intro } from './scene-kit';
+import { openChat, useEnter } from './shared';
+import './faq-alt.css'; // prefiksy on-f2- i on-f3-
+
+// „PYTANIA” - PROPOZYCJE 2026-10-13 (właściciel: „teraz wszystkie następne sekcje daj kilka propozycji dla każdej”).
+// Obecna wersja (akordeon, faq.tsx) zostaje domyślna; przełącznik w panelu na dole ekranu (tylko dev). Treść pytań
+// i odpowiedzi bez zmian (słownik = źródło danych strukturalnych FAQPage).
+//   FaqChat  „Rozmowa” - pytania po lewej, po prawej szklane okno rozmowy: wybrane pytanie pojawia się jako Twoja
+//            wiadomość, po chwili przychodzi odpowiedź. Okno nigdy nie jest puste (pierwsze pytanie od razu z odpowiedzią).
+//            „Zapytaj asystenta” otwiera prawdziwy czat z rogu strony.
+//   FaqCards „Karty” - bez klikania: wszystkie odpowiedzi widać od razu w szklanych kartach obok nagłówka, pod
+//            nagłówkiem „Inne pytanie?” z przyciskiem asystenta.
+// Nagłówek sekcji stoi w lewej kolumnie obok treści (runda 29 - osobne nagłówki nad sekcjami „wyglądają mediocre”).
+// Bez JS: w „Rozmowie” wszystkie pytania z odpowiedziami są w oknie jedno pod drugim. Po wyborze niewybrane usunąć.
+
+type Props = { t: ONasDict['faqSection']; faq: ONasDict['faq']; live: boolean; ready: boolean };
+const d = (n: number) => ({ '--d': n }) as CSSProperties;
+const pad = (n: number) => String(n).padStart(2, '0');
+const gem = <svg viewBox="-20 -20 40 40" focusable="false" aria-hidden="true"><path d={GEM} /></svg>;
+/** Ile trwa „pisanie” odpowiedzi po wybraniu pytania (pełny ruch). */
+const TYPING_MS = 700;
+
+function Ask({ t, className }: { t: Props['t']; className: string }) {
+  return (
+    <div className={className}>
+      <div>
+        <p className="on-faq-ask-t">{t.askTitle}</p>
+        <p className="on-faq-ask-d">{t.askDesc}</p>
+      </div>
+      <button type="button" className="on-ghost" onClick={openChat}>
+        <MessageCircle aria-hidden="true" />
+        {t.askButton}
+      </button>
+    </div>
+  );
+}
+
+export function FaqChat({ t, faq, live, ready }: Props) {
+  const [sel, setSel] = useState(0);
+  const [typing, setTyping] = useState(false);
+  const timer = useRef(0);
+  const box = useRef<HTMLDivElement>(null);
+  useEnter(box, live, 0.15);
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+
+  const pick = (i: number) => {
+    if (i === sel) return;
+    window.clearTimeout(timer.current);
+    setSel(i);
+    setTyping(live);
+    if (live) timer.current = window.setTimeout(() => setTyping(false), TYPING_MS);
+  };
+
+  return (
+    <section className="on-sec on-f2" aria-labelledby="on-faq-h">
+      <div ref={box} className="container mx-auto px-6 on-f2-box">
+        <Intro id="on-faq-h" label={t.label} title={t.heading} lead={t.lead} live={live} className="on-f2-head" />
+        <div className="on-f2-qs on-in" role="group" aria-label={t.heading} style={d(0)}>
+          {faq.map((f, i) => (
+            <button key={i} type="button" className="on-f2-q" aria-pressed={ready && sel === i} onClick={() => pick(i)}>
+              <span className="on-f2-qn" aria-hidden="true">{pad(i + 1)}</span>
+              <span>{f.question}</span>
+            </button>
+          ))}
+        </div>
+        <div className="on-f2-win on-in" data-sky="" style={d(1)}>
+          <p className="on-f2-top"><span className="on-f2-av">{gem}</span>{t.chatFrom}</p>
+          <div className="on-f2-log" aria-live="polite">
+            <p className="on-f2-msg on-f2-msg--a">{t.chatHello}</p>
+            {faq.map((f, i) => (
+              <div key={i} className="on-f2-pair" hidden={ready && sel !== i}>
+                <p className="on-f2-msg on-f2-msg--u">{f.question}</p>
+                {ready && typing && sel === i ? (
+                  <p className="on-f2-msg on-f2-msg--a on-f2-dots" aria-hidden="true"><i /><i /><i /></p>
+                ) : (
+                  <p className="on-f2-msg on-f2-msg--a on-f2-ans">{f.answer}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+        <Ask t={t} className="on-f2-ask on-in" />
+      </div>
+    </section>
+  );
+}
+
+export function FaqCards({ t, faq, live }: Props) {
+  const box = useRef<HTMLDivElement>(null);
+  useEnter(box, live, 0.12);
+  return (
+    <section className="on-sec on-f3" aria-labelledby="on-faq-h">
+      <div ref={box} className="container mx-auto px-6 on-f3-box">
+        <Intro id="on-faq-h" label={t.label} title={t.heading} lead={t.lead} live={live} className="on-f3-head" />
+        <div className="on-f3-grid" data-sky="">
+          {faq.map((f, i) => (
+            <article key={i} className="on-f3-card on-in" style={d(i)}>
+              <span className="on-f3-rule">{gem}</span>
+              <p className="on-f3-n" aria-hidden="true">{pad(i + 1)}</p>
+              <h3 className="on-f3-q">{f.question}</h3>
+              <p className="on-f3-a">{f.answer}</p>
+            </article>
+          ))}
+        </div>
+        <Ask t={t} className="on-faq-ask on-f3-ask on-in" />
+      </div>
+    </section>
+  );
+}

@@ -3,8 +3,9 @@ import { i18nAlternates } from "@/lib/i18n/locale";
 import { CONTACT } from "@/lib/seo-data";
 
 export const metadata: Metadata = {
-  title: "Contact - free consultation and website quote",
-  description: `Get in touch with Avenly. A free consultation and a project quote within 24 hours. Email: ${CONTACT.email}, phone: ${CONTACT.phoneDisplay}. Websites, online stores and AI chatbots.`,
+  title: "Contact - free consultation, reply within 24 h",
+  // the lead under the page heading (lib/i18n/kontakt.ts) + contact details; about 160 characters in total
+  description: `Tell us what you need. Within 24 hours you get a clear answer, a quote and a timeline. Free consultation: ${CONTACT.email}, ${CONTACT.phoneDisplay}.`,
   alternates: i18nAlternates("/kontakt", "en"),
   keywords: [
     "contact Avenly",

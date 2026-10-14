@@ -1,0 +1,211 @@
+'use client';
+
+import { useCallback, useEffect, useRef, type CSSProperties } from 'react';
+import { MessageCircle, Send } from 'lucide-react';
+import { AvenlyLogo } from '@/components/ui/AvenlyLogo';
+import { GEM } from '@/lib/brand/logo';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { Scene, swap } from './scene-kit';
+import { clamp01, css, flag, openChat, seg, text, useEnter, usePin } from './shared';
+import './faq-window.css'; // prefiks on-f4-
+
+// „PYTANIA” - PROPOZYCJA „OKNO ASYSTENTA” (2026-10-14, właściciel: „teraz faq zrób”). Pytania to rozmowa z naszym
+// asystentem AI: na cały ekran stoi okno czatu w wyglądzie prawdziwego okna z rogu strony (klasa .cb z globals.css -
+// granatowe szkło ze światłem z góry), na mgławicy podstrony. Pierwsza wiadomość asystenta = nagłówek sekcji wielkim
+// pismem („Częste pytania” + „Krótko i konkretnie.”). Przewijanie prowadzi rozmowę: pytanie wpisuje się w pole
+// wiadomości, po „wysłaniu” staje w oknie jako Twoja wiadomość, asystent „pisze”, przychodzi odpowiedź, rozmowa
+// przesuwa się w górę jak w czacie. Na końcu kamera odjeżdża: okno zwija się w koło i wpada w prawdziwy bąbel czatu
+// w prawym dolnym rogu (przy lądowaniu jeden pierścień), a na środku zostaje „Inne pytanie?” z przyciskiem, który
+// otwiera prawdziwy czat. Jedno miejsce akcji naraz, ruch bez odbicia (smoothstep - dojeżdża i staje).
+// Układ inny niż sekcje wyżej (kadr obok tekstu w „Portalu”, stół z pasem tytułowym w „Co robimy”, ściana słów
+// w „Świetle”) - jeden obiekt na środku ekranu.
+// SEO: h2 i pytania (h3) z odpowiedziami to prawdziwy tekst w kolejności czytania; dane FAQPage w layout.tsx.
+// Bez JS / ograniczony ruch: okno jako zwykły blok z całą rozmową, pod nim „Inne pytanie?”.
+// Wydajność: rozmowa przesuwana transformem na własnej warstwie (samo przesunięcie - ostre pismo), zapisy stylu tylko
+// przy zmianie, wymiary mierzone tylko przy zmianie rozmiaru i po wczytaniu fontu; skala okna dopiero w odjeździe,
+// gdy treść już gaśnie.
+
+type Props = { t: ONasDict['faqSection']; faq: ONasDict['faq']; live: boolean };
+
+/** Oś sceny w vh przewinięcia: postój na nagłówku, potem pary pytanie - odpowiedź, odjazd okna do bąbla, postój. */
+const H0 = 26, PAIR = 74, DOCK = 60, END = 20;
+/** W parze: pisanie pytania 0-22, wysłanie (pytanie w oknie) 22-29, „pisze…” 27-42, odpowiedź 40-50, postój do 74. */
+const TYPE = 22;
+/** Bąbel czatu (components/chatbot/Chatbot.tsx): 56 px, 24 px od dołu okna, z boku 16 px (od 640 px 24 px). */
+const BUBBLE = 56;
+
+const d = (n: number) => ({ '--d': n }) as CSSProperties;
+const gem = <svg viewBox="-20 -20 40 40" focusable="false" aria-hidden="true"><path d={GEM} /></svg>;
+const show = (el: Element | null | undefined, o: number) => {
+  css(el, 'opacity', o.toFixed(3));
+  css(el, 'visibility', o < 0.002 ? 'hidden' : 'visible');
+};
+
+type Geo = { T: number[]; W: number; H: number; D: number; dx: number; dy: number; bx: number; by: number };
+
+export function FaqWindow({ t, faq, live }: Props) {
+  const pin = useRef<HTMLDivElement>(null), stage = useRef<HTMLDivElement>(null);
+  const win = useRef<HTMLDivElement>(null), inner = useRef<HTMLDivElement>(null);
+  const log = useRef<HTMLDivElement>(null), track = useRef<HTMLDivElement>(null);
+  const foot = useRef<HTMLDivElement>(null), typed = useRef<HTMLSpanElement>(null);
+  const ask = useRef<HTMLDivElement>(null), ring = useRef<HTMLSpanElement>(null);
+  const geo = useRef<Geo | null>(null);
+  const els = useRef<{ q: HTMLElement; av: HTMLElement; dots: HTMLElement; a: HTMLElement }[] | null>(null);
+  const prog = useRef(0);
+  const N = faq.length;
+  const len = H0 + N * PAIR + DOCK + END;
+  useEnter(stage, live, 0.2);
+
+  /** Położenia rozmowy (nowa para zawsze cała w oknie) i droga okna do bąbla. Tylko przy zmianie rozmiaru. */
+  const measure = useCallback((): Geo | null => {
+    const st = stage.current, w = win.current, lg = log.current, tr = track.current;
+    if (!st || !w || !lg || !tr) return null;
+    const W = w.offsetWidth, H = w.offsetHeight, logH = lg.clientHeight;
+    if (!W || !H || !logH) return null;
+    const T = [0];
+    tr.querySelectorAll<HTMLElement>('.on-f4-pair').forEach((pr, i) => {
+      T.push(Math.max(T[i], pr.offsetTop + pr.offsetHeight + 28 - logH));
+    });
+    // bąbel w układzie sceny (scena przypięta: góra sceny = góra okna przeglądarki)
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const bx = vw - (vw >= 640 ? 24 : 16) - BUBBLE / 2 - st.getBoundingClientRect().left;
+    const by = vh - 24 - BUBBLE / 2;
+    return {
+      T, W, H, D: Math.min(W, H), bx, by,
+      dx: bx - (w.offsetLeft + W / 2), dy: by - (w.offsetTop + H / 2),
+    };
+  }, []);
+
+  const paint = useCallback(() => {
+    const st = stage.current, w = win.current;
+    if (!st || !w) return;
+    const c = (els.current ??= Array.from(st.querySelectorAll<HTMLElement>('.on-f4-pair')).map((pr) => ({
+      q: pr.querySelector<HTMLElement>('.on-f4-q')!,
+      av: pr.querySelector<HTMLElement>('.on-f4-av')!,
+      dots: pr.querySelector<HTMLElement>('.on-f4-dots')!,
+      a: pr.querySelector<HTMLElement>('.on-f4-a p')!,
+    })));
+    const g = (geo.current ??= measure());
+    if (!g) return;
+    const sv = prog.current * len;
+
+    // rozmowa: pisanie w polu wiadomości, wysłane pytanie, „pisze…”, odpowiedź; okno przesuwa się jak czat
+    let ty = 0, typing = '', armed = false;
+    c.forEach((e, i) => {
+      const l = sv - H0 - i * PAIR;
+      if (l >= 0 && l < TYPE) {
+        const q = faq[i].question;
+        typing = q.slice(0, Math.round(q.length * Math.min(1, l / (TYPE - 5))));
+        armed = l >= TYPE - 5;
+      }
+      swap(e.q, seg(l, TYPE, TYPE + 7), 0, 22);
+      const wait = seg(l, TYPE + 5, TYPE + 9);
+      const dots = wait * (1 - seg(l, TYPE + 17, TYPE + 20));
+      show(e.av, wait);
+      show(e.dots, dots);
+      flag(e.dots, 'data-on', dots > 0.01);
+      swap(e.a, seg(l, TYPE + 18, TYPE + 28), 0, 14);
+      if (l > TYPE) ty = g.T[i] + (g.T[i + 1] - g.T[i]) * seg(l, TYPE, TYPE + 20);
+    });
+    css(track.current, 'transform', `translate3d(0, ${(-ty).toFixed(2)}px, 0)`);
+    text(typed.current, typing);
+    flag(foot.current, 'data-typed', typing.length > 0);
+    flag(foot.current, 'data-armed', armed);
+
+    // odjazd: treść gaśnie, okno zwija się w koło i wpada w bąbel czatu; na środku wschodzi „Inne pytanie?”
+    const m = clamp01((sv - H0 - N * PAIR) / DOCK);
+    flag(w, 'data-dock', m > 0);
+    if (m <= 0) {
+      css(w, 'transform', '');
+      css(w, 'clip-path', '');
+      css(w, 'opacity', '');
+      css(inner.current, 'opacity', '');
+    } else {
+      const k = seg(m, 0.06, 0.5); // prostokąt -> koło (średnica = krótszy bok okna)
+      const ix = ((g.W - g.D) / 2) * k, iy = ((g.H - g.D) / 2) * k, r = 24 + (g.D / 2 - 24) * k;
+      css(w, 'clip-path', `inset(${iy.toFixed(1)}px ${ix.toFixed(1)}px round ${r.toFixed(1)}px)`);
+      const s = 1 + (BUBBLE / g.D - 1) * seg(m, 0.2, 0.82);
+      // tor łukiem: najpierw w bok, potem w dół do rogu
+      const x = g.dx * seg(m, 0.3, 0.8), y = g.dy * seg(m, 0.36, 0.86);
+      css(w, 'transform', `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) scale(${s.toFixed(4)})`);
+      css(w, 'opacity', (1 - seg(m, 0.84, 0.98)).toFixed(3));
+      css(inner.current, 'opacity', (1 - seg(m, 0, 0.28)).toFixed(3));
+    }
+    const rf = seg(m, 0.82, 1);
+    css(ring.current, 'transform', `translate(${g.bx.toFixed(1)}px, ${g.by.toFixed(1)}px) scale(${(1 + rf * 1.5).toFixed(3)})`);
+    css(ring.current, 'opacity', (rf > 0 && rf < 1 ? 0.9 * (1 - rf) : 0).toFixed(3));
+    swap(ask.current, seg(m, 0.34, 0.62), 0, 24);
+  }, [faq, len, measure, N]);
+
+  useEffect(() => {
+    if (!live) return;
+    const st = stage.current;
+    if (!st) return;
+    const ro = new ResizeObserver(() => { geo.current = null; paint(); });
+    ro.observe(st);
+    let dead = false;
+    document.fonts?.ready.then(() => { if (!dead) { geo.current = null; paint(); } });
+    return () => { dead = true; ro.disconnect(); geo.current = null; els.current = null; };
+  }, [live, paint]);
+  usePin(pin, (p) => { prog.current = p; paint(); }, live);
+
+  return (
+    <section className="on-sec on-f4" aria-labelledby="on-faq-h">
+      <Scene pin={pin} len={len}>
+        <div ref={stage} className="container mx-auto px-6 on-f4-stage">
+          {/* blask mgławicy podstrony za oknem, a po odjeździe okna za „Inne pytanie?” */}
+          <span className="on-f4-core" data-sky="" aria-hidden="true" />
+          <div ref={win} className="cb on-f4-win">
+            <div ref={inner} className="on-f4-in">
+              <div className="on-f4-top" aria-hidden="true">
+                <AvenlyLogo className="on-f4-logo" />
+                <span className="on-f4-status"><span className="on-f4-live" />{t.chatName}</span>
+              </div>
+              <div ref={log} className="on-f4-log">
+                <div ref={track} className="on-f4-track">
+                  <header className="on-f4-intro">
+                    <p className="on-f4-who on-in" style={d(0)} aria-hidden="true"><span className="on-f4-av on-f4-av--on">{gem}</span>Avenly</p>
+                    <h2 id="on-faq-h" className="on-f4-h">
+                      <span className="on-mask"><span className="on-rise" style={d(1)}>{t.heading}</span></span>{' '}
+                      <span className="on-mask"><span className="on-rise im-accent" style={d(2)}>{t.accent}</span></span>
+                    </h2>
+                    <p className="on-f4-lead on-in" style={d(4)}>{t.more}</p>
+                  </header>
+                  {faq.map((f, i) => (
+                    <div key={i} className="on-f4-pair">
+                      <h3 className="on-f4-q">{f.question}</h3>
+                      <div className="on-f4-a">
+                        <span className="on-f4-av" aria-hidden="true">{gem}</span>
+                        <div className="on-f4-body">
+                          <span className="on-f4-dots" aria-hidden="true"><i /><i /><i /></span>
+                          <p>{f.answer}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div ref={foot} className="on-f4-foot" aria-hidden="true">
+                <span className="on-f4-field">
+                  <span className="on-f4-ph">{t.chatInput}</span>
+                  <span ref={typed} className="on-f4-typed" />
+                  <span className="on-f4-caret" />
+                </span>
+                <span className="on-f4-send"><Send /></span>
+              </div>
+            </div>
+          </div>
+          <span ref={ring} className="on-f4-ring" aria-hidden="true" />
+          <div ref={ask} className="on-f4-ask">
+            <p className="on-f4-ask-t">{t.askTitle}</p>
+            <p className="on-f4-ask-d">{t.askDesc}</p>
+            <button type="button" className="on-ghost" onClick={openChat}>
+              <MessageCircle aria-hidden="true" />
+              {t.askButton}
+            </button>
+          </div>
+        </div>
+      </Scene>
+    </section>
+  );
+}

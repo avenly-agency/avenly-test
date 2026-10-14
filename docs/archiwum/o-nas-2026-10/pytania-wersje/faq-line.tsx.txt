@@ -1,0 +1,92 @@
+'use client';
+
+import { useRef, useState, type CSSProperties } from 'react';
+import { MessageCircle } from 'lucide-react';
+import { SectionLabel } from '@/components/ui/SectionLabel';
+import { GEM } from '@/lib/brand/logo';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { openChat, useEnter } from './shared';
+import './faq-line.css'; // prefiks on-f6-
+
+// „PYTANIA” - PROPOZYCJA „LINIA Z GWIAZDĄ” (2026-10-14, właściciel: „teraz faq zrób”). Bez przypięcia, od krawędzi
+// do krawędzi wrappera: pytania stoją jedno pod drugim wielkim pismem (jak hasła w „Portalu” i „Świetle”), a każde
+// zamyka linia z gwiazdą jak w logo - włosowa linia na całą szerokość z gwiazdą na końcu. Kliknięte pytanie się
+// otwiera: jego linia nabiera koloru marki od lewej do prawej i zapala gwiazdę na końcu (jak linia w logo), pod
+// pytaniem pojawia się odpowiedź. Pierwsza pozycja = nagłówek sekcji w tym samym piśmie, ostatnia = „Inne pytanie?”
+// z przyciskiem, który otwiera prawdziwy czat. Wejście (raz, na czas): linie rysują się od lewej, pytania wysuwają
+// się spod maski, gwiazdy zapalają się na końcach linii. Blask mgławicy podstrony idzie za pytaniem najbliżej środka
+// ekranu (data-sky na każdym wierszu).
+// Układ inny niż sekcje wyżej: lista na całą szerokość, bez kadru i bez przypiętej sceny (po trzech przypiętych
+// scenach strona na chwilę „oddycha”, a pytania czyta się i klika jak zwykły akordeon).
+// SEO i dostępność: h2, pytania (h3 z przyciskami aria-expanded) i odpowiedzi w kolejności czytania; bez JS
+// wszystkie odpowiedzi otwarte; dane FAQPage w layout.tsx.
+
+type Props = { t: ONasDict['faqSection']; faq: ONasDict['faq']; live: boolean; ready: boolean };
+
+const d = (n: number) => ({ '--d': n }) as CSSProperties;
+const pad = (n: number) => String(n).padStart(2, '0');
+
+/** Linia z gwiazdą: włosowa linia, nad nią warstwa w kolorze marki (rysuje się przy otwarciu), gwiazda na końcu. */
+function Line() {
+  return (
+    <span className="on-f6-line" aria-hidden="true">
+      <i />
+      <b><svg viewBox="-20 -20 40 40" focusable="false"><path d={GEM} /></svg></b>
+    </span>
+  );
+}
+
+export function FaqLine({ t, faq, live, ready }: Props) {
+  const [open, setOpen] = useState(0); // pierwsze pytanie otwarte - sekcja nigdy nie jest samą listą zamkniętych
+  const box = useRef<HTMLDivElement>(null);
+  useEnter(box, live, 0.12);
+  const N = faq.length;
+  return (
+    <section className="on-sec on-f6" aria-labelledby="on-faq-h">
+      <div ref={box} className="container mx-auto px-6 on-f6-box">
+        <header className="on-f6-row on-f6-head" data-sky="" style={d(0)}>
+          <div className="on-label on-in" style={d(0)}><SectionLabel align="start">{t.label}</SectionLabel></div>
+          <h2 id="on-faq-h" className="on-f6-t">
+            <span className="on-mask"><span className="on-rise" style={d(1)}>{t.heading}</span></span>{' '}
+            <span className="on-mask"><span className="on-rise im-accent" style={d(2)}>{t.accent}</span></span>
+          </h2>
+          <p className="on-f6-lead on-in" style={d(3)}>{t.more}</p>
+          <Line />
+        </header>
+        {faq.map((f, i) => {
+          const isOpen = !ready || open === i;
+          return (
+            <div key={i} className="on-f6-row on-f6-item" data-open={isOpen ? '' : undefined} data-sky="" style={d(i + 1)}>
+              <h3 className="on-f6-q">
+                <button
+                  type="button" id={`on-f6-b${i}`} aria-expanded={isOpen} aria-controls={`on-f6-a${i}`}
+                  onClick={() => setOpen((o) => (o === i ? -1 : i))}
+                >
+                  <span className="on-f6-n" aria-hidden="true">{pad(i + 1)} / {pad(N)}</span>
+                  <span className="on-mask on-f6-qm"><span className="on-rise on-f6-t" style={d(i + 3)}>{f.question}</span></span>
+                  <span className="on-f6-x" aria-hidden="true" />
+                </button>
+              </h3>
+              <div id={`on-f6-a${i}`} role="region" aria-labelledby={`on-f6-b${i}`} className="on-f6-a" inert={!isOpen || undefined}>
+                <div><p>{f.answer}</p></div>
+              </div>
+              <Line />
+            </div>
+          );
+        })}
+        <div className="on-f6-row on-f6-ask" style={d(N + 1)}>
+          <div className="on-f6-ask-in">
+            <p className="on-f6-t on-in" style={d(N + 3)}>{t.askTitle}</p>
+            <p className="on-f6-lead on-in" style={d(N + 4)}>{t.askDesc}</p>
+          </div>
+          <div className="on-in" style={d(N + 4)}>
+            <button type="button" className="on-ghost" onClick={openChat}>
+              <MessageCircle aria-hidden="true" />
+              {t.askButton}
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

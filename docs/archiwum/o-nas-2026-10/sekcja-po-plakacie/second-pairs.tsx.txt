@@ -1,0 +1,66 @@
+'use client';
+
+import { useRef } from 'react';
+import { GEM } from '@/lib/brand/logo';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { Head } from './parts';
+import { css, seg, usePin } from './shared';
+import './second.css';
+
+// SEKCJA PO PLAKACIE - WERSJA 7 „TY I MY” (2026-10-13, kierunek „zaskocz mnie”). Prefiks on-2p-.
+// Przypięta 100svh + 230vh, sam HTML i CSS. Zamiast obrazu drogi wiadomości - trzy pary dużych zdań: po lewej to,
+// co robisz Ty, po prawej to, co robimy my. Każdą parę łączy krótka prosta linia z gwiazdą (gest logo): pojawia się
+// Twoje zdanie, gwiazda przelatuje po linii i od razu staje nasze - między nimi nie ma nikogo. Pary wchodzą po kolei
+// razem z przewijaniem. Telefon: Twoje zdanie przy lewej krawędzi, linia na całą szerokość, nasze przy prawej.
+// Zdania są zwykłym tekstem (lista dla czytników: „Ty: …”, „My: …”).
+// Bez JS / ograniczony ruch: wszystkie pary od razu, linie w całości.
+
+/** Wejście zdania: krycie i lekki wjazd z dołu, bez przestrzelenia. */
+const rise = (el: Element | null, o: number) => {
+  css(el, 'opacity', o.toFixed(3));
+  css(el, 'visibility', o < 0.002 ? 'hidden' : 'visible');
+  css(el, 'transform', o >= 0.9995 ? 'none' : `translate3d(0, ${((1 - o) * 16).toFixed(2)}px, 0)`);
+};
+
+export function SecondPairs({ t, live }: { t: ONasDict['direct']; live: boolean }) {
+  const pin = useRef<HTMLDivElement>(null);
+  const rows = useRef<HTMLElement[] | null>(null);
+  const { you, us, rows: pairs } = t.pairs;
+
+  usePin(pin, (p, el) => {
+    const list = (rows.current ??= Array.from(el.querySelectorAll<HTMLElement>('.on-2p-row')));
+    list.forEach((row, i) => {
+      const b = 0.05 + i * 0.28; // każda para ma swój odcinek przewijania
+      const g = seg(p, b + 0.06, b + 0.18);
+      rise(row.children[0], seg(p, b, b + 0.07));
+      css(row.children[1], '--g', g.toFixed(4));
+      css(row.children[1], 'visibility', g < 0.002 ? 'hidden' : 'visible');
+      rise(row.children[2], seg(p, b + 0.15, b + 0.23));
+    });
+  }, live);
+
+  return (
+    <section className="on-sec on-2 on-2p" aria-labelledby="on-2-h">
+      <Head id="on-2-h" label={t.label} title={t.heading} accent={t.headingAccent} lead={t.leadShort} live={live} />
+      <div ref={pin} className="on-pin on-2p-pin">
+        <div className="on-stick on-2-stick">
+          <div className="container mx-auto px-6 on-2p-box">
+            <p className="on-2p-heads" aria-hidden="true"><span>{you}</span><span>{us}</span></p>
+            <ol className="on-2p-list">
+              {pairs.map((r, i) => (
+                <li key={i} className="on-2p-row">
+                  <p className="on-2p-you"><span className="sr-only">{you}: </span>{r.you}</p>
+                  <span className="on-2p-link" aria-hidden="true">
+                    <i />
+                    <svg viewBox="-20 -20 40 40" focusable="false"><path d={GEM} /></svg>
+                  </span>
+                  <p className="on-2p-us"><span className="sr-only">{us}: </span>{r.us}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

@@ -1,0 +1,85 @@
+// Pole słownika `blueprint` (lib/i18n/o-nas.ts) ze stanu przed usunięciem sekcji „Nasz znak” (2026-10-14).
+// Typ:
+//   blueprint: {
+//     label: string; heading: string; headingAccent: string; lead: string; steps: string[]; figLabel: string;
+//     zoom: { lead: string; says: string[] };                       // propozycja „Z bliska” (blueprint-alt.tsx)
+//     fix: { label; heading; headingAccent; lead; caption; before; after;   // propozycja „Trzy poprawki”
+//            items: { title: string; desc: string }[]; mock: { eyebrow: string; title: string; cta: string } };
+//   };
+//   stepsLabel: string;   // podpis listy kroków (Narrator w blueprint.tsx) - PL „Kroki sceny”, EN „Scene steps”
+
+// PL
+blueprint: {
+  label: 'Nasz znak',
+  heading: 'Każdy detal',
+  headingAccent: 'ma swój wymiar.',
+  lead: 'Logo Avenly ma wymiary co do jednostki. Z tą samą dokładnością dopracowujemy Twój projekt.',
+  steps: [
+    'Litery stoją na wspólnej siatce: jedna wysokość, jedna linia bazowa.',
+    'Linia z gwiazdą przecina każdą literę na tej samej wysokości.',
+    'Z tą samą dokładnością dopracowujemy każdy ekran Twojej strony.',
+  ],
+  figLabel: 'Konstrukcja logo Avenly: litery na siatce o wysokości 40 jednostek, linia z gwiazdą na wysokości 25 jednostek.',
+  zoom: {
+    lead: 'Przyjrzyj się naszemu logo z bliska. Tak samo oglądamy każdą stronę, zanim ją oddamy.',
+    says: [
+      'Jedna linia przecina wszystkie litery.',
+      'Szczelina rośnie równo, litera po literze.',
+      'Na końcu linia przechodzi w gwiazdę jednym łukiem.',
+      'Z tą samą dokładnością dopracowujemy każdy ekran Twojej strony.',
+    ],
+  },
+  fix: {
+    label: 'Detale',
+    heading: 'Dobrą stronę poznasz',
+    headingAccent: 'po detalach.',
+    lead: 'Zanim oddamy Ci stronę, sprawdzamy ją element po elemencie. Zobacz trzy takie poprawki.',
+    caption: 'Przykładowa strona',
+    before: 'przed poprawkami',
+    after: 'po poprawkach',
+    items: [
+      { title: 'Równo.', desc: 'Każdy element trzyma tę samą linię. Strona od razu wygląda porządnie.' },
+      { title: 'Wygodnie.', desc: 'Przycisk jest na tyle duży, że łatwo trafisz w niego kciukiem.' },
+      { title: 'Czytelnie.', desc: 'Tekst wyraźnie odcina się od tła. Przeczytasz go także w pełnym słońcu.' },
+    ],
+    mock: { eyebrow: 'Gabinet w Twoim mieście', title: 'Umów wizytę w dwie minuty', cta: 'Sprawdź terminy' },
+  },
+},
+
+// EN
+blueprint: {
+  label: 'Our mark',
+  heading: 'Every detail',
+  headingAccent: 'has its measure.',
+  lead: 'The Avenly logo is measured down to a single unit. We bring the same precision to your project.',
+  steps: [
+    'The letters stand on one grid: one height, one baseline.',
+    'The line with the star cuts every letter at the same height.',
+    'We bring the same precision to every screen of your site.',
+  ],
+  figLabel: 'Construction of the Avenly logo: letters on a grid 40 units tall, the line with the star at 25 units.',
+  zoom: {
+    lead: 'Take a close look at our logo. That is how we look at every website before we hand it over.',
+    says: [
+      'One line cuts through every letter.',
+      'The gap grows evenly, letter by letter.',
+      'At the end the line flows into the star in a single curve.',
+      'We bring the same precision to every screen of your website.',
+    ],
+  },
+  fix: {
+    label: 'Details',
+    heading: 'You can tell a good website',
+    headingAccent: 'by its details.',
+    lead: 'Before we hand your website over, we check it element by element. Here are three of those fixes.',
+    caption: 'Sample website',
+    before: 'before the fixes',
+    after: 'after the fixes',
+    items: [
+      { title: 'Aligned.', desc: 'Every element follows the same line. The page looks tidy right away.' },
+      { title: 'Comfortable.', desc: 'The button is big enough to hit easily with your thumb.' },
+      { title: 'Readable.', desc: 'Text stands out clearly from the background. You can read it in full sunlight too.' },
+    ],
+    mock: { eyebrow: 'A practice in your town', title: 'Book a visit in two minutes', cta: 'See available dates' },
+  },
+},

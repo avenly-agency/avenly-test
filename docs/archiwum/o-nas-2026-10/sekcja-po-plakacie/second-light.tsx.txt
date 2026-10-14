@@ -1,0 +1,98 @@
+'use client';
+
+import { Fragment, useCallback, useEffect, useRef } from 'react';
+import { SectionLabel } from '@/components/ui/SectionLabel';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { markShape } from './mark';
+import { attr, css, flag, lin, usePin } from './shared';
+import './second.css';
+
+// DRUGA SEKCJA - PROPOZYCJA 3 „ŚWIATŁO” (2026-10-12). Prefiks on-2l-. Przypięta 100svh + 190vh, bez WebGL.
+// Ruch: SPOKÓJ I ŚWIATŁO (po dwóch ruchach kamery z wejścia - oddech). Cała treść sekcji to jedno duże zdanie-manifest
+// (nagłówek „Bez pośredników. Prosto do nas.” i dwa zdania pod nim, jednym krojem i rozmiarem). Na początku tekst
+// jest ledwo widoczny; przy przewijaniu gwiazda z logo zjeżdża po linii wzdłuż lewej krawędzi tekstu (znak z logo
+// ustawiony pionowo, jeden kształt) i zapala słowa po kolei - jak w wejściu, gdzie jej światło zapala litery.
+// Słowo, do którego właśnie doszło światło, jest przez chwilę w jaśniejszym błękicie marki i stygnie do bieli
+// (stygnięcie na czas, w CSS). Gwiazda jedzie tylko w dół, płynnie między wierszami - bez cofania.
+// Bez JS / ograniczony ruch: cały tekst od razu w pełnym kolorze, bez znaku.
+
+type Row = { words: HTMLElement[]; ys: number[]; top: number; sz: number };
+
+const words = (s: string, cls = '') => s.split(' ').map((w, i) => (
+  <Fragment key={i}><span className={cls ? `on-2l-w ${cls}` : 'on-2l-w'}>{w}</span>{' '}</Fragment>
+));
+
+export function SecondLight({ t, live }: { t: ONasDict['direct']; live: boolean }) {
+  const pin = useRef<HTMLDivElement>(null), body = useRef<HTMLDivElement>(null);
+  const mark = useRef<SVGPathElement>(null);
+  const row = useRef<Row | null>(null);
+  const prog = useRef(0);
+
+  /** Słowa i środki ich wierszy (względem bloku tekstu) - tylko przy zmianie rozmiaru i po wczytaniu fontu. */
+  const measure = useCallback(() => {
+    const bd = body.current;
+    if (!bd) return null;
+    const ws = Array.from(bd.querySelectorAll<HTMLElement>('.on-2l-w'));
+    if (!ws.length) return null;
+    const ys = ws.map((w) => w.offsetTop + w.offsetHeight / 2);
+    // wielkość gwiazdy (skala znaku z logo): mniejsza na telefonie - razem z pomiarem, bez odczytu okna w klatce
+    return (row.current = { words: ws, ys, top: ws[0].offsetTop, sz: bd.clientWidth < 600 ? 0.5 : 0.72 });
+  }, []);
+
+  const paint = useCallback(() => {
+    const d = row.current ?? measure();
+    if (!d) return;
+    const p = prog.current, n = d.words.length;
+    // czoło światła liczone w słowach (z zapasem na końcu: ostatnie słowo dochodzi do pełnego koloru);
+    // przed startem żadne słowo nie jest zapalone ani „gorące”
+    const q = lin(p, 0.05, 0.88) * (n + 0.3);
+    d.words.forEach((w, i) => {
+      const x = (q - i - 0.05) / 1.2, l = x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x);
+      css(w, 'opacity', (0.14 + 0.86 * l).toFixed(3));
+      flag(w, 'data-hot', l > 0.02 && l < 0.98);
+    });
+    // gwiazda stoi na wysokości wiersza, do którego doszło światło; między wierszami zjeżdża płynnie
+    const f = Math.min(n - 1, Math.max(0, q - 0.4)), i0 = Math.floor(f), i1 = Math.min(n - 1, i0 + 1);
+    const u = f - i0, y = d.ys[i0] + (d.ys[i1] - d.ys[i0]) * u * u * (3 - 2 * u);
+    attr(mark.current, 'd', markShape(d.top - 10, y, 0, d.sz));
+  }, [measure]);
+
+  useEffect(() => {
+    if (!live) return;
+    const bd = body.current;
+    if (!bd) return;
+    const again = () => { measure(); paint(); };
+    const ro = new ResizeObserver(again);
+    ro.observe(bd);
+    let dead = false;
+    document.fonts?.ready.then(() => { if (!dead) again(); });
+    return () => {
+      dead = true;
+      ro.disconnect();
+      // po wyłączeniu ruchu tekst wraca do pełnego koloru
+      row.current?.words.forEach((w) => { w.style.removeProperty('opacity'); w.removeAttribute('data-hot'); });
+      row.current = null;
+    };
+  }, [live, measure, paint]);
+  usePin(pin, (p) => { prog.current = p; paint(); }, live);
+
+  return (
+    <section className="on-sec on-2 on-2l" aria-labelledby="on-2-h">
+      <div ref={pin} className="on-pin on-2l-pin">
+        <div className="on-stick on-2l-stick">
+          <div className="container mx-auto px-6 on-2l-box">
+            <div className="on-label on-2l-label"><SectionLabel align="start">{t.label}</SectionLabel></div>
+            <div ref={body} className="on-2l-body">
+              {/* znak z logo ustawiony pionowo: linia od góry tekstu do gwiazdy (ścieżkę pisze JS) */}
+              <svg className="on-2l-rail" aria-hidden="true" focusable="false">
+                <g className="on-2l-turn"><path ref={mark} className="on-2l-mark" /></g>
+              </svg>
+              <h2 id="on-2-h" className="on-2l-h">{words(t.heading)}{words(t.headingAccent, 'im-accent')}</h2>
+              <p className="on-2l-p">{t.light.map((s, i) => <Fragment key={i}>{words(s)}</Fragment>)}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

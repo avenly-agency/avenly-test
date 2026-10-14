@@ -1,8 +1,9 @@
 'use client';
 
-import { useRef, type CSSProperties } from 'react';
+import { useEffect, useRef, type CSSProperties, type RefObject } from 'react';
 import Link from 'next/link';
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
+import { GEM } from '@/lib/brand/logo';
 import type { ProjectsData, RealizacjeDict, WorkItem } from '@/lib/i18n/projects';
 import { localizeHref, type Locale } from '@/lib/i18n/locale';
 import { nn, SIZES } from './cards';
@@ -200,10 +201,100 @@ const Part = ({ no, label, text, i = 0 }: { no: string; label: string; text: str
   </Rv>
 );
 
+// ── Zapowiedź następnej realizacji: jej strona otwiera się w kadrze przez GWIAZDĘ Z LOGO (2026-10-13) ─────────────
+// Właściciel po przejściu „Portal” na /o-nas: „portal zajebisty, gdzie można jeszcze ten efekt użyć zmiany
+// z gwiazdami?” i polecenie „wykonaj”. Kadr (szkło, pasek z adresem) stoi od razu, a jego okno jest puste; gdy
+// zapowiedź wjedzie na ekran, w oknie otwiera się gwiazda i rośnie, aż odsłoni całą stronę następnego klienta - przed
+// nią lecą dwa obrysy-powidoki w jego kolorze (--ac). Odsłona gra do końca na czas (nie zależy od przewijania).
+// Zastępuje kurtynę od dołu z Frame (anim="none"). Ograniczony ruch / bez JS: strona w kadrze widoczna od razu
+// (stan „przed” tylko pod .rl[data-live], case.css).
+const STAR_FROM = 0.25;          // skala gwiazdy (promień 20 jedn.) na starcie = promień 5 px
+const STAR_ECHO = [1, 1.24, 1.56]; // obrys okna i dwa powidoki przed nim
+const STAR_WAIST = 7.884;        // wcięcie gwiazdy: okno zakrywa pole, gdy wcięcia wyjdą poza jego rogi
+const STAR_MS = 1150;
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const starPath = (cx: number, cy: number, s: number) => {
+  const P = (x: number, y: number) => `${(cx + x * s).toFixed(1)} ${(cy + y * s).toFixed(1)}`;
+  return `path("M${P(0, -20)}C${P(1.4, -6.8)} ${P(6.8, -1.4)} ${P(20, 0)}C${P(6.8, 1.4)} ${P(1.4, 6.8)} ${P(0, 20)}`
+    + `C${P(-1.4, 6.8)} ${P(-6.8, 1.4)} ${P(-20, 0)}C${P(-6.8, -1.4)} ${P(-1.4, -6.8)} ${P(0, -20)}Z")`;
+};
+
+/** `host` = pole z kadrem (.rl-cf-next-fr); `dep` = zmiana realizacji (odsłona gra od nowa). */
+const useStarOpen = (ref: RefObject<HTMLElement | null>, dep: string) => {
+  useEffect(() => {
+    const host = ref.current;
+    if (!host) return;
+    const view = host.querySelector<HTMLElement>('.rl-frame-view');
+    const cur = host.querySelector<HTMLElement>('.rl-frame-cur');
+    if (!view || !cur || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      host.setAttribute('data-open', '');
+      return () => host.removeAttribute('data-open');
+    }
+    let raf = 0;
+    let svg: SVGSVGElement | null = null;
+    const run = () => {
+      // Okno kadru i widoczna część pola (pole pokazuje tylko górę kadru, niżej gaśnie maską - gwiazda otwiera się
+      // w jej jasnej, górnej części).
+      const vr = view.getBoundingClientRect(), hr = host.getBoundingClientRect();
+      const w = vr.width, vis = Math.max(40, Math.min(vr.height, hr.bottom - vr.top));
+      const cx = w / 2, cy = vis * 0.32;
+      const full = Math.max(STAR_FROM * 2, (Math.hypot(w / 2, Math.max(cy, vis - cy)) * 1.08) / STAR_WAIST);
+      const rings: SVGPathElement[] = [];
+      svg = document.createElementNS(SVG_NS, 'svg');
+      svg.setAttribute('class', 'rl-cf-next-rings');
+      svg.setAttribute('aria-hidden', 'true');
+      svg.setAttribute('focusable', 'false');
+      for (let k = 0; k < STAR_ECHO.length; k++) {
+        const p = document.createElementNS(SVG_NS, 'path');
+        p.setAttribute('d', GEM);
+        p.setAttribute('vector-effect', 'non-scaling-stroke');
+        svg.appendChild(p);
+        rings.push(p);
+      }
+      view.appendChild(svg);
+      const paint = (b: number) => {
+        const s = STAR_FROM * Math.pow(full / STAR_FROM, b);
+        cur.style.clipPath = starPath(cx, cy, s);
+        for (let k = 0; k < rings.length; k++) {
+          rings[k].setAttribute('transform', `translate(${cx.toFixed(1)} ${cy.toFixed(1)}) scale(${(s * STAR_ECHO[k]).toFixed(4)})`);
+        }
+      };
+      // Stan startowy i odsłonięcie w tej samej klatce (okno nie mignie całe).
+      paint(0);
+      host.setAttribute('data-open', '');
+      let t0 = -1;
+      const step = (now: number) => {
+        if (t0 < 0) t0 = now;
+        const t = Math.min(1, (now - t0) / STAR_MS);
+        if (t >= 1) { cur.style.clipPath = ''; svg?.remove(); svg = null; return; }
+        paint(t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2); // łagodny start i koniec
+        raf = requestAnimationFrame(step);
+      };
+      raf = requestAnimationFrame(step);
+    };
+    // Start, gdy pole z kadrem jest już wyraźnie na ekranie (odsłona ma być widziana od początku).
+    const io = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return;
+      io.disconnect();
+      run();
+    }, { threshold: 0.4 });
+    io.observe(host);
+    return () => {
+      io.disconnect();
+      cancelAnimationFrame(raf);
+      svg?.remove();
+      cur.style.clipPath = '';
+      host.removeAttribute('data-open');
+    };
+  }, [ref, dep]);
+};
+
 /** Następna realizacja: jej nazwa jak plansza i góra jej kadru gasnąca w czerń końca strony. */
 const NextPlate = ({ next, num, t, locale }: { next: WorkItem; num: number; t: RealizacjeDict; locale: Locale }) => {
   const ref = useRef<HTMLElement>(null);
+  const frRef = useRef<HTMLDivElement>(null);
   useEnter(ref, 0.15);
+  useStarOpen(frRef, next.slug);
   const name = nameOf(next);
   const href = localizeHref(`/realizacje/${next.slug}`, locale);
   return (
@@ -216,9 +307,10 @@ const NextPlate = ({ next, num, t, locale }: { next: WorkItem; num: number; t: R
             <span className="rl-cf-next-name"><span className="rl-mask"><span className="rl-cf-next-line">{name.node}</span></span></span>
             <ArrowRight className="rl-arrow rl-cf-next-arrow" aria-hidden="true" />
           </Link>
-          <div className="rl-cf-next-fr" aria-hidden="true">
+          <div ref={frRef} className="rl-cf-next-fr" aria-hidden="true">
             <Frame
               slug={next.slug} alt="" accent={next.accent} domain={next.domain} size="case" sizes={SIZES.case} live={false} sky={next.slug}
+              anim="none"
               hit={<Link href={href} prefetch={false} className="rl-frame-hit" tabIndex={-1} aria-hidden="true" />}
             />
           </div>

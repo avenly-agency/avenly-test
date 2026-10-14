@@ -4,13 +4,17 @@ import { AppShell } from "@/components/layout/AppShell";
 import { SITE } from "@/lib/seo-data";
 import { i18nAlternates } from "@/lib/i18n/locale";
 
+// Home page title and description (the root layout is the metadata of `/en/`): hero headline + services on offer +
+// the defensible facts from the proof line. Sentence case, no "Marketing" (not on offer) - PRODUCT.md.
+const HOME_TITLE_EN = "Avenly - interactive agency. Websites, online stores and AI";
+const HOME_SHARE_TITLE_EN = "Avenly - websites, online stores and AI chatbots";
 const SITE_DESCRIPTION_EN =
-  'Interactive agency from Poland. We build modern websites, e-commerce stores and AI chatbots, and run conversion-focused marketing.';
+  'From a website to a system that keeps your business in order. A store that sells while you rest. An AI chatbot that answers around the clock. Free consultation.';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
   title: {
-    default: "Avenly - Interactive Agency · Websites, AI & Marketing",
+    default: HOME_TITLE_EN,
     template: "%s | Avenly",
   },
   description: SITE_DESCRIPTION_EN,
@@ -23,14 +27,13 @@ export const metadata: Metadata = {
     'interactive agency',
     'web design agency Poland',
     'website development',
+    'company website',
+    'one page website',
+    'online store',
+    'CRM system',
     'AI chatbot',
     'AI automation',
-    'company website',
     'Next.js',
-    'e-commerce',
-    'WooCommerce',
-    'UI/UX design',
-    'SEO',
     'Avenly',
   ],
   category: 'technology',
@@ -52,22 +55,22 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: `${SITE.url}/en/`,
     siteName: SITE.name,
-    title: 'Avenly - Interactive Agency · Websites, AI & Marketing',
+    title: HOME_SHARE_TITLE_EN,
     description: SITE_DESCRIPTION_EN,
     images: [
       {
         url: '/og-default.png',
         width: 1200,
         height: 630,
-        alt: 'Avenly - Interactive Agency',
+        alt: 'Avenly - interactive agency',
         type: 'image/png',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Avenly - Interactive Agency',
-    description: 'Websites · AI · Marketing',
+    title: HOME_SHARE_TITLE_EN,
+    description: SITE_DESCRIPTION_EN,
     images: ['/og-default.png'],
   },
   icons: {

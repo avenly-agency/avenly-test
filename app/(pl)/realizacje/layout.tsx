@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { i18nAlternates } from "@/lib/i18n/locale";
 
 export const metadata: Metadata = {
-  title: "Realizacje - strony WWW, sklepy internetowe i asystent AI",
+  title: "Realizacje - dowód, nie obietnice",
   description:
     "Strony WWW, sklep internetowy z panelem, aplikacja klubowa i asystent AI. Prawdziwe strony prawdziwych firm, które możesz otworzyć i sprawdzić.",
   alternates: i18nAlternates("/realizacje", "pl"),

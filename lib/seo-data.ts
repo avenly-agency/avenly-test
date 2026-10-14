@@ -7,13 +7,15 @@
 
 export const SITE = {
   name: 'Avenly',
-  legalName: 'Avenly', // TODO: pełna nazwa prawna jeśli inna (np. "Avenly Sp. z o.o.")
+  legalName: 'Avenly Michał Grzejdak', // nazwa działalności w CEIDG (JDG, od 2026-10-14); tylko w danych strukturalnych
   url: 'https://avenly.pl',
   logo: 'https://avenly.pl/icon.png',
   ogImage: 'https://avenly.pl/og-default.png',
+  // Opis firmy w danych strukturalnych (Organization, WebSite) i zapasowy opis meta. Tylko usługi z oferty
+  // (bez marketingu i „e-commerce”); opis strony głównej w głosie korzyści jest w app/(pl)/layout.tsx.
   description:
-    'Polska agencja interaktywna. Tworzymy nowoczesne strony WWW, sklepy e-commerce, chatboty AI i prowadzimy marketing zorientowany na konwersję.',
-  shortDescription: 'Strony WWW · AI · Marketing',
+    'Avenly to polska agencja interaktywna. Projektujemy i budujemy strony WWW, sklepy internetowe, systemy CRM i chatboty AI dla firm.',
+  shortDescription: 'Strony WWW · sklepy internetowe · chatboty AI',
   language: 'pl-PL',
   founded: '2026',
 } as const;
@@ -39,8 +41,9 @@ export const ADDRESS = {
 } as const;
 
 export const COMPANY_IDS = {
-  // TODO: NIP/REGON dla trust signal i ewentualnej VAT validation
-  nip: '', // np. "1234567890"
+  // NIP z 2026-10-14 (właściciel: jednoosobowa działalność „Avenly Michał Grzejdak”, CEIDG). TODO: REGON, jeśli ma być
+  // pokazywany (stopka pokazuje tylko NIP, polityka prywatności oba, gdy są uzupełnione).
+  nip: '5381873554',
   regon: '', // np. "123456789"
   krs: '', // jeśli sp. z o.o.
 } as const;

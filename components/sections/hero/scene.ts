@@ -1,16 +1,24 @@
 // Orkiestrator sceny hero (wariant 12a). Vanilla TS, zero zależności - ładowany
 // przez dynamic import() PO idle (poza krytycznym bundlem i oknem hydratacji).
 // Jedna pętla rAF dla wszystkich warstw; planeta (WebGL) i niebo renderują się
-// naprzemiennie (po ~30 fps każda - ruch jest wolny), cząstki w pełnym tempie
-// tylko gdy coś się rusza. Pauza: IntersectionObserver + document.hidden.
+// naprzemiennie (po ~30 fps każda - ruch jest wolny), logotyp tylko w czasie wejścia
+// (cały napis → gwiazda go przecina, ~2,6 s), potem nie rysuje nic. Pauza: IntersectionObserver + document.hidden.
+// Od 2026-10-09 logotyp to nowe logo z „chirurgicznym cięciem” (logo.ts) - dawne cząstki usunięte („laguje”).
 
 import { measureLayout, type HeroLayout, type HeroPointer } from './layout';
 import { createPlanet, type PlanetLayer } from './planet';
-import { createParticles } from './particles';
+import { createLogo } from './logo';
 import { createSky } from './sky';
+import { markHeroIntroDone } from '@/lib/hero-intro';
 
 const REFLECT_K = 0.78;
-const STRIP = 6;
+/** Odbicie logotypu (2026-10-13, właściciel: „odbicie jest low quality (…) plus nie odzwierciedla aktualnej wersji”):
+    dawne paski co 6 jednostek (wymyślone dla logotypu z cząstek) dawały na pełnych literach schodki, a płótno odbicia
+    miało gęstość 1 - na ekranach o większej gęstości było rozmyte. Teraz odbicie to lustro logotypu względem
+    POWIERZCHNI PLANETY liczone klinami od jej środka (w każdym klinie lustro względem stycznej - gładko, bez schodków,
+    litery i linia z gwiazdą dokładnie jak nad horyzontem), w gęstości płótna logotypu. */
+const REFLECT_WEDGES = 40;
+const REFLECT_DPR = 2;
 
 export interface HeroScene { destroy(): void }
 
@@ -25,7 +33,6 @@ export function createHeroScene(section: HTMLElement): HeroScene | null {
 
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const interactive = !reduced && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-  const fontFamily = getComputedStyle(section).fontFamily || 'Inter, sans-serif';
 
   const t0 = performance.now();
   const pointer: HeroPointer = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5, px: -1, py: -1 };
@@ -37,62 +44,81 @@ export function createHeroScene(section: HTMLElement): HeroScene | null {
   let inView = true;
   let lastSky = 0;
   let lastPlanet = 0;
+  let lastReflect = 0;
+  let pendingReflect = false;
+  /** Planeta WebGL zamówiona (po zakończeniu wejścia logotypu). */
+  let planetQueued = false;
   /** Ostatni ruch myszy / fokus etykiety (ms) - przez chwilę po nim scena rysuje w pełnym tempie. */
   let lastMove = -1e9;
   let built = false;
   let pageLeft = 0, pageTop = 0;
   let resizeTimer = 0;
-  /** Kiedy odsłonić tekst: logotyp po ~1,9 s wejścia jest już czytelny (0 = jeszcze nie wiadomo). */
+  /** Kiedy odsłonić tekst: gdy gwiazda kończy cięcie logotypu (~2,55 s wejścia; 0 = jeszcze nie wiadomo). */
   let textAt = reduced ? t0 : 0;
   let textShown = false;
 
-  // Kolejność wejścia (decyzja właściciela): planeta (obraz od 1. klatki) → logotyp → tekst (CSS).
-  // Dlatego cząstki ruszają niemal od razu po starcie sceny, a nie po 600 ms jak w makiecie.
-  // Cząstki reagują na mysz ORAZ dotyk (na telefonie lity napis rozpada się pod palcem);
-  // niebo/magnes/światło planety zostają tylko dla myszy (`interactive`).
-  const particles = createParticles(dotsCanvas, !reduced, () => { if (!disposed) apply(false, true); });
+  // Kolejność wejścia (decyzja właściciela): planeta (obraz od 1. klatki) → logotyp (cały napis, potem cięcie
+  // gwiazdą) → tekst (CSS). Niebo / magnes / światło planety reagują tylko na mysz (`interactive`).
+  const logo = createLogo(dotsCanvas);
   const sky = createSky(skyCanvas, labels, t0 + 400, reduced, interactive);
   const rctx = reflectCanvas.getContext('2d')!;
   let reflectTop = 0;
 
   const drawReflection = () => {
-    // Renderer GPU rysuje odbicie sam (druga transformacja w vertex shaderze).
-    if (!layout || layout.compact || particles.ownsReflection) return;
-    const L = layout, src = particles.canvas;
+    if (!layout || layout.compact || logo.ownsReflection) return;
+    const L = layout, src = logo.canvas;
     if (!src.width) return;
-    const sd = src.width / L.W; // px bufora źródła na px CSS
+    const sd = src.width / L.W; // px bufora źródła (logotypu) na px CSS
+    const rd = reflectCanvas.width / L.W; // px bufora odbicia na px CSS
     const off = 6.24 * (L.R / 1300);
+    const Cy = L.horizon + L.R; // środek planety
+    // jednostki sceny → px bufora odbicia
+    const toScene = () => rctx.setTransform(L.k * rd, 0, 0, L.k * rd, L.ox * rd, (L.oy - reflectTop) * rd);
     rctx.setTransform(1, 0, 0, 1, 0, 0);
     rctx.clearRect(0, 0, reflectCanvas.width, reflectCanvas.height);
-    rctx.setTransform(L.k, 0, 0, L.k, L.ox, L.oy - reflectTop);
     rctx.globalCompositeOperation = 'source-over';
-    const yTop = particles.topY - 30;
-    const xA = Math.max(L.xMin, L.cx - L.logoW / 2 - 120), xB = Math.min(L.xMax, L.cx + L.logoW / 2 + 120);
-    for (let x = xA; x < xB; x += STRIP) {
-      const dx = x + STRIP / 2 - L.cx, inside = L.R * L.R - dx * dx;
-      if (inside <= 0) continue;
-      const surf = L.horizon + (L.R - Math.sqrt(inside));
-      const far = surf + REFLECT_K * (surf - yTop) + off, near = surf + off;
-      const sy = (L.oy + yTop * L.k) * sd, sh = (surf - yTop) * L.k * sd;
-      if (sh <= 0 || sy + sh < 0) continue;
+    // Kliny od środka planety obejmujące logotyp z zapasem. W każdym: przycięcie do klina (wnętrze planety), potem
+    // obraz logotypu odbity względem stycznej do powierzchni w środku klina (ściśnięty REFLECT_K w głąb planety).
+    // Kliny lekko zachodzą na siebie - bez szwów na ich granicach.
+    const half = Math.min(1.2, (L.logoW * 0.52 + 150) / L.R);
+    const step = (2 * half) / REFLECT_WEDGES, lap = step * 0.05, rr = L.R + 2;
+    for (let i = 0; i < REFLECT_WEDGES; i++) {
+      const a = -half + i * step, b = a + step + lap, th = a + step / 2;
+      const sn = Math.sin(th), cs = Math.cos(th);
+      const sx = L.cx + L.R * sn, sy = Cy - L.R * cs; // punkt powierzchni planety w środku klina
       rctx.save();
-      rctx.translate(x, far); rctx.scale(1, -1);
-      rctx.globalAlpha = 1 - Math.min(1, Math.abs(dx) / L.R) * 0.35;
-      rctx.drawImage(src, (L.ox + x * L.k) * sd, Math.max(0, sy), STRIP * L.k * sd, sh, 0, 0, STRIP, far - near);
+      toScene();
+      rctx.beginPath();
+      rctx.moveTo(L.cx, Cy);
+      rctx.lineTo(L.cx + rr * Math.sin(a), Cy - rr * Math.cos(a));
+      rctx.lineTo(L.cx + rr * Math.sin(b), Cy - rr * Math.cos(b));
+      rctx.closePath();
+      rctx.clip();
+      rctx.globalAlpha = 1 - Math.min(1, Math.abs(sn)) * 0.35; // ku bokom odbicie słabnie (jak dotąd)
+      // lustro: układ styczna / promień w punkcie powierzchni, odwrócenie i ściśnięcie wzdłuż promienia
+      rctx.translate(sx, sy); rctx.rotate(th); rctx.translate(0, off); rctx.scale(1, -REFLECT_K); rctx.rotate(-th); rctx.translate(-sx, -sy);
+      // obraz logotypu: px jego bufora → jednostki sceny
+      rctx.translate(-L.ox / L.k, -L.oy / L.k);
+      rctx.scale(1 / (L.k * sd), 1 / (L.k * sd));
+      rctx.drawImage(src, 0, 0);
       rctx.restore();
     }
+    // wygaszenie w głąb planety (od krawędzi do `span` jednostek pod nią) - te same wartości co dotąd, ale liczone
+    // od powierzchni planety (promieniście), więc odbicie liter przy brzegach nie jest słabsze niż na środku
+    toScene();
     rctx.globalAlpha = 1;
     rctx.globalCompositeOperation = 'destination-in';
     const span = 616 * 0.95 * (L.R / 1300);
-    const g = rctx.createLinearGradient(0, L.horizon - 10, 0, L.horizon + span);
-    g.addColorStop(0, 'rgba(0,0,0,.5)'); g.addColorStop(0.35, 'rgba(0,0,0,.22)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    const g = rctx.createRadialGradient(L.cx, Cy, Math.max(1, L.R - span), L.cx, Cy, L.R + 10);
+    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.65, 'rgba(0,0,0,.22)'); g.addColorStop(1, 'rgba(0,0,0,.5)');
     rctx.fillStyle = g;
     rctx.fillRect(L.xMin, L.yMin, L.xMax - L.xMin, L.yMax - L.yMin);
     rctx.globalCompositeOperation = 'source-over';
+    rctx.setTransform(1, 0, 0, 1, 0, 0);
   };
 
   const sizeReflection = (L: HeroLayout) => {
-    if (L.compact || particles.ownsReflection) { reflectCanvas.width = reflectCanvas.height = 1; reflectCanvas.style.display = 'none'; return; }
+    if (L.compact || logo.ownsReflection) { reflectCanvas.width = reflectCanvas.height = 1; reflectCanvas.style.display = 'none'; return; }
     reflectTop = Math.max(0, Math.floor(L.oy + (L.horizon - 12) * L.k));
     const h = Math.max(1, L.H - reflectTop);
     reflectCanvas.style.display = 'block';
@@ -100,7 +126,9 @@ export function createHeroScene(section: HTMLElement): HeroScene | null {
     reflectCanvas.style.transform = `translate3d(0,${reflectTop}px,0)`;
     reflectCanvas.style.width = `${L.W}px`;
     reflectCanvas.style.height = `${h}px`;
-    reflectCanvas.width = Math.round(L.W); reflectCanvas.height = Math.round(h);
+    // gęstość jak płótno logotypu (najwyżej 2) - odbicie nie jest już rozmyte na ekranach o większej gęstości
+    const rd = Math.min(window.devicePixelRatio || 1, REFLECT_DPR);
+    reflectCanvas.width = Math.round(L.W * rd); reflectCanvas.height = Math.round(h * rd);
   };
 
   const measureStatics = () => {
@@ -120,24 +148,18 @@ export function createHeroScene(section: HTMLElement): HeroScene | null {
     planet?.resize(next);
     sky.resize(next);
     const entrance = animate && !reduced;
-    // Start wejścia liczony od TERAZ (build czeka na font) - nie od startu sceny.
+    // Start wejścia liczony od TERAZ - nie od startu sceny.
     const entranceAt = performance.now() + 100;
-    particles.build(next, fontFamily, entrance, entranceAt);
-    if (!textAt) textAt = entrance ? entranceAt + 1900 : performance.now();
-    sizeReflection(next); // po build(): dopiero wtedy wiadomo, który renderer rysuje odbicie
+    logo.build(next, entrance, entranceAt);
+    if (!textAt) textAt = entrance ? entranceAt + 2550 : performance.now();
+    sizeReflection(next);
     built = true;
     drawReflection();
     start();
-    // Start rozbity na osobne taski (każdy < 50 ms): sampling (wyżej) → siatka sąsiedztwa
-    // → kontekst WebGL. Cząstki ruszają dopiero w t0+600 ms, planeta w t0+900 ms - jest zapas.
-    window.setTimeout(() => {
-      if (disposed || layout !== next) return;
-      if (entrance) particles.link();
-      window.setTimeout(() => { if (!disposed && layout === next) ensurePlanet(next); }, 0);
-      // Lity napis (raster hi-res + tekstura) jest potrzebny dopiero przy zastyganiu (~3,7 s) -
-      // osobny task w środku wejścia, żeby nie sklejał się z siatką sąsiedztwa w long task.
-      if (entrance) window.setTimeout(() => { if (!disposed && layout === next) particles.prepareSolid(); }, 1400);
-    }, 0);
+    // Kontekst WebGL planety: przy wejściu dopiero PO cięciu logotypu (tick - do tego czasu planeta to statyczny
+    // render, identyczny z pierwszą klatką shadera; kompilacja i przenikanie nie dzielą klatek z animacją),
+    // bez wejścia (zmiana rozmiaru, ograniczony ruch) - w osobnym tasku od razu.
+    if (!entrance || planetQueued) window.setTimeout(() => { if (!disposed && layout === next) ensurePlanet(next); }, 0);
   };
 
   // WebGL tylko na desktopie (zasada projektu: shader hero na mobile = TBT killer);
@@ -161,8 +183,22 @@ export function createHeroScene(section: HTMLElement): HeroScene | null {
     if (!textShown && textAt && now >= textAt) { textShown = true; section.setAttribute('data-text', ''); }
     pointer.x += (pointer.tx - pointer.x) * 0.05;
     pointer.y += (pointer.ty - pointer.y) * 0.05;
-    const partsLive = particles.frame(now, pointer);
-    if (partsLive) drawReflection();
+    const partsLive = logo.frame(now);
+    // Odbicie logotypu w planecie: w czasie wejścia najwyżej ~30 razy na sekundę (ok. 240 pasków drawImage na
+    // przerysowanie), ostatnia klatka zawsze (wydajność, 2026-10-09).
+    if (partsLive || pendingReflect) {
+      if (logo.done || now - lastReflect >= 32) { lastReflect = now; pendingReflect = false; drawReflection(); }
+      else pendingReflect = true;
+    }
+    // Koniec wejścia logotypu: sygnał dla reszty strony (lib/hero-intro.ts - sekcje poniżej, czat, cookies)
+    // i dopiero teraz planeta WebGL (desktop).
+    if (logo.done && !planetQueued) {
+      planetQueued = true;
+      markHeroIntroDone();
+      const L = layout;
+      window.setTimeout(() => { if (!disposed && layout === L) ensurePlanet(L); }, 500);
+    }
+    const logoBusy = !logo.done;
     let skyLive = true;
     if (layout.mobile) {
       // Mobile: brak WebGL; niebo ~20 fps (mruganie/impulsy są wolne, a każda klatka canvasa
@@ -177,7 +213,8 @@ export function createHeroScene(section: HTMLElement): HeroScene | null {
       const lively = partsLive || sky.busy || now - lastMove < 1200 || now - t0 < 6500
         || Math.abs(pointer.tx - pointer.x) + Math.abs(pointer.ty - pointer.y) > 0.002;
       if (now - lastPlanet >= (lively ? 30 : 46)) { lastPlanet = now; planet?.render(reduced ? 0 : (now - t0) / 1000, pointer); }
-      if (now - lastSky >= (lively ? 12 : 30)) { lastSky = now; skyLive = sky.frame(now, pointer); }
+      // W czasie wejścia logotypu niebo ~30 kl./s (jego ruch jest wolny) - klatki należą do cięcia (2026-10-09).
+      if (now - lastSky >= (logoBusy ? 30 : lively ? 12 : 30)) { lastSky = now; skyLive = sky.frame(now, pointer); }
     }
     // Reduced motion: po fade-inach scena jest statyczna → pętla staje (zero kosztu).
     if (reduced && !skyLive && now - t0 > 5000) stop();
@@ -204,23 +241,9 @@ export function createHeroScene(section: HTMLElement): HeroScene | null {
   const onLeave = () => {
     pointer.tx = 0.5; pointer.ty = 0.5; pointer.px = -1; pointer.py = -1;
   };
-  // Dotyk / rysik: tylko surowa pozycja (dla cząstek). Listenery pasywne - nie blokują scrolla;
-  // gdy przeglądarka przejmie gest (scroll), przychodzi pointercancel i "dziura" się zamyka.
-  const onTouch = (e: PointerEvent) => {
-    if (e.pointerType === 'mouse' || !layout) return;
-    pointer.px = (e.pageX - pageLeft - layout.ox) / layout.k;
-    pointer.py = (e.pageY - pageTop - layout.oy) / layout.k;
-  };
-  const onTouchEnd = (e: PointerEvent) => { if (e.pointerType !== 'mouse') { pointer.px = -1; pointer.py = -1; } };
   if (interactive) {
     section.addEventListener('pointermove', onMove, { passive: true });
     section.addEventListener('pointerleave', onLeave, { passive: true });
-  }
-  if (!reduced) {
-    section.addEventListener('pointerdown', onTouch, { passive: true });
-    section.addEventListener('pointermove', onTouch, { passive: true });
-    section.addEventListener('pointerup', onTouchEnd, { passive: true });
-    section.addEventListener('pointercancel', onTouchEnd, { passive: true });
   }
 
   // Hover / focus linku etykiety = "hot" węzeł (klawiatura dostaje ten sam feedback co mysz).
@@ -256,13 +279,8 @@ export function createHeroScene(section: HTMLElement): HeroScene | null {
   });
   ro.observe(section);
 
-  // Pierwszy build dopiero gdy Inter 800 jest gotowy (sampling liter z canvasa);
-  // bezpiecznik 1500 ms, żeby brak fontu nie zablokował sceny.
-  let fontDone = false;
-  const first = () => { if (fontDone || disposed) return; fontDone = true; apply(true); };
-  const fontTimer = window.setTimeout(first, 1500);
-  if (document.fonts?.load) document.fonts.load(`800 100px ${fontFamily}`, 'AVENLY').then(first, first);
-  else first();
+  // Logotyp to ścieżki SVG (nie font) - scena buduje się od razu.
+  apply(true);
 
   section.setAttribute('data-scene', 'on');
 
@@ -270,20 +288,15 @@ export function createHeroScene(section: HTMLElement): HeroScene | null {
     destroy() {
       disposed = true;
       stop();
-      window.clearTimeout(fontTimer);
       window.clearTimeout(resizeTimer);
       io.disconnect(); ro.disconnect();
       document.removeEventListener('visibilitychange', onVisibility);
       section.removeEventListener('pointermove', onMove);
       section.removeEventListener('pointerleave', onLeave);
-      section.removeEventListener('pointerdown', onTouch);
-      section.removeEventListener('pointermove', onTouch);
-      section.removeEventListener('pointerup', onTouchEnd);
-      section.removeEventListener('pointercancel', onTouchEnd);
       labelHandlers.forEach((fn) => fn());
       planet?.destroy(); planet = null;
       glHost.removeAttribute('data-ready');
-      particles.destroy(); sky.destroy();
+      logo.destroy(); sky.destroy();
       reflectCanvas.width = reflectCanvas.height = 1;
       dotsCanvas.width = dotsCanvas.height = 1;
       section.removeAttribute('data-scene');

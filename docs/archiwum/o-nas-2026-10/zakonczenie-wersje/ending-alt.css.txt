@@ -1,0 +1,77 @@
+/* ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+   O NAS - ZAKOŃCZENIE: PROPOZYCJE 2026-10-13 (ending-alt.tsx; obecna wersja „Linia z gwiazdą” ma style .on-end-
+   w o-nas.css). Przełącznik w panelu na dole ekranu, tylko dev.
+     on-e2  „Przez gwiazdę” - gwiazda z logo otwiera się w okno z nagłówkiem i przyciskiem (raz, na czas),
+     on-e3  „Horyzont” - gwiazda wschodzi zza krawędzi planety na dole sekcji, planeta przechodzi w stopkę.
+   Tło: mgławica podstrony (data-sky). Style bez [data-live] = stan końcowy.
+   ═══════════════════════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* ═════════ „PRZEZ GWIAZDĘ” ═════════ */
+.on-e2-stage { position: relative; display: flex; min-height: min(88vh, 820px); min-height: min(88svh, 820px); }
+.on-e2-win { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; padding: clamp(110px, 15vh, 170px) 0 clamp(90px, 12vh, 140px); }
+/* światło w oknie: miękka poświata marki bez krawędzi (gaśnie do zera przed brzegami pola) */
+.on-e2-light {
+  position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(46% 44% at 50% 50%, rgb(59 130 246 / .2), rgb(59 130 246 / .06) 56%, rgb(59 130 246 / 0) 80%);
+}
+.on-e2-core { position: absolute; left: 25%; right: 25%; top: 25%; bottom: 25%; pointer-events: none; }
+.on-e2-in { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.on-e2-h { margin: 0 0 24px; font-size: clamp(40px, 6.6vw, 104px); line-height: 1; letter-spacing: -.045em; }
+.on-e2 .on-lead { margin: 0 0 32px; max-width: 34rem; }
+.on-e2-rings, .on-e2-seed { display: none; }
+/* pełny ruch: przed wejściem na środku czeka gwiazdka, treść jest niewidoczna; okno (clip-path) i obrysy pisze JS */
+.on[data-live] .on-e2:not([data-in]) .on-e2-win { opacity: 0; }
+.on[data-live] .on-e2-rings { display: block; position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.on-e2-rings path { fill: none; stroke: #60a5fa; stroke-width: 1.5; }
+.on-e2-rings path:nth-child(2) { stroke-width: 1; stroke-opacity: .55; }
+.on-e2-rings path:nth-child(3) { stroke-width: 1; stroke-opacity: .3; }
+.on[data-live] .on-e2-seed {
+  display: block; position: absolute; left: 50%; top: 50%; width: 28px; height: 28px; margin: -14px 0 0 -14px;
+  fill: var(--on-ac); pointer-events: none; transition: opacity .3s ease;
+}
+.on[data-live] .on-e2[data-in] .on-e2-seed { opacity: 0; }
+@media (max-width: 767px) {
+  .on-e2-h { font-size: clamp(38px, 11.5vw, 56px); margin-bottom: 18px; }
+  .on-e2 .on-lead { margin-bottom: 26px; }
+}
+
+/* ═════════ „HORYZONT” ═════════ */
+.on-e3 {
+  --hz: 68%;
+  position: relative; min-height: min(92vh, 880px); min-height: min(92svh, 880px);
+  padding: clamp(120px, 16vh, 180px) 0 0; overflow: hidden; overflow: clip;
+}
+.on-e3-in { position: relative; z-index: 2; }
+.on-e3-h { margin: 0 0 26px; font-size: clamp(40px, 6vw, 92px); line-height: 1; letter-spacing: -.045em; }
+.on-e3-row { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 24px 40px; }
+.on-e3 .on-lead { max-width: 30rem; }
+/* planeta i orbita gwiazdy: to samo ogromne koło, widać tylko jego górny łuk (reszta za dolną krawędzią sekcji) */
+.on-e3-orbit, .on-e3-planet {
+  position: absolute; left: 50%; top: var(--hz); width: max(230vw, 1000px); aspect-ratio: 1; border-radius: 50%;
+  transform: translateX(-50%); pointer-events: none;
+}
+/* wnętrze planety ciemnieje do czerni stopki, krawędź łapie światło (biel + kolor marki), nad nią cienka poświata */
+.on-e3-planet {
+  z-index: 1;
+  background: radial-gradient(ellipse 120vw 210px at 50% 0, #0c1a38 0%, #070b17 48%, #050505 100%), #050505;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .7), inset 0 3px 9px -1px rgb(96 165 250 / .8),
+    inset 0 30px 70px -22px rgb(59 130 246 / .4), 0 -24px 80px -26px rgb(59 130 246 / .32);
+}
+/* gwiazda siedzi na orbicie 12° w prawo od szczytu łuku, tuż nad krawędzią planety */
+.on-e3-orbit { z-index: 0; transform: translateX(-50%) rotate(12deg); }
+.on-e3-star { position: absolute; left: 50%; top: -30px; width: 40px; height: 40px; margin: -20px 0 0 -20px; fill: var(--on-ac); transform: rotate(-12deg); }
+.on-e3-glow { position: absolute; left: 22%; right: 22%; top: calc(var(--hz) - 10%); height: 20%; pointer-events: none; }
+/* wejście (raz, na czas): planeta dojeżdża od dołu, potem gwiazda wschodzi zza jej krawędzi */
+.on[data-live] .on-e3:not([data-in]) .on-e3-planet { transform: translateX(-50%) translateY(70px); opacity: 0; }
+.on[data-live] .on-e3:not([data-in]) .on-e3-orbit { transform: translateX(-50%) translateY(70px) rotate(12deg); }
+.on[data-live] .on-e3:not([data-in]) .on-e3-star { transform: translateY(96px) rotate(-12deg); }
+.on[data-live] .on-e3[data-in] .on-e3-planet { transition: transform 2s var(--on-ease), opacity 1.2s ease; }
+.on[data-live] .on-e3[data-in] .on-e3-orbit { transition: transform 2s var(--on-ease); }
+.on[data-live] .on-e3[data-in] .on-e3-star { transition: transform 2.2s var(--on-ease) .7s; }
+@media (max-width: 767px) {
+  .on-e3 { --hz: 74%; }
+  .on-e3-h { font-size: clamp(38px, 11.5vw, 56px); margin-bottom: 20px; }
+  .on-e3-row { flex-direction: column; align-items: flex-start; gap: 24px; }
+  .on-e3-star { top: -24px; width: 30px; height: 30px; margin: -15px 0 0 -15px; }
+}

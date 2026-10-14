@@ -1,0 +1,127 @@
+/* ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+   O NAS - „W CO WIERZYMY”: PROPOZYCJE 2026-10-13 (principles-alt.tsx; obecna wersja „Stacje na linii” ma style
+   .on-pr- w o-nas.css). Przełącznik w panelu na dole ekranu, tylko dev.
+     on-p2  „Gwiazdozbiór” - przypięta scena: tekst (najpierw nagłówek sekcji, potem zasady) po lewej, po prawej gwiazdy
+            łączone lecącą gwiazdą z logo,
+     on-p3  „Karty” - siatka 3 × 2: nagłówek sekcji jako pierwszy kafelek i pięć szklanych kart z rysunkami.
+   Bez własnego tła (mgławica podstrony, data-sky). Style bez [data-live] = stan końcowy.
+   ═══════════════════════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* ═════════ „GWIAZDOZBIÓR” ═════════ */
+/* bez ruchu: nagłówek i zwykła numerowana lista zasad, rysunek schowany */
+.on-p2-sky { display: none; }
+.on-p2-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 36px; }
+.on-p2-item { border-top: 1px solid rgba(255, 255, 255, .1); padding-top: 22px; }
+/* nagłówek sekcji = pierwsza pozycja tekstu (runda 29); bez ruchu stoi nad listą */
+.on-p2-intro { border-top: 0; padding-top: clamp(64px, 10vh, 120px); margin-bottom: 40px; }
+.on-p2-n { display: block; margin-bottom: 12px; font-size: 14px; font-weight: 600; color: #60a5fa; font-variant-numeric: tabular-nums; }
+.on-p2-t { margin: 0; font-weight: 700; font-size: clamp(30px, 3.6vw, 54px); line-height: 1.04; letter-spacing: -.035em; color: #f8fafc; text-wrap: balance; }
+.on-p2-d { margin: 16px 0 0; max-width: 30rem; font-size: 18px; line-height: 1.65; color: #94a3b8; text-wrap: pretty; }
+
+.on[data-live] .on-p2-pin { height: calc(100vh + var(--n) * 58vh); height: calc(100svh + var(--n) * 58vh); }
+.on[data-live] .on-p2-box {
+  height: 100%; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: center;
+  gap: 0 clamp(24px, 4vw, 64px); padding-top: 88px; padding-bottom: 40px;
+}
+.on[data-live] .on-p2-texts { position: relative; height: clamp(280px, 44vh, 380px); height: clamp(280px, 44svh, 380px); }
+.on[data-live] .on-p2-list { display: block; position: absolute; inset: 0; }
+.on[data-live] .on-p2-item {
+  position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center;
+  margin: 0; padding: 0; border: 0; opacity: 0; visibility: hidden;
+}
+/* przed pierwszą klatką sceny widać nagłówek (potem krycie pisze JS); pismo nagłówka: scene-kit.css */
+.on[data-live] .on-p2-intro { opacity: 1; visibility: visible; }
+/* rysunek zawsze w proporcji 6:5 (położenia gwiazd i blasku liczone w procentach pola) */
+.on[data-live] .on-p2-sky {
+  display: block; position: relative; justify-self: end; aspect-ratio: 6 / 5;
+  width: min(100%, calc(72vh * 1.2)); width: min(100%, calc(72svh * 1.2));
+}
+.on-p2-sky svg { position: absolute; inset: 0; display: block; width: 100%; height: 100%; overflow: visible; }
+.on-p2-dust { fill: #fff; }
+/* linia między gwiazdami: bez non-scaling-stroke (z pathLength Chrome liczy wtedy kreskę niedokładnie) */
+.on-p2-link { fill: none; stroke: var(--on-ac); stroke-width: 1.6; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; }
+.on-p2-gem { fill: #fff; }
+.on-p2-ring {
+  fill: none; stroke: #60a5fa; stroke-width: 1; opacity: 0; transform: scale(.6);
+  transform-box: fill-box; transform-origin: 50% 50%; transition: opacity .5s ease, transform .7s var(--on-ease);
+}
+.on-p2-node[data-on] .on-p2-ring { opacity: .7; transform: none; }
+.on-p2-trav path { fill: var(--on-ac); }
+/* niewidoczny cel dla mgławicy podstrony: blask idzie za lecącą gwiazdą */
+.on-p2-glow { position: absolute; width: 38%; aspect-ratio: 1; transform: translate(-50%, -50%); pointer-events: none; }
+
+@media (max-width: 1023px) {
+  /* telefon i tablet: gwiazdozbiór u góry, tekst pod nim w polu o stałej wysokości */
+  .on[data-live] .on-p2-box { grid-template-columns: minmax(0, 1fr); align-content: center; gap: 14px 0; padding-top: 72px; padding-bottom: 28px; }
+  .on[data-live] .on-p2-sky { order: -1; justify-self: center; width: min(100%, calc(38vh * 1.2)); width: min(100%, calc(38svh * 1.2)); }
+  .on[data-live] .on-p2-texts { height: clamp(230px, 36vh, 300px); height: clamp(230px, 36svh, 300px); }
+  .on[data-live] .on-p2-item { justify-content: flex-start; }
+  .on-p2-d { max-width: 34rem; }
+}
+/* niski ekran poziomo: z powrotem obok siebie, mniejsze pismo */
+@media (max-width: 1023px) and (orientation: landscape) and (max-height: 560px) {
+  .on[data-live] .on-p2-box { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); align-content: normal; gap: 0 28px; padding-top: 60px; padding-bottom: 14px; }
+  .on[data-live] .on-p2-sky { order: 0; justify-self: end; width: min(100%, calc((100vh - 84px) * 1.2)); width: min(100%, calc((100svh - 84px) * 1.2)); }
+  .on[data-live] .on-p2-texts { height: 100%; }
+  .on[data-live] .on-p2-item { justify-content: center; }
+  .on-p2-t { font-size: clamp(22px, 3.6vw, 30px); }
+  .on-p2-d { margin-top: 8px; font-size: 14.5px; line-height: 1.5; }
+}
+@media (max-width: 767px) {
+  .on-p2-t { font-size: clamp(28px, 8.4vw, 40px); }
+  .on-p2-d { margin-top: 12px; font-size: 16.5px; }
+}
+
+/* ═════════ „KARTY” ═════════ */
+/* nagłówek sekcji jest pierwszym kafelkiem siatki 3 × 2 (runda 29) - nie osobnym blokiem nad kartami */
+.on-p3-box { padding-top: clamp(120px, 16vh, 180px); padding-bottom: clamp(40px, 8vh, 90px); }
+.on-p3-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.on-p3-head { align-self: start; padding: 6px 12px 0 0; }
+.on-p3-card {
+  display: flex; flex-direction: column; padding: 10px 10px 28px; border-radius: 22px;
+  background: rgb(9 9 12 / .66); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), 0 0 0 1px rgba(255, 255, 255, .1);
+}
+.on-p3-art { border-radius: 14px; overflow: hidden; background: #060607; }
+.on-p3-art svg { display: block; width: 100%; height: 190px; }
+.on-p3-n { margin: 22px 16px 10px; font-size: 14px; font-weight: 600; color: #60a5fa; font-variant-numeric: tabular-nums; }
+.on-p3-t { margin: 0 16px; font-size: clamp(22px, 2vw, 28px); font-weight: 700; line-height: 1.15; letter-spacing: -.025em; color: #f8fafc; text-wrap: balance; }
+.on-p3-d { margin: 10px 16px 0; font-size: 16px; line-height: 1.6; color: #94a3b8; text-wrap: pretty; }
+/* rysunki: włosowe linie, biel, jeden akcent marki */
+.on-p3-s { fill: none; stroke: rgba(255, 255, 255, .42); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.on-p3-a { fill: none; stroke: #60a5fa; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.on-p3-f { fill: rgba(255, 255, 255, .18); }
+.on-p3-w { fill: #f8fafc; }
+.on-p3-af { fill: var(--on-ac); }
+.on-p3-track { fill: none; stroke: rgba(255, 255, 255, .14); stroke-width: 5; }
+.on-p3-arc { stroke-width: 5; stroke-dasharray: 98 100; }
+.on-p3-num { fill: #f8fafc; font-size: 34px; font-weight: 700; letter-spacing: -.03em; }
+.on-p3-sub { fill: #94a3b8; font-size: 12px; font-weight: 500; }
+.on-p3-draw { stroke-dasharray: 1; stroke-dashoffset: 0; }
+.on-p3-grow { transform-box: fill-box; transform-origin: 0% 50%; }
+/* wejście karty (raz, na czas): karta, potem części rysunku po kolei */
+.on[data-live] .on-p3-card { opacity: 0; transform: translateY(18px); }
+.on[data-live] .on-p3-card .on-p3-b { opacity: 0; transform: translateY(6px); }
+.on[data-live] .on-p3-card .on-p3-arc { stroke-dasharray: 0 100; }
+.on[data-live] .on-p3-card .on-p3-draw { stroke-dashoffset: 1; }
+.on[data-live] .on-p3-card .on-p3-grow { transform: scaleX(.0001); }
+.on[data-live] .on-p3-card[data-in] { opacity: 1; transform: none; transition: opacity .9s ease, transform 1s var(--on-ease); }
+.on[data-live] .on-p3-card[data-in] .on-p3-b {
+  opacity: 1; transform: none;
+  transition: opacity .6s ease calc(.35s + var(--k, 0) * 90ms), transform .8s var(--on-ease) calc(.35s + var(--k, 0) * 90ms);
+}
+.on[data-live] .on-p3-card[data-in] .on-p3-arc { stroke-dasharray: 98 100; transition: stroke-dasharray 1.6s var(--on-io) .4s; }
+.on[data-live] .on-p3-card[data-in] .on-p3-draw { stroke-dashoffset: 0; transition: stroke-dashoffset .6s var(--on-io) calc(.5s + var(--k, 0) * 260ms); }
+.on[data-live] .on-p3-card[data-in] .on-p3-grow { transform: none; transition: transform 1.8s var(--on-io) .4s; }
+@media (max-width: 1023px) {
+  .on-p3-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 639px) {
+  .on-p3-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .on-p3-head { padding: 0 0 12px; }
+  .on-p3-box { padding-top: 104px; }
+  .on-p3-card { padding: 8px 8px 24px; border-radius: 18px; }
+  .on-p3-art svg { height: 168px; }
+  .on-p3-n { margin: 18px 12px 8px; }
+  .on-p3-t { margin: 0 12px; }
+  .on-p3-d { margin: 8px 12px 0; }
+}

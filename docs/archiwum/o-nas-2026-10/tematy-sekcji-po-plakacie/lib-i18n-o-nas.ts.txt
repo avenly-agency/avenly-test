@@ -1,0 +1,409 @@
+import type { Locale } from '@/lib/i18n/locale';
+
+/**
+ * Słownik strony /o-nas (PL) i /en/about-us (EN) - przebudowa od zera 2026-10-09 („zrób totalnie od zera i zrób
+ * cinematic bazując na nowym logo”). Sceny wyrastają z nowego logo (AVENLY przecięte linią z gwiazdą):
+ *   intro      - wejście „Panorama z cięciem”: gwiazda tnie ogromne logo, kamera jedzie z nią, potem wjazd
+ *                w gwiazdę i „Plakat” z nagłówkiem, opisem i przyciskiem (poster.tsx),
+ *   clients / goals / offer - sekcja po plakacie, trzy propozycje o różnych tematach (2026-10-13): dla kogo
+ *                pracujemy, po co to robimy, co robimy (sec-*.tsx); dawny blok `direct` („Bez pośredników”)
+ *                jest w docs/archiwum/o-nas-2026-10/sekcja-po-plakacie/,
+ *   blueprint  - „Każdy detal ma swój wymiar”: konstrukcja logo (siatka, wymiary) rysuje się przy przewijaniu,
+ *   principles - pięć zasad mijanych na linii logo jak stacje: hasło nad linią, wyjaśnienie pod nią,
+ *   faq, ending.
+ * - Głos „my” (jedyny wyjątek od głosu korzyści - PRODUCT.md), EN „we”; sentence case, bez myślników em / en,
+ *   bez rozstrzelonych wersalików, jedyne CTA „Bezpłatna konsultacja”.
+ * - Liczby tylko obronne: 98/100 PageSpeed (nasze realizacje), odpowiedź w 24 h. Teksty w większości z poprzedniej
+ *   wersji podstrony (archiwum: docs/archiwum/o-nas-2026-09/).
+ * - `faq` = źródło prawdy dla akordeonu i danych strukturalnych FAQPage (PL przez re-export w faq-data.ts).
+ *
+ * Import WYŁĄCZNIE w server page / layout - słownik wędruje do klienta jako props.
+ */
+
+export interface ONasFaq {
+  question: string;
+  answer: string;
+}
+
+export interface ONasDict {
+  intro: {
+    label: string;
+    title: string;
+    titleAccent: string;
+    lead: string;
+    cta: string;
+  };
+  /** Sekcja po plakacie, propozycja 1 „Dla kogo pracujemy” (2026-10-13): rodzaje firm i ich realizacje
+      (krótkie kopie faktów z lib/i18n/projects.ts; `image` = nazwa zrzutu w public/portfolio/stage/). */
+  clients: {
+    label: string;
+    heading: string;
+    headingAccent: string;
+    lead: string;
+    more: string;
+    items: { type: string; name: string; line: string; href: string; image: string }[];
+    yours: { type: string; line: string; cta: string; frame: string };
+  };
+  /** Propozycja 2 „Więcej i mniej”: dwa cele i usługi, które do nich prowadzą. */
+  goals: {
+    label: string;
+    more: { title: string; line: string; links: { name: string; href: string }[] };
+    less: { title: string; line: string; links: { name: string; href: string }[] };
+  };
+  /** Propozycja 3 „Co robimy”: usługi z jednym zdaniem (chwyty z Oferty - lib/i18n/services.ts). */
+  offer: {
+    label: string;
+    heading: string;
+    items: { name: string; hook: string; href: string }[];
+    all: string;
+  };
+  blueprint: {
+    label: string;
+    heading: string;
+    headingAccent: string;
+    lead: string;
+    steps: string[];
+    figLabel: string;
+  };
+  principles: {
+    label: string;
+    heading: string;
+    headingAccent: string;
+    items: { title: string; desc: string }[];
+  };
+  faqSection: {
+    label: string;
+    heading: string;
+    lead: string;
+    askTitle: string;
+    askDesc: string;
+    askButton: string;
+  };
+  faq: ONasFaq[];
+  ending: { heading: string; text: string; cta: string };
+  /** Podpis listy kroków sceny (czytniki ekranu). */
+  stepsLabel: string;
+}
+
+/** Twarde spacje: po jednoliterowych słowach („w”, „i”, „z”, „o”, „a”, „u”) i między liczbą a jednostką. */
+const typo = <T,>(v: T): T => {
+  if (typeof v === 'string') {
+    return v
+      .replace(/(^|[\s(„])([aiouwzAIOUWZ]) /g, '$1$2 ')
+      .replace(/(^|[\s(„])([aiouwzAIOUWZ]) /g, '$1$2 ') // drugi przebieg: dwa jednoliterowe słowa pod rząd
+      .replace(/(\d) (h|godzin[a-z]*)(?![a-ząćęłńóśźż])/g, '$1 $2') as T;
+  }
+  if (Array.isArray(v)) return v.map(typo) as T;
+  if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, typo(x)])) as T;
+  return v;
+};
+
+const PL: ONasDict = {
+  intro: {
+    label: 'O nas',
+    title: 'Nie jesteśmy kolejną korporacją.',
+    titleAccent: 'Jesteśmy Twoim partnerem.',
+    lead: 'Projektujemy i piszemy strony, sklepy i asystentów AI. Każdy detal ma jeden cel: więcej klientów i mniej Twojej pracy.',
+    cta: 'Bezpłatna konsultacja',
+  },
+  clients: {
+    label: 'Dla kogo pracujemy',
+    heading: 'Pracujemy z firmami',
+    headingAccent: 'takimi jak Twoja.',
+    lead: 'Te strony i sklepy działają dziś u prawdziwych klientów.',
+    more: 'Zobacz realizację',
+    items: [
+      {
+        type: 'Klub sportowy',
+        name: 'Klub Sportowy RKS',
+        line: 'Zmodernizowana strona i własna aplikacja klubu.',
+        href: '/realizacje/klub-sportowy',
+        image: 'klub-sportowy',
+      },
+      {
+        type: 'Pracownia grawerska',
+        name: 'Grawerstwo Józef Kardyś',
+        line: 'Nowa strona, sklep z płatnościami online i jeden panel do zarządzania.',
+        href: '/realizacje/grawerstwo-kardys',
+        image: 'grawerstwo-kardys',
+      },
+      {
+        type: 'Gabinet fizjoterapii',
+        name: 'Mcentrumfizjoterapia',
+        line: 'Strona zbudowana pod lokalne wyszukiwanie, z wizytą umawianą przez Booksy.',
+        href: '/realizacje/mcentrumfizjoterapia',
+        image: 'mcentrumfizjoterapia',
+      },
+    ],
+    yours: {
+      type: 'Twoja firma',
+      line: 'Opowiedz nam o niej, a zadbamy o to, co zobaczą Twoi klienci.',
+      cta: 'Bezpłatna konsultacja',
+      frame: 'Miejsce na Twoją stronę',
+    },
+  },
+  goals: {
+    label: 'Po co to robimy',
+    more: {
+      title: 'Więcej klientów.',
+      line: 'Strony i sklepy, przez które klienci piszą, dzwonią i kupują.',
+      links: [
+        { name: 'Strona one-page', href: '/uslugi/strony-www/one-page' },
+        { name: 'Strona firmowa', href: '/uslugi/strony-www/strona-firmowa' },
+        { name: 'Strona interaktywna', href: '/uslugi/strony-www/strona-szyta-na-miare' },
+        { name: 'Sklep internetowy', href: '/uslugi/strony-www/sklep-internetowy' },
+      ],
+    },
+    less: {
+      title: 'Mniej Twojej pracy.',
+      line: 'Asystent AI odpowiada klientom o każdej porze, a system CRM trzyma wszystko w jednym miejscu.',
+      links: [
+        { name: 'Chatboty AI', href: '/uslugi/automatyzacje-ai/chatboty-ai' },
+        { name: 'System CRM', href: '/uslugi/strony-www/system-crm' },
+      ],
+    },
+  },
+  offer: {
+    label: 'Co robimy',
+    heading: 'Strony, sklepy, systemy i asystenci AI',
+    items: [
+      { name: 'Strona one-page', hook: 'Jedna strona, jeden cel.', href: '/uslugi/strony-www/one-page' },
+      {
+        name: 'Strona firmowa',
+        hook: 'Twoja firma wygląda w sieci tak solidnie, jak pracuje na co dzień.',
+        href: '/uslugi/strony-www/strona-firmowa',
+      },
+      { name: 'Strona interaktywna', hook: 'To już nie tylko strona, to uczucie.', href: '/uslugi/strony-www/strona-szyta-na-miare' },
+      {
+        name: 'Sklep internetowy',
+        hook: 'Sklep, który sprzedaje także wtedy, gdy Ty odpoczywasz.',
+        href: '/uslugi/strony-www/sklep-internetowy',
+      },
+      { name: 'System CRM', hook: 'Koniec z arkuszami i karteczkami.', href: '/uslugi/strony-www/system-crm' },
+      { name: 'Chatboty AI', hook: 'Twój najlepszy sprzedawca pracuje także w nocy.', href: '/uslugi/automatyzacje-ai/chatboty-ai' },
+    ],
+    all: 'Wszystkie usługi',
+  },
+  blueprint: {
+    label: 'Nasz znak',
+    heading: 'Każdy detal',
+    headingAccent: 'ma swój wymiar.',
+    lead: 'Logo Avenly ma wymiary co do jednostki. Z tą samą dokładnością dopracowujemy Twój projekt.',
+    steps: [
+      'Litery stoją na wspólnej siatce: jedna wysokość, jedna linia bazowa.',
+      'Linia z gwiazdą przecina każdą literę na tej samej wysokości.',
+      'Z tą samą dokładnością dopracowujemy każdy ekran Twojej strony.',
+    ],
+    figLabel: 'Konstrukcja logo Avenly: litery na siatce o wysokości 40 jednostek, linia z gwiazdą na wysokości 25 jednostek.',
+  },
+  principles: {
+    label: 'W co wierzymy',
+    heading: 'Zasady, których',
+    headingAccent: 'się trzymamy.',
+    items: [
+      {
+        title: 'Projekt od zera.',
+        desc: 'Każdą stronę projektujemy i piszemy pod Twoją firmę. Zanim powstanie kod, widzisz projekt, także w wersji na telefon.',
+      },
+      {
+        title: '98/100 w PageSpeed.',
+        desc: 'Tyle nasze realizacje mają w Google PageSpeed. Strona ładuje się szybko, także na telefonie.',
+      },
+      {
+        title: 'Odpowiedź w 24 h.',
+        desc: 'Na każdą wiadomość odpowiadamy w ciągu doby. Rozmawiasz z nami, a nie z systemem zgłoszeń.',
+      },
+      {
+        title: 'Sprawdzalne fakty.',
+        desc: 'Nie wymyślamy wzrostów ani procentów. Mówimy, co zrobimy, ile to potrwa i co z tego masz.',
+      },
+      {
+        title: 'Zostajemy po wdrożeniu.',
+        desc: 'Na życzenie dbamy o aktualizacje, bezpieczeństwo i rozwój strony. Zawsze masz do kogo napisać.',
+      },
+    ],
+  },
+  faqSection: {
+    label: 'Pytania',
+    heading: 'Częste pytania',
+    lead: 'Krótko i konkretnie. Nie ma tu Twojego pytania? Zapytaj asystenta AI albo napisz do nas.',
+    askTitle: 'Inne pytanie?',
+    askDesc: 'Asystent AI odpowie od razu, o każdej porze.',
+    askButton: 'Zapytaj asystenta',
+  },
+  faq: [
+    {
+      question: 'Czy mogę dostać fakturę?',
+      answer: 'Tak. Rozliczamy się przez platformę Useme, więc za wykonaną usługę dostajesz pełnoprawną fakturę.',
+    },
+    {
+      question: 'Jak wygląda wsparcie po wdrożeniu?',
+      answer:
+        'Nie znikamy po oddaniu projektu. Na życzenie prowadzimy opiekę techniczną: aktualizacje, bezpieczeństwo i rozwój strony. Na zgłoszenia odpowiadamy w ciągu 24 godzin.',
+    },
+    {
+      question: 'Ile trwa realizacja projektu?',
+      answer: 'Strona firmowa powstaje zwykle w około dwa tygodnie. Rozbudowany sklep internetowy: od 2 do 6 tygodni.',
+    },
+  ],
+  ending: {
+    heading: 'Zacznijmy od rozmowy.',
+    text: 'Opowiedz nam o swojej firmie, a dopasujemy najlepsze rozwiązanie dla Twojego biznesu.',
+    cta: 'Bezpłatna konsultacja',
+  },
+  stepsLabel: 'Kroki sceny',
+};
+
+const EN: ONasDict = {
+  intro: {
+    label: 'About us',
+    title: 'We are not another corporation.',
+    titleAccent: 'We are your partner.',
+    lead: 'We design and build websites, online stores and AI assistants. Every detail serves one goal: more customers and less work for you.',
+    cta: 'Free consultation',
+  },
+  clients: {
+    label: 'Who we work for',
+    heading: 'We work with businesses',
+    headingAccent: 'like yours.',
+    lead: 'These websites and stores run today for real clients.',
+    more: 'See the project',
+    items: [
+      {
+        type: 'Sports club',
+        name: 'Klub Sportowy RKS',
+        line: 'A modernized website and the club’s own app.',
+        href: '/realizacje/klub-sportowy',
+        image: 'klub-sportowy',
+      },
+      {
+        type: 'Engraving workshop',
+        name: 'Grawerstwo Józef Kardyś',
+        line: 'A new website, a store with online payments and one panel to manage it all.',
+        href: '/realizacje/grawerstwo-kardys',
+        image: 'grawerstwo-kardys',
+      },
+      {
+        type: 'Physiotherapy practice',
+        name: 'Mcentrumfizjoterapia',
+        line: 'A website built for local search, with appointments booked through Booksy.',
+        href: '/realizacje/mcentrumfizjoterapia',
+        image: 'mcentrumfizjoterapia',
+      },
+    ],
+    yours: {
+      type: 'Your business',
+      line: 'Tell us about it and we will take care of what your clients see.',
+      cta: 'Free consultation',
+      frame: 'A place for your website',
+    },
+  },
+  goals: {
+    label: 'Why we do it',
+    more: {
+      title: 'More customers.',
+      line: 'Websites and stores through which customers write, call and buy.',
+      links: [
+        { name: 'One-page website', href: '/uslugi/strony-www/one-page' },
+        { name: 'Company website', href: '/uslugi/strony-www/strona-firmowa' },
+        { name: 'Interactive website', href: '/uslugi/strony-www/strona-szyta-na-miare' },
+        { name: 'Online store', href: '/uslugi/strony-www/sklep-internetowy' },
+      ],
+    },
+    less: {
+      title: 'Less work for you.',
+      line: 'The AI assistant answers customers at any hour, and the CRM system keeps everything in one place.',
+      links: [
+        { name: 'AI chatbots', href: '/uslugi/automatyzacje-ai/chatboty-ai' },
+        { name: 'CRM system', href: '/uslugi/strony-www/system-crm' },
+      ],
+    },
+  },
+  offer: {
+    label: 'What we do',
+    heading: 'Websites, stores, systems and AI assistants',
+    items: [
+      { name: 'One-page website', hook: 'One page, one goal.', href: '/uslugi/strony-www/one-page' },
+      {
+        name: 'Company website',
+        hook: 'Your business looks as solid online as it works every day.',
+        href: '/uslugi/strony-www/strona-firmowa',
+      },
+      { name: 'Interactive website', hook: 'It is no longer just a website. It is a feeling.', href: '/uslugi/strony-www/strona-szyta-na-miare' },
+      { name: 'Online store', hook: 'A store that keeps selling while you rest.', href: '/uslugi/strony-www/sklep-internetowy' },
+      { name: 'CRM system', hook: 'No more spreadsheets and sticky notes.', href: '/uslugi/strony-www/system-crm' },
+      { name: 'AI chatbots', hook: 'Your best salesperson now works nights too.', href: '/uslugi/automatyzacje-ai/chatboty-ai' },
+    ],
+    all: 'All services',
+  },
+  blueprint: {
+    label: 'Our mark',
+    heading: 'Every detail',
+    headingAccent: 'has its measure.',
+    lead: 'The Avenly logo is measured down to a single unit. We bring the same precision to your project.',
+    steps: [
+      'The letters stand on one grid: one height, one baseline.',
+      'The line with the star cuts every letter at the same height.',
+      'We bring the same precision to every screen of your site.',
+    ],
+    figLabel: 'Construction of the Avenly logo: letters on a grid 40 units tall, the line with the star at 25 units.',
+  },
+  principles: {
+    label: 'What we believe in',
+    heading: 'Principles',
+    headingAccent: 'we stick to.',
+    items: [
+      {
+        title: 'Designed from scratch.',
+        desc: 'We design and build every site for your business. Before any code is written, you see the design, including the mobile version.',
+      },
+      {
+        title: '98/100 in PageSpeed.',
+        desc: 'That is what our projects score in Google PageSpeed. Your site loads fast, on phones too.',
+      },
+      {
+        title: 'A reply within 24 h.',
+        desc: 'We answer every message within a day. You talk to us, not to a ticketing system.',
+      },
+      {
+        title: 'Facts you can check.',
+        desc: 'We do not invent growth figures or percentages. We tell you what we will do, how long it takes and what you get.',
+      },
+      {
+        title: 'Here after launch.',
+        desc: 'On request we take care of updates, security and new features. You always know who to write to.',
+      },
+    ],
+  },
+  faqSection: {
+    label: 'Questions',
+    heading: 'Frequently asked questions',
+    lead: 'Short and to the point. Your question is not here? Ask the AI assistant or write to us.',
+    askTitle: 'Another question?',
+    askDesc: 'The AI assistant answers right away, at any hour.',
+    askButton: 'Ask the assistant',
+  },
+  faq: [
+    {
+      question: 'Can I get an invoice?',
+      answer: 'Yes. We settle payments through the Useme platform, so you receive a fully valid invoice for the service.',
+    },
+    {
+      question: 'What does support look like after launch?',
+      answer:
+        'We do not disappear after handover. On request we provide technical care: updates, security and new features. We respond to requests within 24 hours.',
+    },
+    {
+      question: 'How long does a project take?',
+      answer: 'A company website usually takes about two weeks. A larger online store: 2 to 6 weeks.',
+    },
+  ],
+  ending: {
+    heading: "Let's start with a conversation.",
+    text: 'Tell us about your business and we will find the best solution for it.',
+    cta: 'Free consultation',
+  },
+  stepsLabel: 'Scene steps',
+};
+
+export const oNasDict: Record<Locale, ONasDict> = { pl: typo(PL), en: EN };

@@ -1,0 +1,113 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import { useLenis } from 'lenis/react';
+import { createChoice, ProposalSwitcher, useChoice } from '@/components/utils/proposals';
+import type { Locale } from '@/lib/i18n/locale';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { Blueprint } from './blueprint';
+import { Dock } from './dock';
+import { Ending } from './ending';
+import { Faq } from './faq';
+import { HeroPan } from './heroes';
+import { Principles } from './principles';
+import { SecClients } from './sec-clients';
+import { SecClientsFlight } from './sec-clients-flight';
+import { SecClientsGallery } from './sec-clients-gallery';
+import { SecClientsPlates } from './sec-clients-plates';
+import { SecClientsPortal } from './sec-clients-portal';
+import { SecClientsScreen } from './sec-clients-screen';
+import { SecClientsWall } from './sec-clients-wall';
+import { Sky } from './sky';
+import { useMode } from './shared';
+import './o-nas.css'; // style podstrony we własnym pliku (praca równoległa - PRACA-ROWNOLEGLA.md), prefiks on-
+
+// O NAS - przebudowa od zera 2026-10-09 na nowym logo (AVENLY przecięte linią z gwiazdą), wszystko w SVG, sceny
+// sterowane przewijaniem. Układ strony (właściciel liczy „sekcje” tak, jak pojawiają się na ekranie):
+//   1. wejście „Panorama z cięciem” (heroes.tsx) - wybór właściciela 2026-10-09, potwierdzony 2026-10-12,
+//   2. sekcja po wjeździe w gwiazdę = „Plakat” (poster.tsx, część tej samej przypiętej sceny) - wybór 2026-10-12,
+//   3. SEKCJA PO PLAKACIE = „DLA KOGO PRACUJEMY” - temat wybrany 2026-10-13 („concept z dla kogo pracujemy fajny,
+//      zrób kilka wersji tego”); wersje sceny w przełączniku „Dla kogo pracujemy” w panelu na dole ekranu (tylko
+//      `npm run dev`, produkcja = wariant domyślny). Tura 1: Taśma (sec-clients.tsx) / Przelot (-flight) / Ściana
+//      (-wall) / Ekran (-screen) - „niby spoko, ale potrzebuję czegoś (…) oddającego taki efekt wow jak wszędzie”.
+//      Tura 2 z mgławicą w barwach klienta (sec-wow.tsx): Portal (-portal) / Plansze (-plates) / Galeria (-gallery). Odrzucone: temat „Bez pośredników” (dziewięć scen) i tematy „Więcej
+//      i mniej”, „Co robimy” - kopie w docs/archiwum/o-nas-2026-10/,
+//   4. Konstrukcja logo (blueprint.tsx), Zasady (principles.tsx), FAQ (faq.tsx), zakończenie (ending.tsx).
+// Niewybrane wejścia, wersje całej podstrony i propozycje sekcji po wjeździe: docs/archiwum/o-nas-2026-10/.
+// Tryby: data-live (pełny ruch), data-still (ograniczony ruch - zwykła strona w stanie końcowym); przed hydratacją
+// treść schowana (bez mignięcia układu statycznego), bez JS pokazuje ją <noscript>. Notatki: docs/podstrony/o-nas.md.
+
+const NOSCRIPT = '.on-body{opacity:1!important;animation:none!important}';
+const DEV = process.env.NODE_ENV !== 'production';
+
+// „Dla kogo pracujemy”: wersje sceny; 5-7 = tura z mgławicą w barwach klienta (domyślna = pierwsza z nich),
+// 1-4 = pierwsza tura, zostawiona do porównania
+const CLIENTS = [
+  { id: 'portal', label: '5. Portal' },
+  { id: 'plansze', label: '6. Plansze' },
+  { id: 'galeria', label: '7. Galeria' },
+  { id: 'tasma', label: '1. Taśma' },
+  { id: 'przelot', label: '2. Przelot' },
+  { id: 'sciana', label: '3. Ściana' },
+  { id: 'ekran', label: '4. Ekran' },
+] as const;
+type ClientsKind = (typeof CLIENTS)[number]['id'];
+const clientsChoice = createChoice<ClientsKind>('avenly-o-nas-klienci-2', CLIENTS, 'portal');
+
+export function ONasClient({ t, locale }: { t: ONasDict; locale: Locale }) {
+  const mode = useMode();
+  const live = mode === 'live';
+  const picked = useChoice(clientsChoice);
+  // produkcja zawsze dostaje wariant domyślny
+  const kind: ClientsKind = DEV ? picked : clientsChoice.def;
+  // dev: wybór z panelu wczytuje się z localStorage dopiero po hydratacji - do tego czasu sekcja po plakacie nie jest
+  // montowana, inaczej najpierw stanęłaby wersja domyślna, a chwilę później wybrana. Efekt stoi PO useChoice, więc
+  // biegnie po wczytaniu wyboru. Produkcja: od razu. Wejście jest jedno - montuje się zawsze od pierwszej klatki.
+  const [settled, setSettled] = useState(!DEV);
+  useEffect(() => { setSettled(true); }, []);
+  const lenis = useLenis();
+  const two = useRef<HTMLDivElement>(null);
+  // zmiana wersji: przewinięcie na początek sekcji (każda ma inną budowę)
+  const pick = (id: ClientsKind) => {
+    clientsChoice.set(id);
+    const el = two.current;
+    if (!el) return;
+    const y = el.getBoundingClientRect().top + window.scrollY;
+    if (lenis) lenis.scrollTo(y, { immediate: true, force: true }); else window.scrollTo(0, y);
+  };
+  const ready = mode !== null;
+  const clients = kind === 'portal' ? (
+    <SecClientsPortal key="portal" t={t.clients} locale={locale} live={live} />
+  ) : kind === 'plansze' ? (
+    <SecClientsPlates key="plansze" t={t.clients} locale={locale} live={live} />
+  ) : kind === 'galeria' ? (
+    <SecClientsGallery key="galeria" t={t.clients} locale={locale} live={live} />
+  ) : kind === 'przelot' ? (
+    <SecClientsFlight key="przelot" t={t.clients} locale={locale} live={live} />
+  ) : kind === 'sciana' ? (
+    <SecClientsWall key="sciana" t={t.clients} locale={locale} live={live} />
+  ) : kind === 'ekran' ? (
+    <SecClientsScreen key="ekran" t={t.clients} locale={locale} live={live} />
+  ) : (
+    <SecClients key="tasma" t={t.clients} locale={locale} live={live} />
+  );
+  return (
+    <div className="on" data-live={live ? '' : undefined} data-still={mode === 'still' ? '' : undefined}>
+      <noscript><style>{NOSCRIPT}</style></noscript>
+      <Sky live={live} />
+      <div className="on-body">
+        <HeroPan t={t.intro} locale={locale} live={live} />
+        <div ref={two} className="on-two">{settled && clients}</div>
+        <Blueprint t={t.blueprint} live={live} stepsLabel={t.stepsLabel} />
+        <Principles t={t.principles} live={live} />
+        <Faq t={t.faqSection} faq={t.faq} live={live} ready={ready} />
+        <Ending t={t.ending} locale={locale} live={live} />
+      </div>
+      {DEV && (
+        <Dock>
+          <ProposalSwitcher label="Dla kogo pracujemy" items={CLIENTS} value={kind} pick={pick} />
+        </Dock>
+      )}
+    </div>
+  );
+}

@@ -1,0 +1,119 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useLenis } from 'lenis/react';
+import { createChoice, ProposalSwitcher, useChoice } from '@/components/utils/proposals';
+import type { Locale } from '@/lib/i18n/locale';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { Atlas } from './atlas';
+import { Blueprint } from './blueprint';
+import { Cut } from './cut';
+import { Direct } from './direct';
+import { Dock } from './dock';
+import { Ending } from './ending';
+import { Faq } from './faq';
+import { Flight } from './flight';
+import { Hero, type HeroKind } from './heroes';
+import { Orbit } from './orbit';
+import { Principles } from './principles';
+import { Sky } from './sky';
+import { useMode } from './shared';
+import './o-nas.css'; // style podstrony we własnym pliku (praca równoległa - PRACA-ROWNOLEGLA.md), prefiks on-
+
+// O NAS - przebudowa od zera 2026-10-09 (właściciel: „podstronę o nas zrób totalnie od zera i zrób cinematic bazując
+// na nowym logo, użyj svg, zrób zajebiste animacje na scrolla”), potem tego samego dnia: „zrób kilka nowych wersji
+// podstrony o nas cinematic następnie dodaj toggle do zmiany”. Cztery wersje CAŁEJ podstrony, każda z innym ruchem
+// kamery (przełącznik w panelu na dole ekranu, tylko `npm run dev`; produkcja = „Cięcie”):
+//   Cięcie       - logo rozcięte linią: połówki liter rozchodzą się, linia zostaje horyzontem; drogi wiadomości,
+//                  konstrukcja logo z wymiarami, zasady jak stacje na linii (cut / direct / blueprint / principles),
+//   Gwiazdozbiór - mapa nieba: kamera jedzie od gwiazdy do gwiazdy, droga rysuje gwiazdę z logo, finał = całe logo
+//                  (atlas.tsx),
+//   Orbita       - planeta i gwiazda z hero: wschód, doba na tarczy (odpowiedź w 24 h), zasady wschodzą zza horyzontu
+//                  po łuku (orbit.tsx),
+//   Przelot      - gwiazda tnie logo jak w hero, potem lot w głąb przez litery jak przez bramy, do gwiazdy (flight.tsx).
+// Runda 4 („weź jakieś ciekawe fullscreen sekcje hero z avenly logiem, animacjami, scrollem itp., dodaj 5”): drugi
+// przełącznik „Hero” - pięć pełnoekranowych wejść z logo (heroes.tsx) zamiast pierwszego ekranu wersji. Z własnym
+// wejściem dalsza część strony to: przy „Przelocie” sam lot przez litery (bez jego otwarcia), przy pozostałych
+// wersjach sekcje z „Cięcia” (Bez pośredników, Konstrukcja, Zasady, FAQ, zakończenie).
+// Tryby: data-live (pełny ruch), data-still (ograniczony ruch - zwykła strona w stanie końcowym); przed hydratacją
+// treść schowana (bez mignięcia układu statycznego), bez JS pokazuje ją <noscript>. Notatki: docs/podstrony/o-nas.md.
+
+const NOSCRIPT = '.on-body{opacity:1!important;animation:none!important}';
+const DEV = process.env.NODE_ENV !== 'production';
+
+const VERSIONS = [
+  { id: 'ciecie', label: 'Cięcie' },
+  { id: 'gwiazdozbior', label: 'Gwiazdozbiór' },
+  { id: 'orbita', label: 'Orbita' },
+  { id: 'przelot', label: 'Przelot' },
+] as const;
+type Version = (typeof VERSIONS)[number]['id'];
+const versionChoice = createChoice<Version>('avenly-o-nas-wersja', VERSIONS, 'ciecie');
+
+const HEROES = [
+  { id: 'wersja', label: 'Z wersji' },
+  { id: 'okno', label: '1. Okno' },
+  { id: 'odjazd', label: '2. Odjazd' },
+  { id: 'panorama', label: '3. Panorama' },
+  { id: 'przesuniecie', label: '4. Przesunięcie' },
+  { id: 'klapka', label: '5. Klapka' },
+] as const;
+type HeroChoice = 'wersja' | HeroKind;
+const heroChoice = createChoice<HeroChoice>('avenly-o-nas-hero', HEROES, 'wersja');
+
+export function ONasClient({ t, locale }: { t: ONasDict; locale: Locale }) {
+  const mode = useMode();
+  const live = mode === 'live';
+  const pickedVersion = useChoice(versionChoice);
+  const pickedHero = useChoice(heroChoice);
+  // produkcja zawsze dostaje wariant domyślny (wersja „Cięcie” z własnym pierwszym ekranem)
+  const v: Version = DEV ? pickedVersion : versionChoice.def;
+  const hero: HeroChoice = DEV ? pickedHero : heroChoice.def;
+  // dev: wybór z panelu wczytuje się z localStorage dopiero po hydratacji - do tego czasu nic nie montujemy, inaczej
+  // najpierw grała wersja domyślna, a chwilę później wybrana (właściciel 2026-10-12: „pojawianie się jest okropne, bo
+  // renderuje się kilka razy tło”). Efekt stoi PO useChoice, więc biegnie po wczytaniu wyboru. Produkcja: od razu.
+  const [settled, setSettled] = useState(!DEV);
+  useEffect(() => { setSettled(true); }, []);
+  const lenis = useLenis();
+  // zmiana propozycji: od góry strony (każda ma własne wejście i inną długość)
+  const toTop = () => { if (lenis) lenis.scrollTo(0, { immediate: true, force: true }); else window.scrollTo(0, 0); };
+  const pickVersion = (id: Version) => { versionChoice.set(id); toTop(); };
+  const pickHero = (id: HeroChoice) => { heroChoice.set(id); toTop(); };
+  const ready = mode !== null;
+  const heroEl = hero === 'wersja' ? null : <Hero key={hero} kind={hero} t={t.intro} locale={locale} live={live} />;
+  // sekcje wersji „Cięcie” po pierwszym ekranie
+  const rest = (
+    <>
+      <Direct t={t.direct} live={live} stepsLabel={t.stepsLabel} />
+      <Blueprint t={t.blueprint} live={live} stepsLabel={t.stepsLabel} />
+      <Principles t={t.principles} live={live} />
+      <Faq t={t.faqSection} faq={t.faq} live={live} ready={ready} />
+      <Ending t={t.ending} locale={locale} live={live} />
+    </>
+  );
+  return (
+    <div className="on" data-v={v} data-live={live ? '' : undefined} data-still={mode === 'still' ? '' : undefined}>
+      <noscript><style>{NOSCRIPT}</style></noscript>
+      {settled && v !== 'przelot' && <Sky live={live} />}
+      <div className="on-body">
+        {!settled ? null : v === 'przelot' ? (
+          <Flight key={heroEl ? 'lot' : 'calosc'} t={t} locale={locale} live={live} ready={ready} intro={!heroEl} hero={heroEl} />
+        ) : heroEl ? (
+          <>{heroEl}{rest}</>
+        ) : v === 'ciecie' ? (
+          <><Cut t={t.intro} locale={locale} live={live} />{rest}</>
+        ) : v === 'gwiazdozbior' ? (
+          <Atlas t={t} locale={locale} live={live} ready={ready} />
+        ) : (
+          <Orbit t={t} locale={locale} live={live} ready={ready} />
+        )}
+      </div>
+      {DEV && (
+        <Dock>
+          <ProposalSwitcher label="Wersja podstrony" items={VERSIONS} value={v} pick={pickVersion} />
+          <ProposalSwitcher label="Hero (pierwszy ekran)" items={HEROES} value={hero} pick={pickHero} />
+        </Dock>
+      )}
+    </div>
+  );
+}

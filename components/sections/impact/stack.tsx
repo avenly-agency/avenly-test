@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState, type CSSProperties, type MouseEvent } from 'react';
 import Link from 'next/link';
-import { useInView, useMotionValue, useSpring } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { localizeHref, type Locale } from '@/lib/i18n/locale';
 import type { ImpactDict } from '@/lib/i18n/home/impact';
@@ -28,7 +27,8 @@ import { CardViz, SCENES } from './viz';
 // ułożenie"): karty 2 i 4 w lustrze (wizualizacja po lewej, tekst i zakładka po prawej - stos
 // czyta się zygzakiem); zakładka stoi w tej samej siatce co treść, więc numer zaczyna się dokładnie
 // nad tytułem. Ułożenie tekstu: "U góry" (wybór właściciela 2026-09-27; "U dołu" usunięte) - tytuł
-// i opis tuż pod zakładką, dodatek (wynik 98/100, link) na dole kolumny.
+// i opis tuż pod zakładką, dodatek (link) na dole kolumny. 2026-10-14: karta 3 bez licznika „98/100” (właściciel:
+// „fake info, bo nie zawsze będzie tyle” - „zmienić na uniwersalną szybkość”); jak karta 1 nie ma dodatku.
 // Runda 9 (właściciel: "żeby minimalnie zmieniał się kolor tła w zależności od boxa na ekranie;
 // lepiej umiejscowić napisy historii"): aktywna karta (przednia w stosie / najbliżej środka ekranu
 // na liście) ustawia na sekcji --im-tint = jej akcent - KSZTAŁTY tła sekcji (impact/backdrop.tsx:
@@ -68,21 +68,6 @@ const copy = (t: ImpactDict, n: Benefit): [string, string] =>
 const accent = (n: Benefit) => ({ '--ic': META[n].rgb, '--ic-hi': META[n].hi }) as CSSProperties;
 const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1);
 
-// --- WYDAJNY LICZNIK --- (useRef + onChange: bez renderu 60 razy na sekundę)
-function Counter({ value }: { value: number }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const isInView = useInView(ref, { once: true, margin: '-20px' });
-  const motionValue = useMotionValue(0);
-  const springValue = useSpring(motionValue, { damping: 30, stiffness: 60 });
-  useEffect(() => {
-    if (isInView) motionValue.set(value);
-  }, [isInView, value, motionValue]);
-  useEffect(() => springValue.on('change', (latest) => {
-    if (ref.current) ref.current.textContent = Math.round(latest).toString();
-  }), [springValue]);
-  return <span ref={ref}>0</span>;
-}
-
 /** Tekst korzyści (tytuł, opis, dodatek) - `data-im-shield`: pod tą kolumną shader łagodnie
     wygasza warstwice (miękka elipsa, bez prostokątów). */
 const BenefitText = ({ n, t, locale }: { n: Benefit; t: ImpactDict; locale: Locale }) => {
@@ -96,16 +81,6 @@ const BenefitText = ({ n, t, locale }: { n: Benefit; t: ImpactDict; locale: Loca
           {t.card2Tag}
           <ArrowRight aria-hidden="true" />
         </Link>
-      )}
-      {n === 3 && (
-        <div className="im-score il-score il-extra" data-im-shield="extra">
-          <span className="sr-only">{t.card3CounterAria}</span>
-          <span className="im-score-num" aria-hidden="true">
-            <Counter value={98} />
-            <small>/100</small>
-          </span>
-          <span className="im-score-label" aria-hidden="true">{t.card3CounterLabel}</span>
-        </div>
       )}
     </div>
   );

@@ -1,0 +1,115 @@
+'use client';
+
+import { useRef, type CSSProperties } from 'react';
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
+import { SectionLabel } from '@/components/ui/SectionLabel';
+import { LOGO_STAR_CENTER, LOGO_VIEWBOX } from '@/lib/brand/logo';
+import { localizeHref, type Locale } from '@/lib/i18n/locale';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { Comet, Pieces } from './mark';
+import { css, flag, seg, usePin } from './shared';
+
+// SCENA 1 - „CIĘCIE” (pierwszy ekran, przypięty 100svh + 170vh). Wejście (na czas, CSS): gwiazda przelatuje od lewej
+// po linii logo, za nią rośnie linia, a połówki liter AVENLY schodzą się do cięcia litera po literze (za gwiazdą).
+// Przewijanie: połówki rozchodzą się - górne w górę, dolne w dół - i znikają za krawędziami ekranu, a linia z gwiazdą
+// zostaje jako horyzont planszy tytułowej: etykieta i h1 wysuwają się nad linią, opis i przycisk pod nią (jak litery
+// logo nad linią i pod nią). Od 1024 px przez gwiazdę rośnie pionowa oś (motyw konstrukcji - scena 3).
+// Bez JS / ograniczony ruch: logo w całości, pod nim nagłówek, opis i przycisk (zwykły układ).
+
+const AXIS = 560; // długość osi od środka gwiazdy w górę i w dół (jednostki logo)
+
+export function Cut({ t, locale, live }: { t: ONasDict['intro']; locale: Locale; live: boolean }) {
+  const root = useRef<HTMLElement>(null);
+  const svg = useRef<SVGSVGElement>(null);
+  const label = useRef<HTMLDivElement>(null);
+  const l1 = useRef<HTMLSpanElement>(null);
+  const l2 = useRef<HTMLSpanElement>(null);
+  const lead = useRef<HTMLParagraphElement>(null);
+  const cta = useRef<HTMLDivElement>(null);
+  const hint = useRef<HTMLDivElement>(null);
+
+  usePin(root, (p) => {
+    const s = svg.current;
+    if (!s) return;
+    // odczyty przed zapisami
+    const w = s.getBoundingClientRect().width || 1;
+    const unit = w / 632.617;
+    const far = (window.innerHeight * 0.72) / unit + 40; // połówki wychodzą za krawędź ekranu
+    s.querySelectorAll<SVGPathElement>('.on-pc').forEach((el) => {
+      const k = Number(el.dataset.k);
+      const dir = el.dataset.part === 'up' ? -1 : 1;
+      const e = seg(p, 0.02 + k * 0.034, 0.36 + k * 0.034);
+      css(el, 'transform', e > 0 ? `translateY(${(dir * far * e).toFixed(2)}px)` : 'none');
+      css(el, 'opacity', (1 - seg(e, 0.4, 0.96)).toFixed(3));
+    });
+    const ax = seg(p, 0.22, 0.6);
+    s.querySelectorAll('.on-cut-ax').forEach((el) => css(el, 'transform', `scaleY(${Math.max(0.0001, ax).toFixed(4)})`));
+    const lab = seg(p, 0.32, 0.46), t1 = seg(p, 0.36, 0.52), t2 = seg(p, 0.42, 0.58);
+    const ld = seg(p, 0.5, 0.64), ct = seg(p, 0.56, 0.7);
+    css(label.current, 'opacity', lab.toFixed(3));
+    css(label.current, 'transform', `translateY(${((1 - lab) * 14).toFixed(2)}px)`);
+    css(l1.current, 'transform', `translateY(${((1 - t1) * 112).toFixed(2)}%)`);
+    css(l2.current, 'transform', `translateY(${((1 - t2) * 112).toFixed(2)}%)`);
+    css(lead.current, 'opacity', ld.toFixed(3));
+    css(lead.current, 'transform', `translateY(${((1 - ld) * 18).toFixed(2)}px)`);
+    css(cta.current, 'opacity', ct.toFixed(3));
+    css(cta.current, 'transform', `translateY(${((1 - ct) * 18).toFixed(2)}px)`);
+    flag(cta.current, 'data-on', ct > 0.9);
+    css(hint.current, 'opacity', (1 - seg(p, 0, 0.07)).toFixed(3));
+  }, live);
+
+  const { x: sx, y: sy } = LOGO_STAR_CENTER;
+  return (
+    <section ref={root} className="on-cut" aria-labelledby="on-h1">
+      <div className="on-cut-stick">
+        <div className="container mx-auto px-6 on-cut-wrap">
+          <div className="on-cut-box">
+            <div className="on-cut-top">
+              <div ref={label} className="on-cut-label on-label">
+                <SectionLabel align="start">{t.label}</SectionLabel>
+              </div>
+              <h1 id="on-h1" className="on-h1 on-cut-h1">
+                <span className="on-mask"><span ref={l1} className="on-cut-l">{t.title}</span></span>{' '}
+                <span className="on-mask"><span ref={l2} className="on-cut-l im-accent">{t.titleAccent}</span></span>
+              </h1>
+            </div>
+            <div className="on-cut-mark" aria-hidden="true">
+              <svg ref={svg} viewBox={LOGO_VIEWBOX} overflow="visible" focusable="false">
+                <defs>
+                  <linearGradient id="on-ax-up" x1="0" y1="1" x2="0" y2="0">
+                    <stop offset="0" stopColor="#60a5fa" stopOpacity=".7" />
+                    <stop offset="1" stopColor="#60a5fa" stopOpacity="0" />
+                  </linearGradient>
+                  <linearGradient id="on-ax-dn" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stopColor="#60a5fa" stopOpacity=".7" />
+                    <stop offset="1" stopColor="#60a5fa" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                <rect className="on-cut-ax on-cut-ax--up" x={sx - 0.4} y={sy - AXIS} width={0.8} height={AXIS} fill="url(#on-ax-up)" />
+                <rect className="on-cut-ax on-cut-ax--dn" x={sx - 0.4} y={sy} width={0.8} height={AXIS} fill="url(#on-ax-dn)" />
+                <g className="on-cut-letters"><Pieces /></g>
+                <Comet className="on-cut-comet" />
+              </svg>
+            </div>
+            <div className="on-cut-bot">
+              <p ref={lead} className="on-lead on-cut-lead">{t.lead}</p>
+              <div ref={cta} className="on-cut-cta">
+                <Link href={localizeHref('/kontakt', locale)} prefetch={false} className="on-cta">
+                  {t.cta}
+                  <ArrowRight aria-hidden="true" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="on-cut-hint" aria-hidden="true">
+          <div ref={hint} className="on-cut-hint-in" style={{ '--d': 0 } as CSSProperties}>
+            <span>{t.hint}</span>
+            <i />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

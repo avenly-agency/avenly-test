@@ -4,13 +4,20 @@ import { AppShell } from "@/components/layout/AppShell";
 import { SITE } from "@/lib/seo-data";
 import { i18nAlternates } from "@/lib/i18n/locale";
 
+// Tytuł i opis strony głównej (root layout = metadane `/`), wybór właściciela 2026-10-13: tytuł mówi, kim jesteśmy
+// (do 60 znaków), opis daje każdej usłudze własną korzyść. Sentence case, bez „Marketingu” (nie ma go w ofercie) - PRODUCT.md.
+const HOME_TITLE = "Avenly - agencja interaktywna. Strony WWW, sklepy i AI";
+const HOME_SHARE_TITLE = "Avenly - strony WWW, sklepy internetowe i chatboty AI";
+const HOME_DESCRIPTION =
+  "Od strony WWW po system, który porządkuje pracę firmy. Sklep, który sprzedaje, gdy odpoczywasz. Chatbot AI, który odpowiada całą dobę. Bezpłatna konsultacja.";
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
   title: {
-    default: "Avenly - Agencja Interaktywna · Strony WWW, AI i Marketing",
+    default: HOME_TITLE,
     template: "%s | Avenly",
   },
-  description: SITE.description,
+  description: HOME_DESCRIPTION,
   applicationName: SITE.name,
   authors: [{ name: SITE.name, url: SITE.url }],
   creator: SITE.name,
@@ -18,16 +25,15 @@ export const metadata: Metadata = {
   generator: 'Next.js',
   keywords: [
     'agencja interaktywna',
-    'strony WWW',
     'tworzenie stron internetowych',
+    'strony WWW',
+    'strona firmowa',
+    'strona one-page',
+    'sklep internetowy',
+    'system CRM',
     'chatbot AI',
     'automatyzacja AI',
-    'strona firmowa',
     'Next.js',
-    'sklepy internetowe',
-    'WooCommerce',
-    'UI/UX design',
-    'SEO',
     'Avenly',
   ],
   category: 'technology',
@@ -49,22 +55,22 @@ export const metadata: Metadata = {
     locale: 'pl_PL',
     url: SITE.url,
     siteName: SITE.name,
-    title: 'Avenly - Agencja Interaktywna · Strony WWW, AI i Marketing',
-    description: SITE.description,
+    title: HOME_SHARE_TITLE,
+    description: HOME_DESCRIPTION,
     images: [
       {
         url: '/og-default.png',
         width: 1200,
         height: 630,
-        alt: 'Avenly - Agencja Interaktywna',
+        alt: 'Avenly - agencja interaktywna',
         type: 'image/png',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Avenly - Agencja Interaktywna',
-    description: SITE.shortDescription,
+    title: HOME_SHARE_TITLE,
+    description: HOME_DESCRIPTION,
     images: ['/og-default.png'],
   },
   icons: {

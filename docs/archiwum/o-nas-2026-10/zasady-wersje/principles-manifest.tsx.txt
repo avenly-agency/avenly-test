@@ -1,0 +1,167 @@
+'use client';
+
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { markShape } from './mark';
+import { axis, clamp01, lerp, pad, sm, Words, type Pr } from './principles-kit';
+import { Scene } from './scene-kit';
+import { attr, css, usePin } from './shared';
+import './principles-manifest.css'; // prefiks on-p5-
+
+// „W CO WIERZYMY” - PROPOZYCJA 1 „MANIFEST” (2026-10-14, „zrób 5 wersji tej sekcji zasady”). Język „Plakatu”
+// (właściciel go wybrał: wielka typografia prowadzona przewijaniem): zasady DOPISUJĄ SIĘ jedna pod drugą jako wiersze
+// manifestu. Słowa nowego wiersza wysuwają się spod maski, kolumna płynnie podjeżdża, poprzednie wiersze przygasają
+// nad nim; pod wierszem na ekranie numer i jedno zdanie. Na końcu kamera odjeżdża: cały manifest (nagłówek + pięć
+// zasad) staje jako jeden plakat, a pod nim rysuje się podpis - linia z gwiazdą z logo (jeden kształt, markShape).
+// Bez kadru i bez kart. Bez JS / ograniczony ruch: nagłówek i lista (principles-kit.css).
+// Wydajność: wszystkie położenia transformami 2D (bez warstw - ostre pismo), wysokości mierzone tylko przy zmianie
+// rozmiaru i po wczytaniu fontu, zapisy stylu tylko przy zmianie.
+
+const H0 = 18, MOVE = 36, HOLD = 30, FINAL = 50, END = 12;
+
+type Geo = {
+  read: number; top: number; avail: number;
+  h: number[]; before: number[]; after: number[]; gap: number; signH: number;
+};
+type Els = { items: HTMLElement[]; titles: HTMLElement[]; words: HTMLElement[][]; num: (HTMLElement | null)[]; desc: (HTMLElement | null)[] };
+
+export function PrinciplesManifest({ t, live }: { t: Pr; live: boolean }) {
+  const pin = useRef<HTMLDivElement>(null), box = useRef<HTMLDivElement>(null), col = useRef<HTMLDivElement>(null);
+  const sign = useRef<SVGSVGElement>(null), signPath = useRef<SVGPathElement>(null);
+  const geo = useRef<Geo | null>(null);
+  const els = useRef<Els | null>(null);
+  const prog = useRef(0);
+  const N = t.items.length;
+  const ax = useMemo(() => axis(N, H0, MOVE, HOLD), [N]);
+  const len = ax.len + FINAL + END;
+
+  const measure = useCallback((): Geo | null => {
+    const b = box.current, cl = col.current, c = els.current;
+    if (!b || !cl || !c) return null;
+    const H = b.clientHeight, W = cl.clientWidth;
+    if (!H || !W) return null;
+    const narrow = b.clientWidth < 768;
+    const fs = parseFloat(getComputedStyle(c.titles[1] ?? c.titles[0]).fontSize) || 80;
+    const top = narrow ? 76 : 96, bottom = narrow ? 96 : 64;
+    // podpis: linia z gwiazdą na szerokość kolumny (jeden kształt - gwiazda się nie rozciąga)
+    const sz = narrow ? 0.62 : 0.9, signH = Math.round(44 * sz);
+    if (sign.current) attr(sign.current, 'viewBox', `0 0 ${W.toFixed(1)} ${signH}`);
+    if (sign.current) css(sign.current, 'height', `${signH}px`);
+    if (signPath.current) attr(signPath.current, 'd', markShape(0, W - 22 * sz, signH / 2, sz));
+    return {
+      read: H * (narrow ? 0.4 : 0.36), top, avail: H - top - bottom - signH - 24,
+      h: c.titles.map((x) => x.offsetHeight),
+      before: c.num.map((x) => (x ? x.offsetHeight + 12 : 0)),
+      after: c.desc.map((x) => (x ? x.offsetHeight + 24 : 0)),
+      gap: Math.round(fs * 0.14), signH,
+    };
+  }, []);
+
+  const paint = useCallback(() => {
+    const el = pin.current, cl = col.current;
+    if (!el || !cl) return;
+    const c = (els.current ??= (() => {
+      const items = Array.from(el.querySelectorAll<HTMLElement>('.on-p5-it'));
+      return {
+        items,
+        titles: items.map((it) => it.querySelector<HTMLElement>('.on-p5-t')!),
+        words: items.map((it) => Array.from(it.querySelectorAll<HTMLElement>('.on-p5-w'))),
+        num: items.map((it) => it.querySelector<HTMLElement>('.on-p5-n')),
+        desc: items.map((it) => it.querySelector<HTMLElement>('.on-p5-d')),
+      };
+    })());
+    const g = (geo.current ??= measure());
+    if (!g) return;
+    const sv = prog.current * len;
+    const cam = ax.cam(Math.min(sv, ax.len));
+    const fin = sm((sv - ax.len) / FINAL); // odjazd do całego plakatu
+
+    // miejsca wierszy: pod wierszem na ekranie (i nad nim) robi się miejsce na zdanie i numer
+    const ys: number[] = [];
+    let y = 0;
+    for (let j = 0; j <= N; j++) {
+      const w = Math.max(0, 1 - Math.abs(cam - j)) * (1 - fin);
+      y += g.before[j] * w;
+      ys[j] = y;
+      y += g.h[j] + g.gap + g.after[j] * w;
+    }
+    const total = g.h.reduce((a, b) => a + b + g.gap, 0) - g.gap; // cały plakat (bez miejsc na zdania)
+    const k = Math.min(Math.floor(cam), N), fr = cam - k;
+    const anchor = k >= N ? ys[N] : lerp(ys[k], ys[k + 1], fr);
+    const sf = Math.min(1, g.avail / Math.max(1, total));
+    const off = lerp(g.read - anchor, g.top + (g.avail - total * sf) / 2, fin);
+    css(cl, 'transform', `translateY(${off.toFixed(2)}px) scale(${lerp(1, sf, fin).toFixed(4)})`);
+
+    c.items.forEach((it, j) => {
+      css(it, 'transform', `translateY(${ys[j].toFixed(2)}px)`);
+      // wiersz pisze się w przejściu, które go wprowadza: słowa po kolei spod maski
+      const write = j === 0 ? 1 : clamp01(cam - (j - 1));
+      css(it, 'visibility', write <= 0.001 ? 'hidden' : 'visible');
+      const ws = c.words[j], nw = ws.length || 1;
+      ws.forEach((wd, i) => {
+        const q = sm((write - (i / nw) * 0.5) / 0.5);
+        css(wd, 'transform', q >= 0.9995 ? 'none' : `translateY(${((1 - q) * 112).toFixed(2)}%)`);
+      });
+      // poprzednie wiersze przygasają nad wierszem na ekranie, dalekie znikają pod nawigacją; na końcu cały plakat jasny
+      const dd = cam - j;
+      let o = dd > 0 ? (1 - 0.66 * sm(dd / 0.7)) * (1 - sm((dd - 1.6) / 0.8)) : 1;
+      o = lerp(o, 0.96, fin);
+      css(c.titles[j], 'opacity', o.toFixed(3));
+      // numer i zdanie tylko na postoju
+      const a = (1 - sm(Math.abs(dd) / 0.22)) * (1 - fin);
+      [c.num[j], c.desc[j]].forEach((x) => {
+        if (!x) return;
+        css(x, 'opacity', a.toFixed(3));
+        css(x, 'visibility', a < 0.002 ? 'hidden' : 'visible');
+      });
+    });
+
+    // podpis pod plakatem: linia z gwiazdą rysuje się od czubka do gwiazdy (odsłanianie, bez rozciągania kształtu)
+    const q = sm((sv - ax.len - FINAL * 0.5) / (FINAL * 0.45));
+    css(sign.current, 'transform', `translateY(${(total + g.gap * 2).toFixed(2)}px)`);
+    css(sign.current, 'clip-path', `inset(0 ${((1 - q) * 100).toFixed(2)}% 0 0)`);
+    css(sign.current, 'visibility', q > 0.001 ? 'visible' : 'hidden');
+  }, [ax, len, measure, N]);
+
+  useEffect(() => {
+    if (!live) return;
+    const b = box.current;
+    if (!b) return;
+    const ro = new ResizeObserver(() => { geo.current = null; paint(); });
+    ro.observe(b);
+    let dead = false;
+    document.fonts?.ready.then(() => { if (!dead) { geo.current = null; paint(); } });
+    return () => { dead = true; ro.disconnect(); geo.current = null; els.current = null; };
+  }, [live, paint]);
+  usePin(pin, (p) => { prog.current = p; paint(); }, live);
+
+  return (
+    <section className="on-sec on-p5" aria-labelledby="on-p5-h">
+      <Scene pin={pin} len={len}>
+        <div ref={box} className="container mx-auto px-6 on-p5-box">
+          <div ref={col} className="on-p5-col">
+            <header className="on-p5-it on-p5-head">
+              <h2 id="on-p5-h" className="on-pk-h on-p5-t">
+                <Words text={t.heading} cls="on-p5" />{' '}
+                <span className="on-pk-acc"><Words text={t.headingAccent} cls="on-p5" /></span>
+              </h2>
+              <p className="on-pk-lead on-p5-d">{t.lead}</p>
+            </header>
+            <ol className="on-pk-list on-p5-list">
+              {t.items.map((it, i) => (
+                <li key={i} className="on-p5-it">
+                  <p className="on-pk-n on-p5-n" aria-hidden="true">{pad(i + 1)} / {pad(N)}</p>
+                  <h3 className="on-pk-t on-p5-t"><Words text={it.title} cls="on-p5" /></h3>
+                  <p className="on-pk-d on-p5-d">{it.desc}</p>
+                </li>
+              ))}
+            </ol>
+            {/* podpis plakatu: linia z gwiazdą z logo (ozdoba) */}
+            <svg ref={sign} className="on-pk-fx on-p5-sign" aria-hidden="true" focusable="false" preserveAspectRatio="none">
+              <path ref={signPath} />
+            </svg>
+          </div>
+        </div>
+      </Scene>
+    </section>
+  );
+}

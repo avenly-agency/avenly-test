@@ -412,6 +412,9 @@ html.lenis, html.lenis body {
 .cb-brand { display: flex; align-items: baseline; gap: 12px; min-width: 0; }
 .cb-word { font-weight: 700; font-size: 17px; line-height: 1; letter-spacing: -.04em; color: #f8fafc; }
 .cb-word-dot { color: rgb(var(--cb-accent)); }
+/* Nowe logo w nagłówku czatu (2026-10-09): litery w kolorze .cb-word, linia z gwiazdą w akcencie podstrony;
+   dół svg = linia bazowa liter, więc .cb-brand (align-items: baseline) zrównuje go z napisem statusu. */
+.cb-logo { display: block; height: 13px; width: 82px; }
 .cb-status { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; line-height: 1; color: var(--cb-muted); white-space: nowrap; }
 .cb-status-dot { width: 6px; height: 6px; border-radius: 50%; background: #34d399; box-shadow: 0 0 8px rgba(52, 211, 153, .7); }
 .cb-actions { display: flex; align-items: center; gap: 2px; }

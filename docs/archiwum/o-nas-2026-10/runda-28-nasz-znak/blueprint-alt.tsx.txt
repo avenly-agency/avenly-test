@@ -1,0 +1,176 @@
+'use client';
+
+import { useRef, type CSSProperties } from 'react';
+import { GEM, LOGO_CUT_SHIFT, LOGO_PIECES, LOGO_WHOLE_FILLS } from '@/lib/brand/logo';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { DIMS, GUIDES } from './blueprint-data';
+import { Comet, fillPoints, Pieces } from './mark';
+import { Head, Narrator, setNarrator } from './parts';
+import { css, lin, seg, useEnter, usePin } from './shared';
+import './blueprint-alt.css'; // prefiksy on-b2- i on-b3-
+
+// „NASZ ZNAK” - PROPOZYCJE 2026-10-13 (właściciel: „teraz wszystkie następne sekcje daj kilka propozycji dla każdej”).
+// Obecna wersja („Konstrukcja logo”, blueprint.tsx) zostaje domyślna; przełącznik w panelu na dole ekranu (tylko dev).
+//   BlueprintDetail   „Na Twojej stronie” - ta sama myśl („każdy detal ma swój wymiar”) pokazana na ekranie strony
+//                     klienta: w szklanym kadrze stoi od początku cała przykładowa strona, a przewijanie wskazuje na
+//                     niej po kolei trzy rzeczy - siatkę, wysokość przycisku, kontrast tekstu. Jedno miejsce akcji
+//                     i jedno zdanie narratora naraz. Przypięte 100svh + 200vh.
+//   BlueprintTriptych „Trzy kadry” - spokojna wersja bez przypięcia: trzy szklane kadry z fragmentami rysunku logo
+//                     (siatka i wysokość liter, miejsce linii, gwiazda), każdy rysuje się raz, gdy wejdzie na ekran.
+// Tło: mgławica podstrony (page-sky.tsx) - kadr / rząd kadrów ma data-sky. Po wyborze niewybrane usunąć (kopie
+// do docs/archiwum/o-nas-2026-10/).
+
+type Bp = ONasDict['blueprint'];
+const COLS = Array.from({ length: 12 }, (_, i) => i);
+const f3 = (n: number) => n.toFixed(3);
+const star = <svg viewBox="-20 -20 40 40" focusable="false"><path d={GEM} /></svg>;
+
+export function BlueprintDetail({ t, live, stepsLabel }: { t: Bp; live: boolean; stepsLabel: string }) {
+  const pin = useRef<HTMLDivElement>(null);
+  const mock = useRef<HTMLDivElement>(null);
+  const narr = useRef<HTMLOListElement>(null);
+  const d = t.detail;
+
+  usePin(pin, (p) => {
+    const m = mock.current;
+    // 1. siatka rośnie kolumnami, potem przygasa; 2. wymiar przycisku; 3. obrys nagłówka (kontrast)
+    const grid = seg(p, 0.05, 0.2), gridOff = seg(p, 0.36, 0.44);
+    const btn = seg(p, 0.38, 0.5), btnOff = seg(p, 0.66, 0.74);
+    const con = seg(p, 0.68, 0.8);
+    css(m, '--g', f3(grid));
+    css(m, '--go', f3(1 - gridOff * 0.7));
+    css(m, '--gc', f3(seg(grid, 0.6, 1) * (1 - gridOff)));
+    css(m, '--b', f3(btn));
+    css(m, '--bc', f3(seg(btn, 0.5, 1) * (1 - btnOff)));
+    css(m, '--fb', f3(btn * (1 - btnOff)));
+    css(m, '--c', f3(con));
+    css(m, '--fc', f3(con));
+    setNarrator(narr.current, p < 0.37 ? 0 : p < 0.67 ? 1 : 2, [lin(p, 0, 0.37), lin(p, 0.37, 0.67), lin(p, 0.67, 0.94)]);
+  }, live);
+
+  return (
+    <section className="on-sec on-b2" aria-labelledby="on-bp-h">
+      <Head id="on-bp-h" label={t.label} title={t.heading} accent={t.headingAccent} lead={d.lead} live={live} />
+      <div ref={pin} className="on-pin on-b2-pin">
+        <div className="on-stick on-b2-stick">
+          <div className="container mx-auto px-6 on-b2-box">
+            <div className="on-b2-frame" data-sky="">
+              <p className="on-b2-bar"><i className="on-b2-dot" aria-hidden="true" />{d.caption}</p>
+              {/* makieta: napisy to atrapa interfejsu (nie nagłówki), treść niosą zdania narratora pod kadrem */}
+              <div ref={mock} className="on-b2-mock" aria-hidden="true">
+                <div className="on-b2-grid">
+                  {COLS.map((i) => <i key={i} style={{ '--i': i } as CSSProperties} />)}
+                </div>
+                <div className="on-b2-nav">
+                  <span className="on-b2-logo">{star}</span>
+                  <span className="on-b2-links"><i /><i /><i /></span>
+                  <span className="on-b2-navbtn" />
+                </div>
+                <div className="on-b2-hero">
+                  <div className="on-b2-copy">
+                    <p className="on-b2-eyebrow">{d.mock.eyebrow}</p>
+                    <p className="on-b2-title">
+                      {d.mock.title}
+                      <em className="on-b2-chip on-b2-chip--c">{d.marks[2]}</em>
+                    </p>
+                    <p className="on-b2-text"><i /><i /></p>
+                    <p className="on-b2-btnrow">
+                      <span className="on-b2-btn">
+                        {d.mock.cta}
+                        <b className="on-b2-dim" />
+                        <em className="on-b2-chip on-b2-chip--b">{d.marks[1]}</em>
+                      </span>
+                    </p>
+                  </div>
+                  <div className="on-b2-pic">{star}</div>
+                </div>
+                <em className="on-b2-chip on-b2-chip--g">{d.marks[0]}</em>
+              </div>
+            </div>
+            <Narrator ref={narr} items={d.steps} label={stepsLabel} />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/** Kadry „Trzech kadrów”: wycinek rysunku konstrukcji (viewBox) i wymiary do pokazania.
+    1. litery L i Y w całości (przed cięciem, bez linii) na siatce + wysokość liter: wymiar stoi w rysunku przy lewej
+       krawędzi logo, tu przesunięty za literę Y (`dx`), a jego podpis na prawą stronę kreski (`ldx`),
+    2. początek linii przy literach A i V + wysokość, na której linia biegnie,
+    3. gwiazda z bliska + jej wymiar (`lbl` = skala podpisu; w zbliżeniu mniejsza). */
+const PLATES: { vb: string; dims: string[]; whole?: boolean; dx?: number; ldx?: number; lbl: number }[] = [
+  { vb: '340 -132.5 264 165', dims: ['d40'], whole: true, dx: 654.5, ldx: 24.6, lbl: 1.45 },
+  { vb: '-84 -122 236 148', dims: ['d25', 'd15', 'd13'], lbl: 1.45 },
+  { vb: '492 -112 160 100', dims: ['d16r'], lbl: 1 },
+];
+
+/** Litery w całości (jak przed cięciem): górne połówki cofnięte o przesunięcie cięcia, szczelina wypełniona.
+    Krycie na całej grupie (nie na częściach) - wypełnienia zachodzą na połówki i przy kryciu części dawałyby paski. */
+function Whole() {
+  return (
+    <g className="on-b3-whole">
+      {LOGO_PIECES.map((pc, i) => (
+        <path key={i} d={pc.d} transform={pc.part === 'up' ? `translate(${-LOGO_CUT_SHIFT} 0)` : undefined} />
+      ))}
+      {Object.values(LOGO_WHOLE_FILLS).flatMap((polys, li) =>
+        polys.map((poly, pi) => <polygon key={`${li}-${pi}`} points={fillPoints(poly)} />))}
+    </g>
+  );
+}
+
+function Plate({ i, caption, live }: { i: number; caption: string; live: boolean }) {
+  const ref = useRef<HTMLLIElement>(null);
+  useEnter(ref, live, 0.3);
+  const pl = PLATES[i % PLATES.length];
+  return (
+    <li ref={ref} className="on-b3-card" style={{ '--d': i } as CSSProperties}>
+      <div className="on-b3-frame">
+        <svg className="on-b3-art" viewBox={pl.vb} preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+          <g>
+            {GUIDES.map((g, k) => (
+              <line
+                key={k} className="on-b3-g" style={{ '--i': k } as CSSProperties}
+                x1={-112} y1={g.y} x2={672} y2={g.y} strokeOpacity={g.o} vectorEffect="non-scaling-stroke"
+              />
+            ))}
+          </g>
+          <g className="on-b3-ink">
+            {pl.whole ? <Whole /> : <><Pieces /><Comet /></>}
+          </g>
+          <g transform={pl.dx ? `translate(${pl.dx} 0)` : undefined}>
+            {DIMS.filter((dm) => pl.dims.includes(dm.id)).map((dm) => (
+              <g key={dm.id} className="on-b3-dim">
+                {dm.lines.map((l, k) => (
+                  <line
+                    key={k} className="on-b3-dl" x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} strokeOpacity={l.o}
+                    strokeDasharray={l.dash} vectorEffect="non-scaling-stroke"
+                  />
+                ))}
+                <path
+                  className="on-b3-lbl" d={dm.label}
+                  transform={`translate(${dm.cx + (pl.ldx ?? 0)} ${dm.cy}) scale(${pl.lbl}) translate(${-dm.cx} ${-dm.cy})`}
+                />
+              </g>
+            ))}
+          </g>
+        </svg>
+      </div>
+      <p className="on-b3-cap"><b aria-hidden="true">{i + 1}</b><span>{caption}</span></p>
+    </li>
+  );
+}
+
+export function BlueprintTriptych({ t, live }: { t: Bp; live: boolean }) {
+  return (
+    <section className="on-sec on-b3" aria-labelledby="on-bp-h">
+      <Head id="on-bp-h" label={t.label} title={t.heading} accent={t.headingAccent} lead={t.lead} live={live} />
+      <div className="container mx-auto px-6 on-b3-box">
+        <ol className="on-b3-row" data-sky="">
+          {t.steps.map((s, i) => <Plate key={i} i={i} caption={s} live={live} />)}
+        </ol>
+      </div>
+    </section>
+  );
+}

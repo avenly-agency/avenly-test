@@ -1,0 +1,161 @@
+'use client';
+
+import { useCallback, useEffect, useRef, type CSSProperties } from 'react';
+import { GEM } from '@/lib/brand/logo';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { Scene } from './scene-kit';
+import { css, flag, usePin } from './shared';
+import './principles-flight.css'; // prefiks on-p4-
+
+// „W CO WIERZYMY” - PROPOZYCJA „PRZELOT” (2026-10-14). Właściciel o „Kartach”: „niby spoko, ale znowu takie zwykłe,
+// daj propozycję ciekawszą”. Pomysł z wersji „Przelot” z rundy 2 (właściciel wtedy: „pomysł z negatywami i takimi
+// zoomami z przelotu zajebisty”), który nigdy nie trafił na stronę - tu dla zasad:
+//   - jedno ujęcie na cały ekran, bez kadru i kart; w głębi, w prawym górnym rogu, świeci gwiazda z logo (punkt zbiegu;
+//     blask mgławicy podstrony stoi przy niej - data-sky),
+//   - każda zasada WYLATUJE Z GWIAZDY: rośnie po linii perspektywy z punktu zbiegu i staje przy lewej krawędzi wrappera
+//     jako ogromny napis (pismo „Plakatu”), pod nim numer i jedno zdanie wyjaśnienia,
+//   - przewijanie prowadzi kamerę w głąb: zasada na ekranie rośnie dalej, mija kamerę i odlatuje za lewy dolny róg,
+//     a z gwiazdy wylatuje następna. W ruchu napis jest samym obrysem („negatyw”), na miejscu pełną literą - grubość
+//     obrysu stała na ekranie (--s = skala); ruch bez odbicia (smoothstep - dojeżdża i staje),
+//   - pierwsza pozycja = nagłówek sekcji w tym samym piśmie (bez plakietki - jak w „Portalu” i „Co robimy”).
+// Układ inny niż sekcje wyżej (kadr obok tekstu w „Portalu”, stół z pasem tytułowym w „Co robimy”) - właściciel:
+// „layout znowu ten sam (…) zrób bardziej premium” (2026-10-14).
+// Bez JS / ograniczony ruch: nagłówek i zwykła lista zasad. Wydajność: napisy skalowane transformem 2D bez warstwy
+// kompozytora (ostre litery w każdej skali), zmienne pisane na elemencie, który je czyta, tylko przy zmianie; pozycje
+// i punkt zbiegu mierzone tylko przy zmianie rozmiaru.
+
+type Pr = ONasDict['principles'];
+const pad = (n: number) => String(n).padStart(2, '0');
+const sm = (v: number) => { const x = v < 0 ? 0 : v > 1 ? 1 : v; return x * x * (3 - 2 * x); };
+
+// OŚ SCENY w vh przewinięcia: postój na nagłówku, potem dla każdej zasady przelot i postój.
+const H0 = 22, MOVE = 40, HOLD = 34, TAIL = 10;
+/** Punkt zbiegu (ułamki pola sceny): komputer / telefon. */
+const VP = { x: 0.82, y: 0.27 }, VP_PHONE = { x: 0.8, y: 0.17 };
+
+/** Kamera: 0 = nagłówek, k = zasada k (1..N), w przelocie wartość pośrednia (smoothstep - bez odbicia). */
+const camAt = (sv: number, n: number) => {
+  let c = 0;
+  for (let j = 1; j <= n; j++) {
+    const a = H0 + (j - 1) * (MOVE + HOLD);
+    if (sv <= a) break;
+    c = j - 1 + sm((sv - a) / MOVE);
+  }
+  return c;
+};
+
+/** Geometria (tylko przy zmianie rozmiaru): punkt zbiegu i punkt zaczepienia każdego napisu (lewy brzeg, środek
+    wysokości) w układzie pozycji. */
+type Geo = { vx: number; vy: number; anchors: { x: number; y: number }[] };
+type Els = { items: HTMLElement[]; titles: HTMLElement[]; rest: HTMLElement[][] };
+
+export function PrinciplesFlight({ t, live }: { t: Pr; live: boolean }) {
+  const pin = useRef<HTMLDivElement>(null), box = useRef<HTMLDivElement>(null), star = useRef<HTMLSpanElement>(null);
+  const geo = useRef<Geo | null>(null);
+  const els = useRef<Els | null>(null);
+  const prog = useRef(0);
+  const N = t.items.length;
+  const len = H0 + N * (MOVE + HOLD) + TAIL;
+
+  const measure = useCallback((): Geo | null => {
+    const b = box.current, c = els.current;
+    if (!b || !c) return null;
+    const W = b.clientWidth, H = b.clientHeight;
+    if (!W || !H) return null;
+    const vp = W < 768 ? VP_PHONE : VP;
+    // pozycje leżą w polu (left/right 1.5rem = dopełnienie wrappera), punkt zbiegu w tym samym układzie
+    const it0 = c.items[0];
+    const ox = it0 ? it0.offsetLeft : 0, oy = it0 ? it0.offsetTop : 0;
+    const vx = W * vp.x - ox, vy = H * vp.y - oy;
+    const st = star.current?.style;
+    if (st) { st.left = `${(W * vp.x).toFixed(1)}px`; st.top = `${(H * vp.y).toFixed(1)}px`; }
+    return {
+      vx, vy,
+      anchors: c.titles.map((ti) => ({ x: ti.offsetLeft, y: ti.offsetTop + ti.offsetHeight / 2 })),
+    };
+  }, []);
+
+  const paint = useCallback(() => {
+    const el = pin.current;
+    if (!el) return;
+    const c = (els.current ??= (() => {
+      const items = Array.from(el.querySelectorAll<HTMLElement>('.on-p4-it'));
+      return {
+        items,
+        titles: items.map((it) => it.querySelector<HTMLElement>('.on-p4-t')!),
+        rest: items.map((it) => Array.from(it.querySelectorAll<HTMLElement>('.on-p4-n, .on-p4-d'))),
+      };
+    })());
+    const g = (geo.current ??= measure());
+    if (!g) return;
+    const cam = camAt(prog.current * len, N);
+    c.items.forEach((it, j) => {
+      const d = j - cam;                   // > 0: w głębi (jeszcze leci z gwiazdy), < 0: mija kamerę
+      const on = d > -0.8 && d < 0.98;
+      css(it, 'visibility', on ? 'visible' : 'hidden');
+      flag(it, 'data-on', Math.abs(d) < 0.2);
+      if (!on) return;
+      // skala z głębi: z gwiazdy (mała) do napisu na miejscu (1), potem szybko w górę przy mijaniu kamery
+      const s = d >= 0 ? Math.pow(2, -d * 2.4) : Math.pow(2, -d * 2.2);
+      const o = d >= 0 ? 1 - sm((d - 0.25) / 0.7) : 1 - sm((-d - 0.2) / 0.55);
+      const f = d >= 0 ? 1 - sm(d / 0.3) : 1 - sm(-d / 0.22); // wypełnienie: w ruchu sam obrys, na miejscu pełna litera
+      const a = g.anchors[j] ?? { x: 0, y: 0 };
+      // perspektywa: punkt zaczepienia napisu leży na prostej z punktu zbiegu (skala 0 = w gwieździe)
+      const tx = (g.vx - a.x) * (1 - s), ty = (g.vy - a.y) * (1 - s);
+      const ti = c.titles[j];
+      css(ti, 'transform', Math.abs(s - 1) < 0.0005 ? 'none' : `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px) scale(${s.toFixed(4)})`);
+      css(ti, '--s', s.toFixed(4));
+      css(ti, '--f', f.toFixed(3));
+      css(ti, 'opacity', o.toFixed(3));
+      css(it, 'z-index', String(Math.round(50 - d * 20)));
+      // numer i wyjaśnienie tylko na postoju
+      const r = 1 - sm(Math.abs(d) / 0.16);
+      const ry = (d > 0 ? 14 : -14) * (1 - r);
+      c.rest[j].forEach((x) => { css(x, 'opacity', r.toFixed(3)); css(x, 'transform', r > 0.999 ? 'none' : `translateY(${ry.toFixed(1)}px)`); });
+    });
+    // gwiazda w punkcie zbiegu powoli rośnie - kamera się do niej zbliża
+    css(star.current, '--ss', (1 + 0.1 * cam).toFixed(3));
+  }, [len, measure, N]);
+
+  useEffect(() => {
+    if (!live) return;
+    const b = box.current;
+    if (!b) return;
+    const ro = new ResizeObserver(() => { geo.current = null; paint(); });
+    ro.observe(b);
+    // po wczytaniu fontu napisy mają inne wymiary - punkty zaczepienia od nowa
+    let dead = false;
+    document.fonts?.ready.then(() => { if (!dead) { geo.current = null; paint(); } });
+    return () => { dead = true; ro.disconnect(); geo.current = null; els.current = null; };
+  }, [live, paint]);
+  usePin(pin, (p) => { prog.current = p; paint(); }, live);
+
+  return (
+    <section className="on-sec on-p4" aria-labelledby="on-p4-h">
+      <Scene pin={pin} len={len}>
+        <div ref={box} className="container mx-auto px-6 on-p4-box">
+          {/* gwiazda z logo w punkcie zbiegu (data-sky: blask mgławicy podstrony stoi przy niej) */}
+          <span ref={star} className="on-p4-star" data-sky="" aria-hidden="true">
+            <svg viewBox="-20 -20 40 40" focusable="false"><path d={GEM} /></svg>
+          </span>
+          {/* pierwsza pozycja: nagłówek sekcji w piśmie zasad (bez plakietki) */}
+          <header className="on-p4-it on-p4-intro">
+            <h2 id="on-p4-h" className="on-p4-t">
+              {t.heading} <span className="on-p4-acc">{t.headingAccent}</span>
+            </h2>
+            <p className="on-p4-d">{t.lead}</p>
+          </header>
+          <ol className="on-p4-list">
+            {t.items.map((it, i) => (
+              <li key={i} className="on-p4-it" style={{ '--i': i } as CSSProperties}>
+                <p className="on-p4-n" aria-hidden="true">{pad(i + 1)} / {pad(N)}</p>
+                <h3 className="on-p4-t">{it.title}</h3>
+                <p className="on-p4-d">{it.desc}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </Scene>
+    </section>
+  );
+}

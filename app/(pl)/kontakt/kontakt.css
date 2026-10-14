@@ -265,6 +265,16 @@
 .kt-again:hover { color: #fff; text-decoration-color: var(--brand-hi); }
 .kt-again:focus-visible { outline: 2px solid var(--brand-hi); outline-offset: 3px; border-radius: 4px; }
 
+/* Potwierdzenie otwiera się przez gwiazdę z logo (2026-10-13; okna = clip-path pisany przez ContactSection.tsx).
+   data-star="run": odsłona trwa - formularz zostaje widoczny poza oknem (bez wygaszania z .kt-card[data-done]);
+   data-star (run / done): potwierdzenie bez własnych wejść CSS (wchodzi oknem, nie przenikaniem). */
+.kt-star { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; visibility: hidden; }
+.kt-star path { fill: none; stroke: var(--brand-hi); stroke-width: 1.5; }
+.kt-star path:nth-child(2) { stroke-width: 1; stroke-opacity: .55; }
+.kt-star path:nth-child(3) { stroke-width: 1; stroke-opacity: .3; }
+.kt-card[data-star="run"] .kt-card-in { opacity: 1; transition: none; }
+.kt-card[data-star] .kt-done, .kt-card[data-star] .kt-done-ico { animation: none; }
+
 /* ── Ruch: wejście od pierwszej klatki (bez JS), kolejno --d ────────────── */
 @media (prefers-reduced-motion: no-preference) {
   .kt-rv { animation: kt-in 1s var(--kt-out) both; animation-delay: calc(var(--d, 0) * 90ms + 60ms); }

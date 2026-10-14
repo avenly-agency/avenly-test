@@ -1,0 +1,76 @@
+/* ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+   O NAS - wersja „GWIAZDOZBIÓR” (propozycja 2026-10-09, atlas.tsx). Prefiks on-g-.
+   Style bez [data-live] = stan końcowy (bez JS / ograniczony ruch): gotowy gwiazdozbiór jako rysunek, pod nim
+   wszystkie ujęcia jedno pod drugim. Pod [data-live] scena przypięta, kamera = viewBox pisany w klatce przewijania.
+   ═══════════════════════════════════════════════════════════════════════════════════════════════════════════ */
+
+.on-g { position: relative; }
+.on-g-pin { position: relative; }
+.on-g-stick { position: relative; padding: 128px 0 40px; }
+.on-g-map { display: block; width: min(78vw, 440px); height: auto; aspect-ratio: 1; margin: 0 auto 64px; overflow: hidden; }
+.on-g-box { position: relative; }
+.on-g-st { max-width: 40rem; margin: 0 0 72px; }
+.on-g-cap { margin: 0 0 12px; font-size: 19px; line-height: 1.45; color: #e2e8f0; }
+
+/* ── rysunek mapy ── */
+.on-g-grid circle, .on-g-grid line { fill: none; stroke: rgba(255, 255, 255, .07); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.on-g-grid .on-g-ring-n { stroke: rgba(255, 255, 255, .13); }
+.on-g-dot { fill: none; stroke: #fff; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.on-g-dot--0 { stroke-width: 1.3; stroke-opacity: .34; }
+.on-g-dot--1 { stroke-width: 1.9; stroke-opacity: .5; }
+.on-g-dot--2 { stroke-width: 2.6; stroke-opacity: .78; }
+.on-g-route path { fill: none; stroke: rgba(148, 163, 184, .26); stroke-width: 1; stroke-dasharray: 2 7; vector-effect: non-scaling-stroke; }
+/* linia rysowana (pathLength = 1; bez non-scaling-stroke - Chrome liczy wtedy długość kreski niedokładnie,
+   grubość w jednostkach mapy pisze JS na grupie) */
+.on-g-seg { fill: none; stroke: rgba(241, 245, 249, .72); stroke-dasharray: 1; stroke-dashoffset: 0; transition: stroke .9s ease; }
+.on-g-map[data-closed] .on-g-seg { stroke: #60a5fa; }
+.on-g-node-gem { fill: var(--on-ac); transform: scale(.55); transition: transform .8s var(--on-ease), opacity .5s ease; }
+.on-g-node-ring { fill: #050505; stroke: rgba(226, 232, 240, .55); stroke-width: 1; opacity: 0; transition: opacity .5s ease; }
+.on-g-node-pulse { fill: none; stroke: #60a5fa; stroke-width: .8; opacity: 0; }
+.on-g-node[data-s="0"] .on-g-node-gem { opacity: 0; transform: scale(.2); }
+.on-g-node[data-s="0"] .on-g-node-ring { opacity: 1; }
+.on-g-node[data-s="2"] .on-g-node-gem { transform: scale(.9); }
+.on-g-head { fill: #f8fafc; opacity: 0; }
+.on-g-logo { display: none; }
+.on-g-logo-line { fill: var(--on-ac); opacity: 0; }
+.on-g-logo-pc { fill: #fff; opacity: 0; }
+
+/* ── pełny ruch: scena przypięta ── */
+.on[data-live] .on-g-pin { height: calc(100vh + 720vh); height: calc(100svh + 720vh); }
+.on[data-live] .on-g-stick { position: sticky; top: 0; height: 100vh; height: 100svh; padding: 0; overflow: hidden; overflow: clip; }
+.on[data-live] .on-g-map { position: absolute; inset: 0; width: 100%; height: 100%; aspect-ratio: auto; margin: 0; animation: on-fade 1.6s ease .1s both; }
+.on[data-live] .on-g-box { height: 100%; }
+.on[data-live] .on-g-st {
+  position: absolute; left: 1.5rem; top: 0; bottom: 0; width: min(35rem, 44vw); max-width: none; margin: 0;
+  display: flex; flex-direction: column; justify-content: center;
+  opacity: 0; visibility: hidden; pointer-events: none;
+}
+.on[data-live] .on-g-st.on-i { opacity: 1; visibility: visible; }
+.on[data-live] .on-g-st[data-on] { pointer-events: auto; }
+.on[data-live] .on-g-seg { stroke-dashoffset: 1; }
+.on[data-live] .on-g-logo { display: inline; }
+.on[data-live] .on-g-map:not([data-f2]) .on-g-logo { visibility: hidden; }
+.on[data-live] .on-g-node[data-s="2"] .on-g-node-pulse { animation: on-g-pulse 1.4s var(--on-ease) both; }
+@keyframes on-g-pulse { from { transform: scale(.5); opacity: .9; } to { transform: scale(2.3); opacity: 0; } }
+.on[data-live] .on-g-cap {
+  position: absolute; left: 1.5rem; margin: 0; max-width: min(34rem, 44vw); opacity: 0;
+  font-size: clamp(22px, 2.3vw, 34px); line-height: 1.22; font-weight: 600; letter-spacing: -.022em; color: #f8fafc; text-wrap: balance;
+}
+.on[data-live] .on-g-cap--0 { top: 50%; transform: translateY(-50%); }
+.on[data-live] .on-g-cap--1 { top: 62%; }
+
+@media (max-width: 767px) {
+  .on-g-st { margin-bottom: 56px; }
+  .on[data-live] .on-g-st { right: 1.5rem; width: auto; top: 38%; bottom: auto; display: block; }
+  .on[data-live] .on-g-cap { right: 1.5rem; max-width: none; font-size: 22px; }
+  .on[data-live] .on-g-cap--0 { top: 60%; transform: none; }
+}
+/* niski telefon: pierwszy ekran bez opisu (przycisk nie może wyjść poza ekran) */
+@media (max-width: 767px) and (max-height: 700px) {
+  .on[data-live] .on-g-st .on-i-lead { display: none; }
+  .on[data-live] .on-g-st .on-h1 { margin-bottom: 26px; }
+}
+/* niski ekran komputera: krótszy tekst pierwszego ekranu */
+@media (min-width: 768px) and (max-height: 700px) {
+  .on[data-live] .on-g-st .on-h1 { font-size: clamp(32px, 3.6vw, 52px); }
+}

@@ -1,0 +1,220 @@
+'use client';
+
+import { useRef, type CSSProperties, type ReactNode } from 'react';
+import { GEM } from '@/lib/brand/logo';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { Intro } from './scene-kit';
+import { attr, css, flag, seg, useEnter, usePin } from './shared';
+import './principles-alt.css'; // prefiksy on-p2- i on-p3-
+
+// „W CO WIERZYMY” - PROPOZYCJE 2026-10-13 (właściciel: „teraz wszystkie następne sekcje daj kilka propozycji dla
+// każdej”). Obecna wersja („Stacje na linii”, principles.tsx) zostaje domyślna; przełącznik w panelu na dole (dev).
+//   PrinciplesStars „Gwiazdozbiór” - przypięta scena (100svh + 5 · 58vh): każda zasada to gwiazda, gwiazda z logo leci
+//                   od jednej do drugiej i zostawia linię, aż powstanie cały gwiazdozbiór. Tekst zasady stoi w jednym
+//                   miejscu po lewej (jedna naraz), blask mgławicy idzie za lecącą gwiazdą (data-sky).
+//   PrinciplesCards „Karty” - bez przypięcia: pięć szklanych kart, każda z małym rysunkiem, który ożywa raz, gdy karta
+//                   wejdzie na ekran (strona i telefon, wynik 98, wiadomość i odpowiedź, odhaczone fakty, linia, która
+//                   biegnie dalej po wdrożeniu).
+// NAGŁÓWEK SEKCJI (runda 29, właściciel: „znowu te headingi wyglądają mediocre”) nie stoi już nad sceną: w „Gwiazdozbiorze”
+// jest pierwszą pozycją tekstu (obok od początku stoi cały rysunek), w „Kartach” pierwszym kafelkiem siatki.
+// Po wyborze niewybrane usunąć (kopie do docs/archiwum/o-nas-2026-10/).
+
+type Pr = ONasDict['principles'];
+const pad = (n: number) => String(n).padStart(2, '0');
+
+/* ───────── GWIAZDOZBIÓR ───────── */
+
+const VB_W = 600, VB_H = 500;
+/** Gwiazdy pięciu zasad: wznosząca się łamana (jednostki rysunku 600 × 500). */
+const FIVE: [number, number][] = [[64, 430], [196, 318], [322, 392], [438, 206], [540, 84]];
+/** Inna liczba zasad: punkty równo rozłożone po tej samej przekątnej, na przemian wyżej i niżej. */
+const spread = (n: number): [number, number][] => Array.from({ length: n }, (_, i) => {
+  const u = n > 1 ? i / (n - 1) : 0, edge = i === 0 || i === n - 1;
+  return [64 + u * 476, 430 - u * 346 + (edge ? 0 : i % 2 ? -46 : 46)];
+});
+/** Pył gwiazd w tle rysunku - stałe położenia (ten sam wynik na serwerze i w przeglądarce). */
+let seed = 11;
+const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+const DUST = Array.from({ length: 38 }, () => ({
+  x: Math.round(rnd() * VB_W), y: Math.round(rnd() * VB_H),
+  r: Math.round((0.7 + rnd() * 1.1) * 10) / 10, o: Math.round((0.16 + rnd() * 0.42) * 100) / 100,
+}));
+
+export function PrinciplesStars({ t, live }: { t: Pr; live: boolean }) {
+  const pin = useRef<HTMLDivElement>(null);
+  const glow = useRef<HTMLSpanElement>(null);
+  const trav = useRef<SVGGElement>(null);
+  const N = t.items.length;
+  const pts = N === FIVE.length ? FIVE : spread(N);
+
+  usePin(pin, (p, el) => {
+    const pos = p * (N + 1 - 0.35) - 1; // poniżej zera stoi nagłówek sekcji, potem zasady 0..N-1
+    // lecąca gwiazda: odcinek k rysuje się na końcu postoju zasady k, gwiazda jest na jego czole
+    let x = pts[0][0], y = pts[0][1];
+    el.querySelectorAll<SVGPathElement>('.on-p2-link').forEach((ln, k) => {
+      const e = seg(pos, k + 0.7, k + 1);
+      css(ln, 'stroke-dashoffset', (1 - e).toFixed(4));
+      x += (pts[k + 1][0] - pts[k][0]) * e;
+      y += (pts[k + 1][1] - pts[k][1]) * e;
+    });
+    // tekst: jedna zasada naraz - poprzednia odchodzi w górę, zanim gwiazda doleci, następna wchodzi z dołu
+    let active = 0, best = -1;
+    el.querySelectorAll<HTMLElement>('.on-p2-item').forEach((it, j) => {
+      const i = j - 1; // -1 = nagłówek
+      const tin = j === 0 ? 1 : seg(pos, i - 0.16, i + 0.04);
+      const out = i === N - 1 ? 0 : seg(pos, i + 0.68, i + 0.84);
+      const o = tin * (1 - out);
+      css(it, 'opacity', o.toFixed(3));
+      css(it, 'visibility', o < 0.002 ? 'hidden' : 'visible');
+      css(it, 'transform', o >= 0.9995 ? 'none' : `translate3d(0, ${((1 - tin) * 22 - out * 22).toFixed(2)}px, 0)`);
+      if (i >= 0 && o > best) { best = o; active = i; }
+    });
+    el.querySelectorAll<SVGGElement>('.on-p2-node').forEach((nd, i) => {
+      const lit = i === 0 ? 1 : seg(pos, i - 0.1, i + 0.02);
+      css(nd, 'opacity', (0.3 + 0.7 * lit).toFixed(3));
+      flag(nd, 'data-on', i === active && best > 0.5);
+    });
+    attr(trav.current, 'transform', `translate(${x.toFixed(2)} ${y.toFixed(2)})`);
+    css(glow.current, 'left', `${((x / VB_W) * 100).toFixed(2)}%`);
+    css(glow.current, 'top', `${((y / VB_H) * 100).toFixed(2)}%`);
+  }, live);
+
+  return (
+    <section className="on-sec on-p2" aria-labelledby="on-pr-h">
+      <div ref={pin} className="on-pin on-p2-pin" style={{ '--n': N + 1 } as CSSProperties}>
+        <div className="on-stick on-p2-stick">
+          <div className="container mx-auto px-6 on-p2-box">
+            <div className="on-p2-texts">
+              <Intro
+                id="on-pr-h" label={t.label} title={t.heading} accent={t.headingAccent} lead={t.lead} live={live}
+                className="on-p2-item on-p2-intro"
+              />
+              <ol className="on-p2-list">
+                {t.items.map((it, i) => (
+                  <li key={i} className="on-p2-item">
+                    <span className="on-p2-n" aria-hidden="true">{pad(i + 1)} / {pad(N)}</span>
+                    <h3 className="on-p2-t">{it.title}</h3>
+                    <p className="on-p2-d">{it.desc}</p>
+                  </li>
+                ))}
+              </ol>
+            </div>
+            <div className="on-p2-sky" aria-hidden="true">
+              <svg viewBox={`0 0 ${VB_W} ${VB_H}`} focusable="false">
+                {DUST.map((s, i) => <circle key={i} className="on-p2-dust" cx={s.x} cy={s.y} r={s.r} fillOpacity={s.o} />)}
+                {pts.slice(0, -1).map((a, k) => (
+                  <path key={k} className="on-p2-link" pathLength={1} d={`M${a[0]} ${a[1]}L${pts[k + 1][0]} ${pts[k + 1][1]}`} />
+                ))}
+                {pts.map((a, i) => (
+                  <g key={i} className="on-p2-node" transform={`translate(${a[0]} ${a[1]})`}>
+                    <circle className="on-p2-ring" r={30} />
+                    <path className="on-p2-gem" d={GEM} transform="scale(.5)" />
+                  </g>
+                ))}
+                <g ref={trav} className="on-p2-trav" transform={`translate(${pts[0][0]} ${pts[0][1]})`}>
+                  <path d={GEM} transform="scale(.82)" />
+                </g>
+              </svg>
+              <span
+                ref={glow} className="on-p2-glow" data-sky=""
+                style={{ left: `${(pts[0][0] / VB_W) * 100}%`, top: `${(pts[0][1] / VB_H) * 100}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ───────── KARTY ───────── */
+
+const st = (n: number) => ({ '--k': n }) as CSSProperties;
+
+/** Rysunki kart (320 × 150) - jeden na zasadę, w kolejności ze słownika. Części z klasą on-p3-b wchodzą po kolei
+    (--k, funkcja st), on-p3-draw rysują się kreską, on-p3-grow rośnie od lewej; bez ruchu wszystko stoi w stanie
+    końcowym. */
+const ARTS: ReactNode[] = [
+  // 1. Projekt od zera: ten sam układ na komputerze i na telefonie
+  <svg key="a" viewBox="0 0 320 150" focusable="false">
+    <rect className="on-p3-s" x="40" y="22" width="170" height="106" rx="8" />
+    <rect className="on-p3-s" x="226" y="34" width="54" height="94" rx="9" />
+    <rect className="on-p3-f on-p3-b" style={st(0)} x="54" y="38" width="46" height="5" rx="2.5" />
+    <rect className="on-p3-w on-p3-b" style={st(1)} x="54" y="54" width="104" height="10" rx="3" />
+    <rect className="on-p3-f on-p3-b" style={st(2)} x="54" y="73" width="84" height="5" rx="2.5" />
+    <rect className="on-p3-f on-p3-b" style={st(3)} x="54" y="84" width="66" height="5" rx="2.5" />
+    <rect className="on-p3-af on-p3-b" style={st(4)} x="54" y="100" width="46" height="14" rx="4" />
+    <rect className="on-p3-w on-p3-b" style={st(5)} x="235" y="50" width="36" height="7" rx="2.5" />
+    <rect className="on-p3-f on-p3-b" style={st(6)} x="235" y="65" width="30" height="4" rx="2" />
+    <rect className="on-p3-f on-p3-b" style={st(7)} x="235" y="74" width="24" height="4" rx="2" />
+    <rect className="on-p3-af on-p3-b" style={st(8)} x="235" y="88" width="36" height="11" rx="3.5" />
+  </svg>,
+  // 2. 98/100 w PageSpeed: łuk wyniku
+  <svg key="b" viewBox="0 0 320 150" focusable="false">
+    <circle className="on-p3-track" cx="160" cy="75" r="50" />
+    <circle className="on-p3-a on-p3-arc" cx="160" cy="75" r="50" pathLength={100} transform="rotate(-90 160 75)" />
+    <text className="on-p3-num" x="160" y="85" textAnchor="middle">98</text>
+    <text className="on-p3-sub" x="160" y="103" textAnchor="middle">/ 100</text>
+  </svg>,
+  // 3. Odpowiedź w 24 h: wiadomość i odpowiedź
+  <svg key="c" viewBox="0 0 320 150" focusable="false">
+    <g className="on-p3-b" style={st(0)}>
+      <rect className="on-p3-s" x="150" y="24" width="130" height="38" rx="13" />
+      <rect className="on-p3-f" x="166" y="37" width="84" height="5" rx="2.5" />
+      <rect className="on-p3-f" x="166" y="48" width="56" height="5" rx="2.5" />
+    </g>
+    <g className="on-p3-b" style={st(6)}>
+      <rect className="on-p3-af" x="40" y="84" width="158" height="44" rx="13" />
+      <rect className="on-p3-w" x="56" y="98" width="108" height="5" rx="2.5" />
+      <rect className="on-p3-w" x="56" y="110" width="76" height="5" rx="2.5" />
+    </g>
+  </svg>,
+  // 4. Sprawdzalne fakty: trzy pozycje odhaczane po kolei
+  <svg key="d" viewBox="0 0 320 150" focusable="false">
+    {[36, 75, 114].map((y, i) => (
+      <g key={y}>
+        <circle className="on-p3-s" cx="74" cy={y} r="11" />
+        <path className="on-p3-a on-p3-draw" style={st(i)} pathLength={1} d={`M68.5 ${y + 0.5}l4 4l7.5 -8.5`} />
+        <rect className="on-p3-f" x="100" y={y - 4} width={[152, 118, 138][i]} height="8" rx="4" />
+      </g>
+    ))}
+  </svg>,
+  // 5. Zostajemy po wdrożeniu: linia mija znacznik wdrożenia i biegnie dalej, za nim zapalają się kolejne punkty
+  <svg key="e" viewBox="0 0 320 150" focusable="false">
+    <line className="on-p3-s" x1="30" y1="75" x2="284" y2="75" />
+    <line className="on-p3-a on-p3-grow" x1="30" y1="75" x2="284" y2="75" />
+    <line className="on-p3-s" x1="126" y1="52" x2="126" y2="98" />
+    <circle className="on-p3-af" cx="126" cy="46" r="4.5" />
+    {[172, 212, 252].map((x, i) => <circle key={x} className="on-p3-w on-p3-b" style={st(8 + i * 3)} cx={x} cy="75" r="3.5" />)}
+    <path className="on-p3-af" d={GEM} transform="translate(292 75) scale(.42)" />
+  </svg>,
+];
+
+function Card({ i, n, title, desc, live }: { i: number; n: number; title: string; desc: string; live: boolean }) {
+  const ref = useRef<HTMLElement>(null);
+  useEnter(ref, live, 0.3);
+  return (
+    <article ref={ref} className="on-p3-card">
+      <div className="on-p3-art" aria-hidden="true">{ARTS[i % ARTS.length]}</div>
+      <p className="on-p3-n" aria-hidden="true">{pad(i + 1)} / {pad(n)}</p>
+      <h3 className="on-p3-t">{title}</h3>
+      <p className="on-p3-d">{desc}</p>
+    </article>
+  );
+}
+
+export function PrinciplesCards({ t, live }: { t: Pr; live: boolean }) {
+  return (
+    <section className="on-sec on-p3" aria-labelledby="on-pr-h">
+      <div className="container mx-auto px-6 on-p3-box">
+        <div className="on-p3-grid" data-sky="">
+          <Intro
+            id="on-pr-h" label={t.label} title={t.heading} accent={t.headingAccent} lead={t.lead} live={live}
+            className="on-p3-head"
+          />
+          {t.items.map((it, i) => <Card key={i} i={i} n={t.items.length} title={it.title} desc={it.desc} live={live} />)}
+        </div>
+      </div>
+    </section>
+  );
+}

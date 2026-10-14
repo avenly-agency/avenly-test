@@ -15,7 +15,15 @@
 // w trakcie przejścia - od razu odgrywa pełne wejście nowego kadru, a to, co było widoczne, zanika
 // jako "duch" od bieżącego wyglądu (bez czekania i bez skoku). Przejścia zawsze bezpośrednie (klik 01 → 04 nie "kartkuje" 02 i 03). Style pisane
 // wyłącznie gdy się zmieniają.
+//
+// PRZEJŚCIE „GWIAZDA” (2026-10-13; właściciel o tym samym przejściu na /o-nas: „portal zajebisty, gdzie można jeszcze
+// ten efekt użyć” i polecenie „wykonaj”): nowy kadr otwiera się przez okno w kształcie gwiazdy z logo, które rośnie
+// ze środka kadru jak przy wjeździe w gwiazdę; przed oknem lecą dwa obrysy-powidoki w barwie nowej realizacji.
+// Poprzedni kadr stoi nieruchomo pod spodem, dopóki okno go nie zakryje (bez unoszenia, rozmycia i zaniku).
+// „Kurtyna” od dołu zostaje jako drugi wariant - wybór podaje komponent (opts.getTransition; przełącznik tylko
+// w `npm run dev`, realizacje/variant.tsx). Ograniczony ruch: jak dotąd samo przenikanie.
 
+import { GEM } from '@/lib/brand/logo';
 import type { RGB } from '@/lib/i18n/home/realizacje';
 import { createNebula, type NebulaLayer } from './nebula';
 
@@ -103,11 +111,29 @@ const OUT = bez(0.7, 0, 0.84, 0);
 const LAY = bez(0.65, 0, 0.35, 1);
 const EO = (x: number) => 1 - Math.pow(1 - x, 3);
 
+/** Sposób zmiany kadru: okno-gwiazda (domyślnie) albo dotychczasowa kurtyna od dołu. */
+export type RealizacjeTransition = 'star' | 'curtain';
+/** Skala gwiazdy (GEM, promień 20 jedn.) na starcie okna = promień 5 px. */
+const STAR_FROM = 0.25;
+/** Obrys okna i dwa powidoki przed nim (mnożniki skali). */
+const STAR_ECHO = [1, 1.24, 1.56];
+/** Wcięcie gwiazdy leży 7,884 jedn. od jej środka: okno zakrywa kadr, gdy wcięcia wyjdą poza jego rogi (zapas 8%). */
+const STAR_WAIST = 7.884;
+/** Tempo otwierania: skala rośnie wykładniczo (stałe tempo zbliżenia), łagodny start i koniec. */
+const STAR_EASE = bez(0.45, 0, 0.55, 1);
+/** Gwiazda logo jako clip-path w px kadru: środek (cx, cy), skala s. */
+const starPath = (cx: number, cy: number, s: number) => {
+  const P = (x: number, y: number) => `${(cx + x * s).toFixed(1)} ${(cy + y * s).toFixed(1)}`;
+  return `path("M${P(0, -20)}C${P(1.4, -6.8)} ${P(6.8, -1.4)} ${P(20, 0)}C${P(6.8, 1.4)} ${P(1.4, 6.8)} ${P(0, 20)}`
+    + `C${P(-1.4, 6.8)} ${P(-6.8, 1.4)} ${P(-20, 0)}C${P(-6.8, -1.4)} ${P(-1.4, -6.8)} ${P(0, -20)}Z")`;
+};
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
 type StyleProp = 'transform' | 'opacity' | 'filter' | 'clipPath' | 'zIndex';
 
 export function createRealizacjeScene(
   section: HTMLElement,
-  opts: { getScroll?: () => ScrollControl | undefined } = {},
+  opts: { getScroll?: () => ScrollControl | undefined; getTransition?: () => RealizacjeTransition } = {},
 ): RealizacjeScene | null {
   const q = <E extends Element>(sel: string) => Array.from(section.querySelectorAll<E>(sel));
   const box = section.querySelector<HTMLElement>('[data-rz-box]');
@@ -145,6 +171,13 @@ export function createRealizacjeScene(
   let cur = -1;
   let sweptFor = -1;
   let u = 1; // px CSS na jednostkę kadru (kadr sceny = 1200 jednostek szerokości)
+  // „Gwiazda”: wymiary kadru w px, skala okna, przy której zakrywa cały kadr, tryb bieżącego przejścia i czas,
+  // przez który poprzedni kadr stoi pod oknem.
+  let sw = 0, sht = 0;
+  let starFull = 1;
+  let starGo = false;
+  let holdLen = 0;
+  const starMode = () => !reduced && (opts.getTransition?.() ?? 'star') === 'star';
   // Indeks (oba układy, flow od 2026-09-24): pasek miniatur na szerokość kadru o STAŁYCH
   // pozycjach; x0 = lewa krawędź miniatury względem hairline, tw = jej szerokość (pod wskaźnik).
   // Podpisy pod miniaturą tylko w scenie - we flow nazwa jest tytułem panelu tuż niżej.
@@ -219,6 +252,38 @@ export function createRealizacjeScene(
     el.style[prop] = val;
   };
 
+  // ---------- „Gwiazda”: obrys okna i dwa powidoki ----------
+  // SVG nad kadrami, przycięte do okna ze zrzutem (rama 10 jedn. + obwódka 1 px), w barwie realizacji, która się
+  // otwiera (currentColor). Tworzone tutaj (bez zmian w markupie SSR i w globals.css), widoczne tylko w trakcie przejścia.
+  let ringBox: HTMLElement | null = null;
+  const rings: SVGPathElement[] = [];
+  let ringsOn = false;
+  let ringsFor = -1;
+  if (!reduced) {
+    ringBox = document.createElement('div');
+    ringBox.setAttribute('data-rz-rings', '');
+    ringBox.style.cssText = 'position:absolute;inset:calc(var(--u) * 10 + 1px);z-index:3;overflow:hidden;'
+      + 'border-radius:calc(var(--u) * 10);pointer-events:none;visibility:hidden';
+    const svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('width', '100%');
+    svg.setAttribute('height', '100%');
+    svg.setAttribute('focusable', 'false');
+    svg.style.cssText = 'display:block;overflow:visible';
+    STAR_ECHO.forEach((_, k) => {
+      const p = document.createElementNS(SVG_NS, 'path');
+      p.setAttribute('d', GEM);
+      p.setAttribute('fill', 'none');
+      p.setAttribute('stroke', 'currentColor');
+      p.setAttribute('stroke-width', k === 0 ? '1.5' : '1');
+      p.setAttribute('stroke-opacity', k === 0 ? '1' : k === 1 ? '.55' : '.3');
+      p.setAttribute('vector-effect', 'non-scaling-stroke');
+      svg.appendChild(p);
+      rings.push(p);
+    });
+    ringBox.appendChild(svg);
+    stage.appendChild(ringBox);
+  }
+
   const measureTabs = () => {
     if (!tabLayout || !hairline || !ind) { tabsGeo = null; return; }
     const hr = hairline.getBoundingClientRect();
@@ -235,6 +300,8 @@ export function createRealizacjeScene(
   const measure = () => {
     const sr = stage.getBoundingClientRect();
     if (sr.width > 0) u = sr.width / 1200;
+    sw = sr.width; sht = sr.height;
+    starFull = Math.max(STAR_FROM, (Math.hypot(sw, sht) * 0.54) / STAR_WAIST);
     // Zmiana rozmiaru czyści canvas - reduced (statyczna klatka) musi narysować tło od nowa.
     // Poświata mgławicy obejmuje kadr: środek i połowa wymiarów kadru jako ułamki hosta.
     if (nebula) {
@@ -282,10 +349,14 @@ export function createRealizacjeScene(
   // tłem (dotychczasowe tło znika, gdy jest już przykryte); ledwo odsłonięty znika w DROP ms.
   // Duchy leżą w kolejności wyboru (nowszy wyżej) i przy każdym wyborze dostają wspólną oś
   // czasu od bieżącego wyglądu - stare tło odpływa jednym ruchem, warstwy nie rozjeżdżają się.
-  type SlabState = { level: number; entering: boolean; t0: number; delay: number; len: number };
-  const st: SlabState[] = slabs.map((_, i) => ({ level: i === 0 ? 1 : 0, entering: false, t0: 0, delay: 0, len: 0 }));
+  /** `star` = ten kadr wchodzi (albo wszedł) przez okno-gwiazdę, a nie kurtyną. */
+  type SlabState = { level: number; entering: boolean; t0: number; delay: number; len: number; star: boolean };
+  const st: SlabState[] = slabs.map((_, i) => ({ level: i === 0 ? 1 : 0, entering: false, t0: 0, delay: 0, len: 0, star: false }));
   type Ghost = {
     el: HTMLElement; sh: HTMLElement;
+    /** „Gwiazda”: duch stoi nieruchomo w wyglądzie z chwili wyboru (także z zamrożonym oknem-gwiazdą), dopóki nowe
+        okno go nie zakryje - gaśnie tylko jego poświata; znika po `len` ms od `t0`. */
+    hold: boolean;
     /** Wyjście (unosi się, rozmywa, blednie) od wyglądu z chwili t0 - przestawiane przy każdym wyborze. */
     t0: number; len: number; op0: number; dy0: number; blur0: number; sh0: number;
     /** Kurtyna: przycięcie od góry (%) clip0 → clip1 od ct0 (domknięcie tła); settle = offset wejścia, który przy tym dojeżdża do 0. */
@@ -320,11 +391,17 @@ export function createRealizacjeScene(
   const indv = [0, 0];
   let busy = false;
 
-  /** Wygląd kadru z poziomu (kurtyna od dołu; reduced = samo krycie). */
-  const look = (lv: number) => {
-    if (reduced) return { s: lv, op: lv, dy: 0, clipPct: 0 };
+  /** Wygląd kadru z poziomu (kurtyna od dołu albo okno-gwiazda; reduced = samo krycie).
+      `win` = skala okna-gwiazdy w trakcie otwierania (0 = bez okna). */
+  const look = (lv: number, star = false) => {
+    if (reduced) return { s: lv, op: lv, dy: 0, clipPct: 0, win: 0 };
+    if (star) {
+      // Kadr stoi w miejscu, odsłania go okno; skala okna rośnie wykładniczo - jak wjazd w gwiazdę.
+      const win = lv > 0 && lv < 1 ? STAR_FROM * Math.pow(starFull / STAR_FROM, STAR_EASE(lv)) : 0;
+      return { s: lv * lv * (3 - 2 * lv), op: lv > 0 ? 1 : 0, dy: 0, clipPct: 0, win };
+    }
     const s = IN(lv);
-    return { s, op: lv > 0 ? 1 : 0, dy: 24 * (1 - s), clipPct: (1 - s) * 100 };
+    return { s, op: lv > 0 ? 1 : 0, dy: 24 * (1 - s), clipPct: (1 - s) * 100, win: 0 };
   };
   // Bez tiltu za kursorem z makiety (decyzja właściciela 2026-09-24, "na rzecz jakości"):
   // przechylona warstwa jest przepróbkowywana i zrzut realizacji tracił ~15% ostrości (pomiar).
@@ -334,6 +411,9 @@ export function createRealizacjeScene(
       domknięcie kurtyny i szybki zanik - na własnych, stałych zegarach. */
   const ghostAt = (g: Ghost, now: number) => {
     const q = clamp((now - g.t0) / g.len, 0, 1);
+    if (g.hold) {
+      return { done: q >= 1, k: 0, exit: 1, keep: 1, dy: g.dy0, blur: 0, op: g.op0, sh: g.sh0 * (1 - q * q * (3 - 2 * q)), clip: g.clip0 };
+    }
     const k = OUT(q);
     const pc = g.clip0 === g.clip1 ? 1 : EO(clamp((now - g.ct0) / FINISH, 0, 1));
     const dq = clamp((now - g.dropAt) / g.dropLen, 0, 1);
@@ -353,6 +433,8 @@ export function createRealizacjeScene(
       mają odtąd jedną oś czasu, więc całe stare tło unosi się i blednie jednym ruchem. */
   const rebase = (g: Ghost, now: number) => {
     const v = ghostAt(g, now);
+    // „Gwiazda”: duch dalej stoi (teraz pod nowym oknem), poświata gaśnie od bieżącej wartości.
+    if (g.hold) { g.sh0 = v.sh; g.t0 = now; g.len = holdLen; return; }
     g.dy0 -= 16 * v.k;
     g.blur0 = v.blur;
     g.op0 *= v.exit;
@@ -364,7 +446,7 @@ export function createRealizacjeScene(
 
   /** Widoczny kadr oddaje wygląd duchowi (klon kadru i cienia z bieżącymi stylami inline). */
   const spawnGhost = (i: number, now: number) => {
-    const L = look(st[i].level);
+    const L = look(st[i].level, st[i].star);
     const el = slabs[i].cloneNode(true) as HTMLElement;
     const sh = shadows[i].cloneNode(false) as HTMLElement;
     for (const n of [el, sh]) {
@@ -386,12 +468,17 @@ export function createRealizacjeScene(
     stage.insertBefore(sh, shadows[0]);
     stage.insertBefore(el, slabs[0]);
     const g: Ghost = {
-      el, sh, t0: now, len: span * dur, op0: L.op, dy0: L.dy, blur0: 0,
+      el, sh, hold: false, t0: now, len: span * dur, op0: L.op, dy0: L.dy, blur0: 0,
       sh0: parseFloat(shadows[i].style.opacity || '0') || 0,
       clip0: L.clipPct, clip1: L.clipPct, ct0: now, settle: 0,
       dropAt: Infinity, dropLen: 1,
     };
-    if (!reduced) {
+    if (starGo || L.win > 0) {
+      // „Gwiazda”: klon zostaje dokładnie taki, jaki był w chwili wyboru (pełny kadr albo kadr z zamrożonym oknem przy
+      // szybkim klikaniu) i stoi pod nowym oknem, aż to go zakryje.
+      g.hold = true;
+      g.len = holdLen;
+    } else if (!reduced) {
       const backdrops = ghosts.filter((gh) => gh.dropAt === Infinity);
       if (L.s >= DOMINANT || backdrops.length === 0) {
         // Kadr był już w większości widoczny: domyka kurtynę i zostaje jedynym tłem pod nową
@@ -408,9 +495,10 @@ export function createRealizacjeScene(
     }
     ghosts.push(g);
     // Bezpiecznik: najpierw odpada najstarszy znikający duch (i tak prawie niewidoczny).
+    // („Gwiazda”: najstarszy duch to pełny kadr pod wszystkimi oknami - zostaje, odpada drugi w kolejności.)
     while (ghosts.length > MAX_GHOSTS) {
-      const k = ghosts.findIndex((gh) => gh.dropAt !== Infinity);
-      removeGhost(k < 0 ? 0 : k);
+      const k = ghosts.findIndex((gh) => gh.dropAt !== Infinity && !gh.hold);
+      removeGhost(k >= 0 ? k : ghosts[0].hold ? 1 : 0);
     }
   };
   const clearGhosts = () => { ghosts.splice(0).forEach((g) => { g.el.remove(); g.sh.remove(); }); };
@@ -444,6 +532,7 @@ export function createRealizacjeScene(
     if (cur !== -1) return; // użytkownik już wybrał kadr (strzałki z klawiatury w trakcie odsłony)
     const x = st[0];
     x.level = 0; x.entering = true; x.t0 = now; x.delay = 0; x.len = span * dur;
+    x.star = starMode(); // pierwsza realizacja też otwiera się gwiazdą (nad samą mgławicą)
     busy = true;
     setActive(0);
   };
@@ -536,6 +625,7 @@ export function createRealizacjeScene(
     const round = `round ${(20 * u).toFixed(1)}px`;
     let moving = false;
     let best = 0, bs = -1;
+    let winS = 0, winI = 0; // „Gwiazda”: skala otwierającego się okna i jego kadr
     for (let i = 0; i < N; i++) {
       const x = st[i];
       if (x.entering) {
@@ -543,7 +633,8 @@ export function createRealizacjeScene(
         x.level = p;
         if (p >= 1) x.entering = false; else moving = true;
       }
-      const L = look(x.level);
+      const L = look(x.level, x.star);
+      if (L.win > 0) { winS = L.win; winI = i; }
       const tf = `translate3d(0,${(L.dy * u).toFixed(1)}px,0)`;
       const sl = slabs[i];
       setStyle(sl, 'transform', tf);
@@ -553,11 +644,30 @@ export function createRealizacjeScene(
       const off = L.op <= 0;
       if (slabOff[i] !== off) { slabOff[i] = off; sl.toggleAttribute('data-off', off); }
       setStyle(sl, 'filter', 'none');
-      setStyle(sl, 'clipPath', !reduced && L.clipPct > 0.01 ? `inset(${L.clipPct.toFixed(2)}% 0 0 0 ${round})` : 'none');
+      setStyle(sl, 'clipPath', L.win > 0
+        ? starPath(sw / 2, sht / 2, L.win)
+        : !reduced && L.clipPct > 0.01 ? `inset(${L.clipPct.toFixed(2)}% 0 0 0 ${round})` : 'none');
       setStyle(sl, 'zIndex', '2');
       setStyle(shadows[i], 'transform', tf);
       setStyle(shadows[i], 'opacity', (L.op * L.s).toFixed(3));
       if (L.s > bs) { bs = L.s; best = i; }
+    }
+
+    // „Gwiazda”: obrys okna i powidoki przed nim - tylko gdy okno się otwiera, w barwie jego realizacji.
+    if (ringBox) {
+      const on = winS > 0;
+      if (on !== ringsOn) { ringsOn = on; ringBox.style.visibility = on ? 'visible' : 'hidden'; }
+      if (on) {
+        if (ringsFor !== winI) {
+          ringsFor = winI;
+          ringBox.style.color = `rgb(${palettes[winI][0].map((v) => Math.round(v * 255)).join(' ')})`;
+        }
+        const pad = 10 * u + 1; // rama kadru + obwódka: środek okna w układzie pola obrysów
+        const rx = (sw / 2 - pad).toFixed(1), ry = (sht / 2 - pad).toFixed(1);
+        for (let k = 0; k < rings.length; k++) {
+          rings[k].setAttribute('transform', `translate(${rx} ${ry}) scale(${(winS * STAR_ECHO[k]).toFixed(4)})`);
+        }
+      }
     }
 
     // Duchy: zanik jak wychodzący kadr z makiety (unosi się, blednie, rozmycie; expo-in), od
@@ -567,8 +677,9 @@ export function createRealizacjeScene(
       const v = ghostAt(gh, now);
       if (v.done) { removeGhost(g); continue; }
       moving = true;
-      setStyle(gh.el, 'opacity', v.op.toFixed(3));
       setStyle(gh.sh, 'opacity', v.sh.toFixed(3));
+      if (gh.hold) continue; // „Gwiazda”: wygląd zamrożony z chwili wyboru, gaśnie tylko poświata
+      setStyle(gh.el, 'opacity', v.op.toFixed(3));
       if (reduced) continue;
       const tf = `translate3d(0,${(v.dy * u).toFixed(1)}px,0)`;
       setStyle(gh.el, 'transform', tf);
@@ -658,14 +769,20 @@ export function createRealizacjeScene(
     clearAuto();
     if (manual && !fine) manualStop = true;
     idx = to;
+    // „Gwiazda” rusza od razu także w automacie (pod oknem nic się nie dzieje, więc nie ma na co czekać);
+    // poprzedni kadr stoi pod spodem dokładnie tak długo, jak otwiera się okno.
+    starGo = starMode();
+    const delay = !manual && !reduced && !starGo ? 0.2 * dur : 0;
+    holdLen = delay + span * dur;
     ghosts.forEach((g) => rebase(g, now));
     for (let i = 0; i < N; i++) {
       const x = st[i];
       if (x.level > 0.001) spawnGhost(i, now);
       x.level = 0;
       x.entering = i === to;
+      x.star = i === to && starGo;
       x.t0 = now;
-      x.delay = i === to && !manual && !reduced ? 0.2 * dur : 0;
+      x.delay = i === to ? delay : 0;
       x.len = span * dur;
     }
     retarget(palTw, palOf(to), now);
@@ -834,6 +951,7 @@ export function createRealizacjeScene(
       });
       tabHandlers.forEach((fn) => fn());
       clearGhosts();
+      ringBox?.remove();
       slabs.forEach((sl) => sl.removeAttribute('data-off'));
       // Zmiana układu (scena → flow) buduje scenę od nowa - flow nie może dostać przesunięć indeksu.
       tabs.forEach((tb) => { tb.style.transform = ''; });

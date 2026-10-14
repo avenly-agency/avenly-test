@@ -1,0 +1,45 @@
+/* ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+   O NAS - „W CO WIERZYMY”, propozycja 4 „ORBITA” (principles-orbit.tsx, prefiks on-p8-; 2026-10-14).
+   Nagłówek i zasady krążą po pochylonej orbicie wokół gwiazdy z logo; przewijanie obraca orbitę, zasada z przodu
+   jest duża i czytelna. Położenia, skale, krycie i z-index pisze JS (transformy 2D). Bez ruchu: principles-kit.css.
+   ═══════════════════════════════════════════════════════════════════════════════════════════════════════════ */
+
+.on[data-live] .on-p8-box { position: relative; height: 100%; }
+/* pole orbity: pod nawigacją i nad dolną krawędzią (z prawej na telefonie miejsce na bąbel czatu) */
+.on[data-live] .on-p8-stage { position: absolute; left: 1.5rem; right: 1.5rem; top: 88px; bottom: 40px; }
+.on[data-live] .on-p8-list { margin: 0; }
+/* pozycja = blok wyśrodkowany na swoim miejscu orbity (numer, hasło, zdanie) */
+.on[data-live] .on-p8-it {
+  position: absolute; left: 50%; top: 0; width: min(100%, 60rem);
+  display: flex; flex-direction: column; align-items: center; text-align: center; visibility: hidden;
+}
+.on[data-live] .on-p8-head { visibility: visible; }
+.on[data-live] .on-p8-t {
+  max-width: 10.5em; line-height: .98; letter-spacing: -.045em; text-wrap: balance;
+  font-size: clamp(40px, min(5.6vw, 9vh), 100px); font-size: clamp(40px, min(5.6vw, 9svh), 100px);
+}
+.on[data-live] .on-p8-n { margin: 0 0 12px; }
+.on[data-live] .on-p8-d { margin: 20px auto 0; max-width: 32rem; }
+.on[data-live] .on-p8-it:not(.on-p8-head) :is(.on-p8-n, .on-p8-d) { opacity: 0; }
+/* orbita: cienka elipsa na całe pole (atrybuty elipsy pisze JS) */
+.on[data-live] .on-p8-ring { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.on-p8-ring ellipse { fill: none; stroke: rgb(255 255 255 / .1); stroke-width: 1; }
+/* gwiazda z logo w środku orbity, nad pozycjami z tyłu (z-index 50 = środek skali głębi) */
+.on[data-live] .on-p8-star {
+  position: absolute; left: 0; top: 0; z-index: 50; width: 34px; height: 34px; margin: -17px 0 0 -17px; pointer-events: none;
+}
+.on-p8-star svg { display: block; width: 100%; height: 100%; fill: var(--brand, #3b82f6); animation: on-p8-tw 4.8s ease-in-out infinite; }
+@keyframes on-p8-tw { 0%, 100% { opacity: 1; } 50% { opacity: .62; } }
+
+@media (max-width: 767px) {
+  .on[data-live] .on-p8-stage { top: 72px; bottom: 96px; }
+  .on[data-live] .on-p8-it { width: 100%; }
+  .on[data-live] .on-p8-t { max-width: 100%; font-size: clamp(32px, min(9.6vw, 6vh), 46px); font-size: clamp(32px, min(9.6vw, 6svh), 46px); }
+  .on[data-live] .on-p8-d { margin-top: 14px; }
+  .on[data-live] .on-p8-star { width: 26px; height: 26px; margin: -13px 0 0 -13px; }
+}
+@media (max-width: 1023px) and (orientation: landscape) and (max-height: 560px) {
+  .on[data-live] .on-p8-stage { top: 52px; bottom: 12px; right: 84px; }
+  .on[data-live] .on-p8-t { font-size: clamp(24px, min(4.4vw, 8vh), 40px); font-size: clamp(24px, min(4.4vw, 8svh), 40px); }
+  .on[data-live] .on-p8-d { margin-top: 8px; font-size: 14px; line-height: 1.5; }
+}

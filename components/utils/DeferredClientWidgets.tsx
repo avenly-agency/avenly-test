@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
+import { afterHeroIntro } from '@/lib/hero-intro';
 
 /**
  * Client wrapper który ładuje Chatbot i LifecycleManager dynamic z ssr: false.
@@ -39,6 +40,8 @@ export function DeferredClientWidgets() {
   // natychmiast po hydration, czyli w środku okna intro Hero (0-1.5s: Framer Motion
   // text intro + fade-in aurory). requestIdleCallback przesuwa chatbot/cookie/lifecycle
   // za intro; timeout 1500ms gwarantuje że baner cookies i tak pojawi się szybko.
+  // 2026-10-09: na stronie głównej najpierw czeka na koniec wejścia hero (napis + cięcie gwiazdą; lib/hero-intro.ts
+  // - na innych stronach puszcza od razu), żeby czat i baner cookies nie wchodziły w środku animacji (lag).
   const [ready, setReady] = useState(false);
   useEffect(() => {
     type IdleCb = (cb: () => void, opts?: { timeout: number }) => number;
@@ -46,11 +49,17 @@ export function DeferredClientWidgets() {
       requestIdleCallback?: IdleCb;
       cancelIdleCallback?: (id: number) => void;
     };
-    const start = () => setReady(true);
-    const id = w.requestIdleCallback
-      ? w.requestIdleCallback(start, { timeout: 1500 })
-      : window.setTimeout(start, 800);
+    let cancelled = false;
+    let id = 0;
+    const start = () => { if (!cancelled) setReady(true); };
+    afterHeroIntro(4500).then(() => {
+      if (cancelled) return;
+      id = w.requestIdleCallback
+        ? w.requestIdleCallback(start, { timeout: 1500 })
+        : window.setTimeout(start, 800);
+    });
     return () => {
+      cancelled = true;
       if (w.requestIdleCallback && w.cancelIdleCallback) w.cancelIdleCallback(id);
       else window.clearTimeout(id);
     };

@@ -1,0 +1,164 @@
+/* ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+   O NAS - SEKCJA PO PLAKACIE, propozycje o RÓŻNYCH TEMATACH (2026-10-13). Właściciel: „usuń te, co zrobiłeś, i zrób
+   sekcje, które nie są związane z tym formatem, czyli bez pośredników itp.” - poprzednie wersje (droga wiadomości,
+   odpowiedź w 24 h) są w docs/archiwum/o-nas-2026-10/sekcja-po-plakacie/.
+   Przełącznik „Sekcja po plakacie” w panelu na dole ekranu (tylko npm run dev):
+     on-3c  1. „Dla kogo pracujemy”  (sec-clients.tsx) - rodzaje firm wielkim pismem + taśma prawdziwych kadrów,
+     on-3g  2. „Więcej i mniej”      (sec-goals.tsx)   - dwa cele: napis „Więcej…” rośnie, „Mniej…” maleje,
+     on-3w  3. „Co robimy”           (sec-wheel.tsx)   - bęben nazw usług przesuwany nad linią z logo.
+   Zasada jak w całej podstronie: style bez [data-live] = stan końcowy (bez JS / ograniczony ruch), stany „przed”
+   i przypięcie tylko pod [data-live]. Pola *-box są jednocześnie kontenerem (px-6) - dopełnienie tylko górne / dolne.
+   Po wyborze: usunąć pozostałe propozycje, ich bloki tutaj, pola słownika i przełącznik.
+   ═══════════════════════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* ═════════ 1. DLA KOGO PRACUJEMY ═════════ */
+/* bez ruchu: lista pozycji, pod nią siatka kadrów */
+.on-3c-texts { list-style: none; margin: 0 0 40px; padding: 0; display: grid; gap: 40px; }
+.on-3c-type { margin: 0; font-weight: 700; font-size: clamp(34px, 5.2vw, 92px); line-height: 1; letter-spacing: -.04em; color: #f8fafc; text-wrap: balance; }
+.on-3c-name { margin: 16px 0 0; font-size: 15px; font-weight: 600; color: #94a3b8; }
+.on-3c-line { margin: 8px 0 22px; max-width: 30rem; font-size: 18px; line-height: 1.6; color: #cbd5e1; text-wrap: pretty; }
+.on-3c-line--you { margin-top: 18px; }
+.on-3c-more {
+  display: inline-flex; align-items: center; gap: 10px; min-height: 44px;
+  font-size: 15.5px; font-weight: 600; color: #f8fafc; text-decoration: none;
+}
+.on-3c-more svg { flex: none; width: 17px; height: 17px; color: #60a5fa; transition: transform .45s var(--on-ease); }
+.on-3c-more:focus-visible { outline: 2px solid #60a5fa; outline-offset: 4px; border-radius: 6px; }
+@media (hover: hover) { .on-3c-more:hover svg { transform: translateX(4px); } }
+.on-3c-strip { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+/* kadr: ciemna rama jak w Realizacjach (pełne tło, ostry refleks u góry), w niej zrzut strony klienta */
+.on-3c-frame {
+  width: 100%; aspect-ratio: 16 / 9; padding: 8px; border-radius: 18px; background: #0a0a0c;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 0 0 1px rgba(255, 255, 255, .1);
+}
+.on-3c-frame picture, .on-3c-frame img { display: block; width: 100%; height: 100%; }
+.on-3c-frame img { object-fit: cover; object-position: 50% 0; border-radius: 11px; }
+/* „Twoja firma”: pusty kadr z gwiazdą */
+.on-3c-frame--you {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  background: transparent; box-shadow: none; border: 1px dashed rgba(255, 255, 255, .28);
+  font-size: 15px; color: #94a3b8;
+}
+.on-3c-frame--you svg { width: 28px; height: 28px; fill: var(--on-ac); }
+
+.on[data-live] .on-3c-pin { height: calc(100vh + var(--n) * 60vh); height: calc(100svh + var(--n) * 60vh); }
+.on[data-live] .on-3c-box {
+  height: 100%; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); align-items: center;
+  gap: 0 clamp(32px, 5vw, 88px); padding-top: 88px; padding-bottom: 40px;
+}
+/* jedna pozycja naraz, w tym samym miejscu (krycie i przesunięcie pisze JS) */
+.on[data-live] .on-3c-texts { position: relative; height: 100%; margin: 0; display: block; }
+.on[data-live] .on-3c-t {
+  position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
+  opacity: 0; visibility: hidden; pointer-events: none;
+}
+.on[data-live] .on-3c-t[data-on] { pointer-events: auto; }
+/* okno taśmy kadrów: krawędzie gasną (sąsiednie kadry wyłaniają się i znikają bez twardego cięcia) */
+.on[data-live] .on-3c-view {
+  position: relative; height: min(78vh, 720px); height: min(78svh, 720px); overflow: hidden; overflow: clip;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 15%, #000 85%, transparent);
+  mask-image: linear-gradient(180deg, transparent, #000 15%, #000 85%, transparent);
+}
+.on[data-live] .on-3c-strip { position: absolute; left: 0; right: 0; top: 50%; display: block; }
+/* komórka = kadr 16:9 z oddechem nad i pod nim; przesunięcie taśmy liczone w % jej wysokości */
+.on[data-live] .on-3c-cell { display: flex; align-items: center; aspect-ratio: 16 / 10.4; }
+
+/* ═════════ 2. WIĘCEJ I MNIEJ ═════════ */
+.on-3g-goal + .on-3g-goal { margin-top: clamp(36px, 7vh, 72px); }
+.on-3g-h { margin: 0 0 18px; font-weight: 700; letter-spacing: -.045em; text-wrap: balance; transform-origin: 0 62%; }
+/* --f (pisze JS): 0 = sam obrys w ruchu („negatyw”), 1 = pełna litera na miejscu */
+.on-3g-h { color: rgb(248 250 252 / var(--f, 1)); -webkit-text-stroke: 1.5px rgb(248 250 252 / calc(1 - var(--f, 1))); }
+.on-3g-h--more { font-size: clamp(44px, 9.6vw, 150px); line-height: .98; }
+.on-3g-h--less { font-size: clamp(25px, 3.4vw, 54px); line-height: 1.04; letter-spacing: -.035em; }
+.on-3g-body .on-lead { margin: 0 0 16px; max-width: 38rem; }
+.on-3g-links { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 28px; }
+.on-3g-a {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px;
+  font-size: 15.5px; font-weight: 600; color: #f8fafc; text-decoration: none; white-space: nowrap;
+}
+.on-3g-a svg { flex: none; width: 16px; height: 16px; color: #60a5fa; transition: transform .45s var(--on-ease); }
+.on-3g-a:focus-visible { outline: 2px solid #60a5fa; outline-offset: 4px; border-radius: 6px; }
+@media (hover: hover) { .on-3g-a:hover svg { transform: translateX(4px); } }
+.on[data-live] .on-3g-pin { height: calc(100vh + 220vh); height: calc(100svh + 220vh); }
+.on[data-live] .on-3g-box { height: 100%; display: flex; flex-direction: column; justify-content: center; padding-top: 88px; padding-bottom: 40px; }
+
+/* ═════════ 3. CO ROBIMY ═════════ */
+/* bez ruchu: zwykła lista wielkich linków */
+.on-3w-wheel { font-weight: 700; font-size: clamp(30px, 6vw, 96px); letter-spacing: -.04em; }
+.on-3w-strip { list-style: none; margin: 0; padding: 0; }
+.on-3w-item { height: 1.18em; line-height: 1.18; white-space: nowrap; }
+/* --f (pisze JS na pozycji listy): 0 = sam obrys („negatyw”), 1 = pełna nazwa nad linią */
+.on-3w-a {
+  color: rgb(248 250 252 / var(--f, 1)); -webkit-text-stroke: 1.2px rgb(248 250 252 / calc(1 - var(--f, 1)));
+  text-decoration: none;
+}
+.on-3w-a:focus-visible { outline: 2px solid #60a5fa; outline-offset: 4px; border-radius: 8px; }
+.on-3w-mark, .on-3w-hooks { display: none; }
+.on-3w-all {
+  display: inline-flex; align-items: center; gap: 10px; min-height: 44px; margin-top: 26px;
+  font-size: 15.5px; font-weight: 600; letter-spacing: 0; color: #f8fafc; text-decoration: none;
+}
+.on-3w-all svg { flex: none; width: 17px; height: 17px; color: #60a5fa; transition: transform .45s var(--on-ease); }
+.on-3w-all:focus-visible { outline: 2px solid #60a5fa; outline-offset: 4px; border-radius: 6px; }
+@media (hover: hover) { .on-3w-all:hover svg { transform: translateX(4px); } }
+
+.on[data-live] .on-3w-pin { height: calc(100vh + 250vh); height: calc(100svh + 250vh); }
+.on[data-live] .on-3w-box { height: 100%; display: flex; flex-direction: column; padding-top: 96px; padding-bottom: 40px; }
+/* --fy = wysokość, na której stoi nazwa nad linią (środek jej wiersza) */
+.on[data-live] .on-3w-wheel {
+  --fy: 42%; position: relative; flex: 1 1 auto; min-height: 0;
+  font-size: clamp(34px, min(6.4vw, 11vh), 110px); font-size: clamp(34px, min(6.4vw, 11svh), 110px);
+}
+/* bęben nazw: --c (pisze JS) = która nazwa jest nad linią; krok bębna = wysokość wiersza 1,18 em */
+.on[data-live] .on-3w-strip {
+  position: absolute; left: 0; right: 0; top: calc(var(--fy) - .59em);
+  transform: translateY(calc(var(--c, 0) * -1.18em));
+}
+.on[data-live] .on-3w-item { pointer-events: none; }
+.on[data-live] .on-3w-item[data-on] { pointer-events: auto; }
+/* linia z logo z gwiazdą tuż pod nazwą; pod nią zdanie o tej usłudze */
+.on[data-live] .on-3w-mark {
+  display: block; position: absolute; left: 0; width: 100%; height: auto; top: calc(var(--fy) + .59em + 12px);
+  transform: translateY(-50%); overflow: visible; fill: var(--on-ac); pointer-events: none;
+}
+.on[data-live] .on-3w-hooks { display: block; position: absolute; left: 0; right: 0; top: calc(var(--fy) + .59em + 46px); }
+.on[data-live] .on-3w-hook {
+  position: absolute; left: 0; top: 0; margin: 0; max-width: 34rem; opacity: 0; visibility: hidden;
+  font-size: 18px; font-weight: 400; line-height: 1.6; letter-spacing: 0; color: #cbd5e1; text-wrap: pretty;
+}
+.on[data-live] .on-3w-all { margin-top: 0; }
+
+/* ═════════ TELEFON I TABLET ═════════ */
+@media (max-width: 1023px) {
+  /* „Dla kogo”: słowo i opis u góry, taśma kadrów pod nimi */
+  .on[data-live] .on-3c-box { display: flex; flex-direction: column; align-items: stretch; gap: 0; padding-top: 80px; padding-bottom: 88px; }
+  .on[data-live] .on-3c-texts { flex: none; height: clamp(190px, 31vh, 250px); height: clamp(190px, 31svh, 250px); }
+  .on[data-live] .on-3c-t { justify-content: flex-start; }
+  .on[data-live] .on-3c-view { flex: 1 1 auto; min-height: 0; height: auto; }
+}
+@media (max-width: 767px) {
+  .on-3c-texts { gap: 32px; }
+  .on-3c-type { font-size: clamp(30px, 9.4vw, 44px); }
+  .on-3c-name { margin-top: 12px; font-size: 14px; }
+  .on-3c-line { margin: 6px 0 12px; font-size: 15.5px; line-height: 1.55; }
+  .on-3c-line--you { margin-top: 12px; margin-bottom: 16px; }
+  .on-3c-strip { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .on-3c-frame { padding: 6px; border-radius: 14px; }
+  .on-3c-frame img { border-radius: 9px; }
+  .on[data-live] .on-3c-box { padding-top: 76px; }
+  /* „Więcej i mniej”: pierwszy napis w dwóch liniach, całość nad bąblem czatu */
+  .on-3g-h--more { font-size: clamp(40px, 13vw, 64px); line-height: 1; }
+  .on-3g-h--less { font-size: clamp(23px, 6.6vw, 30px); }
+  .on-3g-h { margin-bottom: 12px; -webkit-text-stroke-width: 1.2px; transform-origin: 0 0; }
+  .on-3g-body .on-lead { margin-bottom: 8px; font-size: 15.5px; }
+  .on-3g-links { gap: 0 20px; }
+  .on-3g-a { font-size: 14.5px; }
+  .on-3g-goal + .on-3g-goal { margin-top: clamp(22px, 4vh, 40px); }
+  .on[data-live] .on-3g-box { padding-top: 76px; padding-bottom: 88px; }
+  /* „Co robimy”: najdłuższa nazwa mieści się w wierszu także na 320 px */
+  .on[data-live] .on-3w-box { padding-top: 84px; padding-bottom: 88px; }
+  .on[data-live] .on-3w-wheel { --fy: 36%; font-size: clamp(26px, min(8.4vw, 6vh), 44px); font-size: clamp(26px, min(8.4vw, 6svh), 44px); }
+  .on[data-live] .on-3w-mark { top: calc(var(--fy) + .59em + 8px); }
+  .on[data-live] .on-3w-hooks { top: calc(var(--fy) + .59em + 28px); }
+  .on[data-live] .on-3w-hook { font-size: 15.5px; }
+}

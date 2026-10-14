@@ -11,7 +11,7 @@ import type { TechStackDict } from '@/lib/i18n/home/tech-stack';
 // Pętla bez szwu: 4 identyczne kopie, animacja o -50% toru = dokładnie 2 kopie. Czytnik ekranu
 // czyta tylko pierwszą kopię (reszta aria-hidden).
 
-/** Ikony pozycji - KOLEJNOŚĆ jak `items` w słowniku (PageSpeed, telefon, płatności, asystent AI
+/** Ikony pozycji - KOLEJNOŚĆ jak `items` w słowniku (szybkość - od 2026-10-14 bez wyniku PageSpeed, telefon, płatności, asystent AI
     - ten sam dymek co bąbel czatu, rezerwacje, panel, hosting, lokalne SEO). */
 const ITEM_ICONS: LucideIcon[] = [Gauge, Smartphone, CreditCard, MessageCircle, CalendarCheck, LayoutDashboard, ShieldCheck, MapPin];
 

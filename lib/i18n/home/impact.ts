@@ -32,9 +32,9 @@ export interface ImpactDict {
   card2Flow: [string, string, string];
   /** Link do podstrony chatbotów (dawny tag wersalikami). */
   card2Tag: string;
-  card3CounterAria: string;
-  /** Podpis pod wynikiem 98/100. */
-  card3CounterLabel: string;
+  /** Podpis gwiazdy na końcu łuku w wizualizacji karty 3 (od 2026-10-14 bez wyniku PageSpeed - właściciel: „fake info,
+      bo nie zawsze będzie tyle”, „zmienić na uniwersalną szybkość”). */
+  card3Goal: string;
   card3Title: string;
   card3Desc: string;
   card4Title: string;
@@ -45,7 +45,7 @@ export interface ImpactDict {
   /** Kategoria korzyści w nagłówku-zakładce karty stosu (widoczna też, gdy karta jest przykryta). */
   kickers: [string, string, string, string];
   /** Napisy kroków pod wizualizacjami (viz.tsx STORY) - krótko, jeden krok = jedno zdanie
-      czytane w ok. 3 s; kolejność = kolejność kroków. Fakty z oferty, bez metryk poza 98/100. */
+      czytane w ok. 3 s; kolejność = kolejność kroków. Fakty z oferty, bez metryk. */
   story: {
     card1: [string, string, string];
     card2: [string, string, string];
@@ -71,8 +71,7 @@ export const impactDict: Record<Locale, ImpactDict> = {
     card2Desc: 'Asystent AI zna Twoją ofertę i odpowiada klientom od razu, o każdej porze. Ty dostajesz gotowe zapytania i wchodzisz do rozmowy, gdy jesteś potrzebny.',
     card2Flow: ['Pytania klientów', 'Asystent AI', 'Do Ciebie'],
     card2Tag: 'Chatboty AI',
-    card3CounterAria: 'Wynik 98 na 100 w PageSpeed',
-    card3CounterLabel: 'Wynik PageSpeed',
+    card3Goal: 'Od razu',
     card3Title: 'Szybkość, którą widzi Google',
     card3Desc: 'Google bierze szybkość pod uwagę, gdy układa wyniki, a klienci wychodzą z wolnych stron, zanim się załadują. Twoja ładuje się od razu.',
     card4Title: 'Działa, kiedy klient jej szuka',
@@ -83,7 +82,7 @@ export const impactDict: Record<Locale, ImpactDict> = {
     story: {
       card1: ['Klient trafia na Twoją stronę', 'Zostawia zapytanie', 'Zostaje Twoim klientem'],
       card2: ['Klienci pytają o ceny i terminy', 'Asystent AI odpowiada od razu, o każdej porze', 'Gotowe zapytanie trafia do Ciebie'],
-      card3: ['Google mierzy, jak szybko ładuje się strona', 'Wynik: 98 na 100'],
+      card3: ['Google sprawdza, jak szybko ładuje się strona', 'Twoja strona ładuje się od razu'],
       card4: ['Klienci wchodzą na stronę przez Cloudflare', 'Cloudflare zatrzymuje atak', 'Twoja strona działa bez przerw'],
     },
   },
@@ -103,8 +102,7 @@ export const impactDict: Record<Locale, ImpactDict> = {
     card2Desc: "The AI assistant knows your offer and answers clients right away, at any hour. You get ready inquiries and step in when you're needed.",
     card2Flow: ['Client questions', 'AI assistant', 'To you'],
     card2Tag: 'AI chatbots',
-    card3CounterAria: 'PageSpeed score of 98 out of 100',
-    card3CounterLabel: 'PageSpeed score',
+    card3Goal: 'Instantly',
     card3Title: 'Speed that Google notices',
     card3Desc: 'Google takes speed into account when it ranks results, and clients leave slow sites before they load. Yours loads right away.',
     card4Title: 'Online whenever clients look',
@@ -115,7 +113,7 @@ export const impactDict: Record<Locale, ImpactDict> = {
     story: {
       card1: ['A visitor lands on your website', 'They send an inquiry', 'They become your client'],
       card2: ['Clients ask about prices and dates', 'The AI assistant replies instantly, any time of day', 'A ready inquiry lands with you'],
-      card3: ['Google measures how fast your website loads', 'Score: 98 out of 100'],
+      card3: ['Google checks how fast your website loads', 'Your website loads right away'],
       card4: ['Visitors reach your website through Cloudflare', 'Cloudflare stops the attack', 'Your website keeps running'],
     },
   },

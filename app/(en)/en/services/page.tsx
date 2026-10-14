@@ -6,7 +6,7 @@ import { JsonLd } from '@/components/seo/JsonLd';
 import { breadcrumbSchema } from '@/lib/schemas';
 
 export const metadata: Metadata = {
-  title: 'Services - websites, online stores, CRM systems and AI chatbots',
+  title: 'Services - websites, stores, CRM and AI chatbots',
   description:
     'Websites, online stores, CRM systems and AI chatbots. Clients judge your business before they get in touch. Here you decide what they see.',
   // The page-level openGraph block REPLACES the root layout one (Next does not merge them), so it is given in full.

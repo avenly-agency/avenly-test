@@ -1,0 +1,39 @@
+'use client';
+
+import { useRef, type CSSProperties } from 'react';
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
+import { localizeHref, type Locale } from '@/lib/i18n/locale';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { Comet } from './mark';
+import { useEnter } from './shared';
+
+// ZAKOŃCZENIE - ten sam układ co plansza tytułowa na początku strony: nagłówek NAD linią z logo, opis i przycisk
+// POD nią. Gdy sekcja wejdzie na ekran, gwiazda przelatuje po linii od lewej (na czas, jak w wejściu strony).
+
+const d = (n: number) => ({ '--d': n }) as CSSProperties;
+
+export function Ending({ t, locale, live }: { t: ONasDict['ending']; locale: Locale; live: boolean }) {
+  const ref = useRef<HTMLElement>(null);
+  useEnter(ref, live, 0.35);
+  return (
+    <section ref={ref} className="on-sec on-end" aria-labelledby="on-end-h">
+      <div className="container mx-auto px-6">
+        <h2 id="on-end-h" className="on-h2 on-end-h">
+          <span className="on-mask"><span className="on-rise" style={d(0)}>{t.heading}</span></span>
+        </h2>
+        {/* sama linia z gwiazdą (kadr viewBox przycięty do linii: y -84..-41) */}
+        <svg className="on-end-line" viewBox="-32.5 -84 632.617 43" aria-hidden="true" focusable="false">
+          <Comet className="on-end-comet" />
+        </svg>
+        <p className="on-lead on-in" style={d(5)}>{t.text}</p>
+        <div className="on-in on-end-cta" style={d(6)}>
+          <Link href={localizeHref('/kontakt', locale)} prefetch={false} className="on-cta">
+            {t.cta}
+            <ArrowRight aria-hidden="true" />
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}

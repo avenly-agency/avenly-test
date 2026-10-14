@@ -73,7 +73,7 @@ uniform vec4 u_et[VMAXE];
 uniform vec4 u_par;       // xy: paralaksa terenu (jedn. p) przy przewijaniu, z: px bufora na px CSS
 uniform vec4 u_tx;        // kolumna tekstu: środek xy, półosie zw (px bufora); z = 0 - brak
 uniform vec4 u_tc;        // napis kroku historii: jak u_tx (łagodniejsze wygaszenie)
-uniform vec4 u_te;        // dodatek pod tekstem (wynik 98/100, link): jak u_tx
+uniform vec4 u_te;        // dodatek pod tekstem (link; karta 3 od 2026-10-14 bez licznika): jak u_tx
 uniform vec4 u_vb;        // obszar sceny z zapasem (px bufora) - poza nim wizualizacja się nie liczy
 
 const vec2 VLIGHT = vec2(-0.6, 0.8); // światło z lewej góry (y w górę)

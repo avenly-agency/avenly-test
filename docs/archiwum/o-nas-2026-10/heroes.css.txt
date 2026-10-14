@@ -1,0 +1,157 @@
+/* ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+   O NAS - pięć pełnoekranowych wejść z logo (propozycje 2026-10-09, runda 4; heroes.tsx). Prefiks on-x-.
+   Style bez [data-live] = zwykłe logo, pod nim nagłówek, opis i przycisk (bez JS / ograniczony ruch).
+   Pod [data-live] ekran przypięty; geometrię logo pisze JS atrybutami SVG (piksele ekranu), długość przewijania
+   z --len (vh). Teksty: .on-i = wejście na czas, .on-x-sc = odsłaniane przewijaniem.
+   ═══════════════════════════════════════════════════════════════════════════════════════════════════════════ */
+
+.on-x, .on-x-pin, .on-x-box { position: relative; }
+.on-x-stick { position: relative; padding: 128px 0 56px; }
+.on-x-svg { display: none; }
+.on-x-still { margin-bottom: 48px; }
+.on-x-still svg { display: block; width: min(100%, 560px); height: auto; color: #fff; }
+.on-x-text, .on-x-head { max-width: 46rem; }
+.on-x-head { margin-bottom: 22px; }
+.on-x-tail { max-width: 40rem; }
+.on-i-lead--solo { margin-top: 0; }
+
+.on[data-live] .on-x-pin { height: calc(100vh + var(--len) * 1vh); height: calc(100svh + var(--len) * 1vh); }
+.on[data-live] .on-x-stick { position: sticky; top: 0; height: 100vh; height: 100svh; padding: 0; overflow: hidden; overflow: clip; }
+.on[data-live] .on-x-still { display: none; }
+.on[data-live] .on-x-svg { display: block; position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden; }
+.on[data-live] .on-x-box { height: 100%; }
+.on[data-live] .on-x-head, .on[data-live] .on-x-tail, .on[data-live] .on-x-text { max-width: none; margin: 0; }
+/* tekst odsłaniany przewijaniem */
+.on[data-live] .on-x-sc { opacity: 0; visibility: hidden; pointer-events: none; }
+.on[data-live] .on-x-sc[data-on] { pointer-events: auto; }
+.on[data-live] .on-x-sc .on-i-r { transform: translateY(calc((1 - var(--e, 0)) * 112%)); }
+@keyframes on-x-draw { from { stroke-dashoffset: 1; } }
+
+/* ═════════ 1. OKNO ═════════ */
+.on-x1-out { fill: none; stroke: rgba(255, 255, 255, .82); stroke-dasharray: 1; stroke-dashoffset: 0; }
+.on-x1-line { fill: var(--on-ac); }
+.on-x1-dot { fill: none; stroke: #fff; stroke-linecap: round; }
+.on-x1-dot--0 { stroke-width: 1.2; stroke-opacity: .45; }
+.on-x1-dot--1 { stroke-width: 1.8; stroke-opacity: .68; }
+.on-x1-dot--2 { stroke-width: 2.6; stroke-opacity: .95; }
+/* wejście (na czas): obrys rysuje się litera po literze, potem w oknie zapala się niebo, na końcu linia z gwiazdą */
+.on[data-live] .on-x1-out { animation: on-x-draw 2.2s var(--on-io) .3s both; }
+.on[data-live] .on-x1-win { animation: on-fade 1.4s ease 1.5s both; }
+.on[data-live] .on-x1-line { animation: on-fade 1s ease 2.1s both; }
+.on[data-live] .on-x--1 .on-x-text {
+  position: absolute; left: 1.5rem; top: 0; bottom: 0; width: min(42rem, 54vw);
+  display: flex; flex-direction: column; justify-content: center;
+}
+
+/* ═════════ 2. ODJAZD ═════════ */
+.on-x2-letters { fill: #fff; stroke: rgba(255, 255, 255, .85); }
+.on-x2-star { fill: var(--on-ac); stroke: #60a5fa; }
+.on[data-live] .on-x2-letters, .on[data-live] .on-x2-star { fill-opacity: 0; }
+.on[data-live] .on-x2-logo { animation: on-fade 1.4s ease .3s both; }
+.on[data-live] .on-x--2 .on-x-text { position: absolute; left: 1.5rem; width: min(46rem, 62vw); }
+
+/* ═════════ 3. PANORAMA Z CIĘCIEM (wybór właściciela 2026-10-09; rundy 6-7 2026-10-12: „bardziej premium, cinematic”) ═════════ */
+/* tło: mgławica marki (moduł podstron usług - _usluga/sky.tsx) wewnątrz przypiętej sceny zamiast nieba strony;
+   własne reguły, bo arkusz szkieletu (usluga.css) ładuje się tylko na podstronach usług */
+.on .on-x--3 .sv-sky { position: absolute; inset: 0; z-index: 0; height: auto; margin: 0; overflow: hidden; pointer-events: none; }
+.on .on-x--3 .sv-sky-neb { position: absolute; inset: 0; }
+.on .on-x--3 .sv-sky-neb canvas { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity .6s ease; }
+.on .on-x--3 .sv-sky-neb[data-ready] canvas { opacity: 1; }
+.on .on-x--3 .sv-sky-neb[data-fail] { background: radial-gradient(60% 45% at 50% 100%, rgba(59, 130, 246, .16), transparent 70%); }
+.on-x3-glow { display: none; }
+.on[data-live] .on-x3-glow { display: block; position: absolute; left: 0; top: 0; pointer-events: none; }
+.on[data-live] .on-x--3 .on-x-stick { background: #050505; }
+/* litery: krawędź (obrys w gradiencie światła gwiazdy) POD ciemną bryłą - widać tylko jej zewnętrzną połowę */
+.on-x3-rims { fill: none; stroke-width: 2.6; }
+/* refleks przebiegający po krawędziach (ten sam obrys pod bryłą, kolor z wąskiego gradientu, który jedzie w JS) */
+.on-x3-glints { fill: none; stroke-width: 2.6; visibility: hidden; }
+.on-x3-bodies { stroke: none; }
+/* świeże krawędzie cięcia (kolor z gradientu na grupie, świecą przy gwieździe i stygną) */
+.on-x3-kerf { fill: none; stroke-width: 1.8; }
+/* linia z gwiazdą = jeden kształt: wypełnienie w kolorze marki; przy wjeździe gaśnie i zostaje ostry obrys */
+.on-x3-mark { fill: var(--on-ac); stroke: #60a5fa; stroke-width: 1.4; stroke-opacity: 0; opacity: 0; }
+.on-x3-hot { opacity: 0; }
+/* powidoki przy wjeździe w gwiazdę: obrysy gwiazdy w mniejszej skali */
+.on-x3-echo { opacity: 0; }
+.on-x3-echo path { fill: none; stroke: #60a5fa; stroke-width: 1; }
+.on-x3-echo path:nth-child(2) { stroke-opacity: .6; }
+.on-x3-echo path:nth-child(3) { stroke-opacity: .35; }
+/* iskry spod gwiazdy (canvas 2D nad literami) i wygaszenie dołu kadru na końcu sceny (bez ucięcia mgławicy) */
+.on-x3-sparks, .on-x3-fade { display: none; }
+.on[data-live] .on-x3-sparks { display: block; position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.on[data-live] .on-x3-fade {
+  display: block; position: absolute; left: 0; right: 0; bottom: 0; height: 55%; pointer-events: none; opacity: 0;
+  background: linear-gradient(180deg, rgba(5, 5, 5, 0), rgba(5, 5, 5, .45) 35%, rgba(5, 5, 5, .85) 65%, #050505 88%);
+}
+/* bliskie gwiazdy (paralaksa przy przejeździe kamery) */
+.on-x3-dot { fill: none; stroke: #fff; stroke-linecap: round; stroke-width: 2.2; stroke-opacity: .8; }
+/* pierwsze klatki przed ustawieniem geometrii schowane */
+.on[data-live] .on-x3-strip, .on[data-live] .on-x3-near { animation: on-fade .7s ease .15s both; }
+.on[data-live] .on-x--3 .on-x-text {
+  position: absolute; left: 1.5rem; top: 0; bottom: 0; width: min(42rem, 54vw);
+  display: flex; flex-direction: column; justify-content: center;
+}
+
+/* ═════════ 4. PRZESUNIĘCIE ═════════ */
+.on-x4-row { fill: #fff; }
+.on-x4-row path { stroke: rgba(255, 255, 255, .85); stroke-width: 1.2; }
+/* wejście (na czas): rzędy dojeżdżają z przeciwnych stron i składają logo, potem gwiazda przelatuje po linii, potem tekst */
+.on[data-live] .on-x4-in--u { animation: on-x4-u 1.5s var(--on-ease) .2s both; }
+.on[data-live] .on-x4-in--d { animation: on-x4-d 1.5s var(--on-ease) .2s both; }
+@keyframes on-x4-u { from { transform: translateX(-150px); opacity: 0; } }
+@keyframes on-x4-d { from { transform: translateX(150px); opacity: 0; } }
+.on[data-live] .on-x--4 .on-comet-line { animation: on-line-in 1.3s var(--on-io) 1.2s both; }
+.on[data-live] .on-x--4 .on-comet-gem { animation: on-gem-in 1.3s var(--on-io) 1.2s both, on-gem-out .5s ease 2.55s forwards; }
+.on-x--4 .on-i { --i0: 1.5s; }
+.on[data-live] .on-x--4 .on-x-head { position: absolute; left: 1.5rem; width: min(46rem, 62vw); }
+.on[data-live] .on-x--4 .on-x-tail { position: absolute; left: 1.5rem; width: min(40rem, 56vw); }
+
+/* ═════════ 5. KLAPKA ═════════ */
+/* bez ruchu: zwykły nagłówek w dwóch liniach */
+.on-x5-board { display: block; margin: 0 0 22px; font-weight: 700; font-size: clamp(34px, 4.4vw, 62px); line-height: 1.05; letter-spacing: -.035em; color: #f8fafc; }
+.on-x5-half, .on-x5-face, .on-x5-s { display: block; }
+.on-x5-board svg, .on-x5-bot { display: none; }
+.on-x5-tail .on-lead { margin: 0 0 30px; }
+
+.on[data-live] .on-x--5 .on-x-box { display: flex; flex-direction: column; justify-content: center; }
+.on[data-live] .on-x5-wrap { --h: clamp(150px, 21vh, 216px); --pad: 40px; animation: on-in 1.1s var(--on-ease) .25s both; }
+.on[data-live] .on-x5-board {
+  position: relative; height: calc(var(--h) * 2); margin: 0 0 34px; perspective: 1700px;
+  border-radius: 22px; background: #060607; border: 1px solid rgba(255, 255, 255, .08); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1);
+  font-size: clamp(30px, 4.3vw, 66px);
+}
+.on[data-live] .on-x5-half { position: absolute; left: 0; right: 0; height: var(--h); }
+.on[data-live] .on-x5-top, .on[data-live] .on-x5-flap { top: 0; }
+.on[data-live] .on-x5-bot { display: block; top: var(--h); }
+/* klapka: obrót wokół dolnej krawędzi (zawias = linia cięcia); przód i tył jako dwie ściany */
+.on[data-live] .on-x5-flap { transform-origin: 50% 100%; transform-style: preserve-3d; }
+.on[data-live] .on-x5-face { position: absolute; inset: 0; background: #060607; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.on[data-live] .on-x5-front { border-radius: 21px 21px 0 0; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1); }
+.on[data-live] .on-x5-back { transform: rotateX(180deg); border-radius: 0 0 21px 21px; }
+.on[data-live] .on-x5-board svg { display: block; position: absolute; left: var(--pad); width: calc(100% - var(--pad) * 2); height: auto; fill: #fff; }
+.on[data-live] .on-x5-front svg { bottom: 0; }
+.on[data-live] .on-x5-bot svg { top: 0; }
+.on[data-live] .on-x5-hinge { top: var(--h); transform: translateY(-50%); overflow: visible; z-index: 2; }
+.on[data-live] .on-x5-s { position: absolute; left: var(--pad); right: var(--pad); text-wrap: balance; }
+.on[data-live] .on-x5-s1 { bottom: 28px; }
+.on[data-live] .on-x5-s2 { top: 28px; }
+/* wejście (na czas): gwiazda przelatuje po zawiasie */
+.on[data-live] .on-x--5 .on-comet-line { animation: on-line-in 1.3s var(--on-io) .7s both; }
+.on[data-live] .on-x--5 .on-comet-gem { animation: on-gem-in 1.3s var(--on-io) .7s both, on-gem-out .5s ease 2.05s forwards; }
+
+/* ═════════ TELEFON ═════════ */
+@media (max-width: 767px) {
+  .on-x-still { margin-bottom: 36px; }
+  .on[data-live] .on-x--1 .on-x-text, .on[data-live] .on-x--2 .on-x-text, .on[data-live] .on-x--3 .on-x-text,
+  .on[data-live] .on-x--4 .on-x-head, .on[data-live] .on-x--4 .on-x-tail { right: 1.5rem; width: auto; }
+  .on[data-live] .on-x5-wrap { --h: 108px; --pad: 16px; }
+  .on[data-live] .on-x5-board { margin-bottom: 28px; border-radius: 16px; font-size: clamp(25px, 7.2vw, 32px); }
+  .on[data-live] .on-x5-front { border-radius: 15px 15px 0 0; }
+  .on[data-live] .on-x5-back { border-radius: 0 0 15px 15px; }
+  .on[data-live] .on-x5-s1 { bottom: 20px; }
+  .on[data-live] .on-x5-s2 { top: 20px; }
+}
+/* niski ekran: mniejszy nagłówek w wejściach z tekstem w kolumnie */
+@media (min-width: 768px) and (max-height: 720px) {
+  .on[data-live] .on-x .on-h1 { font-size: clamp(32px, 3.6vw, 52px); }
+}

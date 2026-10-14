@@ -1,0 +1,73 @@
+/* ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+   O NAS - „W CO WIERZYMY”, propozycja „PRZELOT” (principles-flight.tsx, prefiks on-p4-; 2026-10-14). Zasady wylatują
+   z gwiazdy z logo w punkcie zbiegu, stają przy lewej krawędzi wrappera jako ogromne napisy, a przy przewijaniu mijają
+   kamerę i odlatują za lewy dolny róg. W ruchu sam obrys litery („negatyw”), na miejscu pełna litera.
+   Przypięta scena: scene-kit.css (on-k-). Bez własnego tła - za sceną mgławica podstrony, blask przy gwieździe (data-sky).
+   Zmienne na napisie (pisze JS, tylko przy zmianie): --s = skala (obrys o stałej grubości na ekranie), --f = wypełnienie
+   (1 = pełna litera, 0 = sam obrys). Style bez [data-live] = stan końcowy (bez JS / ograniczony ruch): nagłówek i lista.
+   ═══════════════════════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* ═════════ BEZ RUCHU: nagłówek i lista zasad ═════════ */
+.on-p4-list { list-style: none; margin: 56px 0 0; padding: 0; display: grid; gap: 44px; }
+.on-p4-t {
+  margin: 0; max-width: 14em; font-weight: 700; font-size: clamp(34px, 5vw, 80px); line-height: 1.02;
+  letter-spacing: -.04em; color: #f8fafc; text-wrap: balance;
+}
+.on-p4-acc { color: var(--brand, #3b82f6); }
+.on-p4-n { margin: 0 0 14px; font-size: 14px; font-weight: 600; color: #60a5fa; font-variant-numeric: tabular-nums; }
+.on-p4-d { margin: 20px 0 0; max-width: 34rem; font-size: 18px; line-height: 1.65; color: #cbd5e1; text-wrap: pretty; }
+.on-p4-star { display: none; }
+
+/* ═════════ PEŁNY RUCH: przelot przez zasady ═════════ */
+.on[data-live] .on-p4-box { position: relative; height: 100%; }
+.on[data-live] .on-p4-list { margin: 0; }
+/* każda pozycja na całe pole sceny, treść przy lewej krawędzi wrappera, wyśrodkowana w pionie (miejsce napisu na
+   postoju = punkt zaczepienia, z którego JS liczy perspektywę) */
+.on[data-live] .on-p4-it {
+  position: absolute; left: 1.5rem; right: 1.5rem; top: 0; bottom: 0;
+  display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
+  padding: 96px 0 72px; visibility: hidden; pointer-events: none;
+}
+.on[data-live] .on-p4-intro { visibility: visible; }
+/* napis: pismo „Plakatu”; w ruchu sam obrys stałej grubości na ekranie (1,3 px / skala), na miejscu pełna litera */
+.on[data-live] .on-p4-t {
+  --s: 1; --f: 1;
+  max-width: 12.5em; line-height: .98; letter-spacing: -.045em; transform-origin: 0 50%;
+  font-size: clamp(44px, min(7vw, 12vh), 136px); font-size: clamp(44px, min(7vw, 12svh), 136px);
+  color: rgb(248 250 252 / var(--f));
+  -webkit-text-stroke: calc(1.3px / var(--s)) rgb(248 250 252 / calc(.85 - .85 * var(--f)));
+}
+.on[data-live] .on-p4-acc {
+  color: rgb(var(--brand-rgb, 59 130 246) / var(--f));
+  -webkit-text-stroke-color: rgb(var(--brand-rgb, 59 130 246) / calc(.95 - .95 * var(--f)));
+}
+/* numer i wyjaśnienie widać tylko na postoju (krycie pisze JS) */
+.on[data-live] .on-p4-it:not(.on-p4-intro) :is(.on-p4-n, .on-p4-d) { opacity: 0; }
+/* gwiazda z logo w punkcie zbiegu (miejsce pisze JS, --ss = powolne zbliżanie) */
+.on[data-live] .on-p4-star {
+  display: block; position: absolute; z-index: 0; width: 26px; height: 26px; pointer-events: none;
+  transform: translate(-50%, -50%) scale(var(--ss, 1));
+}
+.on-p4-star svg { display: block; width: 100%; height: 100%; fill: var(--brand, #3b82f6); }
+/* życie w spoczynku: gwiazda migocze kryciem jak klejnoty nieba w hero (bez ruchu i skali - bez „bounce”) */
+.on[data-live] .on-p4-star svg { animation: on-p4-tw 4.8s ease-in-out infinite; }
+@keyframes on-p4-tw { 0%, 100% { opacity: 1; } 50% { opacity: .62; } }
+
+/* ═════════ TELEFON ═════════ */
+/* pozycja wyśrodkowana między nawigacją a bąblem czatu; gwiazda wyżej (VP_PHONE w principles-flight.tsx) */
+@media (max-width: 767px) {
+  .on-p4-t { font-size: clamp(30px, 9vw, 44px); }
+  .on-p4-d { font-size: 16px; line-height: 1.6; }
+  .on[data-live] .on-p4-it { padding: 76px 0 96px; }
+  .on[data-live] .on-p4-t { max-width: none; font-size: clamp(34px, min(10.4vw, 7vh), 56px); font-size: clamp(34px, min(10.4vw, 7svh), 56px); }
+  .on[data-live] .on-p4-d { margin-top: 14px; font-size: 16px; }
+  .on[data-live] .on-p4-n { margin-bottom: 10px; font-size: 13px; }
+  .on[data-live] .on-p4-star { width: 22px; height: 22px; }
+}
+/* telefon poziomo: niski ekran - mniejsze pismo, z prawej miejsce na bąbel czatu */
+@media (max-width: 1023px) and (orientation: landscape) and (max-height: 560px) {
+  .on[data-live] .on-p4-it { padding: 56px 84px 16px 0; }
+  .on[data-live] .on-p4-t { font-size: clamp(26px, min(5vw, 10vh), 44px); font-size: clamp(26px, min(5vw, 10svh), 44px); }
+  .on[data-live] .on-p4-d { margin-top: 10px; font-size: 14.5px; line-height: 1.5; }
+  .on[data-live] .on-p4-n { margin-bottom: 6px; }
+}

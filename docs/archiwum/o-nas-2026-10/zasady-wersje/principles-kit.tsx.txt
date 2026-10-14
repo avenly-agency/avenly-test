@@ -1,0 +1,47 @@
+'use client';
+
+import { Fragment } from 'react';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import './principles-kit.css'; // prefiks on-pk-
+
+// „W CO WIERZYMY” - WSPÓLNE KLOCKI PIĘCIU PROPOZYCJI z 2026-10-14 (właściciel: „zrób 5 wersji tej sekcji zasady”):
+// principles-manifest.tsx, principles-cut.tsx, principles-light.tsx, principles-orbit.tsx, principles-mist.tsx.
+// Każda propozycja ma jeden zestaw tekstów (nagłówek h2 + lista zasad h3) - bez ruchu / bez JS jest to zwykły blok
+// z klasami on-pk- (principles-kit.css), a pełny ruch układa te same elementy w scenę (własny prefiks i arkusz).
+
+export type Pr = ONasDict['principles'];
+export const pad = (n: number) => String(n).padStart(2, '0');
+export const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
+/** Smoothstep - ruch dojeżdża i staje (bez odbicia). */
+export const sm = (v: number) => { const x = clamp01(v); return x * x * (3 - 2 * x); };
+export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
+/** Oś przypiętej sceny w vh przewinięcia: postój na nagłówku (h0), potem dla każdej zasady przejście (move) i postój
+    (hold). `cam(sv)` = 0 na nagłówku, k na zasadzie k (1..n), wartości pośrednie w przejściu (smoothstep). */
+export const axis = (n: number, h0: number, move: number, hold: number) => ({
+  len: h0 + n * (move + hold),
+  cam: (sv: number) => {
+    let c = 0;
+    for (let j = 1; j <= n; j++) {
+      const a = h0 + (j - 1) * (move + hold);
+      if (sv <= a) break;
+      c = j - 1 + sm((sv - a) / move);
+    }
+    return c;
+  },
+});
+
+/** Słowa napisu, każde w masce (wysuwa się spod niej). Dzieli po zwykłej spacji - słowa złączone twardą spacją
+    („w 24 h”) zostają razem. `cls` = prefiks klas: `${cls}-m` maska, `${cls}-w` słowo. */
+export function Words({ text, cls }: { text: string; cls: string }) {
+  return (
+    <>
+      {text.split(' ').map((w, i) => (
+        <Fragment key={i}>
+          {i > 0 && ' '}
+          <span className={`${cls}-m`}><span className={`${cls}-w`}>{w}</span></span>
+        </Fragment>
+      ))}
+    </>
+  );
+}

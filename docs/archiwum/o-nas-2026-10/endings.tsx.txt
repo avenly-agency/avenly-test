@@ -1,0 +1,279 @@
+'use client';
+
+import { Fragment, useEffect, useRef } from 'react';
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
+import { SectionLabel } from '@/components/ui/SectionLabel';
+import { GEM } from '@/lib/brand/logo';
+import { localizeHref, type Locale } from '@/lib/i18n/locale';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { markShape } from './mark';
+import { IntroText } from './parts';
+import { attr, css, flag, mix, seg } from './shared';
+import './endings.css';
+
+// O NAS - SEKCJA PO WJEŹDZIE W GWIAZDĘ (koniec wejścia „Panorama”): propozycje do wyboru, 2026-10-12.
+// Właściciel: „daj kilka propozycji co do drugiej sekcji, bo aktualna mi się nie podoba” - „chodziło mi o tą sekcję,
+// która się pojawia po zoomie w gwiazdę”. Przełącznik „Po wjeździe w gwiazdę” w panelu na dole ekranu (tylko dev).
+// Każda propozycja to inna scena z tą samą treścią (etykieta, h1, opis, przycisk); prefiks on-e:
+//   glebia  (on-e1)  1. „Z głębi”        - wyśrodkowany nagłówek dolatuje z głębi jako obrys („negatyw”), staje
+//                                          i wypełnia się; pod nim opis z przyciskiem,
+//   plakat  (on-e2)  2. „Plakat”         - ogromny nagłówek na całą szerokość wrappera, słowa wysuwają się po kolei
+//                                          przy przewijaniu; opis i przycisk w stopce kadru,
+//   ciecie  (on-e3)  3. „Cięcie zdania”  - pierwsze zdanie nagłówka przecina gwiazda (gest logo) i jego połówki
+//                                          rozchodzą się; na linii zostaje drugie zdanie, pod linią opis z przyciskiem,
+//   tunel   (on-e4)  4. „Tunel”          - kolumna tekstu jak dotąd, ale lot trwa: z punktu zbiegu wciąż wypływają
+//                                          powidoki gwiazdy (na czas, powoli),
+//   kolumna          dotychczasowa kolumna przy lewej krawędzi (do porównania).
+// Zasada z rundy 13 zostaje: treść pojawia się dopiero PO przelocie przez ostatni powidok. Malarz każdej propozycji
+// dostaje `v` = ile vh przewinięto od tego momentu (ujemne = jeszcze trwa wjazd) i wymiary sceny; pisze wprost do DOM.
+// EXTRA = o ile vh propozycja wydłuża przypiętą scenę (choreografia + postój), ostatnie 30 vh sceny to zawsze
+// wygaszenie dołu kadru. Bez JS / ograniczony ruch: każda propozycja to zwykły blok (etykieta, h1, opis, przycisk).
+
+export const ENDINGS = [
+  { id: 'glebia', label: '1. Z głębi' },
+  { id: 'plakat', label: '2. Plakat' },
+  { id: 'ciecie', label: '3. Cięcie zdania' },
+  { id: 'tunel', label: '4. Tunel' },
+  { id: 'kolumna', label: 'Dotychczasowa: kolumna' },
+] as const;
+export type EndKind = (typeof ENDINGS)[number]['id'];
+export const END_EXTRA: Record<EndKind, number> = { glebia: 50, plakat: 95, ciecie: 140, tunel: 30, kolumna: 0 };
+
+/** Wymiary sceny wejścia: W × HF = przypięty ekran, H = wysokość kompozycji (100svh), bl / bw = lewa krawędź
+    i szerokość treści wrappera. */
+export type EndGeo = { W: number; H: number; HF: number; bl: number; bw: number };
+export type EndPaint = (v: number, g: EndGeo) => void;
+type P = { t: ONasDict['intro']; locale: Locale; live: boolean; register: (fn: EndPaint | null) => void };
+
+const outCubic = (x: number) => { const v = x < 0 ? 0 : x > 1 ? 1 : x; return 1 - Math.pow(1 - v, 3); };
+/** Krycie + widoczność (element z kryciem 0 nie jest składany ani klikalny). */
+const show = (el: Element | null, o: number) => {
+  css(el, 'opacity', o.toFixed(3));
+  css(el, 'visibility', o < 0.002 ? 'hidden' : 'visible');
+};
+/** Wejście bloku: krycie i lekki wjazd z dołu, bez przestrzelenia. */
+const rise = (el: Element | null, o: number, dy = 18) => {
+  show(el, o);
+  css(el, 'transform', o >= 0.9995 ? 'none' : `translate3d(0, ${((1 - o) * dy).toFixed(2)}px, 0)`);
+};
+/** Korzeń propozycji: widoczny po przelocie przez ostatni powidok, klikalny, gdy treść stoi. */
+const gate = (el: HTMLElement | null, v: number, clickAt: number) => {
+  css(el, 'opacity', '1');
+  css(el, 'visibility', v > 0 ? 'visible' : 'hidden');
+  flag(el, 'data-on', v > clickAt);
+};
+/** Rejestruje malarza propozycji w scenie wejścia (zawsze aktualna funkcja, rejestracja raz). */
+const usePaint = (register: P['register'], fn: EndPaint) => {
+  const f = useRef(fn);
+  useEffect(() => { f.current = fn; });
+  useEffect(() => {
+    register((v, g) => f.current(v, g));
+    return () => register(null);
+  }, [register]);
+};
+
+const Cta = ({ t, locale }: { t: ONasDict['intro']; locale: Locale }) => (
+  <Link href={localizeHref('/kontakt', locale)} prefetch={false} className="on-cta">
+    {t.cta}
+    <ArrowRight aria-hidden="true" />
+  </Link>
+);
+
+/* ───────── DOTYCHCZASOWA: KOLUMNA ───────── */
+// Kolumna przy lewej krawędzi wrappera: krycie, lekki wjazd, tytuł spod maski (--e).
+const reveal = (el: HTMLElement | null, o: number, dy = 22) => {
+  show(el, o);
+  css(el, 'transform', `translate3d(0, ${((1 - o) * dy).toFixed(2)}px, 0)`);
+  css(el, '--e', o.toFixed(3));
+  flag(el, 'data-on', o > 0.9);
+};
+function EndColumn({ t, locale, register }: P) {
+  const root = useRef<HTMLDivElement>(null);
+  usePaint(register, (v) => reveal(root.current, seg(v, 0, 21)));
+  return <div ref={root} className="on-x-text on-x-sc"><IntroText t={t} locale={locale} /></div>;
+}
+
+/* ───────── 1. Z GŁĘBI ───────── */
+// Ruch kamery nie urywa się na ostatnim powidoku: nagłówek stoi w środku gwiazdy i dolatuje do nas - najpierw sam
+// obrys („w ruchu obrys, na miejscu pełna litera”), hamuje, staje i wypełnia się. Potem opis i przycisk.
+function EndDepth({ t, locale, register }: P) {
+  const root = useRef<HTMLDivElement>(null), head = useRef<HTMLDivElement>(null), tail = useRef<HTMLDivElement>(null);
+  usePaint(register, (v) => {
+    gate(root.current, v, 30);
+    const a = outCubic(v / 34);
+    css(head.current, 'opacity', seg(v, 0, 12).toFixed(3));
+    css(head.current, 'transform', a >= 0.9995 ? 'none' : `scale(${mix(0.58, 1, a).toFixed(4)})`);
+    css(head.current, '--f', seg(v, 16, 34).toFixed(3)); // wypełnienie liter (0 = sam obrys)
+    rise(tail.current, seg(v, 28, 42));
+  });
+  return (
+    <div ref={root} className="on-x-sc on-e on-e--glebia">
+      <div ref={head} className="on-e1-head">
+        <div className="on-label"><SectionLabel>{t.label}</SectionLabel></div>
+        <h1 id="on-h1" className="on-e1-h">
+          <span className="on-e1-l">{t.title}</span>{' '}
+          <span className="on-e1-l on-e1-l--ac">{t.titleAccent}</span>
+        </h1>
+      </div>
+      <div ref={tail} className="on-e1-tail">
+        <p className="on-lead">{t.lead}</p>
+        <Cta t={t} locale={locale} />
+      </div>
+    </div>
+  );
+}
+
+/* ───────── 2. PLAKAT ───────── */
+// Kadr jak plakat filmu: ogromny nagłówek na całą szerokość wrappera, słowa wysuwają się spod maski jedno po drugim
+// razem z przewijaniem; opis po lewej i przycisk przy prawej krawędzi wrappera w stopce kadru.
+const STEP = 5.5, WORD = 16; // vh między startami słów i droga jednego słowa
+const maskWords = (s: string) => s.split(' ').map((w, i) => (
+  <Fragment key={i}><span className="on-mask on-e2-m"><span className="on-e2-w">{w}</span></span>{' '}</Fragment>
+));
+function EndPoster({ t, locale, register }: P) {
+  const root = useRef<HTMLDivElement>(null), label = useRef<HTMLDivElement>(null), tail = useRef<HTMLDivElement>(null);
+  const words = useRef<HTMLElement[] | null>(null);
+  usePaint(register, (v) => {
+    const el = root.current;
+    if (!el) return;
+    const ws = (words.current ??= Array.from(el.querySelectorAll<HTMLElement>('.on-e2-w')));
+    const after = 6 + ws.length * STEP; // opis rusza, gdy ostatnie słowo jest w drodze
+    gate(el, v, after);
+    show(label.current, seg(v, 0, 10));
+    ws.forEach((w, i) => {
+      const e = seg(v, 2 + i * STEP, 2 + i * STEP + WORD);
+      css(w, 'transform', e >= 0.9995 ? 'none' : `translateY(${((1 - e) * 112).toFixed(2)}%)`);
+    });
+    rise(tail.current, seg(v, after, after + 16));
+  });
+  return (
+    <div ref={root} className="on-x-sc on-e on-e--plakat">
+      <div ref={label} className="on-label"><SectionLabel align="start">{t.label}</SectionLabel></div>
+      <h1 id="on-h1" className="on-e2-h">
+        <span className="on-e2-s">{maskWords(t.title)}</span>{' '}
+        <span className="on-e2-s im-accent">{maskWords(t.titleAccent)}</span>
+      </h1>
+      <div ref={tail} className="on-e2-tail">
+        <p className="on-lead">{t.lead}</p>
+        <Cta t={t} locale={locale} />
+      </div>
+    </div>
+  );
+}
+
+/* ───────── 3. CIĘCIE ZDANIA ───────── */
+// Gest logo na nagłówku: pierwsze zdanie („Nie jesteśmy kolejną korporacją.”) staje na linii, gwiazda przelatuje
+// przez nie od lewej (linia z gwiazdą = jeden kształt, rośnie od lewej krawędzi wrappera), górna połówka zdania
+// przesuwa się jak w logo i obie rozchodzą się w górę i w dół. Linia zostaje jako horyzont: nad nią wysuwa się drugie
+// zdanie („Jesteśmy Twoim partnerem.”), pod nią opis z przyciskiem - układ planszy tytułowej, ten sam co w zakończeniu
+// strony. Dla czytników h1 jest zwykłym tekstem (wizualne połówki są aria-hidden).
+function EndCut({ t, locale, register }: P) {
+  const root = useRef<HTMLDivElement>(null), label = useRef<HTMLDivElement>(null);
+  const up = useRef<HTMLSpanElement>(null), dn = useRef<HTMLSpanElement>(null);
+  const s2 = useRef<HTMLSpanElement>(null), tail = useRef<HTMLDivElement>(null);
+  const mark = useRef<SVGPathElement>(null);
+  usePaint(register, (v, g) => {
+    gate(root.current, v, 108);
+    show(label.current, seg(v, 0, 12));
+    // zdanie 1: wejście, potem przesunięcie górnej połówki (jak 3u w logo) i rozejście
+    const in1 = seg(v, 0, 14), shift = seg(v, 54, 64), part = seg(v, 58, 88);
+    const d = part * Math.max(110, g.H * 0.2), y0 = (1 - in1) * 14;
+    const o = in1 * (1 - seg(v, 68, 88));
+    css(up.current, 'transform', `translate3d(${(shift * 0.075).toFixed(4)}em, ${(y0 - d).toFixed(2)}px, 0)`);
+    css(dn.current, 'transform', `translate3d(0, ${(y0 + d).toFixed(2)}px, 0)`);
+    show(up.current, o); show(dn.current, o);
+    // gwiazda leci po linii od lewej krawędzi wrappera do prawej; linia rośnie za nią i zostaje
+    const sz = g.W < 768 ? 0.7 : 1.1, cut = seg(v, 18, 56);
+    attr(mark.current, 'd', markShape(0, mix(0, g.bw - 20 * sz, cut), 0, sz));
+    css(mark.current, 'opacity', seg(v, 13, 19).toFixed(3));
+    // zdanie 2 wysuwa się nad linią, potem opis z przyciskiem pod linią
+    const e2 = seg(v, 84, 104);
+    css(s2.current, 'transform', e2 >= 0.9995 ? 'none' : `translateY(${((1 - e2) * 112).toFixed(2)}%)`);
+    rise(tail.current, seg(v, 100, 116));
+  });
+  return (
+    <div ref={root} className="on-x-sc on-e on-e--ciecie">
+      <div className="on-e3-top">
+        <div ref={label} className="on-label"><SectionLabel align="start">{t.label}</SectionLabel></div>
+        <p className="on-e3-s2 im-accent" aria-hidden="true"><span className="on-mask"><span ref={s2}>{t.titleAccent}</span></span></p>
+      </div>
+      <h1 id="on-h1" className="on-e3-h">{t.title} <span className="im-accent">{t.titleAccent}</span></h1>
+      <p className="on-e3-s1" aria-hidden="true">
+        <span className="on-e3-full">{t.title}</span>
+        <span ref={up} className="on-e3-half on-e3-up">{t.title}</span>
+        <span ref={dn} className="on-e3-half on-e3-dn">{t.title}</span>
+      </p>
+      <svg className="on-e3-cut" aria-hidden="true" focusable="false"><path ref={mark} className="on-e3-mark" /></svg>
+      <div ref={tail} className="on-e3-tail">
+        <p className="on-lead">{t.lead}</p>
+        <Cta t={t} locale={locale} />
+      </div>
+    </div>
+  );
+}
+
+/* ───────── 4. TUNEL ───────── */
+// Lot się nie kończy: po ostatnim powidoku punkt zbiegu odpływa w prawo (na telefonie w górę), a z niego wciąż, powoli,
+// wypływają kolejne obrysy gwiazdy i mijają kamerę (na czas; im bliżej, tym bledsze - pod tekstem są ledwo widoczne).
+// Tekst: kolumna przy lewej krawędzi wrappera. Pętla klatek chodzi tylko, gdy sekcja jest odsłonięta i na ekranie.
+const TUNNEL_N = 5, TUNNEL_MS = 15000, TUNNEL_S0 = 0.25;
+function EndTunnel({ t, locale, live, register }: P) {
+  const root = useRef<HTMLDivElement>(null);
+  const st = useRef<{ v: number; g: EndGeo | null; vis: boolean; kick: () => void }>({ v: -1, g: null, vis: true, kick: () => {} });
+  usePaint(register, (v, g) => {
+    reveal(root.current, seg(v, 0, 21));
+    st.current.v = v; st.current.g = g;
+    st.current.kick();
+  });
+  useEffect(() => {
+    const el = root.current, s = st.current;
+    if (!live || !el) return;
+    const svg = el.closest('.on-x-stick')?.querySelector<SVGSVGElement>('.on-e4-svg') ?? null;
+    const paths = svg ? Array.from(svg.querySelectorAll<SVGPathElement>('path')) : [];
+    let raf = 0;
+    const tick = (now: number) => {
+      raf = 0;
+      const g = s.g;
+      if (!g || s.v <= 0 || !s.vis) { css(svg, 'visibility', 'hidden'); return; }
+      css(svg, 'visibility', 'visible');
+      const mob = g.W < 768, drift = seg(s.v, 0, 40), on = seg(s.v, 0, 24);
+      // punkt zbiegu: ze środka ekranu (tam kończy się wjazd) odpływa w bok, żeby nie stał pod tekstem
+      const vx = mix(g.W / 2, g.W * (mob ? 0.5 : 0.72), drift), vy = mix(g.H / 2, g.H * (mob ? 0.26 : 0.5), drift);
+      // skala, przy której wcięcia gwiazdy (7,884 jednostki od środka) wychodzą poza najdalszy róg sceny
+      const far = (Math.hypot(Math.max(vx, g.W - vx), Math.max(vy, g.HF - vy)) * 1.06) / 7.884;
+      paths.forEach((p, i) => {
+        const ph = (now / TUNNEL_MS + i / TUNNEL_N) % 1;
+        const k = TUNNEL_S0 * Math.pow(far / TUNNEL_S0, ph);
+        attr(p, 'transform', `translate(${vx.toFixed(1)} ${vy.toFixed(1)}) scale(${k.toFixed(4)})`);
+        css(p, 'opacity', (on * seg(ph, 0, 0.1) * (0.07 + 0.5 * Math.pow(1 - ph, 1.6)) * (mob ? 0.7 : 1)).toFixed(3));
+      });
+      raf = requestAnimationFrame(tick);
+    };
+    s.kick = () => { if (!raf) raf = requestAnimationFrame(tick); };
+    const io = new IntersectionObserver(([e]) => { s.vis = e.isIntersecting; s.kick(); });
+    io.observe(el);
+    s.kick();
+    return () => { cancelAnimationFrame(raf); io.disconnect(); s.kick = () => {}; css(svg, 'visibility', 'hidden'); };
+  }, [live]);
+  return <div ref={root} className="on-x-text on-x-sc"><IntroText t={t} locale={locale} /></div>;
+}
+
+/** Warstwa tła propozycji, rysowana na całej scenie pod tekstem (dziś tylko „Tunel”: obrysy gwiazdy). */
+export function EndingBackdrop({ kind }: { kind: EndKind }) {
+  if (kind !== 'tunel') return null;
+  return (
+    <svg className="on-x-svg on-e4-svg" aria-hidden="true" focusable="false">
+      {Array.from({ length: TUNNEL_N }, (_, i) => <path key={i} d={GEM} vectorEffect="non-scaling-stroke" />)}
+    </svg>
+  );
+}
+
+/** Treść po wjeździe w gwiazdę w wybranej propozycji. */
+export function HeroEnding({ kind, ...p }: P & { kind: EndKind }) {
+  if (kind === 'glebia') return <EndDepth {...p} />;
+  if (kind === 'plakat') return <EndPoster {...p} />;
+  if (kind === 'ciecie') return <EndCut {...p} />;
+  if (kind === 'tunel') return <EndTunnel {...p} />;
+  return <EndColumn {...p} />;
+}

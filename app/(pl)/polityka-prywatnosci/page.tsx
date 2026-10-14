@@ -18,7 +18,8 @@ const fullAddress = [
 ].filter(Boolean).join(', ');
 
 const ADMIN_ROWS: { label: string; value: React.ReactNode }[] = [
-  { label: 'Podmiot', value: 'Avenly - Agencja Interaktywna' },
+  // nazwa działalności z CEIDG (JDG, od 2026-10-14) - SITE.legalName w lib/seo-data.ts
+  { label: 'Podmiot', value: SITE.legalName },
   ...(fullAddress ? [{ label: 'Adres siedziby', value: fullAddress }] : []),
   ...(COMPANY_IDS.nip ? [{ label: 'NIP', value: COMPANY_IDS.nip }] : []),
   ...(COMPANY_IDS.regon ? [{ label: 'REGON', value: COMPANY_IDS.regon }] : []),
@@ -425,7 +426,7 @@ export default function PrivacyPolicy() {
 
         {/* --- STOPKA DOKUMENTU --- */}
         <p className="mt-12 text-sm text-slate-500 leading-relaxed border-t border-white/5 pt-8">
-          Niniejsza Polityka Prywatności i Cookies weszła w życie dnia {EFFECTIVE_DATE} i stanowi integralną część Regulaminu świadczenia usług drogą elektroniczną przez Avenly - Agencja Interaktywna.
+          Niniejsza Polityka Prywatności i Cookies weszła w życie dnia {EFFECTIVE_DATE} i stanowi integralną część Regulaminu świadczenia usług drogą elektroniczną przez {SITE.legalName}.
         </p>
 
       </div>

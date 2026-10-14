@@ -1,0 +1,94 @@
+'use client';
+
+import { useCallback, useEffect, useRef, type CSSProperties } from 'react';
+import type { Locale } from '@/lib/i18n/locale';
+import { Head } from './parts';
+import { Shot, swapText, Texts, track, YourSlot, type Clients } from './sec-clients-parts';
+import { css, seg, usePin } from './shared';
+import './sec.css';
+
+// „DLA KOGO PRACUJEMY” - WERSJA 2 „PRZELOT” (2026-10-13). Prefiks on-3f-.
+// Ruch: lot w głąb (zoom, jak powidoki w wejściu). Kadry z prawdziwymi zrzutami stoją jeden za drugim w głębi:
+// bieżący jest duży i ostry, następne mniejsze i przygaszone wystają zza niego. Przy przewijaniu kamera leci do
+// przodu - bieżący kadr rośnie, mija nas i gaśnie, a następny dolatuje na jego miejsce i staje (postój przy każdym).
+// Głębia liczona wykładniczo (skala = 2^(-odległość · 1,1)) - stałe tempo zbliżania, bez „uderzenia” przy kamerze.
+// Tekst po lewej: jedna pozycja naraz (rodzaj firmy wielkim pismem, nazwa realizacji, zdanie, link).
+// Komputer: dalsze kadry odchodzą w górę i w lewo, mijany odlatuje w prawy dolny róg (z dala od tekstu).
+// Telefon / tablet: tekst u góry, kadry pod nim; dalsze wystają z prawej, mijany odlatuje w lewo.
+// Bez JS / ograniczony ruch: lista pozycji i siatka kadrów (jak w „Taśmie”).
+
+const SIZES = '(max-width: 1023px) 92vw, 56vw';
+
+type Geo = { W: number; H: number; stack: boolean };
+
+export function SecClientsFlight({ t, locale, live }: { t: Clients; locale: Locale; live: boolean }) {
+  const pin = useRef<HTMLDivElement>(null), view = useRef<HTMLDivElement>(null);
+  const geo = useRef<Geo | null>(null);
+  const els = useRef<{ texts: HTMLElement[]; frames: HTMLElement[] } | null>(null);
+  const prog = useRef(0);
+  const n = t.items.length + 1; // klienci + „Twoja firma”
+
+  const paint = useCallback(() => {
+    const el = pin.current, vw = view.current;
+    if (!el || !vw) return;
+    const g = (geo.current ??= { W: vw.clientWidth, H: vw.clientHeight, stack: window.innerWidth < 1024 });
+    if (!g.W || !g.H) return;
+    const c = (els.current ??= {
+      texts: Array.from(el.querySelectorAll<HTMLElement>('.on-3c-t')),
+      frames: Array.from(el.querySelectorAll<HTMLElement>('.on-3f-frame')),
+    });
+    const tr = track(prog.current, n);
+    // kadr na miejscu: szerokość z pola (16:9), środek pola; wektor „w głąb” - dokąd odchodzą dalsze kadry
+    const fw = Math.min(g.W * 0.9, g.H * 0.64 * (16 / 9)), fh = (fw * 9) / 16;
+    const fx = g.W * 0.5, fy = g.H * (g.stack ? 0.5 : 0.56);
+    const far = g.stack ? [g.W * 0.62, -g.H * 0.1] : [-g.W * 0.56, -g.H * 0.75];
+    css(vw, '--fw', `${fw.toFixed(1)}px`);
+    c.frames.forEach((f, i) => {
+      const d = i - tr.pos, s = Math.pow(2, -d * 1.1);
+      // przed nami: przesunięty w głąb i przygaszony; za nami (d < 0): rośnie, odlatuje w przeciwną stronę i gaśnie
+      const k = d >= 0 ? 1 - s : -(s - 1) * 0.9;
+      const o = d >= 0 ? 1 - 0.5 * Math.min(1, d) - 0.3 * Math.max(0, d - 1) : 1 - seg(-d, 0.1, 0.62);
+      const vis = o > 0.004;
+      css(f, 'visibility', vis ? 'visible' : 'hidden');
+      if (!vis) return;
+      const x = fx + far[0] * k - fw / 2, y = fy + far[1] * k - fh / 2;
+      css(f, 'transform', `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) scale(${s.toFixed(4)})`);
+      css(f, 'opacity', o.toFixed(3));
+    });
+    c.texts.forEach((tx, i) => swapText(tx, tr.tin(i), tr.out(i)));
+  }, [n]);
+
+  useEffect(() => {
+    if (!live) return;
+    const vw = view.current;
+    if (!vw) return;
+    const ro = new ResizeObserver(() => { geo.current = null; paint(); });
+    ro.observe(vw);
+    return () => { ro.disconnect(); geo.current = null; els.current = null; };
+  }, [live, paint]);
+  usePin(pin, (p) => { prog.current = p; paint(); }, live);
+
+  return (
+    <section className="on-sec on-3 on-3c on-3f" aria-labelledby="on-3-h">
+      <Head id="on-3-h" label={t.label} title={t.heading} accent={t.headingAccent} lead={t.lead} live={live} />
+      <div ref={pin} className="on-pin on-3c-pin" style={{ '--n': n } as CSSProperties}>
+        <div className="on-stick on-3c-stick">
+          <div className="container mx-auto px-6 on-3c-box">
+            <Texts t={t} locale={locale} />
+            {/* kadry są ilustracją pozycji z listy obok (nazwy i linki są w tekście) */}
+            <div ref={view} className="on-3f-view" aria-hidden="true">
+              {t.items.map((it, i) => (
+                <div key={it.image} className="on-3c-frame on-3f-frame" style={{ zIndex: n - i }}>
+                  <Shot slug={it.image} sizes={SIZES} big />
+                </div>
+              ))}
+              <div className="on-3c-frame on-3c-frame--you on-3f-frame" style={{ zIndex: 1 }}>
+                <YourSlot label={t.yours.frame} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

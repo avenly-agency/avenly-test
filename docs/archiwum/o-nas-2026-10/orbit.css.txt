@@ -1,0 +1,111 @@
+/* ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+   O NAS - wersja „ORBITA” (propozycja 2026-10-09, orbit.tsx). Prefiks on-o-.
+   Style bez [data-live] = zwykłe sekcje z tekstem (bez JS / ograniczony ruch), rysunki schowane.
+   Pod [data-live] sceny przypięte; geometrię planety i gwiazdy pisze JS atrybutami SVG (piksele ekranu).
+   ═══════════════════════════════════════════════════════════════════════════════════════════════════════════ */
+
+.on-o1, .on-o3, .on-o-end { position: relative; }
+.on-o-svg { display: none; font-family: inherit; }
+.on-o-stick { position: relative; }
+.on-o1-stick { padding: 136px 0 24px; }
+.on-o3-stick { padding: 32px 0 72px; }
+.on-o-box { position: relative; }
+.on-o-intro { max-width: 46rem; margin-bottom: 96px; }
+.on-o-dir { max-width: 40rem; }
+.on-o-dir .on-caps { margin-top: 6px; }
+
+/* ── rysunek: planeta, gwiazda, tarcza doby ── */
+.on-o-disc { fill: #050505; }
+.on-o-edge { fill: none; stroke: rgba(255, 255, 255, .16); stroke-width: 1; }
+.on-o-rim { fill: none; stroke-width: 1.8; }
+.on-o-band { fill: none; stroke: #fff; stroke-width: 1; }
+.on-o-band--0 { stroke-opacity: .1; }
+.on-o-band--1 { stroke-opacity: .06; }
+.on-o-band--2 { stroke-opacity: .035; }
+.on-o-fine line { stroke: rgba(255, 255, 255, .3); stroke-width: 1; }
+.on-o-majors line { stroke: #60a5fa; stroke-width: 1.5; }
+.on-o-gem { fill: var(--on-ac); }
+.on-o-orbit { fill: none; stroke: rgba(255, 255, 255, .22); stroke-width: 1; stroke-dasharray: 2 6; }
+.on-o-sweep { fill: none; stroke: var(--on-ac); stroke-width: 2; }
+.on-o-hour { stroke: rgba(255, 255, 255, .32); stroke-width: 1; transition: stroke .4s ease; }
+.on-o-hour[data-on] { stroke: #60a5fa; }
+.on-o-hand { stroke: #60a5fa; stroke-width: 1.2; }
+.on-o-reply { fill: #f8fafc; }
+.on-o-lbl { font-size: 14px; font-weight: 600; fill: #e2e8f0; }
+.on-o-read { font-size: 15px; font-weight: 600; fill: #e2e8f0; font-variant-numeric: tabular-nums; }
+
+/* ── zasady (bez JS: zwykła lista) ── */
+.on-o-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 36px; }
+.on-o-item { max-width: 40rem; border-top: 1px solid rgba(255, 255, 255, .1); padding-top: 22px; }
+.on-o-n { margin: 0 0 12px; font-size: 14px; color: #94a3b8; font-variant-numeric: tabular-nums; }
+.on-o-n b { font-weight: 600; color: #60a5fa; }
+.on-o-t { margin: 0; font-weight: 700; font-size: clamp(34px, 4.4vw, 68px); line-height: 1.03; letter-spacing: -.038em; color: #f8fafc; text-wrap: balance; }
+.on-o-d { margin: 14px 0 0; font-size: 18px; line-height: 1.65; color: #94a3b8; text-wrap: pretty; }
+.on-o-count { display: none; }
+
+/* ── zakończenie ── */
+.on-o-end { padding: clamp(120px, 16vh, 180px) 0 clamp(96px, 12vh, 150px); }
+.on-o-end-text { max-width: 40rem; }
+.on-o-end .on-lead { margin: 0 0 30px; }
+
+/* ═════════ pełny ruch ═════════ */
+.on[data-live] .on-o-svg { display: block; position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden; }
+.on[data-live] .on-o-stick { position: sticky; top: 0; height: 100vh; height: 100svh; padding: 0; overflow: hidden; overflow: clip; }
+.on[data-live] .on-o-stick .on-o-box { height: 100%; }
+
+/* 1. Wschód + Doba */
+.on[data-live] .on-o1-pin { height: calc(100vh + 330vh); height: calc(100svh + 330vh); }
+.on[data-live] .on-o-intro { position: absolute; left: 1.5rem; bottom: calc(24% + 48px); width: min(46rem, 52vw); max-width: none; margin: 0; }
+.on[data-live] .on-o-intro .on-h1 { font-size: clamp(34px, 3.6vw, 60px); }
+.on[data-live] .on-o-dir {
+  position: absolute; left: 1.5rem; top: 0; bottom: 0; width: min(34rem, 42vw); max-width: none;
+  display: flex; flex-direction: column; justify-content: center; opacity: 0; pointer-events: none;
+}
+.on[data-live] .on-o-dial, .on[data-live] .on-o-lbl, .on[data-live] .on-o-read, .on[data-live] .on-o-reply, .on[data-live] .on-o-hand { opacity: 0; }
+/* wejście (na czas): gwiazda wschodzi zza krawędzi planety, krawędź łapie jej światło, potem tekst */
+.on[data-live] .on-o1 .on-o-svg { animation: on-fade 1.2s ease both; }
+.on[data-live] .on-o1 .on-o-star-in { animation: on-o-rise 1.9s var(--on-ease) .3s both; }
+.on[data-live] .on-o1 .on-o-rim { animation: on-fade 1.6s ease .9s both; }
+.on-o1 .on-i { --i0: 1.3s; }
+@keyframes on-o-rise { from { transform: translateY(170px); } }
+
+/* 2. Zasady na orbicie: obrót wokół środka planety (daleko pod blokiem) */
+.on[data-live] .on-o3-pin { height: calc(100vh + var(--n) * 62vh); height: calc(100svh + var(--n) * 62vh); }
+.on[data-live] .on-o-list { display: block; position: absolute; inset: 0; }
+.on[data-live] .on-o-item {
+  position: absolute; left: 1.5rem; bottom: calc(28% + 44px); width: min(40rem, 46vw); max-width: none;
+  padding: 0; border: 0; opacity: 0; visibility: hidden;
+  transform-origin: 50% calc(100% + var(--on-o-or, 1500px));
+}
+.on[data-live] .on-o-count {
+  display: block; position: absolute; left: 1.5rem; bottom: 30px; margin: 0;
+  font-size: 14px; color: #94a3b8; font-variant-numeric: tabular-nums;
+}
+.on-o-count span { color: #f8fafc; }
+
+/* 4. Zakończenie: tekst nad horyzontem, gwiazda wschodzi przy wejściu sekcji na ekran */
+.on[data-live] .on-o-end { padding: 0; overflow: hidden; overflow: clip; }
+.on[data-live] .on-o-end .on-o-box { min-height: 88vh; min-height: 88svh; }
+.on[data-live] .on-o-end-text { position: absolute; left: 1.5rem; bottom: calc(26% + 48px); width: min(40rem, 46vw); max-width: none; }
+.on[data-live] .on-o-end .on-o-star-in { transform: translateY(170px); }
+.on[data-live] .on-o-end .on-o-rim { opacity: 0; }
+.on[data-live] .on-o-end[data-in] .on-o-star-in { transform: none; animation: on-o-rise 1.9s var(--on-ease) .2s both; }
+.on[data-live] .on-o-end[data-in] .on-o-rim { opacity: 1; animation: on-fade 1.6s ease .8s both; }
+
+@media (max-width: 767px) {
+  .on-o-intro { margin-bottom: 64px; }
+  .on-o-t { font-size: clamp(30px, 8.6vw, 40px); }
+  .on-o-d { font-size: 16.5px; }
+  .on[data-live] .on-o-intro { right: 1.5rem; width: auto; bottom: calc(14% + 36px); }
+  .on[data-live] .on-o-intro .on-h1 { font-size: clamp(30px, 8.4vw, 40px); }
+  .on[data-live] .on-o-dir { right: 1.5rem; width: auto; top: 54%; bottom: auto; display: block; }
+  .on[data-live] .on-o-item { right: 1.5rem; width: auto; bottom: calc(28% + 30px); }
+  .on[data-live] .on-o-end-text { left: 1.5rem; right: 1.5rem; width: auto; bottom: calc(26% + 36px); }
+  .on-o-lbl { font-size: 13px; }
+  .on-o-read { font-size: 14px; }
+}
+/* niski ekran komputera: pierwszy ekran bez opisu (jak podpowiedzi w innych sekcjach) */
+@media (min-width: 768px) and (max-height: 640px) {
+  .on[data-live] .on-o-intro .on-i-lead { display: none; }
+  .on[data-live] .on-o-intro .on-h1 { margin-bottom: 26px; }
+}

@@ -1,0 +1,134 @@
+'use client';
+
+import { useRef } from 'react';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { Comet, setComet } from './mark';
+import { Head, Narrator, setNarrator } from './parts';
+import { css, flag, lin, seg, usePin } from './shared';
+
+// SCENA 2 - „BEZ POŚREDNIKÓW” (przypięta 100svh + 220vh). Dwie drogi jednej wiadomości:
+//   u góry duża agencja - zygzak przez pięć osób; wiadomość (kropka) zatrzymuje się przy każdej z nich,
+//   niżej Avenly - LINIA Z NOWEGO LOGO: gwiazda leci prosto od „Ty” do końca linii (Avenly), bez przystanków,
+//   na końcu wraca cienka linia odpowiedzi „Odpowiedź w 24 h”.
+// Jedno zdanie narratora naraz (PRODUCT.md, Design Principles 18). Komputer: drogi poziomo jedna nad drugą,
+// telefon: pionowo obok siebie (osobny rysunek). Bez JS / ograniczony ruch: stan końcowy obu dróg + lista kroków.
+
+type Pt = [number, number];
+type Geo = {
+  vb: string; ag: Pt[]; label: 'below' | 'right';
+  titleA: Pt; titleB: Pt; titleBAnchor: 'start' | 'middle';
+  you: Pt; youLabel: Pt; comet: string; reply: [Pt, Pt]; replyLabel: Pt;
+};
+
+const DESK: Geo = {
+  vb: '0 0 1200 470', label: 'below',
+  ag: [[70, 120], [330, 170], [600, 112], [870, 172], [1130, 120]],
+  titleA: [58, 44], titleB: [58, 272], titleBAnchor: 'start',
+  you: [70, 345], youLabel: [70, 378],
+  // kometka: czubek linii przy „Ty” (x 82), gwiazda na x 1130; skala 1,7107
+  comet: 'translate(137.6 451.92) scale(1.7107)',
+  reply: [[1130, 404], [96, 404]], replyLabel: [613, 436],
+};
+const MOB: Geo = {
+  vb: '0 0 360 560', label: 'right',
+  ag: [[40, 70], [80, 170], [40, 270], [80, 370], [40, 470]],
+  titleA: [22, 28], titleB: [292, 28], titleBAnchor: 'middle',
+  you: [292, 70], youLabel: [308, 75],
+  // pionowo: czubek pod „Ty” (y 86), gwiazda na y 470; skala 0,627
+  comet: 'translate(292 86) rotate(90) scale(0.62682) translate(32.5 62.5)',
+  reply: [[338, 470], [338, 96]], replyLabel: [292, 528],
+};
+
+const segs = (ag: Pt[]) => {
+  const len = ag.slice(1).map((p, i) => Math.hypot(p[0] - ag[i][0], p[1] - ag[i][1]));
+  const cum = len.reduce<number[]>((a, l) => [...a, a[a.length - 1] + l], [0]);
+  return { len, cum, total: cum[cum.length - 1] };
+};
+const D_SEG = segs(DESK.ag), M_SEG = segs(MOB.ag);
+
+function Stage({ g, t, v }: { g: Geo; t: ONasDict['direct']; v: 'd' | 'm' }) {
+  const path = 'M' + g.ag.map((p) => p.join(' ')).join(' L');
+  const [r0, r1] = g.reply;
+  return (
+    <svg className={`on-dir-svg on-dir-svg--${v}`} viewBox={g.vb} data-v={v} aria-hidden="true" focusable="false">
+      <text className="on-dir-title" x={g.titleA[0]} y={g.titleA[1]}>{t.agency}</text>
+      <text className="on-dir-title on-dir-title--b" x={g.titleB[0]} y={g.titleB[1]} textAnchor={g.titleBAnchor}>{t.studio}</text>
+      <path className="on-dir-abase" d={path} />
+      <path className="on-dir-apath" d={path} pathLength={1} data-r="apath" />
+      {g.ag.map(([x, y], i) => (
+        <g key={i} className="on-dir-node" data-r="node" data-i={i}>
+          <circle cx={x} cy={y} r={v === 'd' ? 5.5 : 5} />
+          <text
+            x={g.label === 'below' ? x : x + 16} y={g.label === 'below' ? y + 34 : y + 5}
+            textAnchor={g.label === 'below' ? 'middle' : 'start'}
+          >{t.roles[i]}</text>
+        </g>
+      ))}
+      <circle className="on-dir-dot" r={4} data-r="dot" cx={0} cy={0} />
+      <g className="on-dir-node on-dir-you">
+        <circle cx={g.you[0]} cy={g.you[1]} r={v === 'd' ? 5.5 : 5} />
+        <text x={g.youLabel[0]} y={g.youLabel[1]} textAnchor={v === 'd' ? 'middle' : 'start'}>{t.you}</text>
+      </g>
+      <g transform={g.comet}><Comet className="on-dir-comet" /></g>
+      <line className="on-dir-reply" data-r="reply" data-dir={v} x1={r0[0]} y1={r0[1]} x2={r1[0]} y2={r1[1]} />
+      <circle className="on-dir-rdot" r={3.5} data-r="rdot" cx={r1[0]} cy={r1[1]} />
+      <text className="on-dir-rlabel" data-r="rlabel" x={g.replyLabel[0]} y={g.replyLabel[1]} textAnchor="middle">{t.reply}</text>
+    </svg>
+  );
+}
+
+function paint(svg: SVGSVGElement, g: Geo, sg: ReturnType<typeof segs>, a: number, b: number, c: number) {
+  // droga przez agencję: 4 odcinki, na każdym ruch (72%) i postój przy osobie (28%)
+  const n = g.ag.length - 1;
+  const s = a >= 1 ? n - 1 : Math.floor(a * n);
+  const u = a >= 1 ? 1 : a * n - s;
+  const m = seg(u, 0, 0.72);
+  const p0 = g.ag[s], p1 = g.ag[s + 1];
+  const x = p0[0] + (p1[0] - p0[0]) * m, y = p0[1] + (p1[1] - p0[1]) * m;
+  const drawn = (sg.cum[s] + m * sg.len[s]) / sg.total;
+  css(svg.querySelector('[data-r=apath]'), 'stroke-dashoffset', (1 - drawn).toFixed(4));
+  const dot = svg.querySelector('[data-r=dot]');
+  css(dot, 'transform', `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`);
+  css(dot, 'opacity', a > 0.002 && a < 0.999 ? '1' : '0');
+  const reached = s + (m >= 0.98 ? 1 : 0);
+  svg.querySelectorAll('[data-r=node]').forEach((el) => flag(el, 'data-off', Number((el as SVGElement).dataset.i) > reached));
+  setComet(svg.querySelector('.on-dir-comet'), b);
+  // odpowiedź: linia wraca od gwiazdy do „Ty”, kropka na jej czole
+  const [r0, r1] = g.reply;
+  css(svg.querySelector('[data-r=reply]'), 'transform', c >= 0.9995 ? 'none' : `scale${r0[1] === r1[1] ? 'X' : 'Y'}(${Math.max(0.0001, c).toFixed(4)})`);
+  const rd = svg.querySelector('[data-r=rdot]');
+  css(rd, 'transform', `translate(${((r0[0] - r1[0]) * (1 - c)).toFixed(1)}px, ${((r0[1] - r1[1]) * (1 - c)).toFixed(1)}px)`);
+  css(rd, 'opacity', c > 0.002 ? '1' : '0');
+  css(svg.querySelector('[data-r=rlabel]'), 'opacity', seg(c, 0.45, 1).toFixed(3));
+}
+
+export function Direct({ t, live, stepsLabel }: { t: ONasDict['direct']; live: boolean; stepsLabel: string }) {
+  const pin = useRef<HTMLDivElement>(null);
+  const narr = useRef<HTMLOListElement>(null);
+
+  usePin(pin, (p, el) => {
+    const a = lin(p, 0.04, 0.48), b = seg(p, 0.52, 0.66), c = seg(p, 0.72, 0.86);
+    el.querySelectorAll<SVGSVGElement>('.on-dir-svg').forEach((svg) => {
+      const m = svg.dataset.v === 'm';
+      paint(svg, m ? MOB : DESK, m ? M_SEG : D_SEG, a, b, c);
+    });
+    setNarrator(narr.current, p < 0.5 ? 0 : p < 0.72 ? 1 : 2, [lin(p, 0, 0.5), lin(p, 0.5, 0.72), lin(p, 0.72, 0.9)]);
+  }, live);
+
+  return (
+    <section className="on-sec on-dir" aria-labelledby="on-dir-h">
+      <Head id="on-dir-h" label={t.label} title={t.heading} accent={t.headingAccent} lead={t.lead} live={live} />
+      <div ref={pin} className="on-pin on-dir-pin">
+        <div className="on-stick on-dir-stick">
+          <div className="container mx-auto px-6 on-dir-box">
+            <div className="on-dir-stage">
+              <Stage g={DESK} t={t} v="d" />
+              <Stage g={MOB} t={t} v="m" />
+            </div>
+            <Narrator ref={narr} items={t.steps} label={stepsLabel} />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

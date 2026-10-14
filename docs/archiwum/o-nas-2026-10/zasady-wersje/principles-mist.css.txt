@@ -1,0 +1,57 @@
+/* ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+   O NAS - „W CO WIERZYMY”, propozycja 5 „Z MGŁAWICY” (principles-mist.tsx, prefiks on-p9-; 2026-10-14).
+   Hasło zgęszcza się z kłębów (maska z pięciu miękkich plam rośnie od lewej do prawej - rozejście), zasady na
+   przemian przy lewej i prawej krawędzi wrappera. --b (0-1) pisze JS na haśle. Bez ruchu: principles-kit.css.
+   ═══════════════════════════════════════════════════════════════════════════════════════════════════════════ */
+
+.on[data-live] .on-p9-box { position: relative; height: 100%; }
+.on[data-live] .on-p9-stage { position: absolute; left: 1.5rem; right: 1.5rem; top: 0; bottom: 0; }
+.on[data-live] .on-p9-list { margin: 0; }
+.on[data-live] .on-p9-it {
+  position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
+  padding: 96px 0 72px; visibility: hidden;
+}
+.on[data-live] .on-p9-head { visibility: visible; }
+/* co druga zasada przy prawej krawędzi wrappera */
+.on[data-live] .on-p9-it[data-side="r"] { align-items: flex-end; text-align: right; }
+.on[data-live] .on-p9-it[data-side="r"] .on-p9-t { transform-origin: 100% 50%; }
+.on[data-live] .on-p9-t {
+  --b: 1;
+  max-width: 11em; line-height: .98; letter-spacing: -.045em; transform-origin: 0 50%;
+  font-size: clamp(44px, min(7vw, 12vh), 136px); font-size: clamp(44px, min(7vw, 12svh), 136px);
+  /* rozejście: pięć miękkich kłębów (elipsy na całą wysokość napisu), każdy rusza trochę później od poprzedniego -
+     rosną i zlewają się od lewej do prawej. Przy --b = 0 progi wszystkich kłębów są poniżej zera (maska pusta),
+     przy --b = 1 nawet ostatni kłąb ma pełne krycie do 115% swojej elipsy (maska pełna). */
+  -webkit-mask-image:
+    radial-gradient(46% 130% at 6% 56%, #000 calc((var(--b) * 2.4 - .45 - 0) * 100%), transparent calc((var(--b) * 2.4 - .45 - 0) * 100% + 42%)),
+    radial-gradient(40% 120% at 28% 40%, #000 calc((var(--b) * 2.4 - .45 - .2) * 100%), transparent calc((var(--b) * 2.4 - .45 - .2) * 100% + 42%)),
+    radial-gradient(44% 130% at 50% 62%, #000 calc((var(--b) * 2.4 - .45 - .4) * 100%), transparent calc((var(--b) * 2.4 - .45 - .4) * 100% + 42%)),
+    radial-gradient(40% 120% at 72% 42%, #000 calc((var(--b) * 2.4 - .45 - .6) * 100%), transparent calc((var(--b) * 2.4 - .45 - .6) * 100% + 42%)),
+    radial-gradient(46% 130% at 94% 56%, #000 calc((var(--b) * 2.4 - .45 - .8) * 100%), transparent calc((var(--b) * 2.4 - .45 - .8) * 100% + 42%));
+  mask-image:
+    radial-gradient(46% 130% at 6% 56%, #000 calc((var(--b) * 2.4 - .45 - 0) * 100%), transparent calc((var(--b) * 2.4 - .45 - 0) * 100% + 42%)),
+    radial-gradient(40% 120% at 28% 40%, #000 calc((var(--b) * 2.4 - .45 - .2) * 100%), transparent calc((var(--b) * 2.4 - .45 - .2) * 100% + 42%)),
+    radial-gradient(44% 130% at 50% 62%, #000 calc((var(--b) * 2.4 - .45 - .4) * 100%), transparent calc((var(--b) * 2.4 - .45 - .4) * 100% + 42%)),
+    radial-gradient(40% 120% at 72% 42%, #000 calc((var(--b) * 2.4 - .45 - .6) * 100%), transparent calc((var(--b) * 2.4 - .45 - .6) * 100% + 42%)),
+    radial-gradient(46% 130% at 94% 56%, #000 calc((var(--b) * 2.4 - .45 - .8) * 100%), transparent calc((var(--b) * 2.4 - .45 - .8) * 100% + 42%));
+}
+.on[data-live] .on-p9-it:not(.on-p9-head) .on-p9-t { --b: 0; }
+.on[data-live] .on-p9-n { margin: 0 0 14px; }
+.on[data-live] .on-p9-d { margin-top: 24px; }
+.on[data-live] .on-p9-it:not(.on-p9-head) :is(.on-p9-n, .on-p9-d) { opacity: 0; }
+/* kotwica blasku (miejsce i wymiary pisze JS) */
+.on[data-live] .on-p9-glow { position: absolute; left: 0; top: 0; pointer-events: none; }
+
+/* telefon: wszystkie zasady przy lewej krawędzi (tekst wyrównany do prawej czyta się gorzej na wąskim ekranie) */
+@media (max-width: 767px) {
+  .on[data-live] .on-p9-it { padding: 76px 0 96px; }
+  .on[data-live] .on-p9-it[data-side="r"] { align-items: flex-start; text-align: left; }
+  .on[data-live] .on-p9-it[data-side="r"] .on-p9-t { transform-origin: 0 50%; }
+  .on[data-live] .on-p9-t { max-width: 100%; font-size: clamp(34px, min(10.4vw, 7vh), 56px); font-size: clamp(34px, min(10.4vw, 7svh), 56px); }
+  .on[data-live] .on-p9-d { margin-top: 16px; }
+}
+@media (max-width: 1023px) and (orientation: landscape) and (max-height: 560px) {
+  .on[data-live] .on-p9-it { padding: 56px 84px 16px 0; }
+  .on[data-live] .on-p9-t { font-size: clamp(26px, min(5vw, 10vh), 44px); font-size: clamp(26px, min(5vw, 10svh), 44px); }
+  .on[data-live] .on-p9-d { margin-top: 10px; font-size: 14.5px; line-height: 1.5; }
+}

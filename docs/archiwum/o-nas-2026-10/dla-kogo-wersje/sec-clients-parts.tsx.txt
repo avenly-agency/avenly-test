@@ -1,0 +1,114 @@
+'use client';
+
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
+import { GEM } from '@/lib/brand/logo';
+import { localizeHref, type Locale } from '@/lib/i18n/locale';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { css, flag, seg } from './shared';
+import './sec.css'; // klasy on-3c- (tekst pozycji, kadr) - wspólne dla wszystkich wersji
+
+// SEKCJA „DLA KOGO PRACUJEMY” - klocki wspólne wersji 2-4 (Przelot, Ściana, Ekran; 2026-10-13: „concept z dla kogo
+// pracujemy fajny, zrób kilka wersji tego”). Wersja 1 „Taśma” (sec-clients.tsx) ma własną kopię - to ją właściciel
+// widział, więc zostaje nietknięta. Treść i kolejność pozycji we wszystkich wersjach te same: trzy rodzaje firm
+// z prawdziwymi realizacjami + „Twoja firma” z przyciskiem.
+
+export type Clients = ONasDict['clients'];
+
+/** Część przewijania sceny na jedno przejście między pozycjami. */
+export const MOVE = 0.14;
+
+/** Postoje i przejścia sceny z `n` pozycjami na odcinku 0,06-0,9 jej przewijania (n postojów, n - 1 przejść). */
+export const track = (p: number, n: number) => {
+  const hold = (0.84 - (n - 1) * MOVE) / n;
+  const from = (i: number) => 0.06 + (i + 1) * hold + i * MOVE; // początek przejścia z pozycji i do i + 1
+  let pos = 0;
+  for (let i = 0; i < n - 1; i++) pos += seg(p, from(i), from(i) + MOVE);
+  return {
+    /** Która pozycja jest na ekranie (z ułamkiem w trakcie przejścia). */
+    pos,
+    /** 0-1: pozycja `i` weszła (druga połowa przejścia do niej). */
+    tin: (i: number) => (i === 0 ? 1 : seg(p, from(i - 1) + MOVE / 2, from(i - 1) + MOVE)),
+    /** 0-1: pozycja `i` wyszła (pierwsza połowa przejścia z niej). */
+    out: (i: number) => (i === n - 1 ? 0 : seg(p, from(i), from(i) + MOVE / 2)),
+    /** 0-1: całe przejście do pozycji `i` (pozycja 0 jest od początku). */
+    move: (i: number) => (i === 0 ? 1 : seg(p, from(i - 1), from(i - 1) + MOVE)),
+  };
+};
+
+/** Blok tekstu pozycji: jedna naraz - poprzednia odjeżdża w górę, następna wjeżdża z dołu; klikalna tylko widoczna. */
+export const swapText = (el: Element | null, tin: number, out: number, dy = 26) => {
+  const o = tin * (1 - out);
+  css(el, 'opacity', o.toFixed(3));
+  css(el, 'visibility', o < 0.002 ? 'hidden' : 'visible');
+  css(el, 'transform', o >= 0.9995 ? 'none' : `translate3d(0, ${((1 - tin) * dy - out * dy).toFixed(2)}px, 0)`);
+  flag(el, 'data-on', o > 0.6);
+};
+
+const img = (slug: string, w: number, ext: 'avif' | 'webp') => `/portfolio/stage/${slug}-${w}.${ext}`;
+const set = (slug: string, ext: 'avif' | 'webp', big: boolean) =>
+  `${img(slug, 720, ext)} 720w, ${img(slug, 1200, ext)} 1200w${big ? `, ${img(slug, 1800, ext)} 1800w` : ''}`;
+
+/** Zrzut strony klienta (public/portfolio/stage/ - te same kadry co w sekcji Realizacje na stronie głównej).
+    `big` dokłada plik 1800 px dla kadrów szerokich na cały wrapper albo powiększanych kamerą. */
+export function Shot({ slug, sizes, big = false }: { slug: string; sizes: string; big?: boolean }) {
+  return (
+    <picture>
+      <source type="image/avif" srcSet={set(slug, 'avif', big)} sizes={sizes} />
+      <source type="image/webp" srcSet={set(slug, 'webp', big)} sizes={sizes} />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={img(slug, 1200, 'webp')} alt="" width={1200} height={675} loading="lazy" decoding="async" />
+    </picture>
+  );
+}
+
+/** Wnętrze pustego kadru „Twoja firma”: gwiazda z logo i podpis. */
+export function YourSlot({ label }: { label: string }) {
+  return (
+    <>
+      <svg viewBox="-20 -20 40 40" focusable="false"><path d={GEM} /></svg>
+      <span>{label}</span>
+    </>
+  );
+}
+
+/** Link „Zobacz realizację” pozycji klienta. */
+export function More({ href, label, locale }: { href: string; label: string; locale: Locale }) {
+  return (
+    <Link href={localizeHref(href, locale)} prefetch={false} className="on-3c-more">
+      {label}
+      <ArrowRight aria-hidden="true" />
+    </Link>
+  );
+}
+
+/** Przycisk „Bezpłatna konsultacja” pozycji „Twoja firma”. */
+export function Consult({ label, locale }: { label: string; locale: Locale }) {
+  return (
+    <Link href={localizeHref('/kontakt', locale)} prefetch={false} className="on-cta">
+      {label}
+      <ArrowRight aria-hidden="true" />
+    </Link>
+  );
+}
+
+/** Lista pozycji z tekstem (rodzaj firmy wielkim pismem, nazwa realizacji, zdanie, link) - układ jak w „Taśmie”. */
+export function Texts({ t, locale }: { t: Clients; locale: Locale }) {
+  return (
+    <ol className="on-3c-texts">
+      {t.items.map((it) => (
+        <li key={it.href} className="on-3c-t">
+          <h3 className="on-3c-type">{it.type}</h3>
+          <p className="on-3c-name">{it.name}</p>
+          <p className="on-3c-line">{it.line}</p>
+          <More href={it.href} label={t.more} locale={locale} />
+        </li>
+      ))}
+      <li className="on-3c-t">
+        <h3 className="on-3c-type im-accent">{t.yours.type}</h3>
+        <p className="on-3c-line on-3c-line--you">{t.yours.line}</p>
+        <Consult label={t.yours.cta} locale={locale} />
+      </li>
+    </ol>
+  );
+}

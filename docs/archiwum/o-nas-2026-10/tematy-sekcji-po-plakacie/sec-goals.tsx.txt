@@ -1,0 +1,90 @@
+'use client';
+
+import { useRef, type Ref } from 'react';
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
+import { SectionLabel } from '@/components/ui/SectionLabel';
+import { localizeHref, type Locale } from '@/lib/i18n/locale';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { css, mix, seg, usePin } from './shared';
+import './sec.css';
+
+// SEKCJA PO PLAKACIE - PROPOZYCJA 2 „WIĘCEJ I MNIEJ” (2026-10-13). Prefiks on-3g-.
+// Temat: po co to robimy - dwa cele z opisu w plakacie („więcej klientów i mniej Twojej pracy”), a pod każdym
+// usługi, które do niego prowadzą (linki do podstron usług).
+// Przypięta 100svh + 220vh, sam tekst i CSS. Typografia robi to, co mówi: „Więcej klientów.” ROŚNIE przy przewijaniu
+// z małego napisu do ogromnego, a „Mniej Twojej pracy.” zaczyna ogromne i MALEJE do niedużego. W ruchu napisy są
+// samym obrysem („negatyw”), na miejscu się wypełniają - bez odbicia. Skala idzie przekształceniem bez will-change,
+// więc przeglądarka rysuje pismo od nowa w każdej wielkości (ostre, nie rozciągnięta bitmapa).
+// Bez JS / ograniczony ruch: oba napisy w wielkości końcowej, pod nimi zdania i linki.
+
+const LESS_FROM = 2.7; // „Mniej…” zaczyna tyle razy większe niż na końcu (mniej więcej wielkość „Więcej…”)
+
+/** Wejście bloku: krycie i lekki wjazd z dołu, bez przestrzelenia. */
+const rise = (el: Element | null, o: number) => {
+  css(el, 'opacity', o.toFixed(3));
+  css(el, 'visibility', o < 0.002 ? 'hidden' : 'visible');
+  css(el, 'transform', o >= 0.9995 ? 'none' : `translate3d(0, ${((1 - o) * 16).toFixed(2)}px, 0)`);
+};
+
+type Goal = ONasDict['goals']['more'];
+
+function Body({ g, locale, r }: { g: Goal; locale: Locale; r: Ref<HTMLDivElement> }) {
+  return (
+    <div ref={r} className="on-3g-body">
+      <p className="on-lead">{g.line}</p>
+      <ul className="on-3g-links">
+        {g.links.map((l) => (
+          <li key={l.href}>
+            <Link href={localizeHref(l.href, locale)} prefetch={false} className="on-3g-a">
+              {l.name}
+              <ArrowRight aria-hidden="true" />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export function SecGoals({ t, locale, live }: { t: ONasDict['goals']; locale: Locale; live: boolean }) {
+  const pin = useRef<HTMLDivElement>(null);
+  const more = useRef<HTMLHeadingElement>(null), less = useRef<HTMLHeadingElement>(null);
+  const moreBody = useRef<HTMLDivElement>(null), lessBody = useRef<HTMLDivElement>(null);
+
+  usePin(pin, (p) => {
+    // „Więcej klientów.”: rośnie i wypełnia się
+    const a = seg(p, 0.04, 0.34);
+    css(more.current, 'transform', a >= 0.9995 ? 'none' : `scale(${mix(0.34, 1, a).toFixed(4)})`);
+    css(more.current, '--f', seg(p, 0.26, 0.4).toFixed(3));
+    rise(moreBody.current, seg(p, 0.36, 0.46));
+    // „Mniej Twojej pracy.”: pojawia się ogromne, maleje do swojej wielkości i wypełnia się
+    const b = seg(p, 0.52, 0.8), lo = seg(p, 0.48, 0.54);
+    css(less.current, 'opacity', lo.toFixed(3));
+    css(less.current, 'visibility', lo < 0.002 ? 'hidden' : 'visible');
+    css(less.current, 'transform', b >= 0.9995 ? 'none' : `scale(${mix(LESS_FROM, 1, b).toFixed(4)})`);
+    css(less.current, '--f', seg(p, 0.74, 0.86).toFixed(3));
+    rise(lessBody.current, seg(p, 0.82, 0.92));
+  }, live);
+
+  return (
+    <section className="on-sec on-3 on-3g" aria-labelledby="on-3-h">
+      <div ref={pin} className="on-pin on-3g-pin">
+        <div className="on-stick on-3g-stick">
+          <div className="container mx-auto px-6 on-3g-box">
+            <div className="on-label" aria-hidden="true"><SectionLabel align="start">{t.label}</SectionLabel></div>
+            <h2 id="on-3-h" className="sr-only">{t.label}</h2>
+            <div className="on-3g-goal">
+              <h3 ref={more} className="on-3g-h on-3g-h--more">{t.more.title}</h3>
+              <Body g={t.more} locale={locale} r={moreBody} />
+            </div>
+            <div className="on-3g-goal">
+              <h3 ref={less} className="on-3g-h on-3g-h--less">{t.less.title}</h3>
+              <Body g={t.less} locale={locale} r={lessBody} />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

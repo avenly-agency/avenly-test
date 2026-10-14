@@ -1,0 +1,53 @@
+/* ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+   O NAS - SEKCJA PO PLAKACIE: „DLA KOGO PRACUJEMY” (temat wybrany przez właściciela 2026-10-13: „concept z dla kogo
+   pracujemy fajny”), wersja „Portal” (wybór tego samego dnia: „portal zajebisty”). Ten plik: tekst pozycji i pole
+   sceny (klasy on-3c-, klocki z sec-clients-parts.tsx). Scena, mgławica i kadr: sec-wow.css (on-4, on-4p).
+   Pozostałe wersje (Taśma, Przelot, Ściana, Ekran, Plansze, Galeria) i odrzucone tematy sekcji:
+   docs/archiwum/o-nas-2026-10/.
+   Zasada jak w całej podstronie: style bez [data-live] = stan końcowy (bez JS / ograniczony ruch), stany „przed”
+   i przypięcie tylko pod [data-live]. Pole .on-3c-box jest jednocześnie kontenerem (px-6) - dopełnienie tylko
+   górne / dolne.
+   ═══════════════════════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* bez ruchu: lista pozycji, pod nią siatka kadrów */
+.on-3c-texts { list-style: none; margin: 0 0 40px; padding: 0; display: grid; gap: 40px; }
+.on-3c-type { margin: 0; font-weight: 700; font-size: clamp(34px, 5.2vw, 92px); line-height: 1; letter-spacing: -.04em; color: #f8fafc; text-wrap: balance; }
+.on-3c-name { margin: 16px 0 0; font-size: 15px; font-weight: 600; color: #94a3b8; }
+.on-3c-line { margin: 8px 0 22px; max-width: 30rem; font-size: 18px; line-height: 1.6; color: #cbd5e1; text-wrap: pretty; }
+.on-3c-line--you { margin-top: 18px; }
+.on-3c-more {
+  display: inline-flex; align-items: center; gap: 10px; min-height: 44px;
+  font-size: 15.5px; font-weight: 600; color: #f8fafc; text-decoration: none;
+}
+.on-3c-more svg { flex: none; width: 17px; height: 17px; color: #60a5fa; transition: transform .45s var(--on-ease); }
+.on-3c-more:focus-visible { outline: 2px solid #60a5fa; outline-offset: 4px; border-radius: 6px; }
+@media (hover: hover) { .on-3c-more:hover svg { transform: translateX(4px); } }
+
+/* pełny ruch: tekst po lewej, kadr po prawej */
+.on[data-live] .on-3c-box {
+  height: 100%; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); align-items: center;
+  gap: 0 clamp(32px, 5vw, 88px); padding-top: 88px; padding-bottom: 40px;
+}
+/* jedna pozycja naraz, w tym samym miejscu (krycie i przesunięcie pisze JS) */
+.on[data-live] .on-3c-texts { position: relative; height: 100%; margin: 0; display: block; }
+.on[data-live] .on-3c-t {
+  position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
+  opacity: 0; visibility: hidden; pointer-events: none;
+}
+.on[data-live] .on-3c-t[data-on] { pointer-events: auto; }
+
+/* ═════════ TELEFON I TABLET ═════════ */
+@media (max-width: 1023px) {
+  /* słowo i opis u góry, kadr pod nimi; dół wolny pod bąbel czatu */
+  .on[data-live] .on-3c-box { display: flex; flex-direction: column; align-items: stretch; gap: 0; padding-top: 80px; padding-bottom: 88px; }
+  .on[data-live] .on-3c-texts { flex: none; height: clamp(190px, 31vh, 250px); height: clamp(190px, 31svh, 250px); }
+  .on[data-live] .on-3c-t { justify-content: flex-start; }
+}
+@media (max-width: 767px) {
+  .on-3c-texts { gap: 32px; }
+  .on-3c-type { font-size: clamp(30px, 9.4vw, 44px); }
+  .on-3c-name { margin-top: 12px; font-size: 14px; }
+  .on-3c-line { margin: 6px 0 12px; font-size: 15.5px; line-height: 1.55; }
+  .on-3c-line--you { margin-top: 12px; margin-bottom: 16px; }
+  .on[data-live] .on-3c-box { padding-top: 76px; }
+}

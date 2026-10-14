@@ -1,0 +1,121 @@
+'use client';
+
+import { useCallback, useEffect, useRef } from 'react';
+import { GEM } from '@/lib/brand/logo';
+import type { Locale } from '@/lib/i18n/locale';
+import { Head } from './parts';
+import { Shot, swapText, Texts, track, YourSlot, type Clients } from './sec-clients-parts';
+import { accentOf, edgeFades, fractionRect, tintOf, WowStage, type SkyHandle } from './sec-wow';
+import { attr, css, flag, usePin } from './shared';
+
+// „DLA KOGO PRACUJEMY” - WERSJA 5 „PORTAL” (2026-10-13; „potrzebuję czegoś (…) oddającego taki efekt wow jak wszędzie”).
+// Prefiks on-4p-. Ciąg dalszy wejścia: tam kamera wjechała w gwiazdę - tu przez gwiazdę widać strony klientów.
+//   - TŁO: mgławica, blask wokół kadru w barwie klienta na ekranie (czerwień, złoto, pomarańcz, błękit marki),
+//   - KADR: duże ciemne szkło po prawej, w nim zrzut strony klienta (powoli się zbliża - obraz żyje także na postoju),
+//   - PRZEJŚCIE: w środku kadru otwiera się gwiazda z logo i rośnie jak przy wjeździe w wejściu - przez nią widać stronę
+//     następnego klienta; przed nią lecą dwa powidoki (obrysy w kolorze tego klienta), aż gwiazda wyjdzie poza kadr,
+//   - TEKST po lewej: jedna pozycja naraz (rodzaj firmy wielkim pismem, nazwa realizacji, zdanie, link).
+// Ostatnia pozycja: „Twoja firma” - przez gwiazdę widać wolne miejsce, mgławica wraca do błękitu marki.
+// Kształt okna to clip-path z tej samej ścieżki co gwiazda logo (pisany w klatce przejścia), obrysy to SVG nad kadrem.
+// Bez JS / ograniczony ruch: lista pozycji i siatka kadrów.
+
+const SIZES = '(max-width: 1023px) 92vw, 58vw';
+/** Gwiazda logo (GEM, promień 20) jako ścieżka clip-path w pikselach kadru: środek (cx, cy), skala s. */
+const starPath = (cx: number, cy: number, s: number) => {
+  const P = (x: number, y: number) => `${(cx + x * s).toFixed(1)} ${(cy + y * s).toFixed(1)}`;
+  return `path("M${P(0, -20)}C${P(1.4, -6.8)} ${P(6.8, -1.4)} ${P(20, 0)}C${P(6.8, 1.4)} ${P(1.4, 6.8)} ${P(0, 20)}` +
+    `C${P(-1.4, 6.8)} ${P(-6.8, 1.4)} ${P(-20, 0)}C${P(-6.8, -1.4)} ${P(-1.4, -6.8)} ${P(0, -20)}Z")`;
+};
+const STAR_FROM = 0.25;        // skala gwiazdy na starcie przejścia (promień 5 px)
+const ECHO = [1, 1.24, 1.56];  // obrys okna i dwa powidoki przed nim
+
+type Geo = { w: number; h: number; aim: { cx: number; cy: number; hw: number; hh: number } };
+
+export function SecClientsPortal({ t, locale, live }: { t: Clients; locale: Locale; live: boolean }) {
+  const root = useRef<HTMLElement>(null);
+  const pin = useRef<HTMLDivElement>(null), stage = useRef<HTMLDivElement>(null), fit = useRef<HTMLDivElement>(null);
+  const frame = useRef<HTMLDivElement>(null);
+  const sky = useRef<SkyHandle>(null);
+  const geo = useRef<Geo | null>(null);
+  const els = useRef<{ texts: HTMLElement[]; layers: HTMLElement[]; rings: SVGPathElement[] } | null>(null);
+  const prog = useRef(0);
+  const n = t.items.length + 1; // klienci + „Twoja firma”
+
+  const paint = useCallback(() => {
+    const el = pin.current, st = stage.current, fr = frame.current;
+    if (!el || !st || !fr) return;
+    // wymiary okna (szkło w ramie kadru) i miejsce kadru na ekranie - tylko przy zmianie rozmiaru
+    const glass = fr.firstElementChild as HTMLElement | null;
+    const g = (geo.current ??= { w: glass?.clientWidth ?? 0, h: glass?.clientHeight ?? 0, aim: fractionRect(fr, st) });
+    if (!g.w || !g.h) return;
+    const c = (els.current ??= {
+      texts: Array.from(el.querySelectorAll<HTMLElement>('.on-3c-t')),
+      layers: Array.from(el.querySelectorAll<HTMLElement>('.on-4p-layer')),
+      rings: Array.from(el.querySelectorAll<SVGPathElement>('.on-4p-ring')),
+    });
+    const p = prog.current, tr = track(p, n);
+    const on = Math.min(n - 1, Math.round(tr.pos)); // pozycja, do której należy tekst, barwa i akcent
+    const slug = t.items[on]?.image;
+    c.texts.forEach((tx, i) => swapText(tx, tr.tin(i), tr.out(i)));
+    // gwiazda-okno: skala rośnie ze stałym tempem (jak wjazd w gwiazdę), aż wcięcia gwiazdy wyjdą poza rogi kadru
+    const cx = g.w / 2, cy = g.h / 2, full = (Math.hypot(g.w, g.h) * 0.54) / 7.884;
+    let open = -1, ob = 0; // warstwa w trakcie otwierania i jej postęp
+    c.layers.forEach((l, i) => {
+      // obraz żyje także na postoju: powolny najazd od chwili pojawienia się warstwy
+      const zoom = 1.08 - 0.08 * Math.min(1, Math.max(0, tr.pos - i + 1) / 2);
+      css(l.firstElementChild, 'transform', `scale(${zoom.toFixed(4)})`);
+      if (i === 0) return;
+      const b = tr.move(i);
+      css(l, 'visibility', b < 0.002 ? 'hidden' : 'visible');
+      if (b > 0.002 && b < 0.998) {
+        open = i; ob = b;
+        css(l, 'clip-path', starPath(cx, cy, STAR_FROM * Math.pow(full / STAR_FROM, b)));
+      } else css(l, 'clip-path', 'none');
+    });
+    // obrys okna i powidoki przed nim (w kolorze klienta, który się otwiera)
+    const s = open < 0 ? 0 : STAR_FROM * Math.pow(full / STAR_FROM, ob);
+    c.rings.forEach((r, i) => {
+      css(r, 'visibility', open < 0 ? 'hidden' : 'visible');
+      if (open < 0) return;
+      attr(r, 'transform', `translate(${cx.toFixed(1)} ${cy.toFixed(1)}) scale(${(s * ECHO[i]).toFixed(4)})`);
+    });
+    css(fr, '--kn', accentOf(t.items[open < 0 ? on : open]?.image));
+    css(root.current, '--kc', accentOf(slug));
+    flag(fr, 'data-you', on === n - 1);
+    sky.current?.aim({ ...g.aim, tint: tintOf(slug) });
+    edgeFades(st, p);
+  }, [n, t]);
+
+  useEffect(() => {
+    if (!live) return;
+    const fr = frame.current, ft = fit.current;
+    if (!fr || !ft) return;
+    const ro = new ResizeObserver(() => { geo.current = null; paint(); });
+    ro.observe(fr); ro.observe(ft);
+    return () => { ro.disconnect(); geo.current = null; els.current = null; };
+  }, [live, paint]);
+  usePin(pin, (p) => { prog.current = p; paint(); }, live);
+
+  return (
+    <section ref={root} className="on-sec on-3 on-3c on-4 on-4p" aria-labelledby="on-3-h">
+      <Head id="on-3-h" label={t.label} title={t.heading} accent={t.headingAccent} lead={t.lead} live={live} />
+      <WowStage pin={pin} stage={stage} fit={fit} sky={sky} len={n * 62} live={live}>
+        <div className="container mx-auto px-6 on-3c-box on-4p-box">
+          <Texts t={t} locale={locale} />
+          {/* kadr jest ilustracją pozycji z listy obok (nazwy i linki są w tekście) */}
+          <div ref={frame} className="on-4-frame on-4p-frame" aria-hidden="true">
+            <div className="on-4p-glass">
+              {t.items.map((it) => (
+                <div key={it.image} className="on-4p-layer"><Shot slug={it.image} sizes={SIZES} big /></div>
+              ))}
+              <div className="on-4p-layer on-4p-layer--you"><div className="on-4p-slot"><YourSlot label={t.yours.frame} /></div></div>
+              <svg className="on-4p-rings" focusable="false">
+                {ECHO.map((e) => <path key={e} className="on-4p-ring" d={GEM} vectorEffect="non-scaling-stroke" />)}
+              </svg>
+            </div>
+          </div>
+        </div>
+      </WowStage>
+    </section>
+  );
+}

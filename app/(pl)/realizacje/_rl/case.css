@@ -234,7 +234,14 @@
   -webkit-mask-image: linear-gradient(180deg, #000 38%, transparent 97%); mask-image: linear-gradient(180deg, #000 38%, transparent 97%);
 }
 @media (min-width: 1024px) { .rl-cf-next-fr { margin-top: 56px; } }
+/* Strona następnej realizacji otwiera się w kadrze przez gwiazdę z logo (2026-10-13; okno = clip-path pisany przez
+   case.tsx - useStarOpen, obrysy = SVG dokładany do okna kadru). Przed odsłoną okno kadru jest puste. */
+.rl-cf-next-rings { position: absolute; inset: 0; z-index: 3; width: 100%; height: 100%; pointer-events: none; }
+.rl-cf-next-rings path { fill: none; stroke: rgb(var(--ac)); stroke-width: 1.5; }
+.rl-cf-next-rings path:nth-child(2) { stroke-width: 1; stroke-opacity: .55; }
+.rl-cf-next-rings path:nth-child(3) { stroke-width: 1; stroke-opacity: .3; }
 @media (prefers-reduced-motion: no-preference) {
+  .rl[data-live] .rl-cf-next-fr:not([data-open]) .rl-frame-cur { visibility: hidden; }
   .rl[data-live] .rl-cf-next-label, .rl[data-live] .rl-cf-next-meta, .rl[data-live] .rl-cf-next-arrow { opacity: 0; transition: opacity 1s var(--rl-ease) .1s, transform .5s var(--rl-ease); }
   .rl[data-live] .rl-cf-next-line { transform: translate3d(0, 108%, 0); transition: transform 1.3s cubic-bezier(.19, 1, .22, 1) .12s; }
   .rl[data-live] .rl-cf-next[data-in] :is(.rl-cf-next-label, .rl-cf-next-meta, .rl-cf-next-arrow) { opacity: 1; }

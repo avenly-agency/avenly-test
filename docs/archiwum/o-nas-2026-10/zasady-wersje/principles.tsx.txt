@@ -1,0 +1,91 @@
+'use client';
+
+import { useRef, type CSSProperties } from 'react';
+import { SectionLabel } from '@/components/ui/SectionLabel';
+import { GEM } from '@/lib/brand/logo';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { css, flag, text, usePin } from './shared';
+
+// SCENA 4 - „ZASADY” (przypięta 100svh + (5 + 1) · 62vh). Przez cały ekran biegnie linia z nowego logo z gwiazdą na
+// końcu, a zasady mijamy na niej jak stacje: hasło stoi NAD linią, wyjaśnienie POD nią (jak połówki liter w logo).
+// Kolejna zasada wjeżdża z prawej, poprzednia odjeżdża w lewo - jedna naraz, z postojem; hasło jedzie szybciej niż
+// wyjaśnienie (głębia). Linia wypełnia się kolorem marki w miarę postępu, znaczniki stacji zapalają się po kolei.
+// NAGŁÓWEK SEKCJI JEST PIERWSZĄ STACJĄ (runda 29, 2026-10-13): etykieta i h2 nad linią, zdanie pod nią. Wcześniej stał
+// jako osobny blok nad sceną - właściciel: „znowu te headingi wyglądają mediocre”.
+// Bez JS / ograniczony ruch: nagłówek i zwykła numerowana lista zasad.
+
+const sm = (v: number) => { const x = v < 0 ? 0 : v > 1 ? 1 : v; return x * x * (3 - 2 * x); };
+/** Sama linia z logo (bez gwiazdy - gwiazda stoi osobno, nierozciągnięta): zwęża się ku lewej. */
+const TAIL = 'M573.412 -57.943C521.515 -60.922 353.232 -62.166 -32.5 -62.5C353.232 -62.834 521.515 -64.078 573.412 -67.057Z';
+const TAIL_VB = '-32.5 -67.06 605.912 9.12';
+
+export function Principles({ t, live }: { t: ONasDict['principles']; live: boolean }) {
+  const pin = useRef<HTMLDivElement>(null);
+  const fill = useRef<HTMLDivElement>(null);
+  const count = useRef<HTMLSpanElement>(null);
+  const countBox = useRef<HTMLParagraphElement>(null);
+  const N = t.items.length, M = N + 1; // stacje: nagłówek + zasady
+
+  usePin(pin, (p, el) => {
+    const pos = p * M * 0.999;
+    let active = -1; // zasada na ekranie; -1 = nagłówek
+    el.querySelectorAll<HTMLElement>('.on-pr-item').forEach((it, j) => {
+      const enter = j === 0 ? 1 : sm((pos - (j - 0.14)) / 0.3);
+      const exit = j === M - 1 ? 0 : sm((pos - (j + 0.84)) / 0.3);
+      const off = 1 - enter - exit; // 1 = czeka z prawej, 0 = na miejscu, -1 = odjechało w lewo
+      const vis = enter * (1 - exit);
+      css(it.querySelector('.on-pr-top'), 'transform', `translate3d(${(off * 38).toFixed(3)}vw, 0, 0)`);
+      css(it.querySelector('.on-pr-bot'), 'transform', `translate3d(${(off * 24).toFixed(3)}vw, 0, 0)`);
+      css(it, 'opacity', vis.toFixed(3));
+      css(it, 'visibility', vis < 0.002 ? 'hidden' : 'visible');
+      if (vis > 0.5) active = j - 1;
+    });
+    const f = Math.max(0, Math.min(1, (pos - 0.5) / N));
+    css(fill.current, 'clip-path', `inset(0 ${((1 - f) * 100).toFixed(2)}% 0 0)`);
+    el.querySelectorAll('.on-pr-tick').forEach((tk, i) => flag(tk, 'data-on', i <= active));
+    css(countBox.current, 'opacity', active < 0 ? '0' : '1');
+    text(count.current, String(Math.max(1, active + 1)).padStart(2, '0'));
+  }, live);
+
+  return (
+    <section className="on-sec on-pr" aria-labelledby="on-pr-h">
+      <div ref={pin} className="on-pin on-pr-pin" style={{ '--n': M } as CSSProperties}>
+        <div className="on-stick on-pr-stick">
+          <div className="container mx-auto px-6 on-pr-box">
+            <header className="on-pr-item on-pr-intro">
+              <div className="on-pr-top">
+                <div className="on-label"><SectionLabel align="start">{t.label}</SectionLabel></div>
+                <h2 id="on-pr-h" className="on-pr-t on-pr-h">{t.heading} <span className="im-accent">{t.headingAccent}</span></h2>
+              </div>
+              <p className="on-pr-bot on-pr-d">{t.lead}</p>
+            </header>
+            <ol className="on-pr-list">
+              {t.items.map((it, i) => (
+                <li key={i} className="on-pr-item">
+                  <div className="on-pr-top">
+                    <span className="on-pr-n" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+                    <h3 className="on-pr-t">{it.title}</h3>
+                  </div>
+                  <p className="on-pr-bot on-pr-d">{it.desc}</p>
+                </li>
+              ))}
+            </ol>
+            <div className="on-pr-line" aria-hidden="true">
+              <svg className="on-pr-rail" viewBox={TAIL_VB} preserveAspectRatio="none" focusable="false"><path d={TAIL} /></svg>
+              <div ref={fill} className="on-pr-fill">
+                <svg viewBox={TAIL_VB} preserveAspectRatio="none" focusable="false"><path d={TAIL} /></svg>
+              </div>
+              {t.items.map((_, i) => (
+                <i key={i} className="on-pr-tick" style={{ left: `${((i + 0.5) / N) * 100}%` }} />
+              ))}
+              <svg className="on-pr-gem" viewBox="-20 -20 40 40" focusable="false"><path d={GEM} /></svg>
+            </div>
+            <p ref={countBox} className="on-pr-count" aria-hidden="true">
+              <span ref={count}>01</span> / {String(N).padStart(2, '0')}
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

@@ -34,8 +34,11 @@ float st=fbm(uv*2.3+n1*1.5);
 gl_FragColor=vec4(vec3(n1,n2,st)+(hash(gl_FragCoord.xy+7.)-.5)/255.,1.);}`;
 
 // Przebieg 2: shader z makiety 1:1, tylko n1 / n2 / szum smug z tekstury (u_noise).
+// Na końcu drobny, nieruchomy szum (±0,75 poziomu z 255) - bez niego łagodne przejścia granatu w czerń i poświata
+// nad krawędzią układały się w widoczne pasy (2026-10-13, właściciel: „planeta (…) jest low quality”).
 const FRAG = `precision highp float;
 uniform sampler2D u_noise;uniform vec2 u_res;uniform float u_time;uniform vec2 u_mouse;uniform float u_int;uniform vec3 u_c;uniform float u_k;
+float dhash(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}
 void main(){vec2 p=vec2(gl_FragCoord.x,u_res.y-gl_FragCoord.y);vec2 d=(p-u_c.xy)/u_k;float R=u_c.z/u_k;float r=length(d);float dist=r-R;
 vec2 m=(u_mouse-.5);
 float glow=exp(-max(dist,0.)/70.)*.42+exp(-max(dist,0.)/14.)*.35;
@@ -57,13 +60,20 @@ float streak=smoothstep(.56,.9,q.b)*(1.-depth)*.32;c+=lite*streak;
 float sheen=smoothstep(.2,.0,abs(nn.x*.6-nn.y*.8-.25+sin(u_time*.3)*.05))*(1.-depth)*.12;c+=vec3(.85,.9,1.)*sheen;
 c+=rim*exp(-abs(dist+1.5)/2.2)*.95;
 col=mix(col,c,inside);alpha=max(alpha,inside);}
-gl_FragColor=vec4(col,alpha);}`;
+float dn=(dhash(gl_FragCoord.xy)-.5)*(1.5/255.)*step(.004,alpha);
+gl_FragColor=vec4(col+dn,alpha+dn);}`;
 
 /** Ile jednostek sceny NAD horyzontem obejmuje canvas (zasięg glow atmosfery). */
 const GLOW_REACH = 300;
-const DPR_CLAMP = 1.25;
-/** Bufor szumu jako ułamek bufora płótna (w każdym wymiarze). */
-const NOISE_SCALE = 0.5;
+/** Gęstość bufora płótna (2026-10-13, właściciel: „planeta (…) jest low quality”): do 2 zamiast dawnego 1,25 - na
+    ekranach o gęstości 1,5-2 krawędź planety i bliki były rozciągane z mniejszego bufora, czyli miękkie. Przebieg
+    światła jest tani (szum liczy się osobno, w stałej rozdzielczości względem ekranu), więc koszt rośnie tylko o piksele
+    tego przebiegu; budżet pikseli trzyma duże ekrany w ryzach. Ekrany o gęstości 1 i 1,25 - bez zmian. */
+const DPR_MAX = 2;
+const PX_BUDGET = 3.4e6;
+/** Bufor szumu w px na px CSS (w każdym wymiarze): połowa gęstości płótna, od 0,5 do 0,75 - jak dotąd przy
+    gęstości 1 i 1,25, a powyżej bez dalszego wzrostu (szum jest gładki, koszt trzech fbm zostaje ten sam). */
+const noisePerCss = (dpr: number) => Math.min(0.75, Math.max(0.5, dpr * 0.5));
 
 export interface PlanetLayer {
   resize(layout: HeroLayout): void;
@@ -98,6 +108,8 @@ export function createPlanet(
   let topCss = 0;
   let noiseW = 0;
   let noiseH = 0;
+  /** Gęstość bufora płótna z ostatniego pomiaru (px bufora na px CSS). */
+  let dprUsed = 1;
 
   let gl: WebGLRenderingContext | null = null;
   let pNoise: WebGLProgram | null = null;
@@ -117,11 +129,12 @@ export function createPlanet(
     onFail();
   };
 
-  /** Tekstura szumu w rozmiarze połowy bufora płótna (alokacja tylko przy zmianie rozmiaru). */
+  /** Tekstura szumu (alokacja tylko przy zmianie rozmiaru): stała rozdzielczość względem ekranu, nie bufora. */
   const sizeNoise = () => {
     if (!gl || !tex) return;
-    const nw = Math.max(1, Math.round(canvas.width * NOISE_SCALE));
-    const nh = Math.max(1, Math.round(canvas.height * NOISE_SCALE));
+    const scale = noisePerCss(dprUsed) / dprUsed;
+    const nw = Math.max(1, Math.round(canvas.width * scale));
+    const nh = Math.max(1, Math.round(canvas.height * scale));
     if (nw === noiseW && nh === noiseH) return;
     noiseW = nw; noiseH = nh;
     gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -131,9 +144,11 @@ export function createPlanet(
   const applySize = () => {
     if (!layout) return;
     const { W, H, k, oy, horizon } = layout;
-    const dpr = Math.min(window.devicePixelRatio || 1, DPR_CLAMP);
     topCss = Math.max(0, Math.floor(oy + (horizon - GLOW_REACH) * k));
     const hCss = Math.max(1, H - topCss);
+    // gęstość ekranu, najwyżej DPR_MAX i tyle, ile mieści budżet pikseli (nigdy poniżej 1)
+    const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, DPR_MAX, Math.sqrt(PX_BUDGET / (W * hCss))));
+    dprUsed = dpr;
     // transform zamiast `top`: zmiana top na widocznym elemencie liczy się do CLS.
     canvas.style.transform = `translate3d(0,${topCss}px,0)`;
     canvas.style.width = `${W}px`;

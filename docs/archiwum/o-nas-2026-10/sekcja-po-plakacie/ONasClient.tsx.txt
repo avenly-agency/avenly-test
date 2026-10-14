@@ -1,0 +1,119 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import { useLenis } from 'lenis/react';
+import { createChoice, ProposalSwitcher, useChoice } from '@/components/utils/proposals';
+import type { Locale } from '@/lib/i18n/locale';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { Blueprint } from './blueprint';
+import { Direct } from './direct';
+import { Dock } from './dock';
+import { Ending } from './ending';
+import { Faq } from './faq';
+import { HeroPan } from './heroes';
+import { Principles } from './principles';
+import { SecondCount } from './second-count';
+import { SecondDay } from './second-day';
+import { SecondHall } from './second-hall';
+import { SecondLight } from './second-light';
+import { SecondPairs } from './second-pairs';
+import { SecondReach } from './second-reach';
+import { SecondStar } from './second-star';
+import { SecondTalk } from './second-talk';
+import { Sky } from './sky';
+import { useMode } from './shared';
+import './o-nas.css'; // style podstrony we własnym pliku (praca równoległa - PRACA-ROWNOLEGLA.md), prefiks on-
+
+// O NAS - przebudowa od zera 2026-10-09 na nowym logo (AVENLY przecięte linią z gwiazdą), wszystko w SVG, sceny
+// sterowane przewijaniem. Układ strony (właściciel liczy „sekcje” tak, jak pojawiają się na ekranie):
+//   1. wejście „Panorama z cięciem” (heroes.tsx) - wybór właściciela 2026-10-09, potwierdzony 2026-10-12,
+//   2. sekcja po wjeździe w gwiazdę = „Plakat” (poster.tsx, część tej samej przypiętej sceny) - wybór 2026-10-12,
+//   3. NASTĘPNA SEKCJA („Bez pośredników. Prosto do nas.”) - WERSJE DO WYBORU (2026-10-12: „następnie następną
+//      sekcję dodaj kilka wersji”, 2026-10-13: „daj jeszcze kilka propozycji tej sekcji” - druga tura, kierunek
+//      „zaskocz mnie”); przełącznik „Sekcja po plakacie” w panelu na dole ekranu (tylko `npm run dev`, produkcja =
+//      wariant domyślny): osiem wersji second-*.tsx + dotychczasowa direct.tsx,
+//   4. Konstrukcja logo (blueprint.tsx), Zasady (principles.tsx), FAQ (faq.tsx), zakończenie (ending.tsx).
+// Niewybrane wejścia, wersje całej podstrony i propozycje sekcji po wjeździe: docs/archiwum/o-nas-2026-10/.
+// Tryby: data-live (pełny ruch), data-still (ograniczony ruch - zwykła strona w stanie końcowym); przed hydratacją
+// treść schowana (bez mignięcia układu statycznego), bez JS pokazuje ją <noscript>. Notatki: docs/podstrony/o-nas.md.
+
+const NOSCRIPT = '.on-body{opacity:1!important;animation:none!important}';
+const DEV = process.env.NODE_ENV !== 'production';
+
+// sekcja po plakacie: wersje do wyboru; 1-4 = pierwsza tura (2026-10-12), 5-8 = druga (2026-10-13); domyślna =
+// pierwsza z nowych (klucz -4: wcześniejsze wybory z panelu nie przykrywają nowej domyślnej)
+const SECONDS = [
+  { id: 'gwiazda', label: '1. Jedna gwiazda' },
+  { id: 'doba', label: '2. Doba' },
+  { id: 'swiatlo', label: '3. Światło' },
+  { id: 'licznik', label: '4. Licznik' },
+  { id: 'korytarz', label: '5. Korytarz' },
+  { id: 'rozmowa', label: '6. Rozmowa' },
+  { id: 'pary', label: '7. Ty i my' },
+  { id: 'kontakt', label: '8. Bezpośrednio' },
+  { id: 'drogi', label: 'Dotychczasowa: drogi wiadomości' },
+] as const;
+type Second = (typeof SECONDS)[number]['id'];
+const secondChoice = createChoice<Second>('avenly-o-nas-druga-4', SECONDS, 'korytarz');
+
+export function ONasClient({ t, locale }: { t: ONasDict; locale: Locale }) {
+  const mode = useMode();
+  const live = mode === 'live';
+  const picked = useChoice(secondChoice);
+  // produkcja zawsze dostaje wariant domyślny
+  const sec: Second = DEV ? picked : secondChoice.def;
+  // dev: wybór z panelu wczytuje się z localStorage dopiero po hydratacji - do tego czasu sekcja po plakacie nie jest
+  // montowana, inaczej najpierw stanęłaby wersja domyślna, a chwilę później wybrana. Efekt stoi PO useChoice, więc
+  // biegnie po wczytaniu wyboru. Produkcja: od razu. Wejście jest jedno - montuje się zawsze od pierwszej klatki.
+  const [settled, setSettled] = useState(!DEV);
+  useEffect(() => { setSettled(true); }, []);
+  const lenis = useLenis();
+  const two = useRef<HTMLDivElement>(null);
+  // zmiana wersji: przewinięcie na początek sekcji (każda ma inną długość)
+  const pick = (id: Second) => {
+    secondChoice.set(id);
+    const el = two.current;
+    if (!el) return;
+    const y = el.getBoundingClientRect().top + window.scrollY;
+    if (lenis) lenis.scrollTo(y, { immediate: true, force: true }); else window.scrollTo(0, y);
+  };
+  const ready = mode !== null;
+  const second = sec === 'gwiazda' ? (
+    <SecondStar key="gwiazda" t={t.direct} live={live} stepsLabel={t.stepsLabel} />
+  ) : sec === 'doba' ? (
+    <SecondDay key="doba" t={t.direct} live={live} stepsLabel={t.stepsLabel} />
+  ) : sec === 'swiatlo' ? (
+    <SecondLight key="swiatlo" t={t.direct} live={live} />
+  ) : sec === 'licznik' ? (
+    <SecondCount key="licznik" t={t.direct} live={live} stepsLabel={t.stepsLabel} />
+  ) : sec === 'korytarz' ? (
+    <SecondHall key="korytarz" t={t.direct} live={live} stepsLabel={t.stepsLabel} />
+  ) : sec === 'rozmowa' ? (
+    <SecondTalk key="rozmowa" t={t.direct} live={live} />
+  ) : sec === 'pary' ? (
+    <SecondPairs key="pary" t={t.direct} live={live} />
+  ) : sec === 'kontakt' ? (
+    <SecondReach key="kontakt" t={t.direct} live={live} />
+  ) : (
+    <Direct key="drogi" t={t.direct} live={live} stepsLabel={t.stepsLabel} />
+  );
+  return (
+    <div className="on" data-live={live ? '' : undefined} data-still={mode === 'still' ? '' : undefined}>
+      <noscript><style>{NOSCRIPT}</style></noscript>
+      <Sky live={live} />
+      <div className="on-body">
+        <HeroPan t={t.intro} locale={locale} live={live} />
+        <div ref={two} className="on-two">{settled && second}</div>
+        <Blueprint t={t.blueprint} live={live} stepsLabel={t.stepsLabel} />
+        <Principles t={t.principles} live={live} />
+        <Faq t={t.faqSection} faq={t.faq} live={live} ready={ready} />
+        <Ending t={t.ending} locale={locale} live={live} />
+      </div>
+      {DEV && (
+        <Dock>
+          <ProposalSwitcher label="Sekcja po plakacie" items={SECONDS} value={sec} pick={pick} />
+        </Dock>
+      )}
+    </div>
+  );
+}

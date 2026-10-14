@@ -4,6 +4,9 @@ export interface BlogPost {
 	slug: string
 	title: string
 	excerpt: string
+	// tytuł i opis tylko dla wyszukiwarki: do ok. 51 i 160 znaków (opcjonalne - bez nich idą title i excerpt)
+	metaTitle?: string
+	metaDescription?: string
 	publishedAt: string
 	readTime: string
 	author: {
@@ -20,6 +23,9 @@ export const blogPosts: BlogPost[] = [
 		id: '1',
 		slug: 'konsultant-ai-automatyzacja-obslugi-klienta',
 		title: 'Konsultant AI i Voiceflow: Jak zautomatyzować obsługę klienta i zwiększyć sprzedaż?',
+		metaTitle: 'Konsultant AI: jak zautomatyzować obsługę klienta',
+		metaDescription:
+			'Jak konsultant AI odciąża Twój zespół, odpowiada klientom o każdej porze i kwalifikuje zapytania. Zobacz, co potrafi i kiedy warto go wdrożyć.',
 		excerpt:
 			'Dowiedz się, jak wdrożenie inteligentnego konsultanta AI opartego na Voiceflow może odciążyć Twój zespół i zapewnić obsługę klienta na poziomie premium 24/7.',
 		publishedAt: '2026-01-05',
@@ -60,6 +66,9 @@ export const blogPosts: BlogPost[] = [
 		id: '2',
 		slug: 'szybkosc-strony-internetowej-seo-konwersja',
 		title: 'Szybkość strony internetowej a SEO: Dlaczego milisekundy decydują o Twoim zysku?',
+		metaTitle: 'Szybkość strony a SEO: liczą się milisekundy',
+		metaDescription:
+			'Jak szybkość strony wpływa na pozycję w Google i na to, ilu odwiedzających zostaje klientami. Poznaj Core Web Vitals i sprawdź, co przyspieszyć najpierw.',
 		excerpt:
 			'Analiza wpływu wydajności strony na pozycjonowanie w Google i współczynnik konwersji. Poznaj zasady Core Web Vitals i zwiększ wydajność swojej witryny.',
 		publishedAt: '2026-01-12',
@@ -98,6 +107,9 @@ export const blogPosts: BlogPost[] = [
 		id: '3',
 		slug: 'dlaczego-strona-www-koniecznosc-2026',
 		title: 'Dlaczego profesjonalna strona WWW to konieczność dla firmy w 2026 roku?',
+		metaTitle: 'Dlaczego firma potrzebuje własnej strony WWW w 2026',
+		metaDescription:
+			'Własna strona WWW uniezależnia Twoją firmę od algorytmów social mediów i buduje markę eksperta. Sprawdź, dlaczego warto mieć swoje miejsce w sieci.',
 		excerpt:
 			'Własna strona internetowa to niezależność od algorytmów social media i fundament budowania marki eksperta. Sprawdź, dlaczego warto zainwestować we własny serwis.',
 		publishedAt: '2026-01-20',

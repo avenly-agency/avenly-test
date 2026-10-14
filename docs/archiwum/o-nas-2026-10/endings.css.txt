@@ -1,0 +1,129 @@
+/* ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+   O NAS - SEKCJA PO WJEŹDZIE W GWIAZDĘ (koniec wejścia „Panorama”), propozycje do wyboru 2026-10-12 (endings.tsx).
+   Właściciel: „chodziło mi o tą sekcję, która się pojawia po zoomie w gwiazdę”. Prefiks on-e:
+     on-e1  1. „Z głębi”        on-e2  2. „Plakat”        on-e3  3. „Cięcie zdania”        on-e4  4. „Tunel”
+   („Tunel” i dotychczasowa kolumna używają układu .on-x-text z heroes.css.)
+   Style bez [data-live] = zwykły blok: etykieta, nagłówek, opis, przycisk (bez JS / ograniczony ruch).
+   Pod [data-live] korzeń propozycji wypełnia pole treści wrappera, a ruch pisze JS (endings.tsx).
+   Po wyborze: usunąć pozostałe propozycje, ich bloki tutaj i przełącznik.
+   ═══════════════════════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* ── bez ruchu: nagłówek jak .on-h1 (własne klasy - reguły .on-h1 dla masek i telefonu tu nie pasują) ── */
+.on-e { max-width: 46rem; }
+.on-e1-h, .on-e2-h, .on-e3-h {
+  margin: 0 0 22px; font-weight: 700; font-size: clamp(34px, 4.6vw, 72px); line-height: 1.04;
+  letter-spacing: -.038em; color: #f8fafc; text-wrap: balance;
+}
+.on-e1-l, .on-e2-s { display: block; }
+.on-e1-l--ac { color: var(--on-ac); }
+.on-e .on-lead { margin: 0 0 30px; }
+.on-e3-s1, .on-e3-s2, .on-e3-cut { display: none; }
+
+/* ── pełny ruch: pole treści wrappera na całą wysokość kompozycji ── */
+.on[data-live] .on-e { position: absolute; left: 1.5rem; right: 1.5rem; top: 0; bottom: 0; max-width: none; }
+
+/* ═════════ 1. Z GŁĘBI ═════════ */
+.on[data-live] .on-e--glebia {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 88px 0 64px; text-align: center;
+}
+/* nagłówek dolatuje z głębi: skalę pisze JS (środek skali nieco pod środkiem bloku - ruch „na nas”) */
+.on[data-live] .on-e1-head { display: flex; flex-direction: column; align-items: center; transform-origin: 50% 62%; }
+.on[data-live] .on-e1-h {
+  margin: 0; font-size: clamp(34px, min(5vw, 8.6vh), 84px); font-size: clamp(34px, min(5vw, 8.6svh), 84px);
+}
+/* --f (0-1, pisze JS na .on-e1-head): 0 = sam obrys liter („negatyw” w ruchu), 1 = pełna litera na miejscu */
+.on[data-live] .on-e1-l {
+  color: rgb(248 250 252 / var(--f, 1));
+  -webkit-text-stroke: 1px rgb(248 250 252 / calc(1 - var(--f, 1)));
+}
+.on[data-live] .on-e1-l--ac {
+  color: rgb(59 130 246 / var(--f, 1));
+  -webkit-text-stroke-color: rgb(96 165 250 / calc(1 - var(--f, 1)));
+}
+.on[data-live] .on-e1-tail { display: flex; flex-direction: column; align-items: center; margin-top: 26px; }
+.on[data-live] .on-e1-tail .on-lead { max-width: 38rem; text-wrap: balance; }
+
+/* ═════════ 2. PLAKAT ═════════ */
+.on[data-live] .on-e--plakat { display: flex; flex-direction: column; justify-content: center; padding: 104px 0 56px; }
+.on[data-live] .on-e2-h {
+  margin: 0; line-height: .98; letter-spacing: -.045em;
+  font-size: clamp(44px, min(7vw, 12vh), 140px); font-size: clamp(44px, min(7vw, 12svh), 140px);
+}
+.on[data-live] .on-e2-s + .on-e2-s { margin-top: .05em; }
+/* stopka kadru: opis przy lewej krawędzi wrappera, przycisk przy prawej */
+.on[data-live] .on-e2-tail {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 24px 48px;
+  margin-top: clamp(28px, 7vh, 84px);
+}
+.on[data-live] .on-e2-tail .on-lead { margin: 0; max-width: 34rem; }
+.on[data-live] .on-e2-tail .on-cta { flex: none; }
+
+/* ═════════ 3. CIĘCIE ZDANIA ═════════ */
+/* --ly = wysokość linii cięcia: pierwsze zdanie stoi NA niej, drugie nad nią, opis z przyciskiem pod nią */
+.on[data-live] .on-e--ciecie { --ly: 54%; }
+/* h1 zostaje dla czytników i wyszukiwarek; na ekranie grają jego wizualne kopie (połówki, drugie zdanie) */
+.on[data-live] .on-e3-h {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap;
+}
+.on[data-live] .on-e3-top { position: absolute; left: 0; right: 0; bottom: calc(100% - var(--ly) + 30px); }
+.on[data-live] .on-e3-top .on-label { margin-bottom: 18px; }
+.on[data-live] .on-e3-s1, .on[data-live] .on-e3-s2 {
+  display: block; margin: 0; font-weight: 700; font-size: clamp(30px, 4.8vw, 80px); line-height: 1.04;
+  letter-spacing: -.038em;
+}
+.on[data-live] .on-e3-s1 {
+  position: absolute; left: 0; top: var(--ly); transform: translateY(-50%); color: #f8fafc; white-space: nowrap;
+}
+/* połówki zdania: ten sam tekst dwa razy, przycięty nad i pod połową wysokości (z zapasem na wystające znaki) */
+.on-e3-full { visibility: hidden; }
+.on-e3-half { position: absolute; left: 0; right: 0; top: 0; }
+.on-e3-up { clip-path: inset(-.3em -1em calc(50% - .5px) -1em); }
+.on-e3-dn { clip-path: inset(calc(50% - .5px) -1em -.3em -1em); }
+/* linia z gwiazdą (jeden kształt, ścieżkę pisze JS w pikselach od lewej krawędzi wrappera) */
+.on[data-live] .on-e3-cut {
+  display: block; position: absolute; left: 0; top: var(--ly); width: 100%; height: 1px;
+  overflow: visible; pointer-events: none;
+}
+.on-e3-mark { fill: var(--on-ac); opacity: 0; }
+.on[data-live] .on-e3-tail { position: absolute; left: 0; right: 0; top: calc(var(--ly) + 36px); }
+.on[data-live] .on-e3-tail .on-lead { margin-bottom: 28px; }
+
+/* ═════════ 4. TUNEL ═════════ */
+/* obrysy gwiazdy na całej scenie pod tekstem; widoczność i geometrię pisze JS */
+.on-e4-svg { visibility: hidden; pointer-events: none; }
+.on-e4-svg path { fill: none; stroke: #60a5fa; stroke-width: 1; opacity: 0; }
+
+/* ═════════ TELEFON ═════════ */
+@media (max-width: 767px) {
+  /* pole między nawigacją a bąblem czatu (prawy dolny róg) */
+  .on[data-live] .on-e--glebia { padding: 76px 0 88px; }
+  .on[data-live] .on-e1-h { font-size: clamp(26px, min(8.4vw, 5vh), 40px); font-size: clamp(26px, min(8.4vw, 5svh), 40px); }
+  .on[data-live] .on-e1-tail { margin-top: clamp(14px, 3vh, 26px); }
+  .on[data-live] .on-e--plakat { padding: 80px 0 92px; }
+  .on[data-live] .on-e2-h { line-height: 1; font-size: clamp(30px, min(10.4vw, 6.4vh), 46px); font-size: clamp(30px, min(10.4vw, 6.4svh), 46px); }
+  .on[data-live] .on-e2-tail { flex-direction: column; align-items: flex-start; gap: 20px; margin-top: clamp(18px, 4vh, 36px); }
+  .on[data-live] .on-e--ciecie { --ly: 45%; }
+  .on[data-live] .on-e3-s1, .on[data-live] .on-e3-s2 { font-size: clamp(26px, min(8.4vw, 5.2vh), 40px); font-size: clamp(26px, min(8.4vw, 5.2svh), 40px); }
+  /* zdanie w dwóch liniach: cięcie biegnie między nimi */
+  .on[data-live] .on-e3-s1 { right: 0; white-space: normal; text-wrap: balance; }
+  .on[data-live] .on-e3-top { bottom: calc(100% - var(--ly) + 24px); }
+  .on[data-live] .on-e3-tail { top: calc(var(--ly) + 28px); }
+  .on[data-live] .on-e3-tail .on-lead { margin-bottom: 22px; }
+}
+/* bardzo niski ekran (telefon bokiem): zwarte bloki */
+@media (min-width: 768px) and (max-height: 520px) {
+  .on[data-live] .on-e--glebia { padding: 64px 0 20px; }
+  .on[data-live] .on-e1-h { font-size: clamp(26px, 3.6vw, 34px); }
+  .on[data-live] .on-e1-tail { margin-top: 14px; }
+  .on[data-live] .on-e--plakat { padding: 68px 0 20px; }
+  .on[data-live] .on-e2-h { font-size: clamp(30px, 5vw, 44px); }
+  .on[data-live] .on-e2-tail { margin-top: 18px; }
+  .on[data-live] .on-e--ciecie { --ly: 50%; }
+  .on[data-live] .on-e3-s1, .on[data-live] .on-e3-s2 { font-size: clamp(26px, 4vw, 34px); }
+  .on[data-live] .on-e3-top { bottom: calc(100% - var(--ly) + 20px); }
+  .on[data-live] .on-e3-top .on-label { margin-bottom: 10px; }
+  .on[data-live] .on-e3-tail { top: calc(var(--ly) + 22px); }
+  .on[data-live] .on-e3-tail .on-lead { margin-bottom: 14px; }
+}

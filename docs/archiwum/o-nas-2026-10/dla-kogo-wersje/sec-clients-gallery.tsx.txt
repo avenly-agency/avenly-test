@@ -1,0 +1,125 @@
+'use client';
+
+import { useCallback, useEffect, useRef } from 'react';
+import type { Locale } from '@/lib/i18n/locale';
+import { Head } from './parts';
+import { Consult, More, Shot, swapText, track, YourSlot, type Clients } from './sec-clients-parts';
+import { accentOf, edgeFades, tintOf, WowStage, type SkyHandle } from './sec-wow';
+import { css, usePin } from './shared';
+
+// „DLA KOGO PRACUJEMY” - WERSJA 7 „GALERIA” (2026-10-13; „efekt wow jak wszędzie”). Prefiks on-4g-.
+// Kadry w PERSPEKTYWIE na tle mgławicy: kadr na środku stoi przodem do nas, duży i ostry; sąsiednie stoją bokiem po obu
+// stronach, cofnięte w głąb i przygaszone, i wychodzą poza krawędzie ekranu. Przy przewijaniu galeria obraca się
+// o jedno miejsce (z postojem): kadr ze środka odchodzi w bok i w głąb, następny obraca się przodem i podjeżdża.
+// Mgławica świeci za kadrem na środku i przechodzi w barwę jego klienta.
+// Nad galerią rodzaj firmy wielkim pismem (wymiana jak plansza tytułowa - stare w górę pod maskę, nowe z dołu),
+// pod galerią wiersz podpisu (nazwa realizacji, zdanie, link). Ostatni kadr: wolne miejsce „Twoja firma”.
+// Obrót i głębia to przekształcenia 3D na warstwach kompozytora (obrazy nie są przerysowywane w klatce).
+// Bez JS / ograniczony ruch: lista pozycji, każda ze swoim kadrem.
+
+const SIZES = '(max-width: 767px) 76vw, 52vw';
+
+type Geo = { W: number; H: number; fw: number; fh: number; aim: { cx: number; cy: number; hw: number; hh: number } };
+
+export function SecClientsGallery({ t, locale, live }: { t: Clients; locale: Locale; live: boolean }) {
+  const root = useRef<HTMLElement>(null);
+  const pin = useRef<HTMLDivElement>(null), stage = useRef<HTMLDivElement>(null), fit = useRef<HTMLDivElement>(null);
+  const flow = useRef<HTMLLIElement>(null);
+  const sky = useRef<SkyHandle>(null);
+  const geo = useRef<Geo | null>(null);
+  const els = useRef<{ words: HTMLElement[]; caps: HTMLElement[]; frames: HTMLElement[] } | null>(null);
+  const prog = useRef(0);
+  const n = t.items.length + 1; // klienci + „Twoja firma”
+
+  const paint = useCallback(() => {
+    const el = pin.current, st = stage.current, fl = flow.current;
+    if (!el || !st || !fl) return;
+    const c = (els.current ??= {
+      words: Array.from(el.querySelectorAll<HTMLElement>('.on-4g-word > span')),
+      caps: Array.from(el.querySelectorAll<HTMLElement>('.on-4g-cap')),
+      frames: Array.from(el.querySelectorAll<HTMLElement>('.on-4g-frame')),
+    });
+    if (!geo.current) {
+      // wymiary pola galerii i kadru na środku - tylko przy zmianie rozmiaru
+      const W = fl.clientWidth, H = fl.clientHeight;
+      const fw = Math.min(W * (W < 768 ? 0.74 : 0.5), H * 0.92 * 1.6), fh = fw / 1.6;
+      const fr = fl.getBoundingClientRect(), sr = st.getBoundingClientRect();
+      const sw = Math.max(1, sr.width), sh = Math.max(1, sr.height);
+      geo.current = {
+        W, H, fw, fh,
+        aim: { cx: (fr.left - sr.left + W / 2) / sw, cy: (fr.top - sr.top + H / 2) / sh, hw: Math.min(0.46, fw / 2 / sw), hh: Math.min(0.44, fh / 2 / sh) },
+      };
+    }
+    const g = geo.current;
+    if (!g.W || !g.H) return;
+    const p = prog.current, tr = track(p, n);
+    const on = Math.min(n - 1, Math.round(tr.pos)), slug = t.items[on]?.image;
+    css(fl.parentElement, '--fw', `${g.fw.toFixed(1)}px`); // na liście - kadry są rodzeństwem pola galerii
+    c.frames.forEach((f, i) => {
+      const d = i - tr.pos, ad = Math.abs(d), near = Math.min(1, ad), far = Math.max(0, ad - 1), sg = d < 0 ? -1 : 1;
+      // w bok, w głąb i bokiem do kamery; dalsze kadry ciaśniej i jeszcze głębiej
+      const x = sg * (near * g.fw * 0.68 + far * g.fw * 0.3);
+      const z = -(near * g.fw * 0.44 + far * g.fw * 0.24);
+      const ry = -sg * near * 56;
+      const o = Math.max(0, 1 - 0.42 * near - 0.4 * Math.min(1, far));
+      css(f, 'visibility', o < 0.004 ? 'hidden' : 'visible');
+      css(f, 'transform', `translate3d(${x.toFixed(1)}px, 0, ${z.toFixed(1)}px) rotateY(${ry.toFixed(2)}deg)`);
+      css(f, 'opacity', o.toFixed(3));
+      css(f, 'z-index', String(100 - Math.round(ad * 10)));
+    });
+    // słowo: plansza tytułowa - wyjeżdża w górę pod maskę, następne wjeżdża z dołu
+    c.words.forEach((w, i) => {
+      const y = (1 - tr.tin(i)) * 112 - tr.out(i) * 112;
+      css(w, 'transform', Math.abs(y) < 0.05 ? 'none' : `translateY(${y.toFixed(2)}%)`);
+      css(w, 'visibility', Math.abs(y) > 111.9 ? 'hidden' : 'visible');
+    });
+    c.caps.forEach((cp, i) => swapText(cp, tr.tin(i), tr.out(i), 14));
+    css(root.current, '--kc', accentOf(slug));
+    sky.current?.aim({ ...g.aim, tint: tintOf(slug) });
+    edgeFades(st, p);
+  }, [n, t]);
+
+  useEffect(() => {
+    if (!live) return;
+    const fl = flow.current;
+    if (!fl) return;
+    const ro = new ResizeObserver(() => { geo.current = null; paint(); });
+    ro.observe(fl);
+    return () => { ro.disconnect(); geo.current = null; els.current = null; };
+  }, [live, paint]);
+  usePin(pin, (p) => { prog.current = p; paint(); }, live);
+
+  return (
+    <section ref={root} className="on-sec on-3 on-3c on-4 on-4g" aria-labelledby="on-3-h">
+      <Head id="on-3-h" label={t.label} title={t.heading} accent={t.headingAccent} lead={t.lead} live={live} />
+      <WowStage pin={pin} stage={stage} fit={fit} sky={sky} len={n * 62} live={live}>
+        <div className="container mx-auto px-6 on-4g-box">
+          <ol className="on-4g-list">
+            {t.items.map((it) => (
+              <li key={it.href} className="on-4g-item">
+                <h3 className="on-4g-word"><span>{it.type}</span></h3>
+                <div className="on-4-frame on-4g-frame" aria-hidden="true"><Shot slug={it.image} sizes={SIZES} big /></div>
+                <div className="on-4g-cap">
+                  <p className="on-3c-name">{it.name}</p>
+                  <p className="on-3c-line">{it.line}</p>
+                  <More href={it.href} label={t.more} locale={locale} />
+                </div>
+              </li>
+            ))}
+            <li className="on-4g-item">
+              <h3 className="on-4g-word"><span className="im-accent">{t.yours.type}</span></h3>
+              <div className="on-4-frame on-4-frame--you on-4g-frame" aria-hidden="true"><YourSlot label={t.yours.frame} /></div>
+              <div className="on-4g-cap">
+                <p className="on-3c-line on-3c-line--you">{t.yours.line}</p>
+                <Consult label={t.yours.cta} locale={locale} />
+              </div>
+            </li>
+            {/* pole galerii: pusta pozycja siatki w środkowym wierszu - z niej JS bierze wymiary; kadry stoją w tej
+                samej komórce (siatka je środkuje), a w bok, w głąb i bokiem ustawia je JS */}
+            <li ref={flow} className="on-4g-flow" aria-hidden="true" />
+          </ol>
+        </div>
+      </WowStage>
+    </section>
+  );
+}

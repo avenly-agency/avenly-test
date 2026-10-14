@@ -1,0 +1,198 @@
+/* ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+   O NAS - SEKCJA PO PLAKACIE: „DLA KOGO PRACUJEMY” (temat wybrany przez właściciela 2026-10-13: „concept z dla kogo
+   pracujemy fajny, zrób kilka wersji tego”). Cztery wersje tej samej treści (trzy rodzaje firm z prawdziwymi
+   realizacjami + „Twoja firma”), każda innym ruchem - przełącznik „Dla kogo pracujemy” w panelu na dole ekranu
+   (tylko npm run dev):
+     on-3c  1. „Taśma”    (sec-clients.tsx)        - słowo po lewej, po prawej taśma kadrów jedzie w górę,
+     on-3f  2. „Przelot”  (sec-clients-flight.tsx) - kadry w głębi, kamera leci przez nie do przodu,
+     on-3w  3. „Ściana”   (sec-clients-wall.tsx)   - cztery plansze 2 × 2, kamera objeżdża ścianę,
+     on-3e  4. „Ekran”    (sec-clients-screen.tsx) - jeden szeroki ekran, strony rozchodzą się po nim kłębami.
+   Klasy on-3c- (tekst pozycji, kadr, pole sceny) są wspólne dla wersji. Odrzucone tematy („Więcej i mniej”,
+   „Co robimy”) są w docs/archiwum/o-nas-2026-10/tematy-sekcji-po-plakacie/.
+   Zasada jak w całej podstronie: style bez [data-live] = stan końcowy (bez JS / ograniczony ruch), stany „przed”
+   i przypięcie tylko pod [data-live]. Pola *-box są jednocześnie kontenerem (px-6) - dopełnienie tylko górne / dolne.
+   Po wyborze: usunąć pozostałe wersje, ich bloki tutaj i przełącznik.
+   ═══════════════════════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* ═════════ WSPÓLNE: tekst pozycji, kadr, pole sceny ═════════ */
+/* bez ruchu: lista pozycji, pod nią siatka kadrów */
+.on-3c-texts { list-style: none; margin: 0 0 40px; padding: 0; display: grid; gap: 40px; }
+.on-3c-type { margin: 0; font-weight: 700; font-size: clamp(34px, 5.2vw, 92px); line-height: 1; letter-spacing: -.04em; color: #f8fafc; text-wrap: balance; }
+.on-3c-name { margin: 16px 0 0; font-size: 15px; font-weight: 600; color: #94a3b8; }
+.on-3c-line { margin: 8px 0 22px; max-width: 30rem; font-size: 18px; line-height: 1.6; color: #cbd5e1; text-wrap: pretty; }
+.on-3c-line--you { margin-top: 18px; }
+.on-3c-more {
+  display: inline-flex; align-items: center; gap: 10px; min-height: 44px;
+  font-size: 15.5px; font-weight: 600; color: #f8fafc; text-decoration: none;
+}
+.on-3c-more svg { flex: none; width: 17px; height: 17px; color: #60a5fa; transition: transform .45s var(--on-ease); }
+.on-3c-more:focus-visible { outline: 2px solid #60a5fa; outline-offset: 4px; border-radius: 6px; }
+@media (hover: hover) { .on-3c-more:hover svg { transform: translateX(4px); } }
+/* kadr: ciemna rama jak w Realizacjach (pełne tło, ostry refleks u góry), w niej zrzut strony klienta */
+.on-3c-frame {
+  width: 100%; aspect-ratio: 16 / 9; padding: 8px; border-radius: 18px; background: #0a0a0c;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 0 0 1px rgba(255, 255, 255, .1);
+}
+.on-3c-frame picture, .on-3c-frame img { display: block; width: 100%; height: 100%; }
+.on-3c-frame img { object-fit: cover; object-position: 50% 0; border-radius: 11px; }
+/* „Twoja firma”: pusty kadr z gwiazdą */
+.on-3c-frame--you {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  background: transparent; box-shadow: none; border: 1px dashed rgba(255, 255, 255, .28);
+  font-size: 15px; color: #94a3b8;
+}
+.on-3c-frame--you svg { width: 28px; height: 28px; fill: var(--on-ac); }
+
+.on[data-live] .on-3c-pin { height: calc(100vh + var(--n) * 60vh); height: calc(100svh + var(--n) * 60vh); }
+/* pole sceny wersji z tekstem po lewej (Taśma, Przelot) */
+.on[data-live] .on-3c-box {
+  height: 100%; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); align-items: center;
+  gap: 0 clamp(32px, 5vw, 88px); padding-top: 88px; padding-bottom: 40px;
+}
+/* jedna pozycja naraz, w tym samym miejscu (krycie i przesunięcie pisze JS) */
+.on[data-live] .on-3c-texts { position: relative; height: 100%; margin: 0; display: block; }
+.on[data-live] .on-3c-t {
+  position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
+  opacity: 0; visibility: hidden; pointer-events: none;
+}
+.on[data-live] .on-3c-t[data-on] { pointer-events: auto; }
+
+/* ═════════ 1. TAŚMA ═════════ */
+.on-3c-strip { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+/* okno taśmy kadrów: krawędzie gasną (sąsiednie kadry wyłaniają się i znikają bez twardego cięcia) */
+.on[data-live] .on-3c-view {
+  position: relative; height: min(78vh, 720px); height: min(78svh, 720px); overflow: hidden; overflow: clip;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 15%, #000 85%, transparent);
+  mask-image: linear-gradient(180deg, transparent, #000 15%, #000 85%, transparent);
+}
+.on[data-live] .on-3c-strip { position: absolute; left: 0; right: 0; top: 50%; display: block; }
+/* komórka = kadr 16:9 z oddechem nad i pod nim; przesunięcie taśmy liczone w % jej wysokości */
+.on[data-live] .on-3c-cell { display: flex; align-items: center; aspect-ratio: 16 / 10.4; }
+
+/* ═════════ 2. PRZELOT ═════════ */
+/* bez ruchu: siatka kadrów */
+.on-3f-view { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+/* pole lotu: kadry stoją jeden za drugim w głębi; miejsce, skalę i krycie każdego pisze JS (--fw = szerokość kadru) */
+.on[data-live] .on-3f-view { display: block; position: relative; height: min(78vh, 720px); height: min(78svh, 720px); }
+.on[data-live] .on-3f-frame {
+  position: absolute; left: 0; top: 0; width: var(--fw, 60%); transform-origin: 50% 50%; visibility: hidden;
+}
+
+/* ═════════ 3. ŚCIANA ═════════ */
+/* bez ruchu: plansze w siatce */
+.on-3w-stick { padding-left: 1.5rem; padding-right: 1.5rem; }
+.on-3w-plane { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 48px 32px; max-width: 1232px; margin: 0 auto; }
+.on-3w-type { margin: 0 0 16px; font-weight: 700; font-size: clamp(28px, 3.6vw, 52px); line-height: 1.02; letter-spacing: -.04em; color: #f8fafc; text-wrap: balance; }
+.on-3w-cap { margin-top: 16px; }
+.on-3w-name { margin: 0; font-size: 15px; font-weight: 600; color: #94a3b8; }
+.on-3w-line { margin: 6px 0 10px; font-size: 16.5px; line-height: 1.55; color: #cbd5e1; text-wrap: pretty; }
+/* pełny ruch: ściana = płaszczyzna, którą przesuwa i skaluje kamera (JS); plansze stoją na niej w układzie 2 × 2.
+   --cw = szerokość planszy, --ratio = jej wysokość / szerokość (pisze JS), odstęp plansz = 0,14 szerokości */
+.on[data-live] .on-3w-stick { padding-left: 0; padding-right: 0; }
+.on[data-live] .on-3w-plane {
+  display: block; position: absolute; left: 0; top: 0; width: 0; height: 0; max-width: none; margin: 0; transform-origin: 0 0;
+}
+.on[data-live] .on-3w-cell {
+  position: absolute; left: calc(var(--col) * var(--cw) * 1.14); top: calc(var(--row) * var(--cw) * (var(--ratio) + .14));
+  width: var(--cw); height: calc(var(--cw) * var(--ratio)); display: flex; flex-direction: column; pointer-events: none;
+}
+.on[data-live] .on-3w-cell[data-on] { pointer-events: auto; }
+.on[data-live] .on-3w-cell .on-3c-frame { flex: none; }
+/* pismo planszy w ułamkach jej szerokości - skaluje się razem z planszą */
+.on[data-live] .on-3w-type { margin-bottom: calc(var(--cw) * .026); font-size: calc(var(--cw) * .078); line-height: 1; white-space: nowrap; }
+.on[data-live] .on-3w-cap {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: baseline; gap: 0 calc(var(--cw) * .03);
+  margin-top: calc(var(--cw) * .022);
+}
+.on[data-live] .on-3w-cap--you { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+.on[data-live] .on-3w-name { font-size: max(13px, calc(var(--cw) * .017)); white-space: nowrap; }
+.on[data-live] .on-3w-line { margin: 0; font-size: max(13px, calc(var(--cw) * .017)); line-height: 1.5; }
+
+/* ═════════ 4. EKRAN ═════════ */
+/* bez ruchu: lista pozycji, każda ze swoim kadrem */
+.on-3e-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 44px; }
+.on-3e-word { margin: 0 0 16px; font-weight: 700; font-size: clamp(32px, 5vw, 80px); line-height: 1.04; letter-spacing: -.04em; color: #f8fafc; }
+.on-3e-word > span { display: inline-block; }
+.on-3e-cap { margin-top: 16px; }
+.on-3e-name { margin: 0; font-size: 15px; font-weight: 600; color: #94a3b8; }
+.on-3e-line { margin: 6px 0 12px; max-width: 34rem; font-size: 17px; line-height: 1.6; color: #cbd5e1; text-wrap: pretty; }
+/* „Twoja firma” na ekranie: pełne czarne tło (zakrywa poprzednią stronę), w nim przerywany obrys wolnego miejsca */
+.on-3e-layer--you {
+  background: #060607; border: 0; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 0 0 1px rgba(255, 255, 255, .1);
+  outline: 1px dashed rgba(255, 255, 255, .26); outline-offset: -18px;
+}
+.on[data-live] .on-3e-box { height: 100%; display: flex; flex-direction: column; justify-content: center; padding-top: 88px; padding-bottom: 36px; }
+/* trzy wiersze: słowo, ekran, podpis - elementy wszystkich pozycji stoją w tych samych komórkach, jedna na drugiej */
+.on[data-live] .on-3e-list { gap: 0; grid-template-columns: minmax(0, 1fr); }
+.on[data-live] .on-3e-item { display: contents; }
+.on[data-live] .on-3e-word {
+  grid-area: 1 / 1; align-self: end; margin: 0 0 clamp(14px, 2.4vh, 26px); padding-bottom: .13em;
+  overflow: hidden; overflow: clip; white-space: nowrap; line-height: 1.02;
+  font-size: clamp(36px, min(6.4vw, 10.5vh), 104px); font-size: clamp(36px, min(6.4vw, 10.5svh), 104px);
+}
+.on[data-live] .on-3e-layer { grid-area: 2 / 1; aspect-ratio: 21 / 9; max-height: 52vh; max-height: 52svh; }
+.on[data-live] .on-3e-cap {
+  grid-area: 3 / 1; display: flex; align-items: baseline; gap: 12px 32px; margin-top: clamp(14px, 2.4vh, 24px);
+  opacity: 0; visibility: hidden; pointer-events: none;
+}
+.on[data-live] .on-3e-cap[data-on] { pointer-events: auto; }
+.on[data-live] .on-3e-cap .on-3e-name { flex: none; }
+.on[data-live] .on-3e-cap .on-3e-line { flex: 1 1 auto; margin: 0; max-width: 36rem; }
+.on[data-live] .on-3e-cap .on-3c-more, .on[data-live] .on-3e-cap .on-cta { flex: none; margin-left: auto; }
+/* ROZEJŚCIE: następna strona pojawia się pięcioma kłębami, które rosną i zlewają się od lewej do prawej.
+   --b (0-1, pisze JS na warstwie) = postęp; promień kłębu k = (--b · 1,9 - opóźnienie k) · --m (część przekątnej).
+   Pierwsza warstwa nie ma maski; po pełnym odsłonięciu (data-full) maska schodzi. */
+.on[data-live] .on-3e-item + .on-3e-item .on-3e-layer { --b: 0; --m: 64%; }
+.on[data-live] .on-3e-item + .on-3e-item .on-3e-layer:not([data-full]) {
+  -webkit-mask-image:
+    radial-gradient(circle at 8% 38%, #000 max(0%, calc(var(--b) * 1.9 * var(--m) - 8%)), transparent max(0%, calc(var(--b) * 1.9 * var(--m)))),
+    radial-gradient(circle at 30% 82%, #000 max(0%, calc((var(--b) * 1.9 - .22) * var(--m) - 8%)), transparent max(0%, calc((var(--b) * 1.9 - .22) * var(--m)))),
+    radial-gradient(circle at 52% 22%, #000 max(0%, calc((var(--b) * 1.9 - .42) * var(--m) - 8%)), transparent max(0%, calc((var(--b) * 1.9 - .42) * var(--m)))),
+    radial-gradient(circle at 74% 74%, #000 max(0%, calc((var(--b) * 1.9 - .62) * var(--m) - 8%)), transparent max(0%, calc((var(--b) * 1.9 - .62) * var(--m)))),
+    radial-gradient(circle at 94% 38%, #000 max(0%, calc((var(--b) * 1.9 - .8) * var(--m) - 8%)), transparent max(0%, calc((var(--b) * 1.9 - .8) * var(--m))));
+  mask-image:
+    radial-gradient(circle at 8% 38%, #000 max(0%, calc(var(--b) * 1.9 * var(--m) - 8%)), transparent max(0%, calc(var(--b) * 1.9 * var(--m)))),
+    radial-gradient(circle at 30% 82%, #000 max(0%, calc((var(--b) * 1.9 - .22) * var(--m) - 8%)), transparent max(0%, calc((var(--b) * 1.9 - .22) * var(--m)))),
+    radial-gradient(circle at 52% 22%, #000 max(0%, calc((var(--b) * 1.9 - .42) * var(--m) - 8%)), transparent max(0%, calc((var(--b) * 1.9 - .42) * var(--m)))),
+    radial-gradient(circle at 74% 74%, #000 max(0%, calc((var(--b) * 1.9 - .62) * var(--m) - 8%)), transparent max(0%, calc((var(--b) * 1.9 - .62) * var(--m)))),
+    radial-gradient(circle at 94% 38%, #000 max(0%, calc((var(--b) * 1.9 - .8) * var(--m) - 8%)), transparent max(0%, calc((var(--b) * 1.9 - .8) * var(--m))));
+}
+
+/* ═════════ TELEFON I TABLET ═════════ */
+@media (max-width: 1023px) {
+  /* Taśma i Przelot: słowo i opis u góry, kadry pod nimi */
+  .on[data-live] .on-3c-box { display: flex; flex-direction: column; align-items: stretch; gap: 0; padding-top: 80px; padding-bottom: 88px; }
+  .on[data-live] .on-3c-texts { flex: none; height: clamp(190px, 31vh, 250px); height: clamp(190px, 31svh, 250px); }
+  .on[data-live] .on-3c-t { justify-content: flex-start; }
+  .on[data-live] .on-3c-view, .on[data-live] .on-3f-view { flex: 1 1 auto; min-height: 0; height: auto; }
+}
+@media (max-width: 767px) {
+  .on-3c-texts { gap: 32px; }
+  .on-3c-type { font-size: clamp(30px, 9.4vw, 44px); }
+  .on-3c-name { margin-top: 12px; font-size: 14px; }
+  .on-3c-line { margin: 6px 0 12px; font-size: 15.5px; line-height: 1.55; }
+  .on-3c-line--you { margin-top: 12px; margin-bottom: 16px; }
+  .on-3c-strip, .on-3f-view { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .on-3c-frame { padding: 6px; border-radius: 14px; }
+  .on-3c-frame img { border-radius: 9px; }
+  .on[data-live] .on-3c-box { padding-top: 76px; }
+  /* Ściana: plansza na szerokość wrappera, nazwa rodzaju firmy może mieć dwie linie, podpis jedno pod drugim */
+  .on-3w-plane { grid-template-columns: minmax(0, 1fr); gap: 36px; }
+  .on[data-live] .on-3w-type { margin-bottom: 10px; font-size: calc(var(--cw) * .112); line-height: 1.02; white-space: normal; }
+  .on[data-live] .on-3w-cap, .on[data-live] .on-3w-cap--you { grid-template-columns: minmax(0, 1fr); align-items: start; gap: 4px; margin-top: 12px; }
+  .on[data-live] .on-3w-name { font-size: 14px; }
+  .on[data-live] .on-3w-line { font-size: 15px; }
+  /* Ekran: węższa panorama, podpis jedno pod drugim, całość nad bąblem czatu */
+  .on-3e-list { gap: 36px; }
+  .on-3e-line { font-size: 15.5px; }
+  .on-3e-layer--you { outline-offset: -12px; }
+  .on[data-live] .on-3e-box { padding-top: 76px; padding-bottom: 88px; }
+  .on[data-live] .on-3e-word {
+    white-space: normal; text-wrap: balance; margin-bottom: 12px;
+    font-size: clamp(28px, min(8.2vw, 5.6vh), 44px); font-size: clamp(28px, min(8.2vw, 5.6svh), 44px);
+  }
+  .on[data-live] .on-3e-layer { aspect-ratio: 16 / 10; max-height: 40vh; max-height: 40svh; }
+  .on[data-live] .on-3e-cap { flex-direction: column; align-items: flex-start; gap: 4px; margin-top: 12px; }
+  .on[data-live] .on-3e-cap .on-3c-more, .on[data-live] .on-3e-cap .on-cta { margin-left: 0; }
+  .on[data-live] .on-3e-cap .on-cta { margin-top: 8px; }
+}

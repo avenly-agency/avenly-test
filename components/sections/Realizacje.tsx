@@ -12,7 +12,9 @@ import type { RealizacjeDict, RealizacjeItem } from '@/lib/i18n/home/realizacje'
 import { JsonLd } from '@/components/seo/JsonLd';
 import { SectionLabel } from '@/components/ui/SectionLabel';
 import { featuredWorkSchema } from '@/lib/schemas';
+import { useChoice } from '@/components/utils/proposals';
 import type { RealizacjeScene } from './realizacje/scene';
+import { RzTransitionDock, rzTransition } from './realizacje/variant';
 
 // Sekcja "Realizacje" strony głównej (2. sekcja, pod hero) - handoff 8b "Kurtyna"
 // (claude-design/design_handoff_avenly_realizacje). Podział odpowiedzialności:
@@ -65,6 +67,11 @@ export const Realizacje = ({ t, locale = 'pl' }: { t: RealizacjeDict; locale?: L
   const lenis = useLenis();
   const lenisRef = useRef<Lenis | undefined>(undefined);
   useEffect(() => { lenisRef.current = lenis; }, [lenis]);
+  // Zmiana projektu w kadrze: „Gwiazda” (od 2026-10-13, domyślna) albo dotychczasowa „Kurtyna” - przełącznik tylko
+  // w `npm run dev` (realizacje/variant.tsx). Ref, bo scena czyta wybór przy każdej zmianie kadru.
+  const transition = useChoice(rzTransition);
+  const transitionRef = useRef(transition);
+  useEffect(() => { transitionRef.current = transition; }, [transition]);
 
   // Scena startuje, gdy sekcja jest w zasięgu ~60% viewportu, i dopiero po idle - kompilacja
   // shadera i pierwsze pomiary nie konkurują z intro hero ani z hydratacją sekcji poniżej.
@@ -82,7 +89,9 @@ export const Realizacje = ({ t, locale = 'pl' }: { t: RealizacjeDict; locale?: L
 
     const create = () => {
       import('./realizacje/scene')
-        .then((m) => { if (!cancelled) scene = m.createRealizacjeScene(section, { getScroll: () => lenisRef.current }); })
+        .then((m) => {
+          if (!cancelled) scene = m.createRealizacjeScene(section, { getScroll: () => lenisRef.current, getTransition: () => transitionRef.current });
+        })
         .catch(() => { /* brak sceny = statyczny kadr 01 + działający indeks (linki) */ });
     };
     const boot = () => { if (booted || cancelled) return; booted = true; create(); };
@@ -306,6 +315,7 @@ export const Realizacje = ({ t, locale = 'pl' }: { t: RealizacjeDict; locale?: L
       </div>
 
       <JsonLd id="ld-featured-work" data={schema} />
+      {process.env.NODE_ENV !== 'production' && <RzTransitionDock value={transition} />}
     </section>
   );
 };

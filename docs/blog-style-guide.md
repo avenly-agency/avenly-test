@@ -31,6 +31,9 @@ Struktura nowego obiektu w tablicy `blogPosts`:
 		id: 'N',  // następny dostępny numer (4, 5, 6...)
 		slug: 'long-tail-keyword-z-myslnikami',  // bez polskich znaków, zgodny z URL
 		title: 'Tytuł z keywordem (60-90 znaków, często pytanie)',
+		metaTitle: 'Tytuł wyniku w Google (do 51 znaków, keyword na początku)',
+		metaDescription:
+			'Opis wyniku w Google, 140-160 znaków. Głos korzyści, konkret, nie kopia excerptu.',
 		excerpt:
 			'Streszczenie 140-160 znaków. Hook + value prop. Bez "W tym artykule...".',
 		publishedAt: 'YYYY-MM-DD',
@@ -181,6 +184,7 @@ Wzorce z istniejących:
 
 - [ ] Keyword w **title** (long-tail 4+ słów)
 - [ ] Keyword w **excerpt**
+- [ ] **metaTitle** do 51 znaków (z dopiskiem „ | Avenly” do 60) i **metaDescription** do 160 znaków, oba z keywordem, znaki policzone
 - [ ] Keyword w **pierwszym h2** lub pierwszym akapicie p
 - [ ] Keyword (lub synonim) w **min. 1 h3**
 - [ ] **`<strong>`** w 2-3 miejscach (główne pojęcia)

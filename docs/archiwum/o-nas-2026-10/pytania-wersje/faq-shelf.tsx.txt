@@ -1,0 +1,197 @@
+'use client';
+
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { MessageCircle } from 'lucide-react';
+import { SectionLabel } from '@/components/ui/SectionLabel';
+import { GEM } from '@/lib/brand/logo';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { Scene } from './scene-kit';
+import { clamp01, css, openChat, usePin } from './shared';
+import './faq-shelf.css'; // prefiks on-f5-
+
+// „PYTANIA” - PROPOZYCJA „PÓŁKA” (2026-10-14, właściciel: „teraz faq zrób”). Jedno ujęcie na cały ekran: pięć
+// wysokich tafli ciemnego szkła od krawędzi do krawędzi wrappera, jak grzbiety książek na półce - nagłówek sekcji,
+// trzy pytania i „Inne pytanie?”. Zamknięta tafla to wąski grzbiet z numerem i pytaniem napisanym w pionie, otwarta
+// zajmuje większość szerokości: u góry numer, u dołu pytanie wielkim pismem i odpowiedź. Przewijanie otwiera tafle
+// po kolei - poprzednia zwija się w grzbiet, następna rozsuwa się obok (jedno miejsce akcji naraz, ruch bez odbicia),
+// obwódka otwartej tafli świeci kolorem marki, a blask mgławicy podstrony stoi za nią (data-sky). Telefon pionowo
+// i tablet pionowo: ta sama półka obrócona - tafle to wiersze jeden pod drugim, otwarty rośnie w dół.
+// Układ inny niż sekcje wyżej (kadr obok tekstu w „Portalu”, stół z pasem tytułowym w „Co robimy”, ściana słów
+// w „Świetle”): rząd tafli na całą szerokość. Pierwsza tafla = nagłówek sekcji w tym samym piśmie co pytania.
+// SEO: h2, pytania (h3) i odpowiedzi to prawdziwy tekst w kolejności czytania; dane FAQPage w layout.tsx.
+// Bez JS / ograniczony ruch: nagłówek, lista pytań z odpowiedziami i „Inne pytanie?” jeden pod drugim.
+// Wydajność: treść tafli ma stały wymiar (otwarta szerokość) i tylko się odsłania - przy ruchu tekst się nie łamie
+// na nowo; wymiary mierzone tylko przy zmianie rozmiaru i po wczytaniu fontu, zapisy stylu tylko przy zmianie.
+
+type Props = { t: ONasDict['faqSection']; faq: ONasDict['faq']; live: boolean };
+
+/** Oś sceny w vh przewinięcia: postój na nagłówku, potem dla każdej następnej tafli rozsunięcie i postój. */
+const H0 = 22, MOVE = 40, HOLD = 34, END = 12;
+const pad = (n: number) => String(n).padStart(2, '0');
+/** Smoothstep - ruch dojeżdża i staje (bez odbicia). */
+const sm = (v: number) => { const x = clamp01(v); return x * x * (3 - 2 * x); };
+const gem = <svg viewBox="-20 -20 40 40" focusable="false" aria-hidden="true"><path d={GEM} /></svg>;
+const show = (el: Element | null | undefined, o: number) => {
+  css(el, 'opacity', o.toFixed(3));
+  css(el, 'visibility', o < 0.002 ? 'hidden' : 'visible');
+};
+
+type Geo = { x: boolean; T: number; S: number; G: number; O: number; W: number; Hf: number };
+
+export function FaqShelf({ t, faq, live }: Props) {
+  const pin = useRef<HTMLDivElement>(null), box = useRef<HTMLDivElement>(null), shelf = useRef<HTMLDivElement>(null);
+  const core = useRef<HTMLSpanElement>(null);
+  const geo = useRef<Geo | null>(null);
+  const els = useRef<{ p: HTMLElement; spine: HTMLElement; open: HTMLElement }[] | null>(null);
+  const prog = useRef(0);
+  const P = faq.length + 2; // nagłówek, pytania, „Inne pytanie?”
+  const len = H0 + (P - 1) * (MOVE + HOLD) + END;
+  /** Położenie „otwarcia” 0..P-1: postój na tafli, rozsunięcie do następnej (smoothstep). */
+  const cam = useMemo(() => (sv: number) => {
+    let c = 0;
+    for (let j = 1; j < P; j++) {
+      const a = H0 + (j - 1) * (MOVE + HOLD);
+      if (sv <= a) break;
+      c = j - 1 + sm((sv - a) / MOVE);
+    }
+    return c;
+  }, [P]);
+
+  /** Półka pozioma (komputer, telefon poziomo) albo pionowa (telefon i tablet pionowo); pole pod nawigacją, nad
+      dolną krawędzią (gdy bąbel czatu wchodzi na półkę - nad nim). Tylko przy zmianie rozmiaru. */
+  const measure = useCallback((): Geo | null => {
+    const b = box.current, sh = shelf.current;
+    if (!b || !sh) return null;
+    const W = b.clientWidth - 48, H = b.clientHeight;
+    if (W <= 0 || !H) return null;
+    const low = H < 560;
+    const x = (W >= 860 && W >= H) || (low && W >= 600);
+    let T: number, B: number, S: number, G: number;
+    if (x) {
+      const spaceRight = window.innerWidth - (b.getBoundingClientRect().right - 24);
+      T = low ? 60 : 96;
+      B = low ? 14 : spaceRight < 100 ? 96 : 40;
+      S = Math.round(Math.min(104, Math.max(60, W * 0.068)));
+      G = W >= 1200 ? 14 : 10;
+    } else {
+      T = 72;
+      B = H >= 640 ? 88 : 24;
+      S = H >= 640 ? 58 : 44;
+      G = 6;
+    }
+    const Hf = H - T - B;
+    const O = (x ? W : Hf) - (P - 1) * (S + G);
+    sh.setAttribute('data-axis', x ? 'x' : 'y');
+    css(sh, '--s', `${S}px`);
+    css(sh, '--ow', `${x ? O : W}px`);
+    css(sh, '--oh', `${x ? Hf : O}px`);
+    return { x, T, S, G, O, W, Hf };
+  }, [P]);
+
+  const paint = useCallback(() => {
+    const sh = shelf.current;
+    if (!sh) return;
+    const c = (els.current ??= Array.from(sh.querySelectorAll<HTMLElement>('.on-f5-p')).map((p) => ({
+      p, spine: p.querySelector<HTMLElement>('.on-f5-spine')!, open: p.querySelector<HTMLElement>('.on-f5-open')!,
+    })));
+    const g = (geo.current ??= measure());
+    if (!g) return;
+    const k = cam(prog.current * len);
+    let at = 0;
+    const rect: { a: number; s: number }[] = [];
+    c.forEach((e, i) => {
+      const o = Math.max(0, 1 - Math.abs(k - i));
+      const size = g.S + (g.O - g.S) * o;
+      rect.push({ a: at, s: size });
+      css(e.p, 'transform', g.x ? `translate(${at.toFixed(1)}px, ${g.T}px)` : `translate(0px, ${(g.T + at).toFixed(1)}px)`);
+      css(e.p, 'width', `${(g.x ? size : g.W).toFixed(1)}px`);
+      css(e.p, 'height', `${(g.x ? g.Hf : size).toFixed(1)}px`);
+      css(e.p, '--o', o.toFixed(3));
+      show(e.spine, 1 - sm(o / 0.45));
+      const r = sm((o - 0.4) / 0.6);
+      show(e.open, r);
+      css(e.open, 'transform', r >= 0.9995 ? 'none' : `translate3d(0, ${((1 - r) * 18).toFixed(2)}px, 0)`);
+      at += size + g.G;
+    });
+    // blask mgławicy za otwartą taflą (w rozsunięciu przechodzi z jednej na drugą)
+    const j = Math.min(Math.floor(k), P - 2), q = k - j;
+    const A = rect[j], Bq = rect[j + 1];
+    const a = A.a + (Bq.a - A.a) * q, s = A.s + (Bq.s - A.s) * q;
+    css(core.current, 'transform', g.x ? `translate(${a.toFixed(1)}px, ${g.T}px)` : `translate(0px, ${(g.T + a).toFixed(1)}px)`);
+    css(core.current, 'width', `${(g.x ? s : g.W).toFixed(1)}px`);
+    css(core.current, 'height', `${(g.x ? g.Hf : s).toFixed(1)}px`);
+  }, [cam, len, measure, P]);
+
+  useEffect(() => {
+    if (!live) return;
+    const b = box.current;
+    if (!b) return;
+    const ro = new ResizeObserver(() => { geo.current = null; paint(); });
+    ro.observe(b);
+    let dead = false;
+    document.fonts?.ready.then(() => { if (!dead) { geo.current = null; paint(); } });
+    return () => { dead = true; ro.disconnect(); geo.current = null; els.current = null; };
+  }, [live, paint]);
+  usePin(pin, (p) => { prog.current = p; paint(); }, live);
+
+  const N = faq.length;
+  return (
+    <section className="on-sec on-f5" aria-labelledby="on-faq-h">
+      <Scene pin={pin} len={len}>
+        <div ref={box} className="container mx-auto px-6 on-f5-box">
+          <div ref={shelf} className="on-f5-shelf">
+            <span ref={core} className="on-f5-core" data-sky="" aria-hidden="true" />
+            <header className="on-f5-p on-f5-p--head">
+              <span className="on-f5-spine" aria-hidden="true">
+                <span className="on-f5-sn">{gem}</span>
+                <span className="on-f5-st">{t.label}</span>
+              </span>
+              <div className="on-f5-open">
+                <div className="on-label on-f5-top"><SectionLabel align="start">{t.label}</SectionLabel></div>
+                <div>
+                  <h2 id="on-faq-h" className="on-f5-t">{t.heading} <span className="im-accent">{t.accent}</span></h2>
+                  <p className="on-f5-a">{t.more}</p>
+                </div>
+              </div>
+            </header>
+            <ol className="on-f5-list">
+              {faq.map((f, i) => (
+                <li key={i} className="on-f5-p">
+                  <span className="on-f5-spine" aria-hidden="true">
+                    <span className="on-f5-sn">{pad(i + 1)}</span>
+                    <span className="on-f5-st">{f.question}</span>
+                    <span className="on-f5-sg">{gem}</span>
+                  </span>
+                  <div className="on-f5-open">
+                    <p className="on-f5-n on-f5-top" aria-hidden="true">{pad(i + 1)} / {pad(N)}</p>
+                    <div>
+                      <h3 className="on-f5-t">{f.question}</h3>
+                      <p className="on-f5-a">{f.answer}</p>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ol>
+            <div className="on-f5-p on-f5-p--ask">
+              <span className="on-f5-spine" aria-hidden="true">
+                <span className="on-f5-sn">{gem}</span>
+                <span className="on-f5-st">{t.askTitle}</span>
+              </span>
+              <div className="on-f5-open">
+                <span className="on-f5-top on-f5-gem" aria-hidden="true">{gem}</span>
+                <div>
+                  <p className="on-f5-t">{t.askTitle}</p>
+                  <p className="on-f5-a">{t.askDesc}</p>
+                  <button type="button" className="on-ghost on-f5-btn" onClick={openChat}>
+                    <MessageCircle aria-hidden="true" />
+                    {t.askButton}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Scene>
+    </section>
+  );
+}

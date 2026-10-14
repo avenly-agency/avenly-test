@@ -4,23 +4,35 @@ import { ServicePageSchema } from '@/components/seo/ServicePageSchema';
 import { companyCopy } from '@/lib/i18n/uslugi/strona-firmowa';
 import { i18nAlternates } from '@/lib/i18n/locale';
 
+// Title = the page heading; description kept to about 160 characters.
 const SERVICE = {
   name: 'Company website',
+  title: 'Company website that builds trust',
   description:
-    'A multipage company website that builds trust: services, about, work and contact. Every service has its own page, plus Google reviews, a map with directions and language versions. A design from scratch, fast loading.',
+    'Your company looks as solid online as it works every day. Every service has its own page, so clients land straight on the one they need. Free consultation.',
   path: '/en/services/websites/company-website',
 };
 
 export const metadata: Metadata = {
-  title: 'Company website - a multipage site that builds trust',
+  title: SERVICE.title,
   description: SERVICE.description,
   alternates: i18nAlternates('/uslugi/strony-www/strona-firmowa', 'en'),
-  keywords: ['company website', 'professional business website', 'multipage website', 'website for a company', 'B2B website', 'Core Web Vitals'],
+  keywords: ['company website', 'website for a company', 'professional business website', 'multipage website', 'company website quote'],
+  // The page-level openGraph block REPLACES the root layout one (Next does not merge them), so it is given in full.
   openGraph: {
-    title: 'Company website - Avenly',
-    description: 'A multipage company website: every service has its own page, so clients land straight on the one they need.',
-    url: SERVICE.path,
     type: 'website',
+    locale: 'en_US',
+    siteName: 'Avenly',
+    url: `${SERVICE.path}/`,
+    title: SERVICE.title,
+    description: SERVICE.description,
+    images: [{ url: '/og-default.png', width: 1200, height: 630, alt: 'Avenly - interactive agency', type: 'image/png' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: SERVICE.title,
+    description: SERVICE.description,
+    images: ['/og-default.png'],
   },
 };
 

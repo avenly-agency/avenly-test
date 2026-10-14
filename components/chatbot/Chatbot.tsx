@@ -6,6 +6,7 @@ import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import { MessageCircle, X, Send, History, ArrowLeft, Clock, Trash2, Plus } from "lucide-react";
 import Image from "next/image";
 import logoImg from "@/app/icon.png";
+import { AvenlyLogo } from "@/components/ui/AvenlyLogo";
 import { getServiceTheme } from "@/lib/service-theme";
 import { localeFromPathname, type Locale } from "@/lib/i18n/locale";
 import { MarkdownMessage } from "./MarkdownMessage";
@@ -416,7 +417,10 @@ export function Chatbot() {
               ) : (
                 <>
                   <div className="cb-brand">
-                    <span className="cb-word">AVENLY<span className="cb-word-dot">.</span></span>
+                    <span className="cb-word">
+                      <span className="sr-only">Avenly</span>
+                      <AvenlyLogo className="cb-logo" accentClassName="cb-word-dot" />
+                    </span>
                     <span className="cb-status">
                       <span className="cb-status-dot" aria-hidden="true" />
                       {ui.status}

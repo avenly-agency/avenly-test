@@ -27,7 +27,7 @@ import type { HeroDict } from '@/lib/i18n/home/hero';
 // tekst mono nie jest LCP). Klasa geistMono.variable ustawia --font-geist-mono na sekcji.
 
 /** Najpóźniejszy moment pokazania tekstu, gdy scena startuje wolno albo wcale. */
-const TEXT_FALLBACK_MS = 4000;
+const TEXT_FALLBACK_MS = 5200; // wejście logotypu (wschód zza planety + cięcie gwiazdą) trwa ~3,8 s od startu sceny
 const TEXT_FALLBACK_SCRIPT = `setTimeout(function(){var h=document.querySelector('.hero');if(h)h.setAttribute('data-text','')},${TEXT_FALLBACK_MS})`;
 
 const delay = (ms: number, dur?: number) =>
@@ -66,6 +66,22 @@ export const Hero = ({ t, locale = 'pl' }: { t: HeroDict; locale?: Locale }) => 
     };
   }, []);
 
+  // Zapas formatu obrazu planety (jak w sekcji Realizacje): gdyby przeglądarka zgłosiła AVIF, a nie zdekodowała pliku
+  // (znane przypadki w starszych Safari 16.x), usuwamy źródła AVIF - <picture> sam wybiera wtedy WebP.
+  const pictureRef = useRef<HTMLPictureElement | null>(null);
+  useEffect(() => {
+    const picture = pictureRef.current;
+    const img = picture?.querySelector('img');
+    if (!picture || !img) return;
+    const isAvif = () => /\.avif(\?|$)/.test(img.currentSrc);
+    const dropAvif = () => picture.querySelectorAll('source[type="image/avif"]').forEach((s) => s.remove());
+    // błąd sprzed hydratacji (obraz ładuje się od razu) - listener by go nie zobaczył
+    if (img.complete && img.naturalWidth === 0 && isAvif()) { dropAvif(); return; }
+    const onError = () => { if (isAvif()) dropAvif(); };
+    img.addEventListener('error', onError);
+    return () => img.removeEventListener('error', onError);
+  }, []);
+
   // Linia dowodów: na mobile łamana w połowie (2 równe linie), bez kropki na końcu pierwszej.
   const proofBreak = Math.ceil(t.proof.length / 2) - 1;
 
@@ -89,22 +105,37 @@ export const Hero = ({ t, locale = 'pl' }: { t: HeroDict; locale?: Locale }) => 
           {/* Statyczny render shadera planety - PIERWSZY element sceny i element LCP
               (największy obiekt w kadrze, malowany od pierwszej klatki; bez niego LCP przejmował
               późny tekst albo akapit banera cookies). Dwa kadry: <1024 px = 1440 jedn. szerokości
-              (100vw), desktop = 2560 jedn. (pokrywa też ultrawide), oba z horyzontem 302 jedn. od góry. */}
-          <picture>
+              (100vw), desktop = 2560 jedn. (pokrywa też ultrawide), oba z horyzontem 302 jedn. od góry.
+              Pliki hero-planet-3-* (od 2026-10-13) liczy scripts/hero-planet.mjs wprost z wzorów shadera: AVIF q95
+              (gładkie ciemne przejścia, plik mniejszy niż dawny WebP) + WebP q97 jako zapas. Dawne zrzuty
+              (hero-planet-*.webp, stratny WebP 8-49 KB) zamieniały ciemne przejścia w klocki - właściciel: „patrz,
+              jaka pikseloza na telefonie”. Na telefon doszła szerokość 1920 (tablety i ekrany 3×). */}
+          <picture ref={pictureRef}>
             <source
               media="(max-width: 1023.98px)"
-              type="image/webp"
-              srcSet="/hero-planet-840.webp 840w, /hero-planet-1280.webp 1280w"
+              type="image/avif"
+              srcSet="/hero-planet-3-840.avif 840w, /hero-planet-3-1280.avif 1280w, /hero-planet-3-1920.avif 1920w"
               sizes="100vw"
             />
             <source
+              media="(max-width: 1023.98px)"
               type="image/webp"
-              srcSet="/hero-planet-wide-1920.webp 1920w, /hero-planet-wide-2560.webp 2560w, /hero-planet-wide-3840.webp 3840w"
+              srcSet="/hero-planet-3-840.webp 840w, /hero-planet-3-1280.webp 1280w, /hero-planet-3-1920.webp 1920w"
+              sizes="100vw"
+            />
+            <source
+              type="image/avif"
+              srcSet="/hero-planet-3-wide-1920.avif 1920w, /hero-planet-3-wide-2560.avif 2560w, /hero-planet-3-wide-3840.avif 3840w"
+              sizes="min(170vw, 272vh)"
+            />
+            <source
+              type="image/webp"
+              srcSet="/hero-planet-3-wide-1920.webp 1920w, /hero-planet-3-wide-2560.webp 2560w, /hero-planet-3-wide-3840.webp 3840w"
               sizes="min(170vw, 272vh)"
             />
             <img
               className="hero-planet-img"
-              src="/hero-planet-wide-1920.webp"
+              src="/hero-planet-3-wide-1920.webp"
               alt=""
               decoding="async"
               fetchPriority="high"

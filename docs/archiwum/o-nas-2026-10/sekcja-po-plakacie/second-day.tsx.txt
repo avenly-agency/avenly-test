@@ -1,0 +1,144 @@
+'use client';
+
+import { useCallback, useEffect, useRef } from 'react';
+import { GEM } from '@/lib/brand/logo';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { Head, Narrator, setNarrator } from './parts';
+import { attr, css, flag, lin, mix, seg, text, usePin } from './shared';
+import './second.css';
+
+// DRUGA SEKCJA - PROPOZYCJA 2 „DOBA” (2026-10-12). Prefiks on-2d-. Przypięta 100svh + 240vh, SVG, bez WebGL.
+// Ruch: OBRÓT. Tarcza doby (24 kreski godzin) i gwiazda z logo, która okrąża ją jeden raz - tyle najdłużej czekasz
+// na odpowiedź (jedyna liczba sceny to obronne „24 h” z PRODUCT.md).
+//   1. Początek z bliska: łuk tarczy przez cały ekran jak horyzont planety ze strony głównej, na jego szczycie gwiazda
+//      („Twoja wiadomość”). Kamera odjeżdża, aż widać całą tarczę.
+//   2. Gwiazda okrąża tarczę: za nią zostaje łuk w kolorze marki, kreski godzin zapalają się, licznik w środku
+//      liczy godziny.
+//   3. Gwiazda wraca na szczyt: „Nasza odpowiedź”, ostry pierścień przy lądowaniu.
+// Kamera = atrybut viewBox (rysunek ostry przy każdym zbliżeniu); podpisy i grubość łuku mają stałą wielkość na
+// ekranie (zmienna --u = jednostki rysunku na piksel). Bez JS / ograniczony ruch: gotowa tarcza po okrążeniu
+// (stan z HTML) i lista kroków.
+
+const R = 170;       // promień tarczy w jednostkach rysunku
+const ZOOM = 2.3;    // zbliżenie na początku sceny
+const TICKS = Array.from({ length: 24 }, (_, i) => i);
+const HOURS = [6, 12, 18];
+
+type Geo = { W: number; H: number; bl: number; bw: number };
+type Els = {
+  svg: SVGSVGElement | null; star: SVGGElement | null; arc: SVGCircleElement | null; ticks: SVGLineElement[];
+  num: SVGTextElement | null; count: SVGGElement | null; ping: SVGCircleElement | null;
+  sent: SVGTextElement | null; back: SVGTextElement | null;
+};
+const collect = (el: HTMLElement): Els => ({
+  svg: el.querySelector<SVGSVGElement>('.on-2d-svg'), star: el.querySelector<SVGGElement>('.on-2d-star'),
+  arc: el.querySelector<SVGCircleElement>('.on-2d-arc'),
+  ticks: Array.from(el.querySelectorAll<SVGLineElement>('.on-2d-tick')),
+  num: el.querySelector<SVGTextElement>('.on-2d-num'), count: el.querySelector<SVGGElement>('.on-2d-count'),
+  ping: el.querySelector<SVGCircleElement>('.on-2d-ping'),
+  sent: el.querySelector<SVGTextElement>('.on-2d-sent'), back: el.querySelector<SVGTextElement>('.on-2d-back'),
+});
+
+export function SecondDay({ t, live, stepsLabel }: { t: ONasDict['direct']; live: boolean; stepsLabel: string }) {
+  const pin = useRef<HTMLDivElement>(null), stage = useRef<HTMLDivElement>(null), box = useRef<HTMLDivElement>(null);
+  const narr = useRef<HTMLOListElement>(null);
+  const geo = useRef<Geo | null>(null), els = useRef<Els | null>(null);
+  const prog = useRef(0);
+
+  const paint = useCallback(() => {
+    const el = pin.current, st = stage.current, bx = box.current;
+    if (!el || !st || !bx) return;
+    const g = (geo.current ??= { W: st.clientWidth, H: st.clientHeight, bl: bx.offsetLeft + 24, bw: Math.max(1, bx.clientWidth - 48) });
+    const { W, H, bl, bw } = g;
+    if (!W || !H) return;
+    const c = (els.current ??= collect(el));
+    const p = prog.current, stack = W < 900; // wąski ekran: tarcza na środku, narrator pod nią (ten sam próg w second.css)
+    // docelowe miejsce tarczy (środek i promień w px)
+    let cx: number, cy: number, r: number;
+    if (stack) {
+      const top = 92, ah = Math.max(200, H - top - 204);
+      r = Math.max(80, Math.min(W * 0.36, ah / 2 - 44));
+      cx = W / 2; cy = top + ah / 2 + 8;
+    } else {
+      r = Math.max(120, Math.min(H * 0.33, bw * 0.24));
+      cx = bl + bw - r - Math.min(64, bw * 0.05); cy = H * 0.52;
+    }
+    // kamera: z bliska na szczyt tarczy (gwiazda), potem odjazd ze stałym tempem do całej tarczy
+    const e = seg(p, 0.02, 0.26);
+    const s = (r / R) * Math.pow(ZOOM, 1 - e);                 // px na jednostkę rysunku
+    const ax = mix(stack ? W * 0.5 : W * 0.72, cx, e);         // gdzie na ekranie stoi szczyt tarczy
+    const ay = mix(H * (stack ? 0.36 : 0.4), cy - r, e);
+    attr(c.svg, 'viewBox', `${(-ax / s).toFixed(2)} ${(-R - ay / s).toFixed(2)} ${(W / s).toFixed(2)} ${(H / s).toFixed(2)}`);
+    css(c.svg, '--u', (1 / s).toFixed(5));
+
+    // okrążenie: rozpędza się i hamuje (bez odbicia)
+    const f = seg(p, 0.24, 0.8), th = -Math.PI / 2 + 2 * Math.PI * f;
+    attr(c.star, 'transform', `translate(${(R * Math.cos(th)).toFixed(2)} ${(R * Math.sin(th)).toFixed(2)})`);
+    css(c.arc, 'stroke-dashoffset', (1 - f).toFixed(4));
+    const hours = f * 24;
+    c.ticks.forEach((tk, i) => flag(tk, 'data-on', f > 0 && i <= hours + 0.02));
+    text(c.num, String(Math.round(hours)));
+    const co = seg(e, 0.5, 1);
+    css(c.count, 'opacity', co.toFixed(3));
+
+    // powrót na szczyt: podpis zmienia się na odpowiedź, ostry pierścień przy lądowaniu
+    const d = seg(p, 0.8, 0.92);
+    attr(c.ping, 'r', (12 + 30 * d).toFixed(2));
+    css(c.ping, 'opacity', (d > 0 && d < 1 ? Math.sin(Math.PI * d) * 0.9 : 0).toFixed(3));
+    css(c.sent, 'opacity', (1 - seg(p, 0.76, 0.82)).toFixed(3));
+    css(c.back, 'opacity', seg(p, 0.82, 0.88).toFixed(3));
+
+    setNarrator(narr.current, p < 0.24 ? 0 : p < 0.8 ? 1 : 2, [lin(p, 0, 0.24), lin(p, 0.24, 0.8), lin(p, 0.8, 0.94)]);
+  }, []);
+
+  useEffect(() => {
+    if (!live) return;
+    const st = stage.current, bx = box.current;
+    if (!st || !bx) return;
+    const ro = new ResizeObserver(() => { geo.current = null; paint(); });
+    ro.observe(st); ro.observe(bx);
+    return () => { ro.disconnect(); geo.current = null; els.current = null; };
+  }, [live, paint]);
+  usePin(pin, (p) => { prog.current = p; paint(); }, live);
+
+  return (
+    <section className="on-sec on-2 on-2d" aria-labelledby="on-2-h">
+      <Head id="on-2-h" label={t.label} title={t.heading} accent={t.headingAccent} lead={t.leadShort} live={live} />
+      <div ref={pin} className="on-pin on-2-pin on-2d-pin">
+        <div ref={stage} className="on-stick on-2-stick">
+          {/* stan z HTML = gotowa tarcza po okrążeniu (bez JS / ograniczony ruch); pod [data-live] wszystko pisze JS */}
+          <svg className="on-2d-svg" viewBox="-232 -240 464 480" aria-hidden="true" focusable="false">
+            <circle className="on-2d-disc" r={R} />
+            <circle className="on-2d-rail" r={R} vectorEffect="non-scaling-stroke" />
+            <g>
+              {TICKS.map((i) => (
+                <line
+                  key={i} className="on-2d-tick" data-on="" x1={0} y1={-R - 8} x2={0} y2={-R - (i % 6 === 0 ? 22 : 15)}
+                  transform={`rotate(${i * 15})`} vectorEffect="non-scaling-stroke"
+                />
+              ))}
+            </g>
+            {HOURS.map((h) => {
+              const a = (h / 24) * 2 * Math.PI - Math.PI / 2;
+              return (
+                <text key={h} className="on-2d-h" x={((R + 40) * Math.cos(a)).toFixed(1)} y={((R + 40) * Math.sin(a)).toFixed(1)} dy=".35em" textAnchor="middle">{h}</text>
+              );
+            })}
+            <circle className="on-2d-arc" r={R} pathLength={1} transform="rotate(-90)" />
+            <circle className="on-2d-ping" cx={0} cy={-R} r={12} vectorEffect="non-scaling-stroke" />
+            <g className="on-2d-star" transform={`translate(0 ${-R})`}><path d={GEM} transform="scale(.8)" /></g>
+            <text className="on-2d-top on-2d-sent" x={0} y={-R - 38} textAnchor="middle">{t.day.sent}</text>
+            <text className="on-2d-top on-2d-back" x={0} y={-R - 38} textAnchor="middle">{t.day.back}</text>
+            <g className="on-2d-count">
+              <text className="on-2d-num" x={14} y={30} textAnchor="end">24</text>
+              <text className="on-2d-unit" x={26} y={30}>{t.day.unit}</text>
+            </g>
+          </svg>
+          <div ref={box} className="container mx-auto px-6 on-2-box on-2d-box">
+            <Narrator ref={narr} items={t.day.steps} label={stepsLabel} />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

@@ -1,0 +1,90 @@
+/* ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+   O NAS - „PYTANIA”: PROPOZYCJA „LINIA Z GWIAZDĄ” (faq-line.tsx, prefiks on-f6-; 2026-10-14).
+   Pytania wielkim pismem na całą szerokość wrappera, każde zamyka linia z gwiazdą jak w logo; otwarte pytanie
+   zapala swoją linię kolorem marki od lewej do prawej. Bez przypięcia. Bez własnego tła (mgławica podstrony).
+   Style bez [data-live] = stan końcowy (bez JS wszystkie odpowiedzi otwarte - ready = false).
+   ═══════════════════════════════════════════════════════════════════════════════════════════════════════════ */
+
+.on-f6 { --n-col: clamp(64px, 7vw, 116px); --gap: clamp(16px, 2vw, 28px); }
+.on-f6-box { padding-top: clamp(120px, 16vh, 180px); padding-bottom: 12px; }
+/* wielkie pismo: nagłówek, pytania i „Inne pytanie?” w jednym rozmiarze (jak hasła w scenach wyżej) */
+.on-f6-t {
+  margin: 0; max-width: 18em; font-weight: 700; font-size: clamp(30px, 4vw, 66px); line-height: 1.04;
+  letter-spacing: -.04em; color: #f8fafc; text-wrap: balance;
+}
+.on-f6-t .on-mask, .on-f6 .on-mask { padding-top: .1em; margin-top: -.1em; }
+.on-f6-head .on-label { margin-bottom: 20px; }
+.on-f6-lead { margin: 18px 0 0; max-width: 34rem; font-size: 18px; line-height: 1.6; color: #cbd5e1; text-wrap: pretty; }
+.on-f6-head { padding-bottom: clamp(34px, 4.4vh, 48px); }
+
+/* linia z gwiazdą: włosowa linia, nad nią kolor marki (rysuje się od lewej przy otwarciu), gwiazda na końcu */
+.on-f6-line { display: flex; align-items: center; }
+.on-f6-line i { position: relative; flex: 1; height: 1px; background: rgba(255, 255, 255, .14); transform-origin: 0 50%; }
+.on-f6-line i::after {
+  content: ''; position: absolute; inset: 0; transform: scaleX(0); transform-origin: 0 50%;
+  background: linear-gradient(90deg, rgb(59 130 246 / .12), var(--on-ac) 70%);
+  transition: transform .9s var(--on-io);
+}
+.on-f6-line b { flex: none; display: block; }
+.on-f6-line svg { display: block; width: 18px; height: 18px; fill: rgba(255, 255, 255, .3); transition: fill .45s ease, filter .45s ease; }
+.on-f6-item[data-open] > .on-f6-line i::after { transform: none; }
+.on-f6-item[data-open] > .on-f6-line svg { fill: var(--on-ac); filter: drop-shadow(0 0 7px rgb(59 130 246 / .7)); transition-delay: .62s; }
+.on-f6-head > .on-f6-line svg { fill: var(--on-ac); }
+
+/* pytanie: numer, wielkie pismo, plus (przy otwarciu krzyżyk) */
+.on-f6-q { margin: 0; }
+.on-f6-q button {
+  display: grid; grid-template-columns: var(--n-col) minmax(0, 1fr) auto; align-items: start; gap: 0 var(--gap);
+  width: 100%; padding: clamp(28px, 3.6vh, 44px) 0 clamp(24px, 3.2vh, 38px); border: 0; background: none;
+  color: inherit; text-align: left; cursor: pointer;
+}
+.on-f6-q button:focus-visible { outline: 2px solid #60a5fa; outline-offset: 4px; border-radius: 8px; }
+.on-f6-n { margin-top: clamp(8px, 1.1vw, 20px); font-size: 14px; font-weight: 600; color: #60a5fa; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.on-f6-q .on-f6-qm { display: block; } /* dwie klasy: o-nas.css (.on-mask = inline-block) ładuje się później */
+.on-f6-q .on-f6-t { color: #cbd5e1; transition: color .35s ease; }
+.on-f6-item[data-open] .on-f6-q .on-f6-t { color: #f8fafc; }
+.on-f6-x { position: relative; flex: none; width: 26px; height: 26px; margin-top: clamp(6px, 1vw, 20px); }
+.on-f6-x::before, .on-f6-x::after {
+  content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 2px; margin-top: -1px; border-radius: 1px;
+  background: #60a5fa; transition: transform .45s var(--on-ease);
+}
+.on-f6-x::after { transform: rotate(90deg); }
+.on-f6-item[data-open] .on-f6-x::before { transform: rotate(45deg); }
+.on-f6-item[data-open] .on-f6-x::after { transform: rotate(135deg); }
+@media (hover: hover) {
+  .on-f6-q button:hover .on-f6-t { color: #f8fafc; }
+}
+
+/* odpowiedź: pod pytaniem, od krawędzi tekstu pytania */
+.on-f6-a { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .6s var(--on-ease); }
+.on-f6-item[data-open] .on-f6-a { grid-template-rows: 1fr; }
+.on-f6-a > div { overflow: hidden; }
+.on-f6-a p {
+  margin: 0; max-width: calc(var(--n-col) + var(--gap) + 44rem);
+  padding: 0 0 clamp(30px, 4vh, 46px) calc(var(--n-col) + var(--gap));
+  font-size: clamp(18px, 1.45vw, 23px); line-height: 1.6; color: #cbd5e1; text-wrap: pretty;
+}
+@keyframes on-f6-ans { from { opacity: 0; transform: translateY(10px); } }
+.on[data-live] .on-f6-item[data-open] .on-f6-a p { animation: on-f6-ans .7s var(--on-ease) .12s both; }
+
+/* „Inne pytanie?” */
+.on-f6-ask { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 24px 40px; padding-top: clamp(40px, 6vh, 64px); }
+.on-f6-ask .on-f6-lead { margin-top: 12px; }
+
+/* wejście (raz, na czas): linie rysują się od lewej, gwiazdy zapalają się na ich końcach */
+.on[data-live] .on-f6-box:not([data-in]) .on-f6-line i { transform: scaleX(0); }
+.on[data-live] .on-f6-box:not([data-in]) .on-f6-line b { opacity: 0; }
+.on[data-live] .on-f6-box[data-in] .on-f6-line i { transition: transform 1.3s var(--on-io) calc(var(--d, 0) * 130ms + .25s); }
+.on[data-live] .on-f6-box[data-in] .on-f6-line b { transition: opacity .5s ease calc(var(--d, 0) * 130ms + 1.3s); }
+
+@media (max-width: 767px) {
+  .on-f6 { --gap: 0px; }
+  .on-f6-box { padding-top: 104px; }
+  .on-f6-t { font-size: clamp(26px, 7.6vw, 36px); }
+  .on-f6-lead { font-size: 16.5px; }
+  .on-f6-q button { grid-template-columns: minmax(0, 1fr) auto; gap: 10px 16px; padding: 26px 0 22px; }
+  .on-f6-n { grid-column: 1 / -1; margin: 0; }
+  .on-f6-x { width: 22px; height: 22px; margin-top: 6px; }
+  .on-f6-a p { padding: 0 0 26px; font-size: 16.5px; }
+  .on-f6-ask { flex-direction: column; align-items: flex-start; }
+}

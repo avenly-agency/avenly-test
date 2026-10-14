@@ -1,0 +1,151 @@
+'use client';
+
+import { useCallback, useEffect, useRef } from 'react';
+import type { Locale } from '@/lib/i18n/locale';
+import { Head } from './parts';
+import { Consult, More, Shot, YourSlot, type Clients } from './sec-clients-parts';
+import { accentOf, edgeFades, tintOf, WowStage, type SkyHandle } from './sec-wow';
+import { css, flag, mix, seg, usePin } from './shared';
+
+// „DLA KOGO PRACUJEMY” - WERSJA 6 „PLANSZE” (2026-10-13; „efekt wow jak wszędzie”). Prefiks on-4t-.
+// Każdy klient dostaje własne ujęcie w mgławicy swojej barwy - język podstrony Realizacje (plansza tytułowa -> odjazd):
+//   1. PLANSZA: rodzaj firmy OGROMNYM pismem na całą szerokość wrappera, sam na ekranie; mgławica przechodzi w barwę
+//      tego klienta, blask stoi za napisem,
+//   2. ODJAZD: napis maleje i odjeżdża do lewego górnego rogu pola, a od dołu wjeżdża kadr w ciemnym szkle ze stroną
+//      klienta (blask przechodzi za kadr); pod napisem pojawia się nazwa realizacji, zdanie i link,
+//   3. POSTÓJ, potem całe ujęcie odjeżdża w górę i gaśnie, a w jego miejsce staje plansza następnego klienta.
+// Ostatnie ujęcie: „Twoja firma” - wolne miejsce w kadrze i przycisk, mgławica w błękicie marki.
+// Skala napisu idzie przekształceniem bez will-change (pismo rysowane od nowa w każdej wielkości - ostre).
+// Wymiary liczy JS z pola sceny przy zmianie rozmiaru (szerokość napisu mierzona raz) i zapisuje miejsca przekształceniami.
+// Bez JS / ograniczony ruch: lista pozycji, każda z nazwą, kadrem i podpisem.
+
+const SIZES = '(max-width: 767px) 92vw, 58vw';
+const CHAPTER = 85; // długość ujęcia jednego klienta w vh
+
+type Geo = {
+  W: number; H: number; stack: boolean; sw: number; sh: number;
+  words: { w: number; h: number }[];
+};
+
+export function SecClientsPlates({ t, locale, live }: { t: Clients; locale: Locale; live: boolean }) {
+  const root = useRef<HTMLElement>(null);
+  const pin = useRef<HTMLDivElement>(null), stage = useRef<HTMLDivElement>(null), fit = useRef<HTMLDivElement>(null);
+  const box = useRef<HTMLDivElement>(null);
+  const sky = useRef<SkyHandle>(null);
+  const geo = useRef<Geo | null>(null);
+  const els = useRef<{ words: HTMLElement[]; caps: HTMLElement[]; frames: HTMLElement[] } | null>(null);
+  const prog = useRef(0);
+  const n = t.items.length + 1; // klienci + „Twoja firma”
+
+  const paint = useCallback(() => {
+    const el = pin.current, st = stage.current, bx = box.current;
+    if (!el || !st || !bx) return;
+    const c = (els.current ??= {
+      words: Array.from(el.querySelectorAll<HTMLElement>('.on-4t-word')),
+      caps: Array.from(el.querySelectorAll<HTMLElement>('.on-4t-cap')),
+      frames: Array.from(el.querySelectorAll<HTMLElement>('.on-4t-frame')),
+    });
+    // pomiar tylko przy zmianie rozmiaru: pole (szerokość treści wrappera × wysokość kompozycji), ekran, napisy
+    const g = (geo.current ??= {
+      W: Math.max(1, bx.clientWidth - 48), H: bx.clientHeight, stack: bx.clientWidth < 768,
+      sw: st.clientWidth, sh: st.clientHeight,
+      words: c.words.map((w) => ({ w: w.offsetWidth, h: w.offsetHeight })),
+    });
+    if (!g.H || !g.sw) return;
+    const { W, H, stack } = g;
+    // które ujęcie jest na ekranie (z ułamkiem): n ujęć równej długości na odcinku 0,02-0,96 sceny
+    const p = prog.current, q = Math.min(n, Math.max(0, ((p - 0.02) / 0.94) * n));
+    const left = (g.sw - W) / 2; // lewa krawędź treści wrappera na ekranie
+    // miejsca na postoju: mały napis u góry po lewej, pod nim podpis; kadr po prawej (telefon: na dole, na całą szerokość)
+    const yS = stack ? 84 : H * 0.27;
+    const fw = stack ? W : W * 0.56, fh = (fw * 10) / 16;
+    const fx = W - fw, fy = stack ? H - 96 - fh : H * 0.54 - fh / 2;
+    css(bx, '--fw', `${fw.toFixed(1)}px`);
+    const on = Math.min(n - 1, Math.max(0, Math.floor(q + 0.14))); // ujęcie, do którego należy barwa
+    let aim = { cx: 0.5, cy: 0.5, hw: 0.3, hh: 0.2 };
+    c.words.forEach((w, i) => {
+      const e = q - i, m = g.words[i] ?? { w: 1, h: 1 };
+      const inn = i === 0 ? 1 : seg(e, -0.14, 0);           // plansza staje
+      const sh = seg(e, 0.28, 0.54);                         // odjazd: napis maleje do rogu
+      const fin = seg(e, 0.3, 0.6);                          // kadr wjeżdża od dołu
+      const out = i === n - 1 ? 0 : seg(e, 0.86, 1);         // całe ujęcie odjeżdża w górę
+      const live1 = inn * (1 - out);
+      // napis: na planszy tak duży, jak pozwala szerokość wrappera (najwyżej 3,2×), wyśrodkowany w pionie
+      const big = Math.min(3.2, (W * 0.98) / Math.max(1, m.w));
+      const k = mix(big, 1, sh), y = mix(H * 0.5 - (m.h * big) / 2, yS, sh) - out * 60 + (1 - inn) * 30;
+      css(w, 'transform', `translate3d(0, ${y.toFixed(1)}px, 0) scale(${k.toFixed(4)})`);
+      css(w, 'opacity', live1.toFixed(3));
+      css(w, 'visibility', live1 < 0.002 ? 'hidden' : 'visible');
+      // podpis pod małym napisem
+      const cap = c.caps[i], co = seg(e, 0.5, 0.64) * (1 - out);
+      css(cap, 'transform', `translate3d(0, ${(yS + m.h + (stack ? 10 : 18) - out * 60 + (1 - seg(e, 0.5, 0.64)) * 14).toFixed(1)}px, 0)`);
+      css(cap, 'opacity', co.toFixed(3));
+      css(cap, 'visibility', co < 0.002 ? 'hidden' : 'visible');
+      flag(cap, 'data-on', co > 0.6);
+      // kadr
+      const fr = c.frames[i], fo = seg(fin, 0, 0.45) * (1 - out);
+      const yy = fy + (1 - fin) * H * 0.42 - out * 80, sc = mix(0.92, 1, fin);
+      css(fr, 'transform', `translate3d(${fx.toFixed(1)}px, ${yy.toFixed(1)}px, 0) scale(${sc.toFixed(4)})`);
+      css(fr, 'opacity', fo.toFixed(3));
+      css(fr, 'visibility', fo < 0.002 ? 'hidden' : 'visible');
+      // cel mgławicy: najpierw za wielkim napisem, potem za kadrem
+      if (i === on) {
+        const wordAim = { cx: (left + (m.w * big) / 2) / g.sw, cy: (H * 0.5) / g.sh, hw: Math.min(0.46, (m.w * big) / 2 / g.sw), hh: Math.max(0.12, (m.h * big) / 2 / g.sh) };
+        const frameAim = { cx: (left + fx + fw / 2) / g.sw, cy: (fy + fh / 2) / g.sh, hw: Math.min(0.46, fw / 2 / g.sw), hh: Math.min(0.44, fh / 2 / g.sh) };
+        aim = {
+          cx: mix(wordAim.cx, frameAim.cx, fin), cy: mix(wordAim.cy, frameAim.cy, fin),
+          hw: mix(wordAim.hw, frameAim.hw, fin), hh: mix(wordAim.hh, frameAim.hh, fin),
+        };
+      }
+    });
+    const slug = t.items[on]?.image;
+    css(root.current, '--kc', accentOf(slug));
+    sky.current?.aim({ ...aim, tint: tintOf(slug) });
+    edgeFades(st, p);
+  }, [n, t]);
+
+  useEffect(() => {
+    if (!live) return;
+    const bx = box.current;
+    if (!bx) return;
+    let dead = false;
+    const again = () => { geo.current = null; paint(); };
+    const ro = new ResizeObserver(again);
+    ro.observe(bx);
+    // szerokość napisów zależy od wczytanego fontu
+    document.fonts?.ready.then(() => { if (!dead) again(); });
+    return () => { dead = true; ro.disconnect(); geo.current = null; els.current = null; };
+  }, [live, paint]);
+  usePin(pin, (p) => { prog.current = p; paint(); }, live);
+
+  return (
+    <section ref={root} className="on-sec on-3 on-3c on-4 on-4t" aria-labelledby="on-3-h">
+      <Head id="on-3-h" label={t.label} title={t.heading} accent={t.headingAccent} lead={t.lead} live={live} />
+      <WowStage pin={pin} stage={stage} fit={fit} sky={sky} len={n * CHAPTER} live={live}>
+        <div ref={box} className="container mx-auto px-6 on-4t-box">
+          <ol className="on-4t-list">
+            {t.items.map((it) => (
+              <li key={it.href} className="on-4t-item">
+                <h3 className="on-4t-word">{it.type}</h3>
+                <div className="on-4t-cap">
+                  <p className="on-3c-name">{it.name}</p>
+                  <p className="on-3c-line">{it.line}</p>
+                  <More href={it.href} label={t.more} locale={locale} />
+                </div>
+                <div className="on-4-frame on-4t-frame" aria-hidden="true"><Shot slug={it.image} sizes={SIZES} big /></div>
+              </li>
+            ))}
+            <li className="on-4t-item">
+              <h3 className="on-4t-word im-accent">{t.yours.type}</h3>
+              <div className="on-4t-cap">
+                <p className="on-3c-line on-3c-line--you">{t.yours.line}</p>
+                <Consult label={t.yours.cta} locale={locale} />
+              </div>
+              <div className="on-4-frame on-4-frame--you on-4t-frame" aria-hidden="true"><YourSlot label={t.yours.frame} /></div>
+            </li>
+          </ol>
+        </div>
+      </WowStage>
+    </section>
+  );
+}

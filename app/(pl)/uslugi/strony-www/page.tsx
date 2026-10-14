@@ -6,7 +6,7 @@ import { JsonLd } from '@/components/seo/JsonLd';
 import { breadcrumbSchema } from '@/lib/schemas';
 
 export const metadata: Metadata = {
-  title: 'Strony WWW - one-page, firmowe, sklepy i systemy CRM',
+  title: 'Strony WWW - od one-page po sklep i system CRM',
   description:
     'Strona one-page, firmowa, interaktywna, sklep internetowy i system CRM. Klient sprawdza Cię w sieci, zanim zadzwoni. Od Twojej strony zależy, czy to zrobi.',
   // Blok openGraph strony ZASTĘPUJE blok z root layoutu (Next go nie łączy) - dlatego podany w całości (adres, typ, obrazek).

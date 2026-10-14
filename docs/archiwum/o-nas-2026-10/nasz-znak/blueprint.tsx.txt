@@ -1,0 +1,116 @@
+'use client';
+
+import { useRef } from 'react';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { BP_VIEWBOX, DIMS, GUIDES } from './blueprint-data';
+import { Comet, Pieces, setComet } from './mark';
+import { Head, Narrator, setNarrator } from './parts';
+import { css, keyframes, lin, seg, usePin } from './shared';
+
+// SCENA 3 - „KAŻDY DETAL MA SWÓJ WYMIAR” (przypięta 100svh + 260vh). Konstrukcja nowego logo (public/logo/
+// avenly-konstrukcja.svg) rysuje się na czarnej desce przy przewijaniu, a kamera jedzie po rysunku:
+//   1. siatka (linia bazowa, góra liter, podziałka co 12,5) i wymiar 40u, litery rysują się obrysem i wypełniają,
+//   2. wymiary 25u / 15u (gdzie biegnie linia), gwiazda leci po linii od czubka do końca - kamera jedzie za nią,
+//      po drodze wymiar 13u (ogon linii) i 3u (odstęp liter),
+//   3. wymiary gwiazdy (5u, 16u), na koniec odjazd kamery do całego rysunku.
+// Kamera: telefon mocno przybliżony (podpisy wymiarów czytelne), komputer łagodniej (ten sam ruch, mniejsze zbliżenie).
+// Bez JS / ograniczony ruch: cały rysunek od razu, lista kroków.
+
+/** Kiedy pojawia się wymiar (postęp sceny). */
+const AT: Record<string, number> = { d40: 0.16, d25: 0.34, d15: 0.37, d13: 0.41, d3: 0.48, d5: 0.6, d16b: 0.62, d16r: 0.64 };
+/** Kamera: środek kadru (jednostki logo) i zbliżenie (telefon; komputer = 1 + (z - 1) · 0,42). */
+const KEYS = [
+  { p: 0, x: 40, y: -50, z: 3.3 },
+  { p: 0.3, x: 40, y: -50, z: 3.3 },
+  { p: 0.38, x: -20, y: -56, z: 3.3 },
+  { p: 0.42, x: -20, y: -56, z: 3.3 },
+  { p: 0.58, x: 540, y: -56, z: 3.3 },
+  { p: 0.64, x: 578, y: -44, z: 3.3 },
+  { p: 0.82, x: 578, y: -44, z: 3.3 },
+  { p: 1, x: 271.5, y: -47, z: 1 },
+];
+const VB = { x: -112.5, y: -128, w: 768.617, h: 162 };
+
+export function Blueprint({ t, live, stepsLabel }: { t: ONasDict['blueprint']; live: boolean; stepsLabel: string }) {
+  const pin = useRef<HTMLDivElement>(null);
+  const stage = useRef<HTMLDivElement>(null);
+  const cam = useRef<HTMLDivElement>(null);
+  const narr = useRef<HTMLOListElement>(null);
+
+  usePin(pin, (p, el) => {
+    const st = stage.current;
+    if (!st) return;
+    const W = st.clientWidth, H = st.clientHeight;
+    // kamera
+    const k = keyframes(p, KEYS, ['x', 'y', 'z']);
+    const z = W < 700 ? k.z : 1 + (k.z - 1) * 0.42;
+    const base = Math.min(W, (H * VB.w) / VB.h) * 0.96; // szerokość rysunku przy z = 1 (cały się mieści)
+    const u = (base / VB.w) * z;
+    const tx = W / 2 - (k.x - VB.x) * u, ty = H / 2 - (k.y - VB.y) * u;
+    css(cam.current, 'width', `${base.toFixed(1)}px`);
+    css(cam.current, 'transform', `translate3d(${tx.toFixed(2)}px, ${ty.toFixed(2)}px, 0) scale(${z.toFixed(4)})`);
+    // siatka
+    el.querySelectorAll<SVGLineElement>('.on-bp-g').forEach((g) => {
+      const i = Number(g.dataset.i);
+      const v = seg(p, 0.02 + i * 0.013, 0.16 + i * 0.013);
+      css(g, 'transform', v >= 0.9995 ? 'none' : `scaleX(${Math.max(0.0001, v).toFixed(4)})`);
+    });
+    // litery: obrys, potem wypełnienie
+    el.querySelectorAll<SVGPathElement>('.on-bp-art .on-pc-o').forEach((o) => {
+      const kk = Number(o.dataset.k);
+      const v = seg(p, 0.1 + kk * 0.026, 0.24 + kk * 0.026);
+      css(o, 'stroke-dashoffset', (1 - v).toFixed(4));
+      css(o, 'opacity', v > 0.001 ? '1' : '0');
+    });
+    el.querySelectorAll<SVGPathElement>('.on-bp-art .on-pc').forEach((f) => {
+      const kk = Number(f.dataset.k);
+      css(f, 'opacity', (seg(p, 0.24 + kk * 0.02, 0.34 + kk * 0.02) * 0.92).toFixed(3));
+    });
+    setComet(el.querySelector('.on-bp-comet'), seg(p, 0.42, 0.58));
+    // wymiary
+    el.querySelectorAll<SVGGElement>('.on-bp-dim').forEach((dm) => {
+      const v = seg(p, Number(dm.dataset.at), Number(dm.dataset.at) + 0.07);
+      css(dm, 'opacity', v.toFixed(3));
+      dm.querySelectorAll('.on-bp-dl').forEach((l) => css(l, 'transform', v >= 0.9995 ? 'none' : `scale(${Math.max(0.0001, v).toFixed(4)})`));
+      css(dm.querySelector('.on-bp-lbl'), 'opacity', seg(v, 0.35, 1).toFixed(3));
+    });
+    setNarrator(narr.current, p < 0.34 ? 0 : p < 0.6 ? 1 : 2, [lin(p, 0, 0.34), lin(p, 0.34, 0.6), lin(p, 0.6, 0.86)]);
+  }, live);
+
+  return (
+    <section className="on-sec on-bp" aria-labelledby="on-bp-h">
+      <Head id="on-bp-h" label={t.label} title={t.heading} accent={t.headingAccent} lead={t.lead} live={live} />
+      <div ref={pin} className="on-pin on-bp-pin">
+        <div className="on-stick on-bp-stick">
+          <div className="container mx-auto px-6 on-bp-box">
+            <div ref={stage} className="on-bp-stage">
+              <div ref={cam} className="on-bp-cam">
+                <svg className="on-bp-art" viewBox={BP_VIEWBOX} role="img" aria-label={t.figLabel} focusable="false">
+                  <g className="on-bp-guides">
+                    {GUIDES.map((g, i) => (
+                      <line key={i} className="on-bp-g" data-i={i} x1={-50.5} y1={g.y} x2={622.117} y2={g.y} strokeOpacity={g.o} vectorEffect="non-scaling-stroke" />
+                    ))}
+                  </g>
+                  <g className="on-bp-letters"><Pieces outline /></g>
+                  <Comet className="on-bp-comet" />
+                  {DIMS.map((dm) => (
+                    <g key={dm.id} className="on-bp-dim" data-at={AT[dm.id]}>
+                      {dm.lines.map((l, i) => (
+                        <line
+                          key={i} className="on-bp-dl" x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} strokeOpacity={l.o}
+                          strokeDasharray={l.dash} vectorEffect="non-scaling-stroke"
+                        />
+                      ))}
+                      <path className="on-bp-lbl" d={dm.label} transform={`translate(${dm.cx} ${dm.cy}) scale(1.45) translate(${-dm.cx} ${-dm.cy})`} />
+                    </g>
+                  ))}
+                </svg>
+              </div>
+            </div>
+            <Narrator ref={narr} items={t.steps} label={stepsLabel} />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

@@ -1,0 +1,95 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import { useLenis } from 'lenis/react';
+import { createChoice, ProposalSwitcher, useChoice } from '@/components/utils/proposals';
+import type { Locale } from '@/lib/i18n/locale';
+import type { ONasDict } from '@/lib/i18n/o-nas';
+import { Blueprint } from './blueprint';
+import { Dock } from './dock';
+import { Ending } from './ending';
+import { Faq } from './faq';
+import { HeroPan } from './heroes';
+import { Principles } from './principles';
+import { SecClients } from './sec-clients';
+import { SecGoals } from './sec-goals';
+import { SecWheel } from './sec-wheel';
+import { Sky } from './sky';
+import { useMode } from './shared';
+import './o-nas.css'; // style podstrony we własnym pliku (praca równoległa - PRACA-ROWNOLEGLA.md), prefiks on-
+
+// O NAS - przebudowa od zera 2026-10-09 na nowym logo (AVENLY przecięte linią z gwiazdą), wszystko w SVG, sceny
+// sterowane przewijaniem. Układ strony (właściciel liczy „sekcje” tak, jak pojawiają się na ekranie):
+//   1. wejście „Panorama z cięciem” (heroes.tsx) - wybór właściciela 2026-10-09, potwierdzony 2026-10-12,
+//   2. sekcja po wjeździe w gwiazdę = „Plakat” (poster.tsx, część tej samej przypiętej sceny) - wybór 2026-10-12,
+//   3. SEKCJA PO PLAKACIE - PROPOZYCJE O RÓŻNYCH TEMATACH (2026-10-13: „usuń te, co zrobiłeś, i zrób sekcje, które
+//      nie są związane z tym formatem, czyli bez pośredników itp.”): przełącznik „Sekcja po plakacie” w panelu na
+//      dole ekranu (tylko `npm run dev`, produkcja = wariant domyślny): Dla kogo pracujemy (sec-clients.tsx) /
+//      Więcej i mniej (sec-goals.tsx) / Co robimy (sec-wheel.tsx). Dawne wersje o drodze wiadomości („Bez
+//      pośredników”, dziewięć scen) są w docs/archiwum/o-nas-2026-10/sekcja-po-plakacie/,
+//   4. Konstrukcja logo (blueprint.tsx), Zasady (principles.tsx), FAQ (faq.tsx), zakończenie (ending.tsx).
+// Niewybrane wejścia, wersje całej podstrony i propozycje sekcji po wjeździe: docs/archiwum/o-nas-2026-10/.
+// Tryby: data-live (pełny ruch), data-still (ograniczony ruch - zwykła strona w stanie końcowym); przed hydratacją
+// treść schowana (bez mignięcia układu statycznego), bez JS pokazuje ją <noscript>. Notatki: docs/podstrony/o-nas.md.
+
+const NOSCRIPT = '.on-body{opacity:1!important;animation:none!important}';
+const DEV = process.env.NODE_ENV !== 'production';
+
+// sekcja po plakacie: trzy propozycje, każda o czym innym; domyślna = pierwsza
+const NEXT = [
+  { id: 'klienci', label: '1. Dla kogo pracujemy' },
+  { id: 'cele', label: '2. Więcej i mniej' },
+  { id: 'uslugi', label: '3. Co robimy' },
+] as const;
+type Next = (typeof NEXT)[number]['id'];
+const nextChoice = createChoice<Next>('avenly-o-nas-po-plakacie', NEXT, 'klienci');
+
+export function ONasClient({ t, locale }: { t: ONasDict; locale: Locale }) {
+  const mode = useMode();
+  const live = mode === 'live';
+  const picked = useChoice(nextChoice);
+  // produkcja zawsze dostaje wariant domyślny
+  const sec: Next = DEV ? picked : nextChoice.def;
+  // dev: wybór z panelu wczytuje się z localStorage dopiero po hydratacji - do tego czasu sekcja po plakacie nie jest
+  // montowana, inaczej najpierw stanęłaby wersja domyślna, a chwilę później wybrana. Efekt stoi PO useChoice, więc
+  // biegnie po wczytaniu wyboru. Produkcja: od razu. Wejście jest jedno - montuje się zawsze od pierwszej klatki.
+  const [settled, setSettled] = useState(!DEV);
+  useEffect(() => { setSettled(true); }, []);
+  const lenis = useLenis();
+  const two = useRef<HTMLDivElement>(null);
+  // zmiana propozycji: przewinięcie na początek sekcji (każda ma inną długość)
+  const pick = (id: Next) => {
+    nextChoice.set(id);
+    const el = two.current;
+    if (!el) return;
+    const y = el.getBoundingClientRect().top + window.scrollY;
+    if (lenis) lenis.scrollTo(y, { immediate: true, force: true }); else window.scrollTo(0, y);
+  };
+  const ready = mode !== null;
+  const next = sec === 'cele' ? (
+    <SecGoals key="cele" t={t.goals} locale={locale} live={live} />
+  ) : sec === 'uslugi' ? (
+    <SecWheel key="uslugi" t={t.offer} locale={locale} live={live} />
+  ) : (
+    <SecClients key="klienci" t={t.clients} locale={locale} live={live} />
+  );
+  return (
+    <div className="on" data-live={live ? '' : undefined} data-still={mode === 'still' ? '' : undefined}>
+      <noscript><style>{NOSCRIPT}</style></noscript>
+      <Sky live={live} />
+      <div className="on-body">
+        <HeroPan t={t.intro} locale={locale} live={live} />
+        <div ref={two} className="on-two">{settled && next}</div>
+        <Blueprint t={t.blueprint} live={live} stepsLabel={t.stepsLabel} />
+        <Principles t={t.principles} live={live} />
+        <Faq t={t.faqSection} faq={t.faq} live={live} ready={ready} />
+        <Ending t={t.ending} locale={locale} live={live} />
+      </div>
+      {DEV && (
+        <Dock>
+          <ProposalSwitcher label="Sekcja po plakacie" items={NEXT} value={sec} pick={pick} />
+        </Dock>
+      )}
+    </div>
+  );
+}

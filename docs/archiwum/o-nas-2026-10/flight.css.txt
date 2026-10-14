@@ -1,0 +1,70 @@
+/* ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+   O NAS - wersja „PRZELOT” (propozycja 2026-10-09, flight.tsx; runda 3: cięcie jak w hero). Prefiks on-f-.
+   Style bez [data-live] = ujęcia jedno pod drugim (bez JS / ograniczony ruch), logo i bramy schowane, niebo nieruchome.
+   Pod [data-live] scena przypięta: litery, linię i gwiazdę pisze JS atrybutami SVG (cięcie na czas, potem
+   przewijanie), ujęcia skalują się wokół punktu zbiegu (transform-origin liczony z pomiaru).
+   ═══════════════════════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* niebo: płótno przyklejone do okna za całą treścią podstrony */
+.on-f-sky {
+  position: sticky; top: 0; z-index: 0;
+  height: 100vh; height: 100lvh; margin-bottom: -100vh; margin-bottom: -100lvh;
+  pointer-events: none;
+}
+.on-f-sky canvas { display: block; width: 100%; height: 100%; }
+.on[data-live] .on-f-sky { animation: on-fade 1.8s ease both; }
+
+.on-f { position: relative; }
+.on-f-pin { position: relative; }
+.on-f-stick { position: relative; padding: 136px 0 24px; }
+.on-f-box { position: relative; }
+.on-f-svg, .on-f-prog { display: none; }
+.on-f-panel { max-width: 40rem; margin: 0 0 72px; }
+
+/* gwiazda: kolor marki; w cięciu rozgrzany biały środek i błysk ostrych promieni przy lądowaniu */
+.on-f-star { opacity: 0; }
+.on-f-gem { fill: var(--on-ac); }
+.on-f-core { fill: #fff; }
+.on-f-rays { fill: none; stroke: #fff; stroke-width: 1; opacity: 0; }
+/* litery-bramy: białe, z bliska sam obrys; krawędzie cięcia w kolorze gwiazdy (pas przycięty w jednostkach logo) */
+.on-f-gate { fill: #fff; }
+.on-f-gate path { stroke: rgba(255, 255, 255, .85); stroke-width: 1.2; }
+.on-f-kerf { fill: none; opacity: 0; }
+.on-f-kerf path { stroke: #60a5fa; stroke-width: 1.6; }
+/* linia logo za gwiazdą i ogon spadającej gwiazdy */
+.on-f-line { fill: var(--on-ac); }
+.on-f-tail { opacity: 0; }
+
+/* ── pełny ruch ── */
+.on[data-live] .on-f-pin { height: calc(100vh + var(--on-f-len, 600) * 1vh); height: calc(100svh + var(--on-f-len, 600) * 1vh); }
+.on[data-live] .on-f-stick { position: sticky; top: 0; height: 100vh; height: 100svh; padding: 0; overflow: hidden; overflow: clip; }
+.on[data-live] .on-f-svg { display: block; position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden; animation: on-fade 1.4s ease .2s both; }
+.on[data-live] .on-f-gate { opacity: 0; }
+.on[data-live] .on-f-box { height: 100%; }
+.on[data-live] .on-f-panel {
+  position: absolute; left: 1.5rem; top: 50%; width: min(35rem, 42vw); max-width: none; margin: 0;
+  transform: translateY(-50%); opacity: 0; visibility: hidden; pointer-events: none;
+}
+.on[data-live] .on-f-panel.on-i { opacity: 1; visibility: visible; }
+.on[data-live] .on-f-panel[data-on] { pointer-events: auto; }
+/* małe logo w rogu = postęp lotu */
+.on[data-live] .on-f-prog { display: block; position: absolute; left: 1.5rem; bottom: 34px; width: 128px; height: auto; overflow: visible; }
+.on-f-prog-pc { fill: rgba(255, 255, 255, .2); transition: fill .7s ease; }
+.on-f-prog-pc[data-on] { fill: #f8fafc; }
+.on-f-prog-line { fill: rgba(59, 130, 246, .42); transition: fill .7s ease; }
+.on-f-prog-line[data-on] { fill: var(--on-ac); }
+
+@media (max-width: 767px) {
+  .on-f-panel { margin-bottom: 56px; }
+  .on[data-live] .on-f-panel { right: 1.5rem; width: auto; top: 43%; transform: none; }
+  .on[data-live] .on-f-prog { width: 104px; bottom: 26px; }
+}
+/* niski telefon: pierwszy ekran bez opisu (przycisk nie może wyjść poza ekran) */
+@media (max-width: 767px) and (max-height: 700px) {
+  .on[data-live] .on-f-panel .on-i-lead { display: none; }
+  .on[data-live] .on-f-panel .on-h1 { margin-bottom: 26px; }
+}
+/* niski ekran komputera: mniejszy nagłówek pierwszego ekranu */
+@media (min-width: 768px) and (max-height: 700px) {
+  .on[data-live] .on-f-panel .on-h1 { font-size: clamp(32px, 3.6vw, 52px); }
+}

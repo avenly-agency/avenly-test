@@ -19,16 +19,21 @@ export const metadata: Metadata = {
     'blog chatbot AI',
     'strona internetowa dla firmy',
   ],
+  // Blok openGraph strony ZASTĘPUJE blok z root layoutu (Next go nie łączy) - dlatego podany w całości (adres, typ, obrazek).
   openGraph: {
+    type: 'website',
+    locale: 'pl_PL',
+    siteName: 'Avenly',
+    url: '/blog/',
     title: 'Blog Avenly - konkretna wiedza bez żargonu',
     description: 'Krótkie artykuły o tym, jak strona internetowa, jej szybkość i AI wpływają na Twój biznes.',
-    url: '/blog',
-    type: 'website',
+    images: [{ url: '/og-default.png', width: 1200, height: 630, alt: 'Avenly - agencja interaktywna', type: 'image/png' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Blog Avenly',
-    description: 'Konkretna wiedza o stronach, szybkości i AI. Bez żargonu.',
+    title: 'Blog Avenly - konkretna wiedza bez żargonu',
+    description: 'Krótkie artykuły o tym, jak strona internetowa, jej szybkość i AI wpływają na Twój biznes.',
+    images: ['/og-default.png'],
   },
 };
 

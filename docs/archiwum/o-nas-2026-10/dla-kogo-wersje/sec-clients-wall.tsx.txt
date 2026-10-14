@@ -1,0 +1,103 @@
+'use client';
+
+import { useCallback, useEffect, useRef, type CSSProperties } from 'react';
+import type { Locale } from '@/lib/i18n/locale';
+import { Head } from './parts';
+import { Consult, More, Shot, track, YourSlot, type Clients } from './sec-clients-parts';
+import { css, flag, usePin } from './shared';
+import './sec.css';
+
+// „DLA KOGO PRACUJEMY” - WERSJA 3 „ŚCIANA” (2026-10-13). Prefiks on-3w-.
+// Ruch: kamera na płaszczyźnie (przejazd i odjazd), jak nad ścianą z planszami. Cztery plansze wiszą w układzie 2 × 2:
+// trzech klientów i jedno wolne miejsce - „Twoja firma”. Każda plansza to komplet: rodzaj firmy wielkim pismem, kadr
+// z prawdziwym zrzutem strony i podpis z linkiem. Kamera stoi przy jednej planszy (sąsiednie wystają przygaszone
+// zza krawędzi ekranu), a przy przewijaniu objeżdża ścianę po kolei zgodnie z ruchem wskazówek - w połowie każdego
+// przejazdu lekko odjeżdża, więc przez chwilę widać kilka plansz naraz, i dojeżdża do następnej (postój przy każdej).
+// Tekst jest częścią planszy (nic nie leży na innych kadrach), klikalna jest tylko plansza przy kamerze.
+// Wymiary planszy liczy JS z pola sceny i podaje CSS-owi jako --cw (szerokość) i --ratio (wysokość / szerokość);
+// pismo planszy jest w ułamkach --cw, więc skaluje się razem z nią.
+// Bez JS / ograniczony ruch: plansze jedna pod drugą (siatka).
+
+const SIZES = '(max-width: 767px) 92vw, 70vw';
+/** Miejsca plansz na ścianie (kolumna, wiersz) w kolejności pozycji: objazd zgodnie z ruchem wskazówek. */
+const SPOTS: [number, number][] = [[0, 0], [1, 0], [1, 1], [0, 1]];
+const GAP = 0.14; // odstęp między planszami w ułamku szerokości planszy (ta sama liczba w sec.css)
+
+type Geo = { W: number; H: number };
+
+export function SecClientsWall({ t, locale, live }: { t: Clients; locale: Locale; live: boolean }) {
+  const pin = useRef<HTMLDivElement>(null), stage = useRef<HTMLDivElement>(null), plane = useRef<HTMLDivElement>(null);
+  const geo = useRef<Geo | null>(null);
+  const cells = useRef<HTMLElement[] | null>(null);
+  const prog = useRef(0);
+  const n = SPOTS.length;
+
+  const paint = useCallback(() => {
+    const el = pin.current, st = stage.current;
+    if (!el || !st) return;
+    const g = (geo.current ??= { W: st.clientWidth, H: st.clientHeight });
+    if (!g.W || !g.H) return;
+    const list = (cells.current ??= Array.from(el.querySelectorAll<HTMLElement>('.on-3w-cell')));
+    const stack = g.W < 768;
+    // pole sceny (pod nawigacją, nad dołem ekranu / bąblem czatu) i plansza, która się w nim mieści
+    const top = stack ? 76 : 92, bot = stack ? 92 : 44, ah = Math.max(240, g.H - top - bot);
+    const ratio = stack ? 1.3 : 0.8;
+    const cw = Math.min(stack ? g.W - 48 : Math.min(g.W * 0.72, 1180), ah / ratio), ch = cw * ratio;
+    css(plane.current, '--cw', `${cw.toFixed(1)}px`);
+    css(plane.current, '--ratio', String(ratio));
+    // kamera: między postojami jedzie po prostej od planszy do planszy i w połowie drogi odjeżdża (z = 0,72)
+    const pos = track(prog.current, n).pos, j = Math.min(n - 2, Math.floor(pos)), u = pos - j;
+    const a = SPOTS[j], b = SPOTS[j + 1];
+    const col = a[0] + (b[0] - a[0]) * u, row = a[1] + (b[1] - a[1]) * u;
+    const z = 1 - 0.28 * Math.sin(Math.PI * u);
+    const cx = col * cw * (1 + GAP) + cw / 2, cy = row * (ch + cw * GAP) + ch / 2;
+    css(plane.current, 'transform', `translate3d(${(g.W / 2 - cx * z).toFixed(1)}px, ${(top + ah / 2 - cy * z).toFixed(1)}px, 0) scale(${z.toFixed(4)})`);
+    list.forEach((cell, i) => {
+      const d = Math.max(Math.abs(SPOTS[i][0] - col), Math.abs(SPOTS[i][1] - row));
+      css(cell, 'opacity', (1 - 0.62 * Math.min(1, d)).toFixed(3));
+      flag(cell, 'data-on', d < 0.3); // klikalna tylko plansza przy kamerze
+    });
+  }, [n]);
+
+  useEffect(() => {
+    if (!live) return;
+    const st = stage.current;
+    if (!st) return;
+    const ro = new ResizeObserver(() => { geo.current = null; paint(); });
+    ro.observe(st);
+    return () => { ro.disconnect(); geo.current = null; cells.current = null; };
+  }, [live, paint]);
+  usePin(pin, (p) => { prog.current = p; paint(); }, live);
+
+  const spot = (i: number) => ({ '--col': SPOTS[i][0], '--row': SPOTS[i][1] }) as CSSProperties;
+  return (
+    <section className="on-sec on-3 on-3c on-3w" aria-labelledby="on-3-h">
+      <Head id="on-3-h" label={t.label} title={t.heading} accent={t.headingAccent} lead={t.lead} live={live} />
+      <div ref={pin} className="on-pin on-3c-pin" style={{ '--n': n } as CSSProperties}>
+        <div ref={stage} className="on-stick on-3w-stick">
+          <div ref={plane} className="on-3w-plane">
+            {t.items.slice(0, n - 1).map((it, i) => (
+              <article key={it.href} className="on-3w-cell" style={spot(i)}>
+                <h3 className="on-3w-type">{it.type}</h3>
+                <div className="on-3c-frame"><Shot slug={it.image} sizes={SIZES} big /></div>
+                <div className="on-3w-cap">
+                  <p className="on-3w-name">{it.name}</p>
+                  <p className="on-3w-line">{it.line}</p>
+                  <More href={it.href} label={t.more} locale={locale} />
+                </div>
+              </article>
+            ))}
+            <article className="on-3w-cell" style={spot(n - 1)}>
+              <h3 className="on-3w-type im-accent">{t.yours.type}</h3>
+              <div className="on-3c-frame on-3c-frame--you"><YourSlot label={t.yours.frame} /></div>
+              <div className="on-3w-cap on-3w-cap--you">
+                <p className="on-3w-line">{t.yours.line}</p>
+                <Consult label={t.yours.cta} locale={locale} />
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

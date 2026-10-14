@@ -1,0 +1,235 @@
+/* ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+   O NAS - SEKCJA PO PLAKACIE („Bez pośredników. Prosto do nas.”), wersje do wyboru (2026-10-12; właściciel po
+   wyborze „Plakatu”: „następnie następną sekcję dodaj kilka wersji”). Przełącznik „Sekcja po plakacie” w panelu
+   na dole ekranu (tylko npm run dev).
+     on-2   wspólna rama przypiętej sceny,
+     on-2s  1. „Jedna gwiazda”  (second-star.tsx)  - obrys gwiazdy zapada się w punkt, potem prosta linia do nas,
+     on-2d  2. „Doba”           (second-day.tsx)   - tarcza doby, gwiazda okrąża ją raz (odpowiedź w 24 h),
+     on-2l  3. „Światło”        (second-light.tsx) - manifest, który gwiazda zapala słowo po słowie,
+     on-2c  4. „Licznik”        (second-count.tsx) - ogromne cyfry przewijają się jak bębny licznika do 24 h,
+   druga tura (2026-10-13, „daj jeszcze kilka propozycji”, kierunek „zaskocz mnie”):
+     on-2h  5. „Korytarz”       (second-hall.tsx)  - lot w głąb prosto do gwiazdy, drzwi działów mijane po bokach,
+     on-2r  6. „Rozmowa”        (second-talk.tsx)  - przykładowa rozmowa: wieczorem piszesz, rano odpowiada projektant,
+     on-2p  7. „Ty i my”        (second-pairs.tsx) - trzy pary dużych zdań połączone prostą linią z gwiazdą,
+     on-2b  8. „Bezpośrednio”   (second-reach.tsx) - po prostu bezpośredni kontakt wielkim pismem (bez przypięcia).
+   Zasada jak w całej podstronie: style bez [data-live] = stan końcowy (bez JS / ograniczony ruch), stany „przed”
+   i przypięcie tylko pod [data-live]. Po wyborze: usunąć pozostałe sceny, ich bloki tutaj i przełącznik.
+   ═══════════════════════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* ── WSPÓLNA RAMA ── */
+.on-2-pin { --len: 230; }
+.on[data-live] .on-2-pin { height: calc(100vh + var(--len) * 1vh); height: calc(100svh + var(--len) * 1vh); }
+.on-2-svg { display: none; }
+.on[data-live] .on-2-svg { display: block; position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden; pointer-events: none; }
+.on-2-box { position: relative; }
+/* narrator na dole sceny, przy lewej krawędzi wrappera */
+.on[data-live] .on-2-box { height: 100%; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 44px; }
+.on[data-live] .on-2-still { display: none; }
+
+/* ═════════ 1. JEDNA GWIAZDA ═════════ */
+.on-2s-star { fill: var(--on-ac); stroke: #60a5fa; stroke-width: 1.3; }
+.on-2s-echo { fill: none; stroke: #60a5fa; stroke-width: 1; }
+.on-2s-line { fill: var(--on-ac); }
+.on-2s-tip circle { fill: #60a5fa; }
+.on-2s-tip text, .on-2s-you text, .on-2s-us { font-size: 15px; font-weight: 500; fill: #e2e8f0; }
+.on-2s-you circle { fill: #050505; stroke: #94a3b8; stroke-width: 1.5; transition: fill .5s ease, stroke .5s ease; }
+.on-2s-you[data-on] circle { fill: #60a5fa; stroke: #60a5fa; }
+.on-2s-msg { fill: #f8fafc; opacity: 0; }
+.on-2s-ans { fill: #60a5fa; opacity: 0; }
+.on-2s-reply { font-size: 15px; font-weight: 600; fill: #f1f5f9; opacity: 0; }
+/* bez JS / ograniczony ruch: gotowy znak z logo między „Ty” a „Avenly” */
+.on-2s-still { margin-bottom: 30px; }
+.on-2s-still svg { display: block; width: 100%; height: auto; overflow: visible; fill: var(--on-ac); }
+.on-2s-still p { display: flex; justify-content: space-between; gap: 16px; margin: 12px 0 0; font-size: 15px; font-weight: 500; color: #e2e8f0; }
+.on-2s-still p span:nth-child(2) { color: #94a3b8; }
+
+/* ═════════ 2. DOBA ═════════ */
+.on-2d-pin { --len: 240; }
+/* --u = jednostki rysunku na piksel ekranu (pisze JS razem z kamerą): podpisy i łuk mają stałą wielkość na ekranie */
+.on-2d-svg { --u: 1; display: block; width: min(100%, 460px); height: auto; margin: 0 auto 28px; overflow: visible; }
+.on[data-live] .on-2d-svg { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; overflow: hidden; pointer-events: none; }
+.on-2d-disc { fill: #070709; fill-opacity: .88; }
+.on-2d-rail { fill: none; stroke: rgba(255, 255, 255, .2); stroke-width: 1; }
+.on-2d-tick { stroke: rgba(255, 255, 255, .26); stroke-width: 1; transition: stroke .5s ease; }
+.on-2d-tick[data-on] { stroke: #60a5fa; }
+.on-2d-h, .on-2d-top { font-size: calc(var(--u) * 14px); font-variant-numeric: tabular-nums; }
+.on-2d-h { fill: #94a3b8; }
+.on-2d-top { font-weight: 600; fill: #f1f5f9; }
+/* łuk drogi gwiazdy: pathLength = 1, grubość w jednostkach rysunku (bez non-scaling-stroke - psuje długość kreski) */
+.on-2d-arc { fill: none; stroke: var(--on-ac); stroke-width: calc(var(--u) * 2px); stroke-dasharray: 1; stroke-dashoffset: 0; }
+.on-2d-ping { fill: none; stroke: #60a5fa; stroke-width: 1; opacity: 0; }
+.on-2d-star { fill: var(--on-ac); }
+.on-2d-sent { opacity: 0; } /* stan końcowy: nad tarczą „Nasza odpowiedź” */
+.on-2d-num { font-size: 84px; font-weight: 700; letter-spacing: -.04em; fill: #f8fafc; font-variant-numeric: tabular-nums; }
+.on-2d-unit { font-size: 34px; font-weight: 600; fill: #94a3b8; }
+/* szeroki ekran: tarcza po prawej, narrator po lewej na wysokości jej środka (ten sam próg 900 px co w second-day.tsx) */
+@media (min-width: 900px) {
+  .on[data-live] .on-2d-box { justify-content: center; padding-bottom: 0; }
+  .on[data-live] .on-2d-box .on-narr { max-width: min(30rem, 38%); }
+}
+
+/* ═════════ 3. ŚWIATŁO ═════════ */
+.on-2l-label { margin-bottom: 26px; }
+.on-2l-body {
+  position: relative; max-width: 70rem; font-weight: 700; font-size: clamp(30px, 4.3vw, 68px);
+  line-height: 1.13; letter-spacing: -.032em; color: #f8fafc; text-wrap: pretty;
+}
+/* nagłówek i zdania pod nim płyną jako jeden akapit, tym samym pismem */
+.on-2l-h, .on-2l-p { display: inline; margin: 0; font: inherit; letter-spacing: inherit; color: inherit; }
+.on-2l-rail { display: none; }
+.on-2l-mark { fill: var(--on-ac); }
+/* słowo, do którego doszło światło: przez chwilę jaśniejszy błękit marki, potem stygnie do swojego koloru */
+.on-2l-w { transition: color .8s ease; }
+.on-2l-w[data-hot] { color: #60a5fa; transition-duration: .12s; }
+.on[data-live] .on-2l-pin { height: calc(100vh + 190vh); height: calc(100svh + 190vh); }
+.on[data-live] .on-2l-box { height: 100%; display: flex; flex-direction: column; justify-content: center; padding-top: 76px; padding-bottom: 48px; }
+/* znak z logo stoi przy lewej krawędzi wrappera, tekst i etykieta są od niego odsunięte o tę samą szerokość */
+.on[data-live] .on-2l-label, .on[data-live] .on-2l-body { padding-left: 58px; }
+.on[data-live] .on-2l-body { font-size: clamp(32px, min(4.3vw, 7vh), 68px); font-size: clamp(32px, min(4.3vw, 7svh), 68px); }
+.on[data-live] .on-2l-rail { --gx: 16px; display: block; position: absolute; left: 0; top: 0; width: 58px; height: 100%; overflow: visible; pointer-events: none; }
+/* linia znaku liczona poziomo (jak w logo) i obrócona w pion: czubek u góry tekstu, gwiazda przy bieżącym wierszu */
+.on-2l-turn { transform: translateX(var(--gx, 16px)) rotate(90deg); }
+
+/* ═════════ 4. LICZNIK ═════════ */
+.on-2c-pin { --len: 220; }
+.on-2c-stage { margin-bottom: 28px; }
+/* cyfry: dwa bębny (kolumny z paskiem cyfr); wiersz cyfry ma .86em - ta sama liczba w second-count.tsx (ROW) */
+.on-2c-num {
+  display: flex; align-items: flex-end; font-weight: 700; font-size: clamp(110px, 32vw, 240px); line-height: .86;
+  letter-spacing: -.04em; font-variant-numeric: tabular-nums; color: #f8fafc;
+}
+.on-2c-col { display: block; height: .86em; overflow: hidden; overflow: clip; }
+/* bez JS / ograniczony ruch: pasek stoi na ostatniej cyfrze (--end), czyli „24” */
+.on-2c-strip { display: block; transform: translateY(calc(var(--end) * -.86em)); }
+.on-2c-strip > span { display: block; height: .86em; }
+.on-2c-unit { display: block; margin: 0 0 .085em .12em; font-size: .3em; line-height: 1; letter-spacing: -.02em; color: var(--on-ac); }
+/* pełny ruch: cyfry na cały kadr nad narratorem; --f (pisze JS na .on-2c-num): 0 = sam obrys w ruchu, 1 = pełna cyfra */
+.on[data-live] .on-2c-stage { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; margin: 0; padding: 84px 0 24px; }
+.on[data-live] .on-2c-num { font-size: min(62vh, 56vw); font-size: min(62svh, 56vw); }
+.on[data-live] .on-2c-strip > span {
+  color: rgb(248 250 252 / var(--f, 1));
+  -webkit-text-stroke: 2px rgb(248 250 252 / calc(1 - var(--f, 1)));
+}
+
+/* ═════════ 5. KORYTARZ ═════════ */
+.on-2h-pin { --len: 240; }
+/* drzwi = same obrysy („negatywy”): rama, płycina i klamka po stronie drogi; geometrię pisze JS */
+.on-2h-door rect { fill: none; stroke: rgba(226, 232, 240, .62); stroke-width: 1; }
+.on-2h-door .on-2h-panel { stroke: rgba(226, 232, 240, .24); }
+.on-2h-door circle { fill: #60a5fa; }
+.on-2h-label text { font-size: 14.5px; font-weight: 500; fill: #e2e8f0; }
+.on-2h-star { fill: var(--on-ac); }
+.on-2h-ans { fill: #f8fafc; opacity: 0; }
+.on-2h-reply { font-size: 15px; font-weight: 600; fill: #f1f5f9; opacity: 0; }
+
+/* ═════════ 6. ROZMOWA ═════════ */
+.on-2r-tag { margin: 0 0 18px; font-size: 13.5px; color: #94a3b8; }
+.on-2r-thread { display: grid; gap: 16px; }
+/* Twoje wiadomości przy prawej krawędzi wrappera, nasze przy lewej */
+.on-2r-msg { max-width: min(36rem, 88%); }
+.on-2r-msg--you { justify-self: end; }
+.on-2r-meta { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; font-size: 13.5px; color: #94a3b8; }
+.on-2r-msg--you .on-2r-meta { justify-content: flex-end; }
+.on-2r-meta b { font-weight: 600; color: #e2e8f0; }
+.on-2r-meta svg { flex: none; width: 13px; height: 13px; fill: var(--on-ac); }
+.on-2r-bubble { position: relative; margin: 0; padding: 16px 20px; border-radius: 20px; font-size: clamp(16px, 1.35vw, 19px); line-height: 1.5; }
+.on-2r-msg--you .on-2r-bubble { border-bottom-right-radius: 6px; background: #eef2f7; color: #0b1220; }
+.on-2r-msg--us .on-2r-bubble {
+  border-bottom-left-radius: 6px; background: linear-gradient(180deg, #0d0d10, #060607); color: #f1f5f9;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .13), 0 0 0 1px rgba(255, 255, 255, .09);
+}
+.on-2r-ghost { display: block; }
+.on-2r-typed { display: none; }
+/* noc między wiadomościami: linia rośnie od Twojej strony (prawa) do naszej, gwiazda na jej czole (--g pisze JS) */
+.on-2r-gap { position: relative; height: 46px; }
+.on-2r-line {
+  position: absolute; left: 0; right: 0; top: 16px; height: 1.5px; background: var(--on-ac);
+  transform-origin: 100% 50%; transform: scaleX(var(--g, 1));
+}
+.on-2r-star { position: absolute; top: 8px; right: calc(var(--g, 1) * 100% - 9px); width: 18px; height: 18px; fill: var(--on-ac); }
+.on-2r-when { position: absolute; left: 50%; top: 26px; transform: translateX(-50%); font-size: 13.5px; color: #94a3b8; white-space: nowrap; }
+.on[data-live] .on-2r-pin { height: calc(100vh + 210vh); height: calc(100svh + 210vh); }
+.on[data-live] .on-2r-box { height: 100%; display: flex; flex-direction: column; justify-content: center; padding-top: 84px; padding-bottom: 36px; }
+/* wiadomość pisana: pełny tekst trzyma wymiar dymka (niewidoczny, ale czytany przez czytniki), nad nim rośnie pisany */
+.on[data-live] .on-2r-msg--typed .on-2r-ghost { opacity: 0; }
+.on[data-live] .on-2r-typed { display: block; position: absolute; left: 20px; right: 20px; top: 16px; }
+.on-2r-typed[data-typing]::after {
+  content: ""; display: inline-block; width: 2px; height: 1.05em; margin-left: 2px; vertical-align: -.16em; background: #60a5fa;
+}
+.on-2r-msg--you .on-2r-typed[data-typing]::after { background: #2563eb; }
+
+/* ═════════ 7. TY I MY ═════════ */
+.on-2p-heads, .on-2p-row { display: grid; grid-template-columns: minmax(0, 1fr) clamp(72px, 12vw, 200px) minmax(0, 1fr); gap: 0 28px; }
+.on-2p-heads { margin: 0 0 10px; font-size: 14.5px; font-weight: 600; color: #94a3b8; }
+.on-2p-heads span:last-child { grid-column: 3; color: #60a5fa; }
+.on-2p-list { list-style: none; margin: 0; padding: 0; }
+.on-2p-row { align-items: center; padding: clamp(18px, 3.4vh, 34px) 0; border-top: 1px solid rgba(255, 255, 255, .1); }
+.on-2p-you, .on-2p-us {
+  margin: 0; font-weight: 700; font-size: clamp(22px, 2.5vw, 40px); line-height: 1.12; letter-spacing: -.03em;
+  color: #f8fafc; text-wrap: balance;
+}
+/* łącznik pary: prosta linia rośnie od Twojego zdania do naszego, gwiazda na jej czole (--g pisze JS) */
+.on-2p-link { position: relative; display: block; height: 20px; }
+.on-2p-link i {
+  position: absolute; left: 0; right: 0; top: 50%; height: 1.5px; margin-top: -.75px; background: var(--on-ac);
+  transform-origin: 0 50%; transform: scaleX(var(--g, 1));
+}
+.on-2p-link svg { position: absolute; top: 1px; left: calc(var(--g, 1) * 100% - 9px); width: 18px; height: 18px; fill: var(--on-ac); }
+.on[data-live] .on-2p-pin { height: calc(100vh + 230vh); height: calc(100svh + 230vh); }
+.on[data-live] .on-2p-box { height: 100%; display: flex; flex-direction: column; justify-content: center; padding-top: 84px; padding-bottom: 36px; }
+
+/* ═════════ 8. BEZPOŚREDNIO ═════════ */
+.on-2b-box { padding-bottom: clamp(48px, 8vh, 96px); }
+.on-2b-mark { display: block; width: 100%; height: auto; margin-bottom: 6px; overflow: visible; }
+.on-2b-list { list-style: none; margin: 0; padding: 0; }
+.on-2b-row { display: flex; align-items: baseline; gap: 12px 28px; padding: clamp(14px, 2.6vh, 26px) 0; border-bottom: 1px solid rgba(255, 255, 255, .1); }
+.on-2b-k { flex: none; width: 6.5rem; font-size: 14.5px; color: #94a3b8; }
+.on-2b-a {
+  display: inline-flex; align-items: center; gap: .28em; min-height: 44px; font-weight: 700;
+  font-size: clamp(26px, 5.2vw, 80px); line-height: 1.05; letter-spacing: -.035em; font-variant-numeric: tabular-nums;
+  color: #f8fafc; text-decoration: none; transition: color .3s ease;
+}
+.on-2b-a svg { flex: none; width: .5em; height: .5em; color: #60a5fa; transition: transform .45s var(--on-ease); }
+.on-2b-a:focus-visible { outline: 2px solid #60a5fa; outline-offset: 6px; border-radius: 8px; }
+@media (hover: hover) {
+  .on-2b-a:hover { color: #60a5fa; }
+  .on-2b-a:hover svg { transform: translate(.08em, -.08em); }
+}
+/* zdanie pod wierszami kontaktu */
+.on-2b-note { margin-top: 26px; }
+/* linia z gwiazdą przelatuje od lewej, gdy sekcja wejdzie na ekran (na czas, do końca) */
+.on[data-live] .on-2b-comet .on-comet-line { transform: scaleX(.0001); }
+.on[data-live] .on-2b-box[data-in] .on-2b-comet .on-comet-line { transform: none; animation: on-line-in 1.4s var(--on-io) .15s both; }
+.on[data-live] .on-2b-box[data-in] .on-2b-comet .on-comet-gem { animation: on-gem-in 1.4s var(--on-io) .15s both, on-gem-out .5s ease 1.6s forwards; }
+
+/* ═════════ TELEFON ═════════ */
+@media (max-width: 767px) {
+  /* narrator nad bąblem czatu (prawy dolny róg) - wspólne dla wszystkich wersji */
+  .on[data-live] .on-2-box { padding-bottom: 84px; }
+  .on-2s-tip text, .on-2s-you text, .on-2s-us, .on-2s-reply { font-size: 14px; }
+  .on-2s-still p { font-size: 14px; }
+  .on-2l-label { margin-bottom: 20px; }
+  .on-2l-body { font-size: clamp(26px, 7.4vw, 34px); }
+  .on[data-live] .on-2l-box { padding-top: 72px; padding-bottom: 72px; }
+  .on[data-live] .on-2l-label, .on[data-live] .on-2l-body { padding-left: 34px; }
+  .on[data-live] .on-2l-body { font-size: clamp(21px, min(6.9vw, 4.1vh), 34px); font-size: clamp(21px, min(6.9vw, 4.1svh), 34px); }
+  .on[data-live] .on-2l-rail { --gx: 11px; width: 34px; }
+  .on[data-live] .on-2c-stage { padding: 76px 0 16px; }
+  .on[data-live] .on-2c-strip > span { -webkit-text-stroke-width: 1.5px; }
+  .on-2h-label text, .on-2h-reply { font-size: 13.5px; }
+  .on-2r-thread { gap: 12px; }
+  .on-2r-msg { max-width: 90%; }
+  .on-2r-bubble { padding: 13px 16px; border-radius: 18px; font-size: 15.5px; }
+  .on-2r-gap { height: 42px; }
+  .on[data-live] .on-2r-box { padding-top: 72px; padding-bottom: 88px; }
+  .on[data-live] .on-2r-typed { left: 16px; right: 16px; top: 13px; }
+  /* pary jedno pod drugim: Twoje zdanie przy lewej krawędzi, linia na całą szerokość, nasze przy prawej */
+  .on-2p-heads { display: flex; justify-content: space-between; }
+  .on-2p-row { grid-template-columns: minmax(0, 1fr); gap: 8px 0; padding: 14px 0; }
+  .on-2p-you, .on-2p-us { font-size: clamp(18px, 5.2vw, 22px); }
+  .on-2p-us { text-align: right; }
+  .on[data-live] .on-2p-box { padding-top: 72px; padding-bottom: 88px; }
+  .on-2b-row { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .on-2b-k { width: auto; }
+  .on-2b-a { font-size: clamp(24px, 7.4vw, 34px); }
+}
